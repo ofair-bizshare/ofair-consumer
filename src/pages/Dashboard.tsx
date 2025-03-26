@@ -8,6 +8,17 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProfessionalCard from '@/components/ProfessionalCard';
 import { Clock, CheckCircle, AlertCircle, Star, MessageSquare, Eye, ArrowRight } from 'lucide-react';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose
+} from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
+import CreditCard from '@/components/dashboard/CreditCard';
 
 // Sample data for requests
 const requests = [
@@ -183,9 +194,12 @@ const RequestCard: React.FC<RequestCardProps> = ({ request, onSelect }) => {
 
 interface QuoteCardProps {
   quote: any;
+  onAccept: (quoteId: string) => void;
+  onReject: (quoteId: string) => void;
+  onViewProfile: (professionalId: string) => void;
 }
 
-const QuoteCard: React.FC<QuoteCardProps> = ({ quote }) => {
+const QuoteCard: React.FC<QuoteCardProps> = ({ quote, onAccept, onReject, onViewProfile }) => {
   return (
     <Card className="overflow-hidden mb-8">
       <CardContent className="p-0">
@@ -231,17 +245,44 @@ const QuoteCard: React.FC<QuoteCardProps> = ({ quote }) => {
               <span>שלח הודעה</span>
             </Button>
             
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="space-x-1 space-x-reverse border-gray-300"
-              asChild
-            >
-              <Link to={`/professional/${quote.professional.id}`}>
-                <Eye size={16} />
-                <span>צפה בפרופיל</span>
-              </Link>
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="space-x-1 space-x-reverse border-gray-300"
+                >
+                  <Eye size={16} />
+                  <span>צפה בפרופיל</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" dir="rtl">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-bold">פרופיל בעל מקצוע</DialogTitle>
+                  <DialogDescription>
+                    מידע מפורט על בעל המקצוע
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                  <iframe 
+                    src={`/professional/${quote.professional.id}`} 
+                    className="w-full h-[70vh] border-none"
+                    title={`פרופיל של ${quote.professional.name}`}
+                  />
+                </div>
+                <div className="flex justify-between">
+                  <DialogClose asChild>
+                    <Button variant="outline">סגור</Button>
+                  </DialogClose>
+                  <Button 
+                    className="bg-blue-600 hover:bg-blue-700"
+                    onClick={() => onViewProfile(quote.professional.id)}
+                  >
+                    פתח בעמוד מלא
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
           
           <div className="flex space-x-2 space-x-reverse">
@@ -249,6 +290,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({ quote }) => {
               variant="outline" 
               size="sm"
               className="border-red-500 text-red-500 hover:bg-red-50"
+              onClick={() => onReject(quote.id)}
             >
               דחה הצעה
             </Button>
@@ -256,6 +298,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({ quote }) => {
             <Button 
               size="sm"
               className="bg-teal-500 hover:bg-teal-600"
+              onClick={() => onAccept(quote.id)}
             >
               קבל הצעה
             </Button>
@@ -268,9 +311,49 @@ const QuoteCard: React.FC<QuoteCardProps> = ({ quote }) => {
 
 const Dashboard = () => {
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
+  const [quotesData, setQuotesData] = useState(quotes);
+  const { toast } = useToast();
   
   const selectedRequest = requests.find(r => r.id === selectedRequestId);
-  const requestQuotes = quotes.filter(q => q.requestId === selectedRequestId);
+  const requestQuotes = quotesData.filter(q => q.requestId === selectedRequestId);
+
+  const handleAcceptQuote = (quoteId: string) => {
+    setQuotesData(prevQuotes => 
+      prevQuotes.map(quote => 
+        quote.id === quoteId 
+          ? { ...quote, status: 'accepted' } 
+          : quote.requestId === quotesData.find(q => q.id === quoteId)?.requestId
+            ? { ...quote, status: 'rejected' }
+            : quote
+      )
+    );
+    
+    toast({
+      title: "הצעה התקבלה",
+      description: "הודעה נשלחה לבעל המקצוע. הוא יצור איתך קשר בהקדם.",
+      variant: "success",
+    });
+  };
+
+  const handleRejectQuote = (quoteId: string) => {
+    setQuotesData(prevQuotes => 
+      prevQuotes.map(quote => 
+        quote.id === quoteId 
+          ? { ...quote, status: 'rejected' } 
+          : quote
+      )
+    );
+    
+    toast({
+      title: "הצעה נדחתה",
+      description: "הודעה נשלחה לבעל המקצוע.",
+      variant: "default",
+    });
+  };
+
+  const handleViewProfile = (professionalId: string) => {
+    window.open(`/professional/${professionalId}`, '_blank');
+  };
 
   return (
     <div className="flex flex-col min-h-screen" dir="rtl">
@@ -287,109 +370,158 @@ const Dashboard = () => {
             </p>
           </div>
           
-          <div className="flex flex-col-reverse lg:flex-row gap-8">
-            {/* Sidebar with requests list */}
-            <div className="w-full lg:w-1/3">
-              <div className="mb-6 flex justify-between items-center">
-                <h2 className="text-xl font-semibold text-blue-700">הבקשות שלי</h2>
-                <Link to="/" className="text-teal-500 hover:text-teal-600 text-sm font-medium">
-                  בקשה חדשה +
-                </Link>
-              </div>
-              
-              <div className="space-y-4">
-                {requests.map(request => (
-                  <RequestCard 
-                    key={request.id} 
-                    request={request} 
-                    onSelect={setSelectedRequestId}
-                  />
-                ))}
-              </div>
-            </div>
+          <Tabs defaultValue="requests" className="mb-8">
+            <TabsList className="w-full mb-6">
+              <TabsTrigger value="requests" className="flex-1">הבקשות והצעות שלי</TabsTrigger>
+              <TabsTrigger value="referrals" className="flex-1">ההפניות שלי</TabsTrigger>
+              <TabsTrigger value="credits" className="flex-1">הקרדיט שלי</TabsTrigger>
+            </TabsList>
             
-            {/* Main content with request details and quotes */}
-            <div className="w-full lg:w-2/3">
-              {selectedRequest ? (
-                <div className="space-y-6 animate-fade-in">
-                  <div className="glass-card p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h2 className="text-2xl font-semibold text-blue-700">{selectedRequest.title}</h2>
-                        <p className="text-gray-500">{selectedRequest.date} | {selectedRequest.location}</p>
-                      </div>
-                      <div className="flex items-center text-sm bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
-                        {selectedRequest.status === 'active' ? (
-                          <>
-                            <Clock className="h-4 w-4 ml-1" />
-                            פעיל
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle className="h-4 w-4 ml-1" />
-                            הושלם
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <p className="text-gray-700 mb-4">
-                      {selectedRequest.description}
-                    </p>
-                    
-                    <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
-                      <p className="text-gray-500 text-sm">
-                        הצעות מחיר: <span className="font-medium text-blue-700">{requestQuotes.length}</span>
-                      </p>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="text-red-500 border-red-200 hover:bg-red-50"
-                      >
-                        מחק בקשה
-                      </Button>
-                    </div>
+            <TabsContent value="requests">
+              <div className="flex flex-col-reverse lg:flex-row gap-8">
+                {/* Sidebar with requests list */}
+                <div className="w-full lg:w-1/3">
+                  <div className="mb-6 flex justify-between items-center">
+                    <h2 className="text-xl font-semibold text-blue-700">הבקשות שלי</h2>
+                    <Link to="/" className="text-teal-500 hover:text-teal-600 text-sm font-medium">
+                      בקשה חדשה +
+                    </Link>
                   </div>
                   
-                  {requestQuotes.length > 0 ? (
-                    <div>
-                      <h3 className="text-xl font-semibold mb-4">הצעות מחיר שהתקבלו</h3>
-                      
-                      <div className="space-y-4">
-                        {requestQuotes.map(quote => (
-                          <QuoteCard key={quote.id} quote={quote} />
-                        ))}
+                  <div className="space-y-4">
+                    {requests.map(request => (
+                      <RequestCard 
+                        key={request.id} 
+                        request={request} 
+                        onSelect={setSelectedRequestId}
+                      />
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Main content with request details and quotes */}
+                <div className="w-full lg:w-2/3">
+                  {selectedRequest ? (
+                    <div className="space-y-6 animate-fade-in">
+                      <div className="glass-card p-6">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h2 className="text-2xl font-semibold text-blue-700">{selectedRequest.title}</h2>
+                            <p className="text-gray-500">{selectedRequest.date} | {selectedRequest.location}</p>
+                          </div>
+                          <div className="flex items-center text-sm bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
+                            {selectedRequest.status === 'active' ? (
+                              <>
+                                <Clock className="h-4 w-4 ml-1" />
+                                פעיל
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle className="h-4 w-4 ml-1" />
+                                הושלם
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <p className="text-gray-700 mb-4">
+                          {selectedRequest.description}
+                        </p>
+                        
+                        <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
+                          <p className="text-gray-500 text-sm">
+                            הצעות מחיר: <span className="font-medium text-blue-700">{requestQuotes.length}</span>
+                          </p>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="text-red-500 border-red-200 hover:bg-red-50"
+                          >
+                            מחק בקשה
+                          </Button>
+                        </div>
                       </div>
+                      
+                      {requestQuotes.length > 0 ? (
+                        <div>
+                          <h3 className="text-xl font-semibold mb-4">הצעות מחיר שהתקבלו</h3>
+                          
+                          <div className="space-y-4">
+                            {requestQuotes.map(quote => (
+                              <QuoteCard 
+                                key={quote.id} 
+                                quote={quote} 
+                                onAccept={handleAcceptQuote}
+                                onReject={handleRejectQuote}
+                                onViewProfile={handleViewProfile}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-12 glass-card">
+                          <AlertCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                          <h3 className="text-xl font-semibold text-gray-700 mb-2">אין הצעות מחיר עדיין</h3>
+                          <p className="text-gray-500 mb-4">
+                            עדיין לא התקבלו הצעות מחיר לבקשה זו. בדרך כלל לוקח 24-48 שעות לקבלת הצעות.
+                          </p>
+                          <Button variant="outline" className="border-teal-500 text-teal-500 hover:bg-teal-50">
+                            רענן
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    <div className="text-center py-12 glass-card">
-                      <AlertCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold text-gray-700 mb-2">אין הצעות מחיר עדיין</h3>
-                      <p className="text-gray-500 mb-4">
-                        עדיין לא התקבלו הצעות מחיר לבקשה זו. בדרך כלל לוקח 24-48 שעות לקבלת הצעות.
+                    <div className="glass-card flex flex-col items-center justify-center text-center p-10">
+                      <MessageSquare className="h-12 w-12 text-blue-200 mb-4" />
+                      <h3 className="text-xl font-semibold text-blue-700 mb-2">בחר בקשה לצפייה</h3>
+                      <p className="text-gray-600 mb-6 max-w-md">
+                        בחר אחת מהבקשות מהרשימה משמאל כדי לצפות בפרטים ובהצעות המחיר שהתקבלו
                       </p>
-                      <Button variant="outline" className="border-teal-500 text-teal-500 hover:bg-teal-50">
-                        רענן
-                      </Button>
+                      <Link to="/">
+                        <Button className="bg-teal-500 hover:bg-teal-600">
+                          שלח בקשה חדשה
+                        </Button>
+                      </Link>
                     </div>
                   )}
                 </div>
-              ) : (
-                <div className="glass-card flex flex-col items-center justify-center text-center p-10">
-                  <MessageSquare className="h-12 w-12 text-blue-200 mb-4" />
-                  <h3 className="text-xl font-semibold text-blue-700 mb-2">בחר בקשה לצפייה</h3>
-                  <p className="text-gray-600 mb-6 max-w-md">
-                    בחר אחת מהבקשות מהרשימה משמאל כדי לצפות בפרטים ובהצעות המחיר שהתקבלו
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="referrals">
+              <div className="space-y-6">
+                <div className="glass-card p-6">
+                  <h2 className="text-2xl font-semibold text-blue-700 mb-4">ההפניות שלי</h2>
+                  <p className="text-gray-600 mb-6">
+                    כאן תוכל לראות את ההפניות שיצרת לבעלי מקצוע, את הסטטוס שלהן ואת הפרטים שנשלחו
                   </p>
-                  <Link to="/">
-                    <Button className="bg-teal-500 hover:bg-teal-600">
-                      שלח בקשה חדשה
-                    </Button>
-                  </Link>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {/* Empty state for now */}
+                    <div className="col-span-full text-center py-12">
+                      <AlertCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-xl font-semibold text-gray-700 mb-2">אין הפניות עדיין</h3>
+                      <p className="text-gray-500 mb-4">
+                        כאשר תיצור הפניות לבעלי מקצוע, הן יופיעו כאן כדי שתוכל לעקוב אחריהן
+                      </p>
+                      <Link to="/search">
+                        <Button className="border-teal-500 text-teal-500 hover:bg-teal-50" variant="outline">
+                          חפש בעלי מקצוע
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-          </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="credits">
+              <div className="max-w-md mx-auto">
+                <CreditCard creditAmount={250} />
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
       

@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { ChevronRight, Calendar, Tag, Facebook, Twitter, LinkIcon, Clock, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { useToast } from '@/hooks/use-toast';
 
 // This would typically come from an API call using the ID
 const getArticleData = (id: string) => {
@@ -94,17 +95,36 @@ const getArticleData = (id: string) => {
 const ArticleDetail = () => {
   const { id } = useParams<{ id: string }>();
   const article = getArticleData(id || '1');
+  const { toast } = useToast();
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   
-  React.useEffect(() => {
+  useEffect(() => {
     scrollToTop();
   }, [id]);
 
+  const handleShareLink = () => {
+    navigator.clipboard.writeText(window.location.href)
+      .then(() => {
+        toast({
+          title: "הקישור הועתק",
+          description: "קישור למאמר הועתק ללוח",
+          variant: "success",
+        });
+      })
+      .catch(() => {
+        toast({
+          title: "שגיאה בהעתקת הקישור",
+          description: "אנא נסה שוב",
+          variant: "destructive",
+        });
+      });
+  };
+
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen" dir="rtl">
       <Header />
       
       <main className="flex-grow pt-24 pb-12">
@@ -169,13 +189,28 @@ const ArticleDetail = () => {
             <div className="flex items-center justify-between">
               <span className="font-medium text-gray-700">שתף מאמר זה:</span>
               <div className="flex space-x-4 space-x-reverse">
-                <Button variant="outline" size="sm" className="rounded-full w-10 h-10 p-0 flex items-center justify-center">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="rounded-full w-10 h-10 p-0 flex items-center justify-center"
+                  onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank')}
+                >
                   <Facebook className="h-5 w-5 text-blue-600" />
                 </Button>
-                <Button variant="outline" size="sm" className="rounded-full w-10 h-10 p-0 flex items-center justify-center">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="rounded-full w-10 h-10 p-0 flex items-center justify-center"
+                  onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(article.title)}`, '_blank')}
+                >
                   <Twitter className="h-5 w-5 text-blue-400" />
                 </Button>
-                <Button variant="outline" size="sm" className="rounded-full w-10 h-10 p-0 flex items-center justify-center">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="rounded-full w-10 h-10 p-0 flex items-center justify-center"
+                  onClick={handleShareLink}
+                >
                   <LinkIcon className="h-5 w-5 text-gray-500" />
                 </Button>
               </div>
