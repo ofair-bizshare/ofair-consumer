@@ -35,7 +35,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
       
       <div className="p-5">
         <div className="flex items-center text-gray-500 text-xs mb-2">
-          <Calendar size={14} className="mr-1" />
+          <Calendar size={14} className="ml-1" />
           <span>{date}</span>
         </div>
         
@@ -48,7 +48,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
         </p>
         
         <Link 
-          to={`/articles/${id}`} 
+          to={`/article/${id}`} 
           className="text-teal-500 font-medium text-sm hover:text-teal-600 inline-flex items-center"
         >
           קרא עוד

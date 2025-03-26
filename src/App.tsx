@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import ProfessionalProfile from "./pages/ProfessionalProfile";
 import Articles from "./pages/Articles";
+import ArticleDetail from "./pages/ArticleDetail";
 import About from "./pages/About";
 import ScrollToTop from "./components/ScrollToTop";
 
@@ -32,7 +33,7 @@ const App = () => (
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/professional/:id" element={<ProfessionalProfile />} />
                 <Route path="/articles" element={<Articles />} />
-                <Route path="/articles/:id" element={<Articles />} />
+                <Route path="/article/:id" element={<ArticleDetail />} />
                 <Route path="/about" element={<About />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

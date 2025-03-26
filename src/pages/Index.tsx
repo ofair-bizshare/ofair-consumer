@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -8,7 +7,7 @@ import DynamicProfessionalSearch from '@/components/DynamicProfessionalSearch';
 import ProfessionalCard from '@/components/ProfessionalCard';
 import ArticleCard from '@/components/ArticleCard';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Star, Shield, Clock, CheckCircle, FileText, Search } from 'lucide-react';
+import { ArrowLeft, Star, Shield, Clock, CheckCircle, FileText, Search, Gift } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 
 // Sample data for the professionals
@@ -93,16 +92,16 @@ const Index = () => {
       
       <Header />
       
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-16 md:pt-40 md:pb-24">
+      {/* Hero Section - Updated for better layout */}
+      <section className="relative pt-28 pb-16 md:pt-32 md:pb-24">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-teal-50 z-[-1]"></div>
         <div className="absolute inset-0 z-[-1] opacity-70 bg-[url('https://images.unsplash.com/photo-1600607687644-c7e39cf7d8b7?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80')] bg-cover bg-center"></div>
         <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-[-1]"></div>
         
         <div className="container mx-auto px-6">
-          <div className="flex flex-col lg:flex-row items-center gap-8">
+          <div className="flex flex-col lg:flex-row items-start gap-8 lg:items-center">
             {/* Left side - Text content */}
-            <div className="w-full lg:w-1/2 animate-fade-in-up">
+            <div className="w-full lg:w-1/2 animate-fade-in-up lg:pr-4">
               <div className="text-base font-semibold text-teal-500 mb-3">oFair - הפתרון המושלם לבעלי בתים</div>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-blue-800 mb-4 leading-tight">
                 מצאו את 
@@ -112,7 +111,7 @@ const Index = () => {
               <p className="text-lg text-gray-700 mb-6">
                 פלטפורמה חינמית המחברת בין בעלי בתים לבעלי מקצוע מובילים בתחומם. קבלו הצעות מחיר ללא התחייבות ובחרו את המקצוען הנכון עבורכם.
               </p>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-4 mb-8 lg:mb-0">
                 <Button 
                   size="lg" 
                   className="bg-teal-600 hover:bg-teal-700 text-white button-transition flex items-center gap-2 shadow-md"
@@ -128,10 +127,23 @@ const Index = () => {
                   </Button>
                 </Link>
               </div>
+              {/* Add new cashback benefit info */}
+              <div className="mt-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg shadow-sm">
+                <div className="flex items-start">
+                  <Gift className="h-6 w-6 text-teal-500 mt-1 ml-2 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-bold text-blue-800 text-lg">5% חזרה לעבודה הבאה!</h3>
+                    <p className="text-gray-700">קבלו 5% חזרה על העבודה הראשונה דרך oFair, לשימוש בעבודה הבאה שלכם.</p>
+                    <Link to="/dashboard" className="text-teal-600 hover:underline mt-2 inline-block font-medium">
+                      הצג את הקרדיט שלי →
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </div>
             
             {/* Right side - Form */}
-            <div className="w-full lg:w-1/2 animate-fade-in">
+            <div className="w-full lg:w-1/2 animate-fade-in lg:pl-4">
               <div id="request-form" ref={requestFormRef}>
                 <RequestForm />
               </div>
@@ -179,7 +191,7 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Featured Professionals */}
+      {/* Featured Professionals - Add border back around "verified" badge */}
       <section className="py-16 md:py-24 bg-gradient-to-br from-blue-50 to-teal-50">
         <div className="container mx-auto px-6">
           <div className="text-center mb-12">
@@ -279,7 +291,7 @@ const Index = () => {
         </div>
       </section>
       
-      {/* CTA Section */}
+      {/* CTA Section - Fix button visibility */}
       <section className="py-16 md:py-24 bg-blue-700 text-white">
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">

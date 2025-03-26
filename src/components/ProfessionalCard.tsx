@@ -36,7 +36,7 @@ const ProfessionalCard: React.FC<ProfessionalCardProps> = ({
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
         {verified && (
-          <div className="absolute top-3 right-3 bg-teal-500 text-white text-xs px-2 py-1 rounded-full flex items-center">
+          <div className="absolute top-3 right-3 bg-teal-500 text-white text-xs px-2 py-1 rounded-full flex items-center border-2 border-white shadow-sm">
             <CheckCircle size={12} className="mr-1" />
             מאומת
           </div>
@@ -49,7 +49,7 @@ const ProfessionalCard: React.FC<ProfessionalCardProps> = ({
             <h3 className="text-lg font-semibold">{name}</h3>
             <p className="text-gray-600 text-sm">{profession}</p>
           </div>
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center space-x-1 space-x-reverse">
             <span className="text-sm font-medium">{rating}</span>
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
             <span className="text-xs text-gray-500">({reviewCount})</span>
@@ -57,7 +57,7 @@ const ProfessionalCard: React.FC<ProfessionalCardProps> = ({
         </div>
         
         <div className="flex items-center mt-2 text-gray-500 text-sm">
-          <MapPin size={14} className="mr-1" />
+          <MapPin size={14} className="ml-1" />
           <span>{location}</span>
         </div>
         
@@ -74,7 +74,7 @@ const ProfessionalCard: React.FC<ProfessionalCardProps> = ({
           </div>
         </div>
         
-        <div className="mt-4 flex space-x-2">
+        <div className="mt-4">
           <Button 
             asChild
             className="w-full bg-teal-500 hover:bg-teal-600 text-white transition-all"
