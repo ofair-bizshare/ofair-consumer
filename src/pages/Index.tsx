@@ -132,7 +132,7 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Search Section - Moved Below Hero */}
+      {/* Search Section */}
       <section className="py-12 bg-white">
         <div className="container mx-auto px-6">
           <div className="animate-fade-in">

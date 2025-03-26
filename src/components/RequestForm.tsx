@@ -156,7 +156,6 @@ const RequestForm = () => {
     const newImages = [...images];
     const newPreviewUrls = [...previewUrls];
 
-    // Revoke object URL to avoid memory leaks
     URL.revokeObjectURL(newPreviewUrls[index]);
     newImages.splice(index, 1);
     newPreviewUrls.splice(index, 1);
@@ -190,7 +189,6 @@ const RequestForm = () => {
       return;
     }
     
-    // Submit the request with the login credentials
     console.log('Submitting form data with login:', formData, loginData);
     
     toast({
@@ -231,7 +229,6 @@ const RequestForm = () => {
       return;
     }
     
-    // Submit the request with the registration data
     console.log('Submitting form data with registration:', formData, registerData);
     
     toast({
@@ -342,7 +339,7 @@ const RequestForm = () => {
             <div className="text-center mb-4">
               <UserRound className="mx-auto h-12 w-12 text-blue-500 mb-2" />
               <h3 className="text-lg font-medium text-gray-700">כניסה או הרשמה לשליחת הבקשה</h3>
-              <p className="text-sm text-gray-500">התחבר או הירשם כדי לקבל הצעות מחיר מבעלי מקצוע</p>
+              <p className="text-sm text-gray-500">כדי להמשיך, יש להתחבר או להירשם</p>
             </div>
             
             <Tabs defaultValue="login" className="w-full">
