@@ -25,9 +25,11 @@ const Header = () => {
     >
       <div className="container mx-auto px-6 flex items-center justify-between">
         <Link to="/" className="flex items-center">
-          <div className="text-2xl font-bold text-blue-700 animate-fade-in">
-            <span className="text-teal-500">o</span>Fair
-          </div>
+          <img 
+            src="/lovable-uploads/1a2c3d92-c7dd-41ef-bc39-b244797da4b2.png" 
+            alt="Ofair Logo" 
+            className="h-14 animate-fade-in"
+          />
         </Link>
 
         <nav className={`hidden md:flex items-center space-x-8 animate-fade-in-down`}>
@@ -46,15 +48,6 @@ const Header = () => {
         </nav>
 
         <div className="flex items-center space-x-4 animate-fade-in">
-          <a 
-            href="https://biz.ofair.co.il" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="hidden md:block text-blue-700 hover:text-blue-800 font-medium transition-colors"
-          >
-            כניסת בעלי מקצוע
-          </a>
-
           <Button variant="ghost" className="hidden md:flex items-center space-x-2 text-blue-700 hover:text-blue-800 hover:bg-blue-50">
             <User size={18} />
             <span>כניסה / הרשמה</span>
@@ -106,16 +99,6 @@ const Header = () => {
               <Button variant="outline" className="w-full justify-center">
                 כניסה / הרשמה
               </Button>
-            </div>
-            <div className="py-2">
-              <a 
-                href="https://biz.ofair.co.il" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="block w-full text-center text-blue-700 font-medium py-2"
-              >
-                כניסת בעלי מקצוע
-              </a>
             </div>
           </div>
         </div>

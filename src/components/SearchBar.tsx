@@ -1,15 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue
-} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 const professions = [
   { label: 'כל המקצועות', value: 'all' },
@@ -40,52 +34,134 @@ interface SearchBarProps {
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch, className = '' }) => {
-  const [profession, setProfession] = useState('all');
-  const [location, setLocation] = useState('all');
+  const [professionQuery, setProfessionQuery] = useState('');
+  const [locationQuery, setLocationQuery] = useState('');
+  const [filteredProfessions, setFilteredProfessions] = useState(professions);
+  const [filteredLocations, setFilteredLocations] = useState(locations);
+  const [showProfessionSuggestions, setShowProfessionSuggestions] = useState(false);
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  const [selectedProfession, setSelectedProfession] = useState('all');
+  const [selectedLocation, setSelectedLocation] = useState('all');
+  const professionInputRef = useRef<HTMLInputElement>(null);
+  const locationInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const filtered = professions.filter(prof =>
+      prof.label.includes(professionQuery) || 
+      prof.value.includes(professionQuery.toLowerCase())
+    );
+    setFilteredProfessions(filtered);
+  }, [professionQuery]);
+
+  useEffect(() => {
+    const filtered = locations.filter(loc =>
+      loc.label.includes(locationQuery) || 
+      loc.value.includes(locationQuery.toLowerCase())
+    );
+    setFilteredLocations(filtered);
+  }, [locationQuery]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (professionInputRef.current && !professionInputRef.current.contains(event.target as Node)) {
+        setShowProfessionSuggestions(false);
+      }
+      if (locationInputRef.current && !locationInputRef.current.contains(event.target as Node)) {
+        setShowLocationSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleProfessionClick = (prof: { label: string; value: string }) => {
+    setProfessionQuery(prof.label);
+    setSelectedProfession(prof.value);
+    setShowProfessionSuggestions(false);
+  };
+
+  const handleLocationClick = (loc: { label: string; value: string }) => {
+    setLocationQuery(loc.label);
+    setSelectedLocation(loc.value);
+    setShowLocationSuggestions(false);
+  };
 
   const handleSearch = () => {
-    onSearch(profession, location);
+    onSearch(selectedProfession, selectedLocation);
   };
 
   return (
     <div className={`bg-white rounded-xl shadow-lg p-4 ${className}`}>
       <div className="flex flex-col md:flex-row gap-3">
-        <div className="relative flex-1">
+        <div className="relative flex-1" ref={professionInputRef}>
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-          <Select 
-            onValueChange={setProfession}
-            value={profession}
-          >
-            <SelectTrigger className="border-gray-200 pl-10">
-              <SelectValue placeholder="בחר סוג מקצוע" />
-            </SelectTrigger>
-            <SelectContent>
-              {professions.map(prof => (
-                <SelectItem key={prof.value} value={prof.value}>
-                  {prof.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Input
+            placeholder="בחר סוג מקצוע"
+            value={professionQuery}
+            onChange={(e) => {
+              setProfessionQuery(e.target.value);
+              setShowProfessionSuggestions(true);
+              if (e.target.value === '') {
+                setSelectedProfession('all');
+              }
+            }}
+            onClick={() => setShowProfessionSuggestions(true)}
+            className="pl-10 border-gray-200"
+          />
+          {showProfessionSuggestions && (
+            <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200 max-h-60 overflow-y-auto">
+              {filteredProfessions.length > 0 ? (
+                filteredProfessions.map((prof) => (
+                  <div
+                    key={prof.value}
+                    className="px-4 py-2 hover:bg-blue-50 cursor-pointer"
+                    onClick={() => handleProfessionClick(prof)}
+                  >
+                    {prof.label}
+                  </div>
+                ))
+              ) : (
+                <div className="px-4 py-2 text-gray-500">לא נמצאו תוצאות</div>
+              )}
+            </div>
+          )}
         </div>
         
-        <div className="relative flex-1">
+        <div className="relative flex-1" ref={locationInputRef}>
           <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-          <Select 
-            onValueChange={setLocation}
-            value={location}
-          >
-            <SelectTrigger className="border-gray-200 pl-10">
-              <SelectValue placeholder="בחר אזור" />
-            </SelectTrigger>
-            <SelectContent>
-              {locations.map(loc => (
-                <SelectItem key={loc.value} value={loc.value}>
-                  {loc.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Input
+            placeholder="בחר אזור"
+            value={locationQuery}
+            onChange={(e) => {
+              setLocationQuery(e.target.value);
+              setShowLocationSuggestions(true);
+              if (e.target.value === '') {
+                setSelectedLocation('all');
+              }
+            }}
+            onClick={() => setShowLocationSuggestions(true)}
+            className="pl-10 border-gray-200"
+          />
+          {showLocationSuggestions && (
+            <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200 max-h-60 overflow-y-auto">
+              {filteredLocations.length > 0 ? (
+                filteredLocations.map((loc) => (
+                  <div
+                    key={loc.value}
+                    className="px-4 py-2 hover:bg-blue-50 cursor-pointer"
+                    onClick={() => handleLocationClick(loc)}
+                  >
+                    {loc.label}
+                  </div>
+                ))
+              ) : (
+                <div className="px-4 py-2 text-gray-500">לא נמצאו תוצאות</div>
+              )}
+            </div>
+          )}
         </div>
         
         <Button 

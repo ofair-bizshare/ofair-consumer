@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Upload, MapPin, DollarSign, Calendar, Briefcase } from 'lucide-react';
+import { Upload, MapPin, Calendar, Briefcase } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const professions = [
@@ -43,7 +43,6 @@ const RequestForm = () => {
     profession: '',
     description: '',
     location: '',
-    budget: '',
     timing: '',
     contactName: '',
     phone: '',
@@ -128,7 +127,7 @@ const RequestForm = () => {
   };
 
   return (
-    <Card className="glass-card overflow-hidden animate-fade-in-up w-full max-w-xl mx-auto" aria-labelledby="service-request-form-title">
+    <Card className="glass-card overflow-hidden animate-fade-in-up w-full max-w-md mx-auto" aria-labelledby="service-request-form-title">
       <div className="p-5 md:p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 id="service-request-form-title" className="text-xl font-bold text-blue-700">
@@ -199,35 +198,18 @@ const RequestForm = () => {
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="budget" className="text-gray-700">תקציב משוער (אופציונלי)</Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                  <Input
-                    id="budget"
-                    name="budget"
-                    placeholder="הזן תקציב משוער"
-                    className="pl-10"
-                    value={formData.budget}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="timing" className="text-gray-700">מועד ביצוע (אופציונלי)</Label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                  <Input
-                    id="timing"
-                    name="timing"
-                    placeholder="מתי תרצה שהעבודה תתבצע?"
-                    className="pl-10"
-                    value={formData.timing}
-                    onChange={handleInputChange}
-                  />
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="timing" className="text-gray-700">מועד ביצוע (אופציונלי)</Label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <Input
+                  id="timing"
+                  name="timing"
+                  placeholder="מתי תרצה שהעבודה תתבצע?"
+                  className="pl-10"
+                  value={formData.timing}
+                  onChange={handleInputChange}
+                />
               </div>
             </div>
 

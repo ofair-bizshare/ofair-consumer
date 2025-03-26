@@ -1,13 +1,14 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import RequestForm from '@/components/RequestForm';
-import ProfessionalSearchByLocation from '@/components/ProfessionalSearchByLocation';
+import DynamicProfessionalSearch from '@/components/DynamicProfessionalSearch';
 import ProfessionalCard from '@/components/ProfessionalCard';
 import ArticleCard from '@/components/ArticleCard';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Star, Shield, Clock, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Star, Shield, Clock, CheckCircle, FileText, Search } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 
 // Sample data for the professionals
@@ -104,8 +105,15 @@ const Index = () => {
               פלטפורמה חינמית המחברת בין בעלי בתים לבעלי מקצוע מובילים בתחומם. קבלו הצעות מחיר ללא התחייבות ובחרו את המקצוען הנכון עבורכם.
             </p>
             <div className="flex flex-wrap gap-4">
+              <Link to="#request-form">
+                <Button size="lg" className="bg-teal-600 hover:bg-teal-700 text-white button-transition flex items-center gap-2 shadow-md">
+                  <FileText size={20} />
+                  שליחת פנייה לבעלי מקצוע
+                </Button>
+              </Link>
               <Link to="/search">
-                <Button size="lg" className="bg-teal-500 hover:bg-teal-600 text-white button-transition">
+                <Button size="lg" variant="outline" className="border-blue-500 text-blue-700 hover:bg-blue-50 button-transition flex items-center gap-2">
+                  <Search size={20} />
                   חיפוש בעלי מקצוע
                 </Button>
               </Link>
@@ -113,8 +121,12 @@ const Index = () => {
           </div>
           
           <div className="w-full lg:w-1/2 lg:px-6 animate-fade-in flex flex-col items-center">
-            <RequestForm />
-            <ProfessionalSearchByLocation />
+            <div id="request-form">
+              <RequestForm />
+            </div>
+            <div className="mt-8 w-full">
+              <DynamicProfessionalSearch />
+            </div>
           </div>
         </div>
       </section>
@@ -261,12 +273,18 @@ const Index = () => {
             אלפי בעלי מקצוע מחכים לעזור לכם. שלחו בקשה עכשיו וקבלו הצעות מחיר בחינם.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Button size="lg" className="bg-teal-500 hover:bg-teal-600 text-white button-transition">
-              שלח בקשה עכשיו
-            </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 button-transition">
-              חפש בעלי מקצוע
-            </Button>
+            <Link to="#request-form">
+              <Button size="lg" className="bg-teal-500 hover:bg-teal-600 text-white button-transition flex items-center gap-2">
+                <FileText size={20} />
+                שלח בקשה עכשיו
+              </Button>
+            </Link>
+            <Link to="/search">
+              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 button-transition flex items-center gap-2">
+                <Search size={20} />
+                חפש בעלי מקצוע
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
