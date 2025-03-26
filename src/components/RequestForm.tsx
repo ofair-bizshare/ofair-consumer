@@ -301,7 +301,7 @@ const RequestForm = () => {
                 <Input
                   id="email"
                   name="email"
-                  placeholder="הזן כתובת דוא\"ל"
+                  placeholder="הזן כתובת דואל"
                   value={formData.email}
                   onChange={handleInputChange}
                   type="email"

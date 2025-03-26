@@ -140,7 +140,7 @@ const Login = () => {
                         id="login-email" 
                         name="email"
                         type="email" 
-                        placeholder="הזן את כתובת הדוא\"ל שלך"
+                        placeholder="הזן את כתובת הדואל שלך"
                         value={loginData.email}
                         onChange={handleLoginChange}
                       />
@@ -209,7 +209,7 @@ const Login = () => {
                         id="register-email" 
                         name="email"
                         type="email" 
-                        placeholder="הזן את כתובת הדוא\"ל שלך"
+                        placeholder="הזן את כתובת הדואל שלך"
                         value={registerData.email}
                         onChange={handleRegisterChange}
                       />
