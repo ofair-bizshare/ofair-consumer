@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -15,6 +16,10 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleLoginClick = () => {
+    navigate('/login');
+  };
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-md py-3' : 'bg-transparent py-5'}`}>
@@ -45,7 +50,11 @@ const Header = () => {
             בעל מקצוע? הצטרף
           </a>
 
-          <Button variant="ghost" className="hidden md:flex items-center space-x-2 text-blue-700 hover:text-blue-800 hover:bg-blue-50">
+          <Button 
+            variant="ghost" 
+            className="hidden md:flex items-center space-x-2 text-blue-700 hover:text-blue-800 hover:bg-blue-50"
+            onClick={handleLoginClick}
+          >
             <User size={18} />
             <span>כניסה / הרשמה</span>
           </Button>
@@ -79,7 +88,10 @@ const Header = () => {
               בעל מקצוע? הצטרף עכשיו
             </a>
             <div className="py-2">
-              <Button variant="outline" className="w-full justify-center">
+              <Button variant="outline" className="w-full justify-center" onClick={() => {
+                setIsMenuOpen(false);
+                navigate('/login');
+              }}>
                 כניסה / הרשמה
               </Button>
             </div>
