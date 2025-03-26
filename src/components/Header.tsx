@@ -1,12 +1,20 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, User } from 'lucide-react';
+import { Menu, X, User, LogOut, Settings, Inbox, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Simulate auth state
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,8 +25,21 @@ const Header = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Check if user is logged in (this would normally use your auth system)
+  useEffect(() => {
+    // For demo purposes, check localStorage or similar
+    const hasSession = localStorage.getItem('isLoggedIn') === 'true';
+    setIsLoggedIn(hasSession);
+  }, []);
+
   const handleLoginClick = () => {
     navigate('/login');
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    setIsLoggedIn(false);
+    navigate('/');
   };
 
   return (
@@ -45,19 +66,52 @@ const Header = () => {
             href="https://biz.ofair.co.il" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="hidden md:inline-block text-xs text-teal-600 hover:text-teal-700 font-medium py-1 px-2 border border-teal-500 rounded transition-colors"
+            className="hidden md:inline-block text-xs text-teal-600 hover:text-teal-700 py-1 px-2 transition-colors"
           >
             בעל מקצוע? הצטרף
           </a>
 
-          <Button 
-            variant="ghost" 
-            className="hidden md:flex items-center space-x-2 text-blue-700 hover:text-blue-800 hover:bg-blue-50"
-            onClick={handleLoginClick}
-          >
-            <User size={18} />
-            <span>כניסה / הרשמה</span>
-          </Button>
+          {isLoggedIn ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  className="hidden md:flex items-center space-x-2 text-blue-700 hover:text-blue-800 hover:bg-blue-50"
+                >
+                  <UserCircle size={18} />
+                  <span>פרופיל</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>אזור אישי</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/dashboard/requests')}>
+                  <Inbox className="mr-2 h-4 w-4" />
+                  <span>הפניות שלי</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/dashboard/settings')}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>הגדרות</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>יציאה</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button 
+              variant="ghost" 
+              className="hidden md:flex items-center space-x-2 text-blue-700 hover:text-blue-800 hover:bg-blue-50"
+              onClick={handleLoginClick}
+            >
+              <User size={18} />
+              <span>כניסה / הרשמה</span>
+            </Button>
+          )}
 
           <button className="md:hidden text-gray-800" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -88,12 +142,45 @@ const Header = () => {
               בעל מקצוע? הצטרף עכשיו
             </a>
             <div className="py-2">
-              <Button variant="outline" className="w-full justify-center" onClick={() => {
-                setIsMenuOpen(false);
-                navigate('/login');
-              }}>
-                כניסה / הרשמה
-              </Button>
+              {isLoggedIn ? (
+                <div className="space-y-2">
+                  <Button variant="outline" className="w-full justify-start" onClick={() => {
+                    setIsMenuOpen(false);
+                    navigate('/dashboard');
+                  }}>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>אזור אישי</span>
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start" onClick={() => {
+                    setIsMenuOpen(false);
+                    navigate('/dashboard/requests');
+                  }}>
+                    <Inbox className="mr-2 h-4 w-4" />
+                    <span>הפניות שלי</span>
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start" onClick={() => {
+                    setIsMenuOpen(false);
+                    navigate('/dashboard/settings');
+                  }}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>הגדרות</span>
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start text-red-600" onClick={() => {
+                    setIsMenuOpen(false);
+                    handleLogout();
+                  }}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>יציאה</span>
+                  </Button>
+                </div>
+              ) : (
+                <Button variant="outline" className="w-full justify-center" onClick={() => {
+                  setIsMenuOpen(false);
+                  navigate('/login');
+                }}>
+                  כניסה / הרשמה
+                </Button>
+              )}
             </div>
           </div>
         </div>

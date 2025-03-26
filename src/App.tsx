@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import ProfessionalProfile from "./pages/ProfessionalProfile";
 import Articles from "./pages/Articles";
 import About from "./pages/About";
+import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
@@ -22,18 +23,21 @@ const App = () => (
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <TooltipProvider>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/search" element={<Search />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/professional/:id" element={<ProfessionalProfile />} />
-              <Route path="/articles" element={<Articles />} />
-              <Route path="/articles/:id" element={<Articles />} />
-              <Route path="/about" element={<About />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <ScrollToTop />
+            <div className="font-assistant">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/search" element={<Search />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/professional/:id" element={<ProfessionalProfile />} />
+                <Route path="/articles" element={<Articles />} />
+                <Route path="/articles/:id" element={<Articles />} />
+                <Route path="/about" element={<About />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
             <Toaster />
           </TooltipProvider>
         </BrowserRouter>
