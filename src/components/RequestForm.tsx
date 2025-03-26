@@ -1,71 +1,92 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Upload, MapPin, Calendar, Briefcase } from 'lucide-react';
+import { Upload, MapPin, Calendar, Briefcase, UserRound } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-const professions = [{
-  label: 'שיפוצים',
-  value: 'renovations'
-}, {
-  label: 'חשמל',
-  value: 'electricity'
-}, {
-  label: 'אינסטלציה',
-  value: 'plumbing'
-}, {
-  label: 'נגרות',
-  value: 'carpentry'
-}, {
-  label: 'מיזוג אוויר',
-  value: 'air_conditioning'
-}, {
-  label: 'גינון',
-  value: 'gardening'
-}, {
-  label: 'ניקיון',
-  value: 'cleaning'
-}, {
-  label: 'צביעה',
-  value: 'painting'
-}, {
-  label: 'הובלות',
-  value: 'moving'
-}, {
-  label: 'אחר',
-  value: 'other'
-}];
-const locations = [{
-  label: 'תל אביב והמרכז',
-  value: 'tel_aviv'
-}, {
-  label: 'ירושלים והסביבה',
-  value: 'jerusalem'
-}, {
-  label: 'חיפה והצפון',
-  value: 'haifa'
-}, {
-  label: 'באר שבע והדרום',
-  value: 'beer_sheva'
-}, {
-  label: 'אזור השרון',
-  value: 'sharon'
-}, {
-  label: 'השפלה',
-  value: 'shfela'
-}];
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+const professions = [
+  {
+    label: 'שיפוצים',
+    value: 'renovations'
+  },
+  {
+    label: 'חשמל',
+    value: 'electricity'
+  },
+  {
+    label: 'אינסטלציה',
+    value: 'plumbing'
+  },
+  {
+    label: 'נגרות',
+    value: 'carpentry'
+  },
+  {
+    label: 'מיזוג אוויר',
+    value: 'air_conditioning'
+  },
+  {
+    label: 'גינון',
+    value: 'gardening'
+  },
+  {
+    label: 'ניקיון',
+    value: 'cleaning'
+  },
+  {
+    label: 'צביעה',
+    value: 'painting'
+  },
+  {
+    label: 'הובלות',
+    value: 'moving'
+  },
+  {
+    label: 'אחר',
+    value: 'other'
+  }
+];
+
+const locations = [
+  {
+    label: 'תל אביב והמרכז',
+    value: 'tel_aviv'
+  },
+  {
+    label: 'ירושלים והסביבה',
+    value: 'jerusalem'
+  },
+  {
+    label: 'חיפה והצפון',
+    value: 'haifa'
+  },
+  {
+    label: 'באר שבע והדרום',
+    value: 'beer_sheva'
+  },
+  {
+    label: 'אזור השרון',
+    value: 'sharon'
+  },
+  {
+    label: 'השפלה',
+    value: 'shfela'
+  }
+];
+
 const RequestForm = () => {
   const [step, setStep] = useState(1);
   const [images, setImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+  
   const [formData, setFormData] = useState({
     profession: '',
     description: '',
@@ -75,22 +96,52 @@ const RequestForm = () => {
     phone: '',
     email: ''
   });
+  
+  const [loginData, setLoginData] = useState({
+    email: '',
+    password: '',
+    rememberMe: false,
+  });
+  
+  const [registerData, setRegisterData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    passwordConfirm: '',
+    agreeTerms: false,
+  });
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const {
-      name,
-      value
-    } = e.target;
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
   };
+
+  const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setLoginData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+  
+  const handleRegisterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setRegisterData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
   const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
   };
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const fileArray = Array.from(e.target.files);
@@ -100,6 +151,7 @@ const RequestForm = () => {
       setPreviewUrls([...previewUrls, ...newPreviewUrls]);
     }
   };
+
   const removeImage = (index: number) => {
     const newImages = [...images];
     const newPreviewUrls = [...previewUrls];
@@ -111,6 +163,7 @@ const RequestForm = () => {
     setImages(newImages);
     setPreviewUrls(newPreviewUrls);
   };
+
   const handleNext = () => {
     if (step === 1) {
       if (!formData.profession || !formData.description || !formData.location) {
@@ -121,39 +174,80 @@ const RequestForm = () => {
         });
         return;
       }
+      setStep(2);
     }
-    if (step === 2) {
-      if (!formData.contactName || !formData.phone || !formData.email) {
-        toast({
-          title: "נא למלא את כל השדות",
-          description: "אנא מלא את פרטי הקשר שלך לפני שליחת הבקשה",
-          variant: "destructive"
-        });
-        return;
-      }
+  };
 
-      // Here we would normally send the data to the server
-      console.log('Submitting form data:', formData);
-      console.log('Images:', images);
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!loginData.email || !loginData.password) {
       toast({
-        title: "בקשתך נשלחה בהצלחה!",
-        description: "בעלי מקצוע רלוונטיים יצרו איתך קשר בקרוב"
-      });
-
-      // Navigate to dashboard or login page
-      navigate('/login', {
-        state: {
-          fromRequest: true
-        }
+        title: "שדות חסרים",
+        description: "אנא מלא את כל השדות הנדרשים",
+        variant: "destructive",
       });
       return;
     }
-    setStep(step + 1);
+    
+    // Submit the request with the login credentials
+    console.log('Submitting form data with login:', formData, loginData);
+    
+    toast({
+      title: "בקשתך נשלחה בהצלחה!",
+      description: "בעלי מקצוע רלוונטיים יצרו איתך קשר בקרוב"
+    });
+    
+    navigate('/dashboard');
   };
+  
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!registerData.name || !registerData.email || !registerData.password || !registerData.passwordConfirm) {
+      toast({
+        title: "שדות חסרים",
+        description: "אנא מלא את כל השדות הנדרשים",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (registerData.password !== registerData.passwordConfirm) {
+      toast({
+        title: "סיסמאות לא תואמות",
+        description: "אנא ודא שהסיסמאות שהזנת זהות",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!registerData.agreeTerms) {
+      toast({
+        title: "תנאי שימוש",
+        description: "עליך לאשר את תנאי השימוש כדי להמשיך",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Submit the request with the registration data
+    console.log('Submitting form data with registration:', formData, registerData);
+    
+    toast({
+      title: "ההרשמה ובקשתך נשלחו בהצלחה!",
+      description: "בעלי מקצוע רלוונטיים יצרו איתך קשר בקרוב"
+    });
+    
+    navigate('/dashboard');
+  };
+
   const handleBack = () => {
     setStep(step - 1);
   };
-  return <Card className="glass-card overflow-hidden animate-fade-in-up w-full max-w-md mx-auto" aria-labelledby="service-request-form-title">
+
+  return (
+    <Card className="glass-card overflow-hidden animate-fade-in-up w-full max-w-md mx-auto" aria-labelledby="service-request-form-title">
       <div className="p-5 md:p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 id="service-request-form-title" className="text-xl font-bold text-blue-700">
@@ -164,7 +258,8 @@ const RequestForm = () => {
           </div>
         </div>
 
-        {step === 1 ? <div className="space-y-6 animate-fade-in">
+        {step === 1 ? (
+          <div className="space-y-6 animate-fade-in">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="profession" className="text-gray-700">סוג עבודה</Label>
@@ -175,9 +270,11 @@ const RequestForm = () => {
                       <SelectValue placeholder="בחר סוג עבודה" />
                     </SelectTrigger>
                     <SelectContent>
-                      {professions.map(profession => <SelectItem key={profession.value} value={profession.value}>
+                      {professions.map(profession => (
+                        <SelectItem key={profession.value} value={profession.value}>
                           {profession.label}
-                        </SelectItem>)}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -192,9 +289,11 @@ const RequestForm = () => {
                       <SelectValue placeholder="בחר אזור" />
                     </SelectTrigger>
                     <SelectContent>
-                      {locations.map(location => <SelectItem key={location.value} value={location.value}>
+                      {locations.map(location => (
+                        <SelectItem key={location.value} value={location.value}>
                           {location.label}
-                        </SelectItem>)}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -224,55 +323,173 @@ const RequestForm = () => {
                 </label>
               </div>
 
-              {previewUrls.length > 0 && <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                  {previewUrls.map((url, index) => <div key={index} className="relative rounded-md overflow-hidden h-20">
+              {previewUrls.length > 0 && (
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                  {previewUrls.map((url, index) => (
+                    <div key={index} className="relative rounded-md overflow-hidden h-20">
                       <img src={url} alt={`Uploaded ${index}`} className="w-full h-full object-cover" />
                       <button type="button" className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs" onClick={() => removeImage(index)}>
                         ×
                       </button>
-                    </div>)}
-                </div>}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div> : <div className="space-y-6 animate-fade-in">
-            <h3 className="text-lg font-medium text-gray-700">פרטי התקשרות</h3>
-            
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="contactName" className="text-gray-700">שם מלא</Label>
-                <Input id="contactName" name="contactName" placeholder="הזן את שמך המלא" value={formData.contactName} onChange={handleInputChange} />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="phone" className="text-gray-700">טלפון</Label>
-                <Input id="phone" name="phone" placeholder="הזן מספר טלפון" value={formData.phone} onChange={handleInputChange} />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-gray-700">דוא"ל</Label>
-                <Input id="email" name="email" placeholder="הזן כתובת דואל" value={formData.email} onChange={handleInputChange} type="email" />
-              </div>
+          </div>
+        ) : (
+          <div className="space-y-6 animate-fade-in">
+            <div className="text-center mb-4">
+              <UserRound className="mx-auto h-12 w-12 text-blue-500 mb-2" />
+              <h3 className="text-lg font-medium text-gray-700">כניסה או הרשמה לשליחת הבקשה</h3>
+              <p className="text-sm text-gray-500">התחבר או הירשם כדי לקבל הצעות מחיר מבעלי מקצוע</p>
             </div>
             
-            <div className="text-sm text-gray-500 mt-4">
-              בלחיצה על "שלח" אתה מאשר את
-              <a href="/terms" className="text-teal-500 mx-1 hover:underline">תנאי השימוש</a>
-              ואת
-              <a href="/privacy" className="text-teal-500 mx-1 hover:underline">מדיניות הפרטיות</a>
-              של האתר
-            </div>
-          </div>}
+            <Tabs defaultValue="login" className="w-full">
+              <TabsList className="grid grid-cols-2 w-full">
+                <TabsTrigger value="login">התחברות</TabsTrigger>
+                <TabsTrigger value="register">הרשמה</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="login">
+                <form onSubmit={handleLogin} className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email">דוא"ל</Label>
+                    <Input 
+                      id="login-email" 
+                      name="email"
+                      type="email" 
+                      placeholder="הזן את כתובת הדואל שלך"
+                      value={loginData.email}
+                      onChange={handleLoginChange}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <Label htmlFor="login-password">סיסמה</Label>
+                      <Link to="/forgot-password" className="text-xs text-teal-500 hover:text-teal-600">
+                        שכחת סיסמה?
+                      </Link>
+                    </div>
+                    <Input 
+                      id="login-password" 
+                      name="password"
+                      type="password" 
+                      placeholder="הזן את הסיסמה שלך"
+                      value={loginData.password}
+                      onChange={handleLoginChange}
+                    />
+                  </div>
+                  
+                  <Button 
+                    type="submit"
+                    className="w-full bg-teal-500 hover:bg-teal-600 text-white mt-4"
+                  >
+                    התחבר ושלח בקשה
+                  </Button>
+                </form>
+              </TabsContent>
+              
+              <TabsContent value="register">
+                <form onSubmit={handleRegister} className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="register-name">שם מלא</Label>
+                    <Input 
+                      id="register-name" 
+                      name="name"
+                      placeholder="הזן את שמך המלא"
+                      value={registerData.name}
+                      onChange={handleRegisterChange}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="register-email">דוא"ל</Label>
+                    <Input 
+                      id="register-email" 
+                      name="email"
+                      type="email" 
+                      placeholder="הזן את כתובת הדואל שלך"
+                      value={registerData.email}
+                      onChange={handleRegisterChange}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="register-password">סיסמה</Label>
+                    <Input 
+                      id="register-password" 
+                      name="password"
+                      type="password" 
+                      placeholder="בחר סיסמה (לפחות 8 תווים)"
+                      value={registerData.password}
+                      onChange={handleRegisterChange}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="register-password-confirm">אימות סיסמה</Label>
+                    <Input 
+                      id="register-password-confirm" 
+                      name="passwordConfirm"
+                      type="password" 
+                      placeholder="הזן שוב את הסיסמה"
+                      value={registerData.passwordConfirm}
+                      onChange={handleRegisterChange}
+                    />
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 space-x-reverse mt-2">
+                    <input 
+                      type="checkbox" 
+                      id="agree-terms" 
+                      name="agreeTerms"
+                      checked={registerData.agreeTerms}
+                      onChange={handleRegisterChange}
+                      className="rounded border-gray-300 text-teal-500 focus:ring-teal-500"
+                    />
+                    <Label htmlFor="agree-terms" className="text-sm cursor-pointer">
+                      אני מסכים/ה ל
+                      <Link to="/terms" className="text-teal-500 mx-1 hover:underline">
+                        תנאי השימוש
+                      </Link>
+                      ול
+                      <Link to="/privacy" className="text-teal-500 mx-1 hover:underline">
+                        מדיניות הפרטיות
+                      </Link>
+                    </Label>
+                  </div>
+                  
+                  <Button 
+                    type="submit"
+                    className="w-full bg-teal-500 hover:bg-teal-600 text-white mt-4"
+                  >
+                    הרשם ושלח בקשה
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
 
         <div className="flex justify-between mt-8">
-          {step > 1 && <Button type="button" variant="outline" onClick={handleBack} className="border-teal-500 text-teal-500 hover:bg-teal-50">
+          {step > 1 && (
+            <Button type="button" variant="outline" onClick={handleBack} className="border-teal-500 text-teal-500 hover:bg-teal-50">
               חזרה
-            </Button>}
-          <div className={step === 1 ? 'ml-auto' : ''}>
-            <Button type="button" onClick={handleNext} className="bg-teal-500 hover:bg-teal-600 text-center px-[73px] mx-[65px]">
-              {step === 2 ? 'שלח בקשה' : 'המשך'}
             </Button>
-          </div>
+          )}
+          {step === 1 && (
+            <div className="ml-auto">
+              <Button type="button" onClick={handleNext} className="bg-teal-500 hover:bg-teal-600">
+                המשך
+              </Button>
+            </div>
+          )}
         </div>
       </div>
-    </Card>;
+    </Card>
+  );
 };
+
 export default RequestForm;

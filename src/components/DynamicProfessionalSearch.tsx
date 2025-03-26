@@ -47,8 +47,8 @@ const DynamicProfessionalSearch: React.FC<DynamicProfessionalSearchProps> = ({ c
   const [showCitySuggestions, setShowCitySuggestions] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
-  const categoryInputRef = useRef<HTMLInputElement>(null);
-  const cityInputRef = useRef<HTMLInputElement>(null);
+  const categoryInputRef = useRef<HTMLDivElement>(null);
+  const cityInputRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -102,7 +102,7 @@ const DynamicProfessionalSearch: React.FC<DynamicProfessionalSearchProps> = ({ c
   };
 
   return (
-    <Card className={`glass-card bg-blue-50/70 overflow-hidden animate-fade-in-up ${className}`} aria-labelledby="dynamic-search-form-title">
+    <Card className={`glass-card bg-blue-50/70 border shadow-md overflow-visible animate-fade-in-up ${className}`} aria-labelledby="dynamic-search-form-title">
       <div className="p-5 md:p-6">
         <h2 id="dynamic-search-form-title" className="text-xl font-bold text-blue-700 mb-4">
           <span className="text-blue-500">חיפוש</span> בעלי מקצוע לפי עיר
@@ -128,7 +128,7 @@ const DynamicProfessionalSearch: React.FC<DynamicProfessionalSearchProps> = ({ c
                 className="pl-10"
               />
               {showCategorySuggestions && (
-                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200 max-h-60 overflow-y-auto">
+                <div className="absolute z-50 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200 max-h-60 overflow-y-auto">
                   {filteredCategories.length > 0 ? (
                     filteredCategories.map((category) => (
                       <div
@@ -166,7 +166,7 @@ const DynamicProfessionalSearch: React.FC<DynamicProfessionalSearchProps> = ({ c
                 className="pl-10"
               />
               {showCitySuggestions && (
-                <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200 max-h-60 overflow-y-auto">
+                <div className="absolute z-50 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200 max-h-60 overflow-y-auto">
                   {filteredCities.length > 0 ? (
                     filteredCities.map((city) => (
                       <div

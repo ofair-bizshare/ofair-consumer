@@ -24,9 +24,6 @@ const Header = () => {
         </Link>
 
         <nav className="hidden md:flex mx-0 px-0">
-          <Link to="/" className="text-gray-800 hover:text-teal-500 transition-colors mx-[35px]">
-            דף הבית
-          </Link>
           <Link to="/search" className="text-gray-800 hover:text-teal-500 transition-colors mx-[29px]">
             חיפוש בעלי מקצוע
           </Link>
@@ -43,9 +40,9 @@ const Header = () => {
             href="https://biz.ofair.co.il" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="hidden md:inline-block bg-teal-500 hover:bg-teal-600 text-white font-medium py-1.5 px-3 rounded-lg transition-colors text-sm"
+            className="hidden md:inline-block text-sm text-teal-600 hover:text-teal-700 font-medium py-1 px-2 border border-teal-500 rounded transition-colors"
           >
-            בעל מקצוע? הצטרף עכשיו
+            בעל מקצוע? הצטרף
           </a>
 
           <Button variant="ghost" className="hidden md:flex items-center space-x-2 text-blue-700 hover:text-blue-800 hover:bg-blue-50">
@@ -63,9 +60,6 @@ const Header = () => {
       {isMenuOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 bg-white shadow-lg border-t border-gray-100 animate-fade-in-down">
           <div className="container mx-auto px-6 py-4 flex flex-col space-y-4">
-            <Link to="/" className="text-gray-800 py-2 border-b border-gray-100" onClick={() => setIsMenuOpen(false)}>
-              דף הבית
-            </Link>
             <Link to="/search" className="text-gray-800 py-2 border-b border-gray-100" onClick={() => setIsMenuOpen(false)}>
               חיפוש בעלי מקצוע
             </Link>
