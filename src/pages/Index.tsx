@@ -93,40 +93,46 @@ const Index = () => {
         <div className="absolute inset-0 z-[-1] opacity-70 bg-[url('https://images.unsplash.com/photo-1600607687644-c7e39cf7d8b7?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80')] bg-cover bg-center"></div>
         <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-[-1]"></div>
         
-        <div className="container mx-auto px-6 flex flex-col lg:flex-row items-center">
-          <div className="w-full lg:w-1/2 mb-12 lg:mb-0 animate-fade-in-up">
-            <div className="text-base font-semibold text-teal-500 mb-3">oFair - הפתרון המושלם לבעלי בתים</div>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-blue-800 mb-4 leading-tight">
-              מצאו את 
-              <span className="text-teal-500 mx-2">בעל המקצוע</span>
-              המושלם לכל עבודה
-            </h1>
-            <p className="text-lg text-gray-700 mb-6">
-              פלטפורמה חינמית המחברת בין בעלי בתים לבעלי מקצוע מובילים בתחומם. קבלו הצעות מחיר ללא התחייבות ובחרו את המקצוען הנכון עבורכם.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Link to="#request-form">
-                <Button size="lg" className="bg-teal-600 hover:bg-teal-700 text-white button-transition flex items-center gap-2 shadow-md">
-                  <FileText size={20} />
-                  שליחת פנייה לבעלי מקצוע
-                </Button>
-              </Link>
-              <Link to="/search">
-                <Button size="lg" variant="outline" className="border-blue-500 text-blue-700 hover:bg-blue-50 button-transition flex items-center gap-2">
-                  <Search size={20} />
-                  חיפוש בעלי מקצוע
-                </Button>
-              </Link>
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col lg:flex-row items-start gap-8">
+            {/* Left side - Text content */}
+            <div className="w-full lg:w-1/2 animate-fade-in-up">
+              <div className="text-base font-semibold text-teal-500 mb-3">oFair - הפתרון המושלם לבעלי בתים</div>
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-blue-800 mb-4 leading-tight">
+                מצאו את 
+                <span className="text-teal-500 mx-2">בעל המקצוע</span>
+                המושלם לכל עבודה
+              </h1>
+              <p className="text-lg text-gray-700 mb-6">
+                פלטפורמה חינמית המחברת בין בעלי בתים לבעלי מקצוע מובילים בתחומם. קבלו הצעות מחיר ללא התחייבות ובחרו את המקצוען הנכון עבורכם.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link to="#request-form">
+                  <Button size="lg" className="bg-teal-600 hover:bg-teal-700 text-white button-transition flex items-center gap-2 shadow-md">
+                    <FileText size={20} />
+                    שליחת פנייה לבעלי מקצוע
+                  </Button>
+                </Link>
+                <Link to="/search">
+                  <Button size="lg" variant="outline" className="border-blue-500 text-blue-700 hover:bg-blue-50 button-transition flex items-center gap-2">
+                    <Search size={20} />
+                    חיפוש בעלי מקצוע
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            
+            {/* Right side - Form */}
+            <div className="w-full lg:w-1/2 animate-fade-in">
+              <div id="request-form">
+                <RequestForm />
+              </div>
             </div>
           </div>
           
-          <div className="w-full lg:w-1/2 lg:px-6 animate-fade-in flex flex-col items-center">
-            <div id="request-form">
-              <RequestForm />
-            </div>
-            <div className="mt-8 w-full">
-              <DynamicProfessionalSearch />
-            </div>
+          {/* Move the search below both the text and form */}
+          <div className="mt-12 animate-fade-in">
+            <DynamicProfessionalSearch />
           </div>
         </div>
       </section>

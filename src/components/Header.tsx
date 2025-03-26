@@ -43,7 +43,7 @@ const Header = () => {
             href="https://biz.ofair.co.il" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="hidden md:inline-block bg-teal-500 hover:bg-teal-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            className="hidden md:inline-block bg-teal-500 hover:bg-teal-600 text-white font-medium py-1.5 px-3 rounded-lg transition-colors text-sm"
           >
             בעל מקצוע? הצטרף עכשיו
           </a>
