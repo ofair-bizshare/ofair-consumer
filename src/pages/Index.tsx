@@ -1,13 +1,14 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import RequestForm from '@/components/RequestForm';
+import ProfessionalSearchByLocation from '@/components/ProfessionalSearchByLocation';
 import ProfessionalCard from '@/components/ProfessionalCard';
 import ArticleCard from '@/components/ArticleCard';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Star, Shield, Clock, CheckCircle } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 
 // Sample data for the professionals
 const professionals = [
@@ -69,6 +70,20 @@ const articles = [
 const Index = () => {
   return (
     <div className="flex flex-col min-h-screen" dir="rtl">
+      <Helmet>
+        <title>oFair - מציאת בעלי מקצוע מובילים בכל תחום | פלטפורמת חיבור בין לקוחות למקצוענים</title>
+        <meta name="description" content="פלטפורמה חינמית המחברת בין בעלי בתים לבעלי מקצוע אמינים ומקצועיים. קבלו הצעות מחיר ללא התחייבות ובחרו את המקצוען הנכון עבורכם." />
+        <meta name="keywords" content="בעלי מקצוע, שיפוצים, חשמלאי, אינסטלציה, נגרות, גינון, ניקיון, צביעה, הובלות, מיזוג אוויר, תיקונים, שירותי בית" />
+        <meta property="og:title" content="oFair - מצא בעלי מקצוע מובילים לכל עבודה" />
+        <meta property="og:description" content="פלטפורמה חינמית המחברת בין צרכנים לבעלי מקצוע מובילים בתחומם. קבלו הצעות מחיר ללא התחייבות." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://ofair.co.il" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="oFair - מצא בעלי מקצוע מובילים לכל עבודה" />
+        <meta name="twitter:description" content="פלטפורמה חינמית המחברת בין צרכנים לבעלי מקצוע מובילים בתחומם. קבלו הצעות מחיר ללא התחייבות." />
+        <link rel="canonical" href="https://ofair.co.il" />
+      </Helmet>
+      
       <Header />
       
       {/* Hero Section */}
@@ -78,9 +93,9 @@ const Index = () => {
         <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-[-1]"></div>
         
         <div className="container mx-auto px-6 flex flex-col lg:flex-row items-center">
-          <div className="w-full lg:w-2/5 mb-12 lg:mb-0 animate-fade-in-up">
+          <div className="w-full lg:w-1/2 mb-12 lg:mb-0 animate-fade-in-up">
             <div className="text-base font-semibold text-teal-500 mb-3">oFair - הפתרון המושלם לבעלי בתים</div>
-            <h1 className="text-4xl md:text-5xl font-bold text-blue-800 mb-4 leading-tight">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-blue-800 mb-4 leading-tight">
               מצאו את 
               <span className="text-teal-500 mx-2">בעל המקצוע</span>
               המושלם לכל עבודה
@@ -94,16 +109,12 @@ const Index = () => {
                   חיפוש בעלי מקצוע
                 </Button>
               </Link>
-              <a href="https://biz.ofair.co.il" target="_blank" rel="noopener noreferrer">
-                <Button variant="outline" size="lg" className="border-blue-700 text-blue-700 hover:bg-blue-50 button-transition">
-                  אני בעל מקצוע
-                </Button>
-              </a>
             </div>
           </div>
           
-          <div className="w-full lg:w-3/5 lg:pr-12 animate-fade-in">
+          <div className="w-full lg:w-1/2 lg:px-6 animate-fade-in flex flex-col items-center">
             <RequestForm />
+            <ProfessionalSearchByLocation />
           </div>
         </div>
       </section>

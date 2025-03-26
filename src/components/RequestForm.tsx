@@ -128,10 +128,10 @@ const RequestForm = () => {
   };
 
   return (
-    <Card className="glass-card overflow-hidden animate-fade-in-up w-full max-w-3xl mx-auto">
-      <div className="p-6 md:p-8">
+    <Card className="glass-card overflow-hidden animate-fade-in-up w-full max-w-xl mx-auto" aria-labelledby="service-request-form-title">
+      <div className="p-5 md:p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-blue-700">
+          <h2 id="service-request-form-title" className="text-xl font-bold text-blue-700">
             <span className="text-teal-500">שליחת</span> בקשה לבעלי מקצוע
           </h2>
           <div className="text-sm text-gray-500">
