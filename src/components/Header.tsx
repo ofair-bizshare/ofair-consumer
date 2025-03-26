@@ -1,10 +1,13 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
@@ -12,13 +15,15 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-  return <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-md py-3' : 'bg-transparent py-5'}`}>
+
+  return (
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-md py-3' : 'bg-transparent py-5'}`}>
       <div className="container mx-auto flex items-center justify-between px-[32px]">
         <Link to="/" className="flex items-center">
           <img alt="Ofair Logo" src="/lovable-uploads/52b937d1-acd7-4831-b19e-79a55a774829.png" className="h-7 animate-fade-in object-contain" />
         </Link>
 
-        <nav className="mx-0 px-0">
+        <nav className="hidden md:flex mx-0 px-0">
           <Link to="/" className="text-gray-800 hover:text-teal-500 transition-colors mx-[35px]">
             דף הבית
           </Link>
@@ -33,7 +38,16 @@ const Header = () => {
           </Link>
         </nav>
 
-        <div className="flex items-center space-x-4 animate-fade-in">
+        <div className="flex items-center gap-4 animate-fade-in">
+          <a 
+            href="https://biz.ofair.co.il" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="hidden md:inline-block bg-teal-500 hover:bg-teal-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+          >
+            בעל מקצוע? הצטרף עכשיו
+          </a>
+
           <Button variant="ghost" className="hidden md:flex items-center space-x-2 text-blue-700 hover:text-blue-800 hover:bg-blue-50">
             <User size={18} />
             <span>כניסה / הרשמה</span>
@@ -46,7 +60,8 @@ const Header = () => {
       </div>
 
       {/* Mobile menu */}
-      {isMenuOpen && <div className="md:hidden absolute top-full left-0 right-0 bg-white shadow-lg border-t border-gray-100 animate-fade-in-down">
+      {isMenuOpen && (
+        <div className="md:hidden absolute top-full left-0 right-0 bg-white shadow-lg border-t border-gray-100 animate-fade-in-down">
           <div className="container mx-auto px-6 py-4 flex flex-col space-y-4">
             <Link to="/" className="text-gray-800 py-2 border-b border-gray-100" onClick={() => setIsMenuOpen(false)}>
               דף הבית
@@ -60,13 +75,25 @@ const Header = () => {
             <Link to="/about" className="text-gray-800 py-2 border-b border-gray-100" onClick={() => setIsMenuOpen(false)}>
               אודות
             </Link>
+            <a 
+              href="https://biz.ofair.co.il" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-gray-800 py-2 border-b border-gray-100 text-teal-500 font-medium"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              בעל מקצוע? הצטרף עכשיו
+            </a>
             <div className="py-2">
               <Button variant="outline" className="w-full justify-center">
                 כניסה / הרשמה
               </Button>
             </div>
           </div>
-        </div>}
-    </header>;
+        </div>
+      )}
+    </header>
+  );
 };
+
 export default Header;

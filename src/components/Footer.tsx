@@ -56,7 +56,7 @@ const Footer = () => {
                 דוא"ל: info@ofair.co.il
               </li>
               <li className="text-blue-100">
-                טלפון: 03-1234567
+                טלפון: 0505-5524542
               </li>
             </ul>
             <div className="mt-6">
