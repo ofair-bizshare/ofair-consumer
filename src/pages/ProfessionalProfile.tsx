@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { 
   User, Phone, Mail, MapPin, Calendar, Star, 
-  CheckCircle, Briefcase, Certificate, Clock 
+  CheckCircle, Briefcase, Award, Clock 
 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -141,7 +141,7 @@ const ProfessionalProfile = () => {
                 <div className="space-y-2">
                   {professional.certifications.map((cert, index) => (
                     <div key={index} className="flex items-center">
-                      <Certificate className="h-4 w-4 text-gray-500 ml-2" />
+                      <Award className="h-4 w-4 text-gray-500 ml-2" />
                       <span>{cert}</span>
                     </div>
                   ))}
