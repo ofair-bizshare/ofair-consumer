@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, User, LogOut, Settings, Inbox, UserCircle, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,6 +15,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Simulate auth state
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -42,6 +42,17 @@ const Header = () => {
     navigate('/');
   };
 
+  const handleSendRequest = () => {
+    if (location.pathname === '/') {
+      const formSection = document.getElementById('request-form-section');
+      if (formSection) {
+        formSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      navigate('/#request-form-section');
+    }
+  };
+
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-md py-3' : 'bg-transparent py-5'}`}>
       <div className="container mx-auto flex items-center justify-between px-[32px]">
@@ -50,12 +61,15 @@ const Header = () => {
         </Link>
 
         <nav className="hidden md:flex mx-0 px-0">
-          <Link to="/" className="text-gray-800 hover:text-teal-500 transition-colors mx-[20px]">
+          <button 
+            onClick={handleSendRequest}
+            className="text-gray-800 hover:text-teal-500 transition-colors mx-[20px] bg-transparent border-none cursor-pointer"
+          >
             <span className="flex items-center">
               <Send size={18} className="ml-1" />
               <span className="font-medium text-teal-600">שליחת פניה</span>
             </span>
-          </Link>
+          </button>
           <Link to="/search" className="text-gray-800 hover:text-teal-500 transition-colors mx-[23px]">
             חיפוש בעלי מקצוע
           </Link>
@@ -129,11 +143,14 @@ const Header = () => {
       {isMenuOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 bg-white shadow-lg border-t border-gray-100 animate-fade-in-down">
           <div className="container mx-auto px-6 py-4 flex flex-col space-y-4">
-            <Link to="/" className="text-teal-600 font-medium py-2 border-b border-gray-100 flex items-center" onClick={() => setIsMenuOpen(false)}>
+            <button
+              onClick={handleSendRequest}
+              className="text-teal-600 font-medium py-2 border-b border-gray-100 flex items-center bg-transparent border-none text-right w-full"
+            >
               <Send size={18} className="ml-2" />
               שליחת פניה
-            </Link>
-            <Link to="/search" className="text-gray-800 py-2 border-b border-gray-100" onClick={() => setIsMenuOpen(false)}>
+            </button>
+            <Link to="/" className="text-gray-800 py-2 border-b border-gray-100" onClick={() => setIsMenuOpen(false)}>
               חיפוש בעלי מקצוע
             </Link>
             <Link to="/articles" className="text-gray-800 py-2 border-b border-gray-100" onClick={() => setIsMenuOpen(false)}>

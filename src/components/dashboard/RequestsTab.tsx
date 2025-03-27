@@ -70,7 +70,7 @@ const RequestsTab: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col-reverse lg:flex-row gap-8">
+    <div className="flex flex-col-reverse lg:flex-row-reverse gap-8">
       <div className="w-full lg:w-1/3">
         <div className="mb-6 flex justify-between items-center">
           <h2 className="text-xl font-semibold text-blue-700">הבקשות שלי</h2>
@@ -101,7 +101,7 @@ const RequestsTab: React.FC = () => {
             <MessageSquare className="h-12 w-12 text-blue-200 mb-4" />
             <h3 className="text-xl font-semibold text-blue-700 mb-2">בחר בקשה לצפייה</h3>
             <p className="text-gray-600 mb-6 max-w-md">
-              בחר אחת מהבקשות מהרשימה משמאל כדי לצפות בפרטים ובהצעות המחיר שהתקבלו
+              בחר אחת מהבקשות מהרשימה מימין כדי לצפות בפרטים ובהצעות המחיר שהתקבלו
             </p>
             <RequestDialog 
               isOpen={isRequestDialogOpen} 
