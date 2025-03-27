@@ -332,6 +332,26 @@ const Dashboard = () => {
     });
   };
 
+  const handleRejectQuote = (quoteId: string) => {
+    setQuotesData(prevQuotes => 
+      prevQuotes.map(quote => 
+        quote.id === quoteId 
+          ? { ...quote, status: 'rejected' } 
+          : quote
+      )
+    );
+    
+    toast({
+      title: "הצעה נדחתה",
+      description: "הודעה נשלחה לבעל המקצוע.",
+      variant: "default",
+    });
+  };
+
+  const handleViewProfile = (professionalId: string) => {
+    window.open(`/professional/${professionalId}`, '_blank');
+  };
+
   return (
     <div className="flex flex-col min-h-screen" dir="rtl">
       <Header />
