@@ -130,7 +130,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
                 {quote.status === 'rejected' && (
                   <span className="text-sm text-gray-500">הצעה נדחתה</span>
                 )}
-                {hasAcceptedQuote && quote.status !== 'rejected' && quote.status !== 'accepted' && (
+                {hasAcceptedQuote && quote.status === 'pending' && (
                   <span className="text-sm text-gray-500">הצעה אחרת התקבלה</span>
                 )}
               </>
