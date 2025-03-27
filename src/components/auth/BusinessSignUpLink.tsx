@@ -14,7 +14,7 @@ const BusinessSignUpLink: React.FC = () => {
         >
           לחץ כאן
         </a>
-        להרשמה כנותן שירות
+        {" "}להרשמה כנותן שירות
       </p>
     </div>
   );
