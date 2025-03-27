@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PhoneIcon } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import PhoneVerification from './PhoneVerification';
 
 interface RegisterFormProps {
   registerData: {
@@ -35,6 +36,19 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
   handlePhoneLogin,
   handleGoogleLogin
 }) => {
+  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
+
+  const onPhoneLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await handlePhoneLogin(e);
+    setShowPhoneVerification(true);
+  };
+
+  const handleVerificationComplete = () => {
+    // After successful verification, we don't need to do anything 
+    // as the auth state change will trigger a redirect
+  };
+
   return (
     <>
       {/* Social registration button */}
@@ -63,126 +77,135 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
         </div>
       </div>
 
-      <form onSubmit={handleRegister}>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="register-name">שם מלא</Label>
-            <Input 
-              id="register-name" 
-              name="name"
-              placeholder="הזן את שמך המלא"
-              value={registerData.name}
-              onChange={handleRegisterChange}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="register-email">דוא"ל</Label>
-            <Input 
-              id="register-email" 
-              name="email"
-              type="email" 
-              placeholder="הזן את כתובת הדואל שלך"
-              value={registerData.email}
-              onChange={handleRegisterChange}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="register-password">סיסמה</Label>
-            <Input 
-              id="register-password" 
-              name="password"
-              type="password" 
-              placeholder="בחר סיסמה (לפחות 8 תווים)"
-              value={registerData.password}
-              onChange={handleRegisterChange}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="register-password-confirm">אימות סיסמה</Label>
-            <Input 
-              id="register-password-confirm" 
-              name="passwordConfirm"
-              type="password" 
-              placeholder="הזן שוב את הסיסמה"
-              value={registerData.passwordConfirm}
-              onChange={handleRegisterChange}
-            />
-          </div>
-          
-          <div className="flex items-center space-x-2 space-x-reverse">
-            <Checkbox 
-              id="agree-terms" 
-              name="agreeTerms"
-              checked={registerData.agreeTerms}
-              onCheckedChange={(checked) => 
-                handleRegisterChange({
-                  target: { name: 'agreeTerms', checked: checked === true, type: 'checkbox', value: '' }
-                } as React.ChangeEvent<HTMLInputElement>)
-              }
-            />
-            <Label htmlFor="agree-terms" className="text-sm cursor-pointer">
-              אני מסכים/ה ל
-              <Link to="/terms" className="text-teal-500 mx-1 hover:underline">
-                תנאי השימוש
-              </Link>
-              ול
-              <Link to="/privacy" className="text-teal-500 mx-1 hover:underline">
-                מדיניות הפרטיות
-              </Link>
-            </Label>
-          </div>
-          
-          <Button 
-            type="submit"
-            className="w-full bg-teal-500 hover:bg-teal-600 text-white"
-          >
-            הרשמה
-          </Button>
-        </div>
-      </form>
+      {showPhoneVerification ? (
+        <PhoneVerification 
+          phone={phoneData.phone} 
+          onVerified={handleVerificationComplete} 
+        />
+      ) : (
+        <>
+          <form onSubmit={handleRegister}>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="register-name">שם מלא</Label>
+                <Input 
+                  id="register-name" 
+                  name="name"
+                  placeholder="הזן את שמך המלא"
+                  value={registerData.name}
+                  onChange={handleRegisterChange}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="register-email">דוא"ל</Label>
+                <Input 
+                  id="register-email" 
+                  name="email"
+                  type="email" 
+                  placeholder="הזן את כתובת הדואל שלך"
+                  value={registerData.email}
+                  onChange={handleRegisterChange}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="register-password">סיסמה</Label>
+                <Input 
+                  id="register-password" 
+                  name="password"
+                  type="password" 
+                  placeholder="בחר סיסמה (לפחות 8 תווים)"
+                  value={registerData.password}
+                  onChange={handleRegisterChange}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="register-password-confirm">אימות סיסמה</Label>
+                <Input 
+                  id="register-password-confirm" 
+                  name="passwordConfirm"
+                  type="password" 
+                  placeholder="הזן שוב את הסיסמה"
+                  value={registerData.passwordConfirm}
+                  onChange={handleRegisterChange}
+                />
+              </div>
+              
+              <div className="flex items-center space-x-2 space-x-reverse">
+                <Checkbox 
+                  id="agree-terms" 
+                  name="agreeTerms"
+                  checked={registerData.agreeTerms}
+                  onCheckedChange={(checked) => 
+                    handleRegisterChange({
+                      target: { name: 'agreeTerms', checked: checked === true, type: 'checkbox', value: '' }
+                    } as React.ChangeEvent<HTMLInputElement>)
+                  }
+                />
+                <Label htmlFor="agree-terms" className="text-sm cursor-pointer">
+                  אני מסכים/ה ל
+                  <Link to="/terms" className="text-teal-500 mx-1 hover:underline">
+                    תנאי השימוש
+                  </Link>
+                  ול
+                  <Link to="/privacy" className="text-teal-500 mx-1 hover:underline">
+                    מדיניות הפרטיות
+                  </Link>
+                </Label>
+              </div>
+              
+              <Button 
+                type="submit"
+                className="w-full bg-teal-500 hover:bg-teal-600 text-white"
+              >
+                הרשמה
+              </Button>
+            </div>
+          </form>
 
-      <div className="relative pt-2">
-        <div className="absolute inset-0 flex items-center">
-          <Separator />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            או הרשמה עם טלפון
-          </span>
-        </div>
-      </div>
-
-      <form onSubmit={handlePhoneLogin} className="pt-2">
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="register-phone">מספר טלפון</Label>
-            <div className="relative">
-              <PhoneIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-              <Input 
-                id="register-phone" 
-                name="phone"
-                type="tel" 
-                dir="ltr"
-                className="text-left pr-10"
-                placeholder="05X-XXX-XXXX"
-                value={phoneData.phone}
-                onChange={handlePhoneChange}
-              />
+          <div className="relative pt-2">
+            <div className="absolute inset-0 flex items-center">
+              <Separator />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                או הרשמה עם טלפון
+              </span>
             </div>
           </div>
-          
-          <Button 
-            type="submit"
-            variant="outline"
-            className="w-full"
-          >
-            שלח קוד אימות
-          </Button>
-        </div>
-      </form>
+
+          <form onSubmit={onPhoneLoginSubmit} className="pt-2">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="register-phone">מספר טלפון</Label>
+                <div className="relative">
+                  <PhoneIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                  <Input 
+                    id="register-phone" 
+                    name="phone"
+                    type="tel" 
+                    dir="ltr"
+                    className="text-left pr-10"
+                    placeholder="05X-XXX-XXXX"
+                    value={phoneData.phone}
+                    onChange={handlePhoneChange}
+                  />
+                </div>
+              </div>
+              
+              <Button 
+                type="submit"
+                variant="outline"
+                className="w-full"
+              >
+                שלח קוד אימות
+              </Button>
+            </div>
+          </form>
+        </>
+      )}
     </>
   );
 };

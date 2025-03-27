@@ -11,6 +11,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<{ error: any | null }>;
   signInWithGoogle: () => Promise<{ error: any | null }>;
   signInWithPhone: (phone: string) => Promise<{ error: any | null }>;
+  verifyOtp: (phone: string, token: string) => Promise<{ error: any | null }>;
   signUp: (email: string, password: string, metadata?: { [key: string]: any }) => Promise<{ error: any | null }>;
   signOut: () => Promise<void>;
 };
@@ -96,8 +97,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithPhone = async (phone: string) => {
     try {
+      // Format phone number to E.164 format if needed
+      let formattedPhone = phone;
+      if (!phone.startsWith('+')) {
+        // Israeli phone numbers: add +972 prefix and remove leading 0
+        if (phone.startsWith('0')) {
+          formattedPhone = '+972' + phone.substring(1);
+        } else {
+          formattedPhone = '+' + phone;
+        }
+      }
+
       const { error } = await supabase.auth.signInWithOtp({
-        phone,
+        phone: formattedPhone,
       });
       if (error) throw error;
       return { error: null };
@@ -106,6 +118,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast({
         title: "שליחת קוד אימות נכשלה",
         description: error.message || "אירעה שגיאה בשליחת קוד האימות, אנא נסה שוב",
+        variant: "destructive",
+      });
+      return { error };
+    }
+  };
+
+  const verifyOtp = async (phone: string, token: string) => {
+    try {
+      // Format phone number to E.164 format if needed
+      let formattedPhone = phone;
+      if (!phone.startsWith('+')) {
+        // Israeli phone numbers: add +972 prefix and remove leading 0
+        if (phone.startsWith('0')) {
+          formattedPhone = '+972' + phone.substring(1);
+        } else {
+          formattedPhone = '+' + phone;
+        }
+      }
+
+      const { error } = await supabase.auth.verifyOtp({
+        phone: formattedPhone,
+        token,
+        type: 'sms',
+      });
+      if (error) throw error;
+      return { error: null };
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
+      toast({
+        title: "אימות קוד נכשל",
+        description: error.message || "אירעה שגיאה באימות הקוד, אנא נסה שוב",
         variant: "destructive",
       });
       return { error };
@@ -156,6 +199,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signInWithGoogle,
     signInWithPhone,
+    verifyOtp,
     signUp,
     signOut,
   };

@@ -1,13 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useToast } from '@/hooks/use-toast';
 import { PhoneIcon } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import PhoneVerification from './PhoneVerification';
 
 interface LoginFormProps {
   loginData: {
@@ -34,6 +34,19 @@ const LoginForm: React.FC<LoginFormProps> = ({
   handlePhoneLogin,
   handleGoogleLogin
 }) => {
+  const [showPhoneVerification, setShowPhoneVerification] = useState(false);
+
+  const onPhoneLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await handlePhoneLogin(e);
+    setShowPhoneVerification(true);
+  };
+
+  const handleVerificationComplete = () => {
+    // After successful verification, we don't need to do anything 
+    // as the auth state change will trigger a redirect
+  };
+
   return (
     <>
       {/* Social login buttons */}
@@ -62,101 +75,110 @@ const LoginForm: React.FC<LoginFormProps> = ({
         </div>
       </div>
 
-      <form onSubmit={handleLogin}>
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="login-email">דוא"ל</Label>
-            <Input 
-              id="login-email" 
-              name="email"
-              type="email" 
-              placeholder="הזן את כתובת הדואל שלך"
-              value={loginData.email}
-              onChange={handleLoginChange}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <Label htmlFor="login-password">סיסמה</Label>
-              <Link to="/forgot-password" className="text-xs text-teal-500 hover:text-teal-600">
-                שכחת סיסמה?
-              </Link>
+      {showPhoneVerification ? (
+        <PhoneVerification 
+          phone={phoneData.phone} 
+          onVerified={handleVerificationComplete} 
+        />
+      ) : (
+        <>
+          <form onSubmit={handleLogin}>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="login-email">דוא"ל</Label>
+                <Input 
+                  id="login-email" 
+                  name="email"
+                  type="email" 
+                  placeholder="הזן את כתובת הדואל שלך"
+                  value={loginData.email}
+                  onChange={handleLoginChange}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="login-password">סיסמה</Label>
+                  <Link to="/forgot-password" className="text-xs text-teal-500 hover:text-teal-600">
+                    שכחת סיסמה?
+                  </Link>
+                </div>
+                <Input 
+                  id="login-password" 
+                  name="password"
+                  type="password" 
+                  placeholder="הזן את הסיסמה שלך"
+                  value={loginData.password}
+                  onChange={handleLoginChange}
+                />
+              </div>
+              
+              <div className="flex items-center space-x-2 space-x-reverse">
+                <Checkbox 
+                  id="remember-me" 
+                  name="rememberMe"
+                  checked={loginData.rememberMe}
+                  onCheckedChange={(checked) => 
+                    handleLoginChange({
+                      target: { name: 'rememberMe', checked: checked === true, type: 'checkbox', value: '' }
+                    } as React.ChangeEvent<HTMLInputElement>)
+                  }
+                />
+                <Label htmlFor="remember-me" className="text-sm cursor-pointer">
+                  זכור אותי
+                </Label>
+              </div>
+              
+              <Button 
+                type="submit"
+                className="w-full bg-teal-500 hover:bg-teal-600 text-white"
+              >
+                התחברות
+              </Button>
             </div>
-            <Input 
-              id="login-password" 
-              name="password"
-              type="password" 
-              placeholder="הזן את הסיסמה שלך"
-              value={loginData.password}
-              onChange={handleLoginChange}
-            />
-          </div>
-          
-          <div className="flex items-center space-x-2 space-x-reverse">
-            <Checkbox 
-              id="remember-me" 
-              name="rememberMe"
-              checked={loginData.rememberMe}
-              onCheckedChange={(checked) => 
-                handleLoginChange({
-                  target: { name: 'rememberMe', checked: checked === true, type: 'checkbox', value: '' }
-                } as React.ChangeEvent<HTMLInputElement>)
-              }
-            />
-            <Label htmlFor="remember-me" className="text-sm cursor-pointer">
-              זכור אותי
-            </Label>
-          </div>
-          
-          <Button 
-            type="submit"
-            className="w-full bg-teal-500 hover:bg-teal-600 text-white"
-          >
-            התחברות
-          </Button>
-        </div>
-      </form>
+          </form>
 
-      <div className="relative pt-2">
-        <div className="absolute inset-0 flex items-center">
-          <Separator />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            או התחברות עם טלפון
-          </span>
-        </div>
-      </div>
-
-      <form onSubmit={handlePhoneLogin} className="pt-2">
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="login-phone">מספר טלפון</Label>
-            <div className="relative">
-              <PhoneIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-              <Input 
-                id="login-phone" 
-                name="phone"
-                type="tel" 
-                dir="ltr"
-                className="text-left pr-10"
-                placeholder="05X-XXX-XXXX"
-                value={phoneData.phone}
-                onChange={handlePhoneChange}
-              />
+          <div className="relative pt-2">
+            <div className="absolute inset-0 flex items-center">
+              <Separator />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                או התחברות עם טלפון
+              </span>
             </div>
           </div>
-          
-          <Button 
-            type="submit"
-            variant="outline"
-            className="w-full"
-          >
-            שלח קוד אימות
-          </Button>
-        </div>
-      </form>
+
+          <form onSubmit={onPhoneLoginSubmit} className="pt-2">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="login-phone">מספר טלפון</Label>
+                <div className="relative">
+                  <PhoneIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                  <Input 
+                    id="login-phone" 
+                    name="phone"
+                    type="tel" 
+                    dir="ltr"
+                    className="text-left pr-10"
+                    placeholder="05X-XXX-XXXX"
+                    value={phoneData.phone}
+                    onChange={handlePhoneChange}
+                  />
+                </div>
+              </div>
+              
+              <Button 
+                type="submit"
+                variant="outline"
+                className="w-full"
+              >
+                שלח קוד אימות
+              </Button>
+            </div>
+          </form>
+        </>
+      )}
     </>
   );
 };

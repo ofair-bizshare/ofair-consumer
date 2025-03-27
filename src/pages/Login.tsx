@@ -162,7 +162,7 @@ const Login = () => {
         title: "קוד אימות נשלח",
         description: "נא להזין את הקוד שנשלח לטלפון שלך",
       });
-      // Further steps will happen in the verification flow
+      // Further verification will be handled in the PhoneVerification component
     }
   };
 
