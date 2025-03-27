@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,90 +9,63 @@ import { Label } from '@/components/ui/label';
 import { Upload, MapPin, Calendar, Briefcase, UserRound, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 interface RequestFormProps {
   onSuccess?: (value: boolean) => void;
 }
-
-const professions = [
-  {
-    label: 'שיפוצים',
-    value: 'renovations'
-  },
-  {
-    label: 'חשמל',
-    value: 'electricity'
-  },
-  {
-    label: 'אינסטלציה',
-    value: 'plumbing'
-  },
-  {
-    label: 'נגרות',
-    value: 'carpentry'
-  },
-  {
-    label: 'מיזוג אוויר',
-    value: 'air_conditioning'
-  },
-  {
-    label: 'גינון',
-    value: 'gardening'
-  },
-  {
-    label: 'ניקיון',
-    value: 'cleaning'
-  },
-  {
-    label: 'צביעה',
-    value: 'painting'
-  },
-  {
-    label: 'הובלות',
-    value: 'moving'
-  },
-  {
-    label: 'אחר',
-    value: 'other'
-  }
-];
-
-const locations = [
-  {
-    label: 'תל אביב והמרכז',
-    value: 'tel_aviv'
-  },
-  {
-    label: 'ירושלים והסביבה',
-    value: 'jerusalem'
-  },
-  {
-    label: 'חיפה והצפון',
-    value: 'haifa'
-  },
-  {
-    label: 'באר שבע והדרום',
-    value: 'beer_sheva'
-  },
-  {
-    label: 'אזור השרון',
-    value: 'sharon'
-  },
-  {
-    label: 'השפלה',
-    value: 'shfela'
-  }
-];
-
-const RequestForm: React.FC<RequestFormProps> = ({ onSuccess }) => {
+const professions = [{
+  label: 'שיפוצים',
+  value: 'renovations'
+}, {
+  label: 'חשמל',
+  value: 'electricity'
+}, {
+  label: 'אינסטלציה',
+  value: 'plumbing'
+}, {
+  label: 'נגרות',
+  value: 'carpentry'
+}, {
+  label: 'מיזוג אוויר',
+  value: 'air_conditioning'
+}, {
+  label: 'גינון',
+  value: 'gardening'
+}, {
+  label: 'ניקיון',
+  value: 'cleaning'
+}, {
+  label: 'צביעה',
+  value: 'painting'
+}, {
+  label: 'הובלות',
+  value: 'moving'
+}, {
+  label: 'אחר',
+  value: 'other'
+}];
+const locations = [{
+  label: 'תל אביב והמרכז',
+  value: 'tel_aviv'
+}, {
+  label: 'ירושלים והסביבה',
+  value: 'jerusalem'
+}, {
+  label: 'חיפה והצפון',
+  value: 'haifa'
+}, {
+  label: 'באר שבע והדרום',
+  value: 'beer_sheva'
+}, {
+  label: 'אזור השרון',
+  value: 'sharon'
+}, {
+  label: 'השפלה',
+  value: 'shfela'
+}];
+const RequestForm: React.FC<RequestFormProps> = ({
+  onSuccess
+}) => {
   const [step, setStep] = useState(1);
   const [images, setImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
@@ -101,8 +73,9 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSuccess }) => {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [newRequestId, setNewRequestId] = useState<string>("");
   const navigate = useNavigate();
-  const { toast } = useToast();
-  
+  const {
+    toast
+  } = useToast();
   const [formData, setFormData] = useState({
     profession: '',
     description: '',
@@ -112,62 +85,66 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSuccess }) => {
     phone: '',
     email: ''
   });
-  
   const [loginData, setLoginData] = useState({
     email: '',
     password: '',
-    rememberMe: false,
+    rememberMe: false
   });
-  
   const [registerData, setRegisterData] = useState({
     name: '',
     email: '',
     password: '',
     passwordConfirm: '',
-    agreeTerms: false,
+    agreeTerms: false
   });
-
   useEffect(() => {
     checkLoginStatus();
   }, []);
-
   const checkLoginStatus = () => {
     const hasSession = localStorage.getItem('isLoggedIn') === 'true';
     setIsLoggedIn(hasSession);
     return hasSession;
   };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+    const {
+      name,
+      value
+    } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
   };
-
   const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+    const {
+      name,
+      value,
+      type,
+      checked
+    } = e.target;
     setLoginData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
   };
-  
   const handleRegisterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+    const {
+      name,
+      value,
+      type,
+      checked
+    } = e.target;
     setRegisterData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
   };
-
   const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
   };
-
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const fileArray = Array.from(e.target.files);
@@ -177,18 +154,15 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSuccess }) => {
       setPreviewUrls([...previewUrls, ...newPreviewUrls]);
     }
   };
-
   const removeImage = (index: number) => {
     const newImages = [...images];
     const newPreviewUrls = [...previewUrls];
-
     URL.revokeObjectURL(newPreviewUrls[index]);
     newImages.splice(index, 1);
     newPreviewUrls.splice(index, 1);
     setImages(newImages);
     setPreviewUrls(newPreviewUrls);
   };
-
   const handleNext = () => {
     if (!formData.profession || !formData.description || !formData.location) {
       toast({
@@ -198,20 +172,16 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSuccess }) => {
       });
       return;
     }
-    
     if (checkLoginStatus()) {
       handleFormSubmit();
     } else {
       setStep(2);
     }
   };
-
   const handleFormSubmit = () => {
     console.log('Submitting form data:', formData);
-    
     const requestId = Date.now().toString();
     setNewRequestId(requestId);
-    
     const newRequest = {
       id: requestId,
       title: getProfessionLabel(formData.profession),
@@ -219,107 +189,92 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSuccess }) => {
       date: new Date().toLocaleDateString('he-IL'),
       location: getLocationLabel(formData.location),
       status: 'active' as const,
-      quotesCount: 0,
+      quotesCount: 0
     };
-    
     const existingRequests = JSON.parse(localStorage.getItem('myRequests') || '[]');
     existingRequests.push(newRequest);
     localStorage.setItem('myRequests', JSON.stringify(existingRequests));
-    
+
     // Show success dialog instead of just toast
     setShowSuccessDialog(true);
-    
+
     // If we're in a dialog and have onSuccess callback, close dialog
     if (onSuccess) {
       onSuccess(false);
     }
   };
-
   const getProfessionLabel = (value: string): string => {
     const profession = professions.find(p => p.value === value);
     return profession ? profession.label : value;
   };
-  
   const getLocationLabel = (value: string): string => {
     const location = locations.find(l => l.value === value);
     return location ? location.label : value;
   };
-
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!loginData.email || !loginData.password) {
       toast({
         title: "שדות חסרים",
         description: "אנא מלא את כל השדות הנדרשים",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-    
     localStorage.setItem('isLoggedIn', 'true');
     setIsLoggedIn(true);
-    
     handleFormSubmit();
   };
-  
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!registerData.name || !registerData.email || !registerData.password || !registerData.passwordConfirm) {
       toast({
         title: "שדות חסרים",
         description: "אנא מלא את כל השדות הנדרשים",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-    
     if (registerData.password !== registerData.passwordConfirm) {
       toast({
         title: "סיסמאות לא תואמות",
         description: "אנא ודא שהסיסמאות שהזנת זהות",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-    
     if (!registerData.agreeTerms) {
       toast({
         title: "תנאי שימוש",
         description: "עליך לאשר את תנאי השימוש כדי להמשיך",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-    
     localStorage.setItem('isLoggedIn', 'true');
     setIsLoggedIn(true);
-    
     handleFormSubmit();
   };
-
   const handleBack = () => {
     setStep(step - 1);
   };
-
   const handleGoToDashboard = () => {
     setShowSuccessDialog(false);
     navigate('/dashboard');
-    
+
     // Scroll to the relevant section in dashboard
     setTimeout(() => {
       const element = document.getElementById('request-' + newRequestId);
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
+        element.scrollIntoView({
+          behavior: 'smooth'
+        });
       }
     }, 500);
   };
-
   const renderFormContent = () => {
     if (step === 1) {
-      return (
-        <div className="space-y-6 animate-fade-in">
+      return <div className="space-y-6 animate-fade-in">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="profession" className="text-gray-700">סוג עבודה</Label>
@@ -330,11 +285,9 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSuccess }) => {
                     <SelectValue placeholder="בחר סוג עבודה" />
                   </SelectTrigger>
                   <SelectContent>
-                    {professions.map(profession => (
-                      <SelectItem key={profession.value} value={profession.value}>
+                    {professions.map(profession => <SelectItem key={profession.value} value={profession.value}>
                         {profession.label}
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -349,11 +302,9 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSuccess }) => {
                     <SelectValue placeholder="בחר אזור" />
                   </SelectTrigger>
                   <SelectContent>
-                    {locations.map(location => (
-                      <SelectItem key={location.value} value={location.value}>
+                    {locations.map(location => <SelectItem key={location.value} value={location.value}>
                         {location.label}
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -383,24 +334,18 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSuccess }) => {
               </label>
             </div>
 
-            {previewUrls.length > 0 && (
-              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                {previewUrls.map((url, index) => (
-                  <div key={index} className="relative rounded-md overflow-hidden h-20">
+            {previewUrls.length > 0 && <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                {previewUrls.map((url, index) => <div key={index} className="relative rounded-md overflow-hidden h-20">
                     <img src={url} alt={`Uploaded ${index}`} className="w-full h-full object-cover" />
                     <button type="button" className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs" onClick={() => removeImage(index)}>
                       ×
                     </button>
-                  </div>
-                ))}
-              </div>
-            )}
+                  </div>)}
+              </div>}
           </div>
-        </div>
-      );
+        </div>;
     } else {
-      return (
-        <div className="space-y-6 animate-fade-in">
+      return <div className="space-y-6 animate-fade-in">
           <div className="text-center mb-4">
             <UserRound className="mx-auto h-12 w-12 text-blue-500 mb-2" />
             <h3 className="text-lg font-medium text-gray-700">כניסה או הרשמה לשליחת הבקשה</h3>
@@ -417,14 +362,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSuccess }) => {
               <form onSubmit={handleLogin} className="space-y-4 pt-4">
                 <div className="space-y-2">
                   <Label htmlFor="login-email">דוא"ל</Label>
-                  <Input 
-                    id="login-email" 
-                    name="email"
-                    type="email" 
-                    placeholder="הזן את כתובת הדואל שלך"
-                    value={loginData.email}
-                    onChange={handleLoginChange}
-                  />
+                  <Input id="login-email" name="email" type="email" placeholder="הזן את כתובת הדואל שלך" value={loginData.email} onChange={handleLoginChange} />
                 </div>
                 
                 <div className="space-y-2">
@@ -434,20 +372,10 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSuccess }) => {
                       שכחת סיסמה?
                     </Link>
                   </div>
-                  <Input 
-                    id="login-password" 
-                    name="password"
-                    type="password" 
-                    placeholder="הזן את הסיסמה שלך"
-                    value={loginData.password}
-                    onChange={handleLoginChange}
-                  />
+                  <Input id="login-password" name="password" type="password" placeholder="הזן את הסיסמה שלך" value={loginData.password} onChange={handleLoginChange} />
                 </div>
                 
-                <Button 
-                  type="submit"
-                  className="w-full bg-[#00D09E] hover:bg-[#00C090] text-white mt-4"
-                >
+                <Button type="submit" className="w-full bg-[#00D09E] hover:bg-[#00C090] text-white mt-4">
                   התחבר ושלח בקשה
                 </Button>
               </form>
@@ -457,60 +385,26 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSuccess }) => {
               <form onSubmit={handleRegister} className="space-y-4 pt-4">
                 <div className="space-y-2">
                   <Label htmlFor="register-name">שם מלא</Label>
-                  <Input 
-                    id="register-name" 
-                    name="name"
-                    placeholder="הזן את שמך המלא"
-                    value={registerData.name}
-                    onChange={handleRegisterChange}
-                  />
+                  <Input id="register-name" name="name" placeholder="הזן את שמך המלא" value={registerData.name} onChange={handleRegisterChange} />
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="register-email">דוא"ל</Label>
-                  <Input 
-                    id="register-email" 
-                    name="email"
-                    type="email" 
-                    placeholder="הזן את כתובת הדואל שלך"
-                    value={registerData.email}
-                    onChange={handleRegisterChange}
-                  />
+                  <Input id="register-email" name="email" type="email" placeholder="הזן את כתובת הדואל שלך" value={registerData.email} onChange={handleRegisterChange} />
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="register-password">סיסמה</Label>
-                  <Input 
-                    id="register-password" 
-                    name="password"
-                    type="password" 
-                    placeholder="בחר סיסמה (לפחות 8 תווים)"
-                    value={registerData.password}
-                    onChange={handleRegisterChange}
-                  />
+                  <Input id="register-password" name="password" type="password" placeholder="בחר סיסמה (לפחות 8 תווים)" value={registerData.password} onChange={handleRegisterChange} />
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="register-password-confirm">אימות סיסמה</Label>
-                  <Input 
-                    id="register-password-confirm" 
-                    name="passwordConfirm"
-                    type="password" 
-                    placeholder="הזן שוב את הסיסמה"
-                    value={registerData.passwordConfirm}
-                    onChange={handleRegisterChange}
-                  />
+                  <Input id="register-password-confirm" name="passwordConfirm" type="password" placeholder="הזן שוב את הסיסמה" value={registerData.passwordConfirm} onChange={handleRegisterChange} />
                 </div>
                 
                 <div className="flex items-center space-x-2 space-x-reverse mt-2">
-                  <input 
-                    type="checkbox" 
-                    id="agree-terms" 
-                    name="agreeTerms"
-                    checked={registerData.agreeTerms}
-                    onChange={handleRegisterChange}
-                    className="rounded border-gray-300 text-[#00D09E] focus:ring-[#00D09E]"
-                  />
+                  <input type="checkbox" id="agree-terms" name="agreeTerms" checked={registerData.agreeTerms} onChange={handleRegisterChange} className="rounded border-gray-300 text-[#00D09E] focus:ring-[#00D09E]" />
                   <Label htmlFor="agree-terms" className="text-sm cursor-pointer">
                     אני מסכים/ה ל
                     <Link to="/terms" className="text-[#00D09E] mx-1 hover:underline">
@@ -523,22 +417,16 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSuccess }) => {
                   </Label>
                 </div>
                 
-                <Button 
-                  type="submit"
-                  className="w-full bg-[#00D09E] hover:bg-[#00C090] text-white mt-4"
-                >
+                <Button type="submit" className="w-full bg-[#00D09E] hover:bg-[#00C090] text-white mt-4">
                   הרשם ושלח בקשה
                 </Button>
               </form>
             </TabsContent>
           </Tabs>
-        </div>
-      );
+        </div>;
     }
   };
-
-  return (
-    <>
+  return <>
       <Card className="glass-card overflow-hidden animate-fade-in-up w-full max-w-md mx-auto" aria-labelledby="service-request-form-title">
         <div className="p-5 md:p-6">
           <div className="flex justify-between items-center mb-6">
@@ -553,22 +441,14 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSuccess }) => {
           {renderFormContent()}
 
           <div className="flex justify-between mt-8">
-            {step > 1 && (
-              <Button type="button" variant="outline" onClick={handleBack} className="border-[#00D09E] text-[#00D09E] hover:bg-teal-50">
+            {step > 1 && <Button type="button" variant="outline" onClick={handleBack} className="border-[#00D09E] text-[#00D09E] hover:bg-teal-50">
                 חזרה
-              </Button>
-            )}
-            {step === 1 && (
-              <div className="ml-auto">
-                <Button 
-                  type="button" 
-                  onClick={handleNext} 
-                  className="bg-[#00D09E] hover:bg-[#00C090]"
-                >
+              </Button>}
+            {step === 1 && <div className="ml-auto">
+                <Button type="button" onClick={handleNext} className="bg-[#00D09E] hover:bg-[#00C090]">
                   {isLoggedIn ? 'שלח בקשה' : 'המשך'}
                 </Button>
-              </div>
-            )}
+              </div>}
           </div>
         </div>
       </Card>
@@ -596,18 +476,12 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSuccess }) => {
             </div>
           </div>
           <DialogFooter className="sm:justify-center">
-            <Button
-              type="button"
-              className="bg-[#00D09E] hover:bg-[#00C090] text-white w-full"
-              onClick={handleGoToDashboard}
-            >
+            <Button type="button" className="bg-[#00D09E] hover:bg-[#00C090] text-white w-full" onClick={handleGoToDashboard}>
               עבור לאזור האישי
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
-  );
+    </>;
 };
-
 export default RequestForm;

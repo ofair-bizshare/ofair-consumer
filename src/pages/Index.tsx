@@ -99,9 +99,7 @@ const Index = () => {
                 <span className="text-[#00D09E] mx-2">בעל המקצוע</span>
                 המושלם לכל עבודה
               </h1>
-              <p className="text-lg text-gray-700 mb-6">
-                פלטפורמה חינמית המחברת בין בעלי בתים לבעלי מקצוע מובילים בתחומם. קבלו הצעות מחיר ללא התחייבות ובחרו את המקצוען הנכון עבורכם.
-              </p>
+              <p className="text-lg text-gray-700 mb-6">פלטפורמה חינמית המחברת בין בעלי בתים לבעלי מקצוע מובילים בתחומם. קבלו הצעות מחיר וזמינות ללא התחייבות ובחרו את המקצוען הנכון עבורכם בקלות וביעילות.</p>
               <div className="flex flex-wrap gap-4 mb-8 lg:mb-0">
                 <Button size="lg" className="bg-[#00D09E] hover:bg-[#00C090] text-white button-transition flex items-center gap-2 shadow-md" onClick={scrollToRequestForm}>
                   <FileText size={20} />
@@ -165,14 +163,14 @@ const Index = () => {
             
             <div className="text-center p-6 rounded-xl bg-blue-50/50 border border-blue-100 hover:shadow-lg transition-all duration-300">
               <div className="w-16 h-16 bg-teal-500 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-4">2</div>
-              <h3 className="text-xl font-semibold text-blue-700 mb-3">קבלו הצעות מחיר</h3>
-              <p className="text-gray-600">בעלי מקצוע מובילים יצרו איתכם קשר עם הצעות מותאמות אישית</p>
+              <h3 className="text-xl font-semibold text-blue-700 mb-3">קבלו הצעות מחיר וזמינות</h3>
+              <p className="text-gray-600">בעלי מקצוע מובילים ישלחו לכם הצעות מותאמות אישית </p>
             </div>
             
             <div className="text-center p-6 rounded-xl bg-blue-50/50 border border-blue-100 hover:shadow-lg transition-all duration-300">
               <div className="w-16 h-16 bg-teal-500 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-4">3</div>
               <h3 className="text-xl font-semibold text-blue-700 mb-3">בחרו את המתאים</h3>
-              <p className="text-gray-600">השוו בין ההצעות ובחרו את בעל המקצוע שהכי מתאים לצרכים שלכם</p>
+              <p className="text-gray-600">השוו בין ההצעות וצרו קשר עם בעל המקצוע שהכי מתאים לצרכים שלכם</p>
             </div>
           </div>
         </div>
@@ -183,7 +181,7 @@ const Index = () => {
         <div className="container mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-blue-700 mb-3">בעלי מקצוע <span className="text-teal-500">מובילים</span></h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">המקצוענים המובילים שלנו עברו תהליך אימות קפדני ומספקים שירות איכותי</p>
+            <p className="text-gray-600 max-w-2xl mx-auto">אפשר גם פשוט לחפש -  בעלי המקצוע המובילים שלנו עברו תהליך אימות קפדני ומספקים שירות איכותי</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-10 stagger-animation">
