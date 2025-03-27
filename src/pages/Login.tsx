@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import LoginForm from '@/components/auth/LoginForm';
@@ -10,39 +10,33 @@ import RegisterForm from '@/components/auth/RegisterForm';
 import SuccessAlert from '@/components/auth/SuccessAlert';
 import BusinessSignUpLink from '@/components/auth/BusinessSignUpLink';
 import { useAuth } from '@/providers/AuthProvider';
-import PhoneVerification from '@/components/auth/PhoneVerification';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { PhoneIcon } from 'lucide-react';
+import PhoneVerificationForm from '@/components/auth/PhoneVerificationForm';
+import { useLoginForm } from '@/hooks/useLoginForm';
+import { useRegisterForm } from '@/hooks/useRegisterForm';
 
 const Login = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { user, loading, phoneVerified, signIn, signUp, signInWithGoogle, signInWithPhone, checkPhoneVerification } = useAuth();
+  const { user, loading, phoneVerified, signInWithPhone, checkPhoneVerification } = useAuth();
   const fromRequest = location.state?.fromRequest;
   
-  const [loginData, setLoginData] = useState({
-    email: '',
-    password: '',
-    rememberMe: false,
-  });
-  
-  const [registerData, setRegisterData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    passwordConfirm: '',
-    agreeTerms: false,
-    phone: '',
-  });
-
-  const [phoneData, setPhoneData] = useState({
-    phone: '',
-  });
-
   const [needsPhoneVerification, setNeedsPhoneVerification] = useState(false);
+  const {
+    loginData,
+    phoneData,
+    showPhoneVerification,
+    handleLoginChange,
+    handlePhoneChange,
+    handleLogin,
+    handleGoogleLogin,
+    handlePhoneLogin
+  } = useLoginForm();
+
+  const {
+    registerData,
+    handleRegisterChange,
+    handleRegister
+  } = useRegisterForm();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -59,127 +53,6 @@ const Login = () => {
     
     checkAuth();
   }, [user, loading, phoneVerified, navigate, checkPhoneVerification]);
-  
-  const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    setLoginData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-  };
-  
-  const handleRegisterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    setRegisterData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-  };
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPhoneData(prev => ({
-      ...prev,
-      phone: e.target.value
-    }));
-  };
-  
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!loginData.email || !loginData.password) {
-      toast({
-        title: "שדות חסרים",
-        description: "אנא מלא את כל השדות הנדרשים",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const { error } = await signIn(loginData.email, loginData.password);
-    
-    if (!error) {
-      toast({
-        title: "כניסה בוצעה בהצלחה",
-        description: "ברוך הבא לחשבון שלך",
-      });
-      navigate('/dashboard');
-    }
-  };
-  
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!registerData.name || !registerData.email || !registerData.password || !registerData.passwordConfirm || !registerData.phone) {
-      toast({
-        title: "שדות חסרים",
-        description: "אנא מלא את כל השדות הנדרשים",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (registerData.password !== registerData.passwordConfirm) {
-      toast({
-        title: "סיסמאות לא תואמות",
-        description: "אנא ודא שהסיסמאות שהזנת זהות",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (!registerData.agreeTerms) {
-      toast({
-        title: "תנאי שימוש",
-        description: "עליך לאשר את תנאי השימוש כדי להמשיך",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const { error } = await signUp(registerData.email, registerData.password, {
-      name: registerData.name,
-      phone: registerData.phone,
-    });
-    
-    if (!error) {
-      toast({
-        title: "ההרשמה בוצעה בהצלחה",
-        description: "ברוך הבא ל-oFair",
-      });
-      
-      toast({
-        title: "אימות דוא\"ל",
-        description: "נשלח אליך דוא\"ל לאימות חשבונך. אנא בדוק את תיבת הדואר שלך.",
-      });
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    await signInWithGoogle();
-  };
-
-  const handlePhoneLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!phoneData.phone) {
-      toast({
-        title: "מספר טלפון חסר",
-        description: "אנא הזן את מספר הטלפון שלך",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const { error } = await signInWithPhone(phoneData.phone);
-    
-    if (!error) {
-      toast({
-        title: "קוד אימות נשלח",
-        description: "נא להזין את הקוד שנשלח לטלפון שלך",
-      });
-      navigate('/dashboard');
-    }
-  };
 
   const handlePhoneVerificationComplete = () => {
     navigate('/dashboard');
@@ -202,40 +75,13 @@ const Login = () => {
               <h2 className="text-xl font-bold text-center mb-4">אימות מספר טלפון</h2>
               <p className="text-center mb-6">כדי להמשיך להשתמש באפליקציה, אנא אמת את מספר הטלפון שלך</p>
               
-              <div className="space-y-4">
-                <Label htmlFor="phone-for-verification">מספר טלפון</Label>
-                <div className="relative">
-                  <PhoneIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                  <Input 
-                    id="phone-for-verification" 
-                    name="phone"
-                    type="tel" 
-                    dir="ltr"
-                    className="text-left pr-10"
-                    placeholder="05X-XXX-XXXX"
-                    value={phoneData.phone}
-                    onChange={handlePhoneChange}
-                  />
-                </div>
-                
-                <Button 
-                  onClick={handlePhoneLogin}
-                  type="button"
-                  className="w-full bg-teal-500 hover:bg-teal-600 text-white"
-                >
-                  שלח קוד אימות
-                </Button>
-              </div>
-              
-              {phoneData.phone && (
-                <div className="mt-6">
-                  <PhoneVerification 
-                    phone={phoneData.phone} 
-                    onVerified={handlePhoneVerificationComplete}
-                    isPostLogin={true}
-                  />
-                </div>
-              )}
+              <PhoneVerificationForm
+                phone={phoneData.phone}
+                onPhoneChange={handlePhoneChange}
+                onPhoneLogin={handlePhoneLogin}
+                onVerified={handlePhoneVerificationComplete}
+                isPostLogin={true}
+              />
             </Card>
           </div>
         </main>
