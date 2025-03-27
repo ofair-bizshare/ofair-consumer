@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -209,7 +210,6 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
                       size="sm"
                       className="border-red-500 text-red-500 hover:bg-red-50"
                       onClick={() => onRejectQuote(quote.id)}
-                      disabled={quote.status === 'rejected'}
                     >
                       דחה הצעה
                     </Button>
@@ -218,7 +218,6 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
                       size="sm"
                       className="bg-teal-500 hover:bg-teal-600"
                       onClick={handleAcceptClick}
-                      disabled={quote.status === 'rejected'}
                     >
                       קבל הצעה
                     </Button>
