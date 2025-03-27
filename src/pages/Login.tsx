@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
@@ -10,11 +10,13 @@ import LoginForm from '@/components/auth/LoginForm';
 import RegisterForm from '@/components/auth/RegisterForm';
 import SuccessAlert from '@/components/auth/SuccessAlert';
 import BusinessSignUpLink from '@/components/auth/BusinessSignUpLink';
+import { useAuth } from '@/providers/AuthProvider';
 
 const Login = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, loading, signIn, signUp, signInWithGoogle, signInWithPhone } = useAuth();
   const fromRequest = location.state?.fromRequest;
   
   const [loginData, setLoginData] = useState({
@@ -34,6 +36,13 @@ const Login = () => {
   const [phoneData, setPhoneData] = useState({
     phone: '',
   });
+
+  useEffect(() => {
+    // If user is already logged in, redirect to dashboard
+    if (!loading && user) {
+      navigate('/dashboard');
+    }
+  }, [user, loading, navigate]);
   
   const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -58,7 +67,7 @@ const Login = () => {
     }));
   };
   
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!loginData.email || !loginData.password) {
@@ -70,21 +79,18 @@ const Login = () => {
       return;
     }
     
-    // Here you would normally authenticate the user
-    console.log('Login data:', loginData);
+    const { error } = await signIn(loginData.email, loginData.password);
     
-    // Store in localStorage for our demo
-    localStorage.setItem('isLoggedIn', 'true');
-    
-    toast({
-      title: "כניסה בוצעה בהצלחה",
-      description: "ברוך הבא לחשבון שלך",
-    });
-    
-    navigate('/dashboard');
+    if (!error) {
+      toast({
+        title: "כניסה בוצעה בהצלחה",
+        description: "ברוך הבא לחשבון שלך",
+      });
+      navigate('/dashboard');
+    }
   };
   
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!registerData.name || !registerData.email || !registerData.password || !registerData.passwordConfirm) {
@@ -113,37 +119,31 @@ const Login = () => {
       });
       return;
     }
-    
-    // Here you would normally register the user
-    console.log('Register data:', registerData);
-    
-    // Store in localStorage for our demo
-    localStorage.setItem('isLoggedIn', 'true');
-    
-    toast({
-      title: "ההרשמה בוצעה בהצלחה",
-      description: "ברוך הבא ל-oFair",
+
+    const { error } = await signUp(registerData.email, registerData.password, {
+      name: registerData.name,
     });
     
-    navigate('/dashboard');
+    if (!error) {
+      toast({
+        title: "ההרשמה בוצעה בהצלחה",
+        description: "ברוך הבא ל-oFair",
+      });
+      
+      // The user will be redirected after email verification by the auth provider
+      toast({
+        title: "אימות דוא\"ל",
+        description: "נשלח אליך דוא\"ל לאימות חשבונך. אנא בדוק את תיבת הדואר שלך.",
+      });
+    }
   };
 
-  const handleGoogleLogin = () => {
-    console.log('Google login clicked');
-    
-    // In a real implementation, you would initiate Google OAuth flow
-    // For now, we'll simulate successful login
-    localStorage.setItem('isLoggedIn', 'true');
-    
-    toast({
-      title: "התחברות עם Google בוצעה בהצלחה",
-      description: "ברוך הבא לחשבון שלך",
-    });
-    
-    navigate('/dashboard');
+  const handleGoogleLogin = async () => {
+    await signInWithGoogle();
+    // Redirect happens automatically in the auth flow
   };
 
-  const handlePhoneLogin = (e: React.FormEvent) => {
+  const handlePhoneLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!phoneData.phone) {
@@ -155,26 +155,22 @@ const Login = () => {
       return;
     }
     
-    // In a real implementation, you would send a verification code
-    console.log('Phone authentication:', phoneData);
+    const { error } = await signInWithPhone(phoneData.phone);
     
-    toast({
-      title: "קוד אימות נשלח",
-      description: "נא להזין את הקוד שנשלח לטלפון שלך",
-    });
-    
-    // For demo purposes, we'll simulate successful login
-    setTimeout(() => {
-      localStorage.setItem('isLoggedIn', 'true');
-      
+    if (!error) {
       toast({
-        title: "התחברות בוצעה בהצלחה",
-        description: "ברוך הבא לחשבון שלך",
+        title: "קוד אימות נשלח",
+        description: "נא להזין את הקוד שנשלח לטלפון שלך",
       });
-      
-      navigate('/dashboard');
-    }, 2000);
+      // Further steps will happen in the verification flow
+    }
   };
+
+  if (loading) {
+    return <div className="flex justify-center items-center min-h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    </div>;
+  }
 
   return (
     <div className="flex flex-col min-h-screen font-assistant" dir="rtl">

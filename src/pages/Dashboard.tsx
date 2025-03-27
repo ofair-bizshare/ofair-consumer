@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Navigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -8,16 +8,14 @@ import DashboardTabs from '@/components/dashboard/DashboardTabs';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
 import { UserCircle, Gift } from 'lucide-react';
+import { useAuth } from '@/providers/AuthProvider';
 
 const Dashboard = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user, loading } = useAuth();
   const { toast } = useToast();
   const location = useLocation();
   
   useEffect(() => {
-    const hasSession = localStorage.getItem('isLoggedIn') === 'true';
-    setIsLoggedIn(hasSession);
-    
     // Check if we need to scroll to a specific section
     if (location.hash) {
       const id = location.hash.substring(1);
@@ -29,6 +27,20 @@ const Dashboard = () => {
       }
     }
   }, [location]);
+
+  // If still loading, show loading spinner
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  // If not logged in and not loading, redirect to login
+  if (!user && !loading) {
+    return <Navigate to="/login" />;
+  }
 
   return (
     <div className="flex flex-col min-h-screen" dir="rtl">
@@ -51,14 +63,14 @@ const Dashboard = () => {
             </p>
           </div>
           
-          {isLoggedIn && (
+          {user && (
             <div className="glass-card p-6 mb-8 flex items-center justify-between">
               <div className="flex items-center">
                 <div className="bg-blue-100 rounded-full p-3 mr-4">
                   <UserCircle size={36} className="text-blue-700" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold">ברוך הבא!</h2>
+                  <h2 className="text-xl font-semibold">ברוך הבא, {user.user_metadata?.name || user.email}!</h2>
                   <p className="text-gray-600">שמחים לראות אותך שוב</p>
                 </div>
               </div>
@@ -73,7 +85,7 @@ const Dashboard = () => {
           )}
           
           <div id="requests-section">
-            <DashboardTabs isLoggedIn={isLoggedIn} />
+            <DashboardTabs isLoggedIn={!!user} />
           </div>
         </div>
       </main>

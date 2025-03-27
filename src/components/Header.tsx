@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import UserDropdown from './header/UserDropdown';
 import MobileMenu from './header/MobileMenu';
 import DesktopNav from './header/DesktopNav';
+import { useAuth } from '@/providers/AuthProvider';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -22,23 +23,17 @@ const Header = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    const hasSession = localStorage.getItem('isLoggedIn') === 'true';
-    setIsLoggedIn(hasSession);
-  }, []);
-
   const handleLoginClick = () => {
     navigate('/login');
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn');
-    setIsLoggedIn(false);
+    signOut();
     navigate('/');
   };
 
   const handleSendRequest = () => {
-    if (isLoggedIn) {
+    if (user) {
       if (location.pathname === '/dashboard') {
         // If we're already on the dashboard, scroll to the requests section
         const requestsSection = document.getElementById('requests-section');
@@ -79,7 +74,7 @@ const Header = () => {
             בעל מקצוע? הצטרף
           </a>
 
-          {isLoggedIn ? (
+          {user ? (
             <UserDropdown onLogout={handleLogout} />
           ) : (
             <Button 
@@ -99,7 +94,7 @@ const Header = () => {
       </div>
 
       <MobileMenu 
-        isLoggedIn={isLoggedIn}
+        isLoggedIn={!!user}
         isOpen={isMenuOpen}
         onSendRequest={handleSendRequest}
         onLogout={handleLogout}
