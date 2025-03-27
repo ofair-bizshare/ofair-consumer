@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProfessionalCard from '@/components/ProfessionalCard';
@@ -311,8 +312,16 @@ const Dashboard = () => {
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [quotesData, setQuotesData] = useState(quotes);
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Added state for isLoggedIn
   const { toast } = useToast();
   const selectedRequestRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  
+  // Check if user is logged in
+  useEffect(() => {
+    const hasSession = localStorage.getItem('isLoggedIn') === 'true';
+    setIsLoggedIn(hasSession);
+  }, []);
   
   const selectedRequest = requests.find(r => r.id === selectedRequestId);
   const requestQuotes = quotesData.filter(q => q.requestId === selectedRequestId);
@@ -426,7 +435,7 @@ const Dashboard = () => {
                           </DialogDescription>
                         </DialogHeader>
                         <div className="py-4">
-                          <RequestForm skipAuthStep={true} />
+                          <RequestForm />
                         </div>
                       </DialogContent>
                     </Dialog>
@@ -535,7 +544,7 @@ const Dashboard = () => {
                             </DialogDescription>
                           </DialogHeader>
                           <div className="py-4">
-                            <RequestForm skipAuthStep={true} />
+                            <RequestForm />
                           </div>
                         </DialogContent>
                       </Dialog>
