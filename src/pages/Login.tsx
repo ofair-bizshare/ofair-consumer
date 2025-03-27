@@ -11,6 +11,10 @@ import SuccessAlert from '@/components/auth/SuccessAlert';
 import BusinessSignUpLink from '@/components/auth/BusinessSignUpLink';
 import { useAuth } from '@/providers/AuthProvider';
 import PhoneVerification from '@/components/auth/PhoneVerification';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { PhoneIcon } from 'lucide-react';
 
 const Login = () => {
   const location = useLocation();
@@ -40,16 +44,13 @@ const Login = () => {
   const [needsPhoneVerification, setNeedsPhoneVerification] = useState(false);
 
   useEffect(() => {
-    // Check if user is logged in but needs phone verification
     const checkAuth = async () => {
       if (!loading && user) {
         const hasPhoneVerified = await checkPhoneVerification();
         
         if (!hasPhoneVerified) {
-          // User logged in but needs to verify phone
           setNeedsPhoneVerification(true);
         } else {
-          // User is logged in and phone is verified, redirect to dashboard
           navigate('/dashboard');
         }
       }
@@ -100,7 +101,7 @@ const Login = () => {
         title: "כניסה בוצעה בהצלחה",
         description: "ברוך הבא לחשבון שלך",
       });
-      // Navigate will happen in the useEffect after checking phone verification
+      navigate('/dashboard');
     }
   };
   
@@ -118,7 +119,7 @@ const Login = () => {
     
     if (registerData.password !== registerData.passwordConfirm) {
       toast({
-        title: "סיסמאות לא תואמות",
+        title: "סיסמאות לא תואמ��ת",
         description: "אנא ודא שהסיסמאות שהזנת זהות",
         variant: "destructive",
       });
@@ -144,7 +145,6 @@ const Login = () => {
         description: "ברוך הבא ל-oFair",
       });
       
-      // The user will be redirected after email verification by the auth provider
       toast({
         title: "אימות דוא\"ל",
         description: "נשלח אליך דוא\"ל לאימות חשבונך. אנא בדוק את תיבת הדואר שלך.",
@@ -154,7 +154,6 @@ const Login = () => {
 
   const handleGoogleLogin = async () => {
     await signInWithGoogle();
-    // Redirect happens automatically in the auth flow
   };
 
   const handlePhoneLogin = async (e: React.FormEvent) => {
@@ -176,12 +175,11 @@ const Login = () => {
         title: "קוד אימות נשלח",
         description: "נא להזין את הקוד שנשלח לטלפון שלך",
       });
-      // Further verification will be handled in the PhoneVerification component
+      navigate('/dashboard');
     }
   };
 
   const handlePhoneVerificationComplete = () => {
-    // After successful verification, we'll redirect to dashboard
     navigate('/dashboard');
   };
 

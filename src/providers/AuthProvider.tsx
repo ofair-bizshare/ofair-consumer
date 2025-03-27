@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -32,20 +31,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const checkPhoneVerification = async (): Promise<boolean> => {
     if (!user) return false;
     
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('phone_verified')
-      .eq('id', user.id)
-      .single();
+    // Check user's metadata for phone verification
+    const hasPhone = user.user_metadata?.phone !== undefined;
+    const isVerified = user.user_metadata?.phone_verified === true;
     
-    if (error || !data) {
-      console.error('Error checking phone verification:', error);
-      return false;
-    }
-    
-    const isVerified = data.phone_verified === true;
-    setPhoneVerified(isVerified);
-    return isVerified;
+    setPhoneVerified(isVerified || false);
+    return isVerified || false;
   };
 
   useEffect(() => {
@@ -180,19 +171,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) throw error;
       
-      // If the user is already logged in (e.g., via Google), update their profile
+      // If the user is already logged in (e.g., via Google), update their metadata
       if (user) {
-        // Update the profile to mark phone as verified
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .upsert({ 
-            id: user.id, 
+        // Update the user metadata to include phone
+        const { error: updateError } = await supabase.auth.updateUser({
+          data: { 
             phone: formattedPhone,
             phone_verified: true 
-          });
+          }
+        });
           
         if (updateError) {
-          console.error('Error updating profile:', updateError);
+          console.error('Error updating user metadata:', updateError);
         } else {
           setPhoneVerified(true);
         }
