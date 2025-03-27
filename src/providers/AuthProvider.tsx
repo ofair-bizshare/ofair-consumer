@@ -8,12 +8,15 @@ type AuthContextType = {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  phoneVerified: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any | null }>;
   signInWithGoogle: () => Promise<{ error: any | null }>;
   signInWithPhone: (phone: string) => Promise<{ error: any | null }>;
   verifyOtp: (phone: string, token: string) => Promise<{ error: any | null }>;
   signUp: (email: string, password: string, metadata?: { [key: string]: any }) => Promise<{ error: any | null }>;
   signOut: () => Promise<void>;
+  checkPhoneVerification: () => Promise<boolean>;
+  setPhoneVerified: (value: boolean) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,12 +25,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [phoneVerified, setPhoneVerified] = useState(false);
   const { toast } = useToast();
+
+  // Check if user has a phone number in their metadata
+  const checkPhoneVerification = async (): Promise<boolean> => {
+    if (!user) return false;
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('phone_verified')
+      .eq('id', user.id)
+      .single();
+    
+    if (error || !data) {
+      console.error('Error checking phone verification:', error);
+      return false;
+    }
+    
+    const isVerified = data.phone_verified === true;
+    setPhoneVerified(isVerified);
+    return isVerified;
+  };
 
   useEffect(() => {
     // Set up the auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
         console.log('Auth state changed:', event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
@@ -35,19 +59,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Store login status in localStorage for components that check it
         if (currentSession?.user) {
           localStorage.setItem('isLoggedIn', 'true');
+          
+          // Check phone verification on login
+          setTimeout(async () => {
+            await checkPhoneVerification();
+          }, 0);
         } else {
           localStorage.removeItem('isLoggedIn');
+          setPhoneVerified(false);
         }
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
       if (currentSession?.user) {
         localStorage.setItem('isLoggedIn', 'true');
+        
+        // Check phone verification status on init
+        setTimeout(async () => {
+          await checkPhoneVerification();
+        }, 0);
       }
       
       setLoading(false);
@@ -79,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: window.location.origin + '/login',
         },
       });
       if (error) throw error;
@@ -142,7 +177,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         token,
         type: 'sms',
       });
+      
       if (error) throw error;
+      
+      // If the user is already logged in (e.g., via Google), update their profile
+      if (user) {
+        // Update the profile to mark phone as verified
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .upsert({ 
+            id: user.id, 
+            phone: formattedPhone,
+            phone_verified: true 
+          });
+          
+        if (updateError) {
+          console.error('Error updating profile:', updateError);
+        } else {
+          setPhoneVerified(true);
+        }
+      }
+      
       return { error: null };
     } catch (error) {
       console.error('Error verifying OTP:', error);
@@ -162,7 +217,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password,
         options: {
           data: metadata,
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: window.location.origin + '/login',
         },
       });
       if (error) throw error;
@@ -182,6 +237,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await supabase.auth.signOut();
       localStorage.removeItem('isLoggedIn');
+      setPhoneVerified(false);
     } catch (error) {
       console.error('Error signing out:', error);
       toast({
@@ -196,12 +252,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     session,
     user,
     loading,
+    phoneVerified,
     signIn,
     signInWithGoogle,
     signInWithPhone,
     verifyOtp,
     signUp,
     signOut,
+    checkPhoneVerification,
+    setPhoneVerified,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

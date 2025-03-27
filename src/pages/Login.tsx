@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,12 +10,13 @@ import RegisterForm from '@/components/auth/RegisterForm';
 import SuccessAlert from '@/components/auth/SuccessAlert';
 import BusinessSignUpLink from '@/components/auth/BusinessSignUpLink';
 import { useAuth } from '@/providers/AuthProvider';
+import PhoneVerification from '@/components/auth/PhoneVerification';
 
 const Login = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, loading, signIn, signUp, signInWithGoogle, signInWithPhone } = useAuth();
+  const { user, loading, phoneVerified, signIn, signUp, signInWithGoogle, signInWithPhone, checkPhoneVerification } = useAuth();
   const fromRequest = location.state?.fromRequest;
   
   const [loginData, setLoginData] = useState({
@@ -37,12 +37,26 @@ const Login = () => {
     phone: '',
   });
 
+  const [needsPhoneVerification, setNeedsPhoneVerification] = useState(false);
+
   useEffect(() => {
-    // If user is already logged in, redirect to dashboard
-    if (!loading && user) {
-      navigate('/dashboard');
-    }
-  }, [user, loading, navigate]);
+    // Check if user is logged in but needs phone verification
+    const checkAuth = async () => {
+      if (!loading && user) {
+        const hasPhoneVerified = await checkPhoneVerification();
+        
+        if (!hasPhoneVerified) {
+          // User logged in but needs to verify phone
+          setNeedsPhoneVerification(true);
+        } else {
+          // User is logged in and phone is verified, redirect to dashboard
+          navigate('/dashboard');
+        }
+      }
+    };
+    
+    checkAuth();
+  }, [user, loading, phoneVerified, navigate, checkPhoneVerification]);
   
   const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -86,7 +100,7 @@ const Login = () => {
         title: "כניסה בוצעה בהצלחה",
         description: "ברוך הבא לחשבון שלך",
       });
-      navigate('/dashboard');
+      // Navigate will happen in the useEffect after checking phone verification
     }
   };
   
@@ -166,10 +180,69 @@ const Login = () => {
     }
   };
 
+  const handlePhoneVerificationComplete = () => {
+    // After successful verification, we'll redirect to dashboard
+    navigate('/dashboard');
+  };
+
   if (loading) {
     return <div className="flex justify-center items-center min-h-screen">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
     </div>;
+  }
+
+  if (user && needsPhoneVerification) {
+    return (
+      <div className="flex flex-col min-h-screen font-assistant" dir="rtl">
+        <Header />
+        
+        <main className="flex-grow pt-28 pb-16 flex items-center justify-center px-4">
+          <div className="w-full max-w-md">
+            <Card className="glass-card shadow-xl animate-fade-in-up p-6">
+              <h2 className="text-xl font-bold text-center mb-4">אימות מספר טלפון</h2>
+              <p className="text-center mb-6">כדי להמשיך להשתמש באפליקציה, אנא אמת את מספר הטלפון שלך</p>
+              
+              <div className="space-y-4">
+                <Label htmlFor="phone-for-verification">מספר טלפון</Label>
+                <div className="relative">
+                  <PhoneIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                  <Input 
+                    id="phone-for-verification" 
+                    name="phone"
+                    type="tel" 
+                    dir="ltr"
+                    className="text-left pr-10"
+                    placeholder="05X-XXX-XXXX"
+                    value={phoneData.phone}
+                    onChange={handlePhoneChange}
+                  />
+                </div>
+                
+                <Button 
+                  onClick={handlePhoneLogin}
+                  type="button"
+                  className="w-full bg-teal-500 hover:bg-teal-600 text-white"
+                >
+                  שלח קוד אימות
+                </Button>
+              </div>
+              
+              {phoneData.phone && (
+                <div className="mt-6">
+                  <PhoneVerification 
+                    phone={phoneData.phone} 
+                    onVerified={handlePhoneVerificationComplete}
+                    isPostLogin={true}
+                  />
+                </div>
+              )}
+            </Card>
+          </div>
+        </main>
+        
+        <Footer />
+      </div>
+    );
   }
 
   return (

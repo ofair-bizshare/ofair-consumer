@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,17 +5,24 @@ import { Label } from '@/components/ui/label';
 import { PhoneIcon } from "lucide-react";
 import { useAuth } from '@/providers/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface PhoneVerificationProps {
   phone: string;
   onVerified: () => void;
+  isPostLogin?: boolean;
 }
 
-const PhoneVerification: React.FC<PhoneVerificationProps> = ({ phone, onVerified }) => {
+const PhoneVerification: React.FC<PhoneVerificationProps> = ({ 
+  phone, 
+  onVerified, 
+  isPostLogin = false 
+}) => {
   const [otp, setOtp] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
-  const { verifyOtp } = useAuth();
+  const { verifyOtp, setPhoneVerified } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +46,14 @@ const PhoneVerification: React.FC<PhoneVerificationProps> = ({ phone, onVerified
           title: "אימות הצליח",
           description: "הטלפון אומת בהצלחה",
         });
-        onVerified();
+        
+        setPhoneVerified(true);
+        
+        if (isPostLogin) {
+          navigate('/dashboard');
+        } else {
+          onVerified();
+        }
       }
     } finally {
       setIsVerifying(false);
