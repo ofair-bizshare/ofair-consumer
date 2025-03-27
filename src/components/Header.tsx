@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, User, LogOut, Settings, Inbox, UserCircle } from 'lucide-react';
+import { Menu, X, User, LogOut, Settings, Inbox, UserCircle, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -50,10 +50,16 @@ const Header = () => {
         </Link>
 
         <nav className="hidden md:flex mx-0 px-0">
-          <Link to="/search" className="text-gray-800 hover:text-teal-500 transition-colors mx-[29px]">
+          <Link to="/" className="text-gray-800 hover:text-teal-500 transition-colors mx-[20px]">
+            <span className="flex items-center">
+              <Send size={18} className="ml-1" />
+              <span className="font-medium text-teal-600">שליחת פניה</span>
+            </span>
+          </Link>
+          <Link to="/search" className="text-gray-800 hover:text-teal-500 transition-colors mx-[23px]">
             חיפוש בעלי מקצוע
           </Link>
-          <Link to="/articles" className="text-gray-800 hover:text-teal-500 transition-colors mx-[25px]">
+          <Link to="/articles" className="text-gray-800 hover:text-teal-500 transition-colors mx-[23px]">
             טיפים ומאמרים
           </Link>
           <Link to="/about" className="text-gray-800 hover:text-teal-500 transition-colors mx-[23px] px-[8px]">
@@ -123,6 +129,10 @@ const Header = () => {
       {isMenuOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 bg-white shadow-lg border-t border-gray-100 animate-fade-in-down">
           <div className="container mx-auto px-6 py-4 flex flex-col space-y-4">
+            <Link to="/" className="text-teal-600 font-medium py-2 border-b border-gray-100 flex items-center" onClick={() => setIsMenuOpen(false)}>
+              <Send size={18} className="ml-2" />
+              שליחת פניה
+            </Link>
             <Link to="/search" className="text-gray-800 py-2 border-b border-gray-100" onClick={() => setIsMenuOpen(false)}>
               חיפוש בעלי מקצוע
             </Link>

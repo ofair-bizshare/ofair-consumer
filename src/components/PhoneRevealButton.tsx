@@ -29,14 +29,26 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
       variant: "default",
     });
     
-    // Simulate saving to "My Referrals" section
-    console.log("Referral saved:", {
+    // Save to localStorage for "My Referrals" section
+    const referral = {
       professionalId,
       professionalName,
       phoneNumber,
-      date: new Date().toISOString(),
+      date: new Date().toLocaleDateString('he-IL'),
       status: "new"
-    });
+    };
+    
+    // Get existing referrals or initialize empty array
+    const existingReferrals = JSON.parse(localStorage.getItem('myReferrals') || '[]');
+    
+    // Add new referral
+    existingReferrals.push(referral);
+    
+    // Save back to localStorage
+    localStorage.setItem('myReferrals', JSON.stringify(existingReferrals));
+    
+    // Also log for debugging
+    console.log("Referral saved:", referral);
   };
 
   return (

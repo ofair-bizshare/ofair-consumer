@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProfessionalCard from '@/components/ProfessionalCard';
-import { Clock, CheckCircle, AlertCircle, Star, MessageSquare, Eye, ArrowRight } from 'lucide-react';
+import { Clock, CheckCircle, AlertCircle, Star, MessageSquare, Eye, ArrowRight, Send } from 'lucide-react';
 import { 
   Dialog,
   DialogContent,
@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import CreditCard from '@/components/dashboard/CreditCard';
+import RequestForm from '@/components/RequestForm';
 
 const requests = [
   {
@@ -309,10 +310,20 @@ const QuoteCard: React.FC<QuoteCardProps> = ({ quote, onAccept, onReject, onView
 const Dashboard = () => {
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [quotesData, setQuotesData] = useState(quotes);
+  const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const { toast } = useToast();
+  const selectedRequestRef = useRef<HTMLDivElement>(null);
   
   const selectedRequest = requests.find(r => r.id === selectedRequestId);
   const requestQuotes = quotesData.filter(q => q.requestId === selectedRequestId);
+
+  useEffect(() => {
+    if (selectedRequestId && selectedRequestRef.current) {
+      setTimeout(() => {
+        selectedRequestRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [selectedRequestId]);
 
   const handleAcceptQuote = (quoteId: string) => {
     setQuotesData(prevQuotes => 
@@ -352,6 +363,27 @@ const Dashboard = () => {
     window.open(`/professional/${professionalId}`, '_blank');
   };
 
+  const referrals = [
+    {
+      id: '1',
+      professionalId: '1',
+      professionalName: 'אבי כהן',
+      profession: 'טכנאי מזגנים',
+      phoneNumber: '052-1234567',
+      date: '15.05.2023',
+      status: 'new'
+    },
+    {
+      id: '2',
+      professionalId: '2',
+      professionalName: 'יוסי לוי',
+      profession: 'אינסטלטור',
+      phoneNumber: '050-7654321',
+      date: '12.05.2023',
+      status: 'contacted'
+    }
+  ];
+
   return (
     <div className="flex flex-col min-h-screen" dir="rtl">
       <Header />
@@ -371,7 +403,7 @@ const Dashboard = () => {
             <TabsList className="w-full mb-6">
               <TabsTrigger value="requests" className="flex-1">הבקשות והצעות שלי</TabsTrigger>
               <TabsTrigger value="referrals" className="flex-1">ההפניות שלי</TabsTrigger>
-              <TabsTrigger value="credits" className="flex-1">הקרדיט שלי</TabsTrigger>
+              {isLoggedIn && <TabsTrigger value="credits" className="flex-1">הקרדיט שלי</TabsTrigger>}
             </TabsList>
             
             <TabsContent value="requests">
@@ -379,9 +411,25 @@ const Dashboard = () => {
                 <div className="w-full lg:w-1/3">
                   <div className="mb-6 flex justify-between items-center">
                     <h2 className="text-xl font-semibold text-blue-700">הבקשות שלי</h2>
-                    <Link to="/" className="text-teal-500 hover:text-teal-600 text-sm font-medium">
-                      בקשה חדשה +
-                    </Link>
+                    
+                    <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button className="text-teal-500 hover:text-teal-600 bg-teal-50 hover:bg-teal-100 text-sm font-medium">
+                          בקשה חדשה +
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" dir="rtl">
+                        <DialogHeader>
+                          <DialogTitle className="text-xl font-bold">יצירת בקשה חדשה</DialogTitle>
+                          <DialogDescription>
+                            מלא את הפרטים כדי ליצור בקשה חדשה לבעלי מקצוע
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4">
+                          <RequestForm skipAuthStep={true} />
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </div>
                   
                   <div className="space-y-4">
@@ -395,7 +443,7 @@ const Dashboard = () => {
                   </div>
                 </div>
                 
-                <div className="w-full lg:w-2/3">
+                <div className="w-full lg:w-2/3" ref={selectedRequestRef}>
                   {selectedRequest ? (
                     <div className="space-y-6 animate-fade-in">
                       <div className="glass-card p-6">
@@ -473,11 +521,24 @@ const Dashboard = () => {
                       <p className="text-gray-600 mb-6 max-w-md">
                         בחר אחת מהבקשות מהרשימה משמאל כדי לצפות בפרטים ובהצעות המחיר שהתקבלו
                       </p>
-                      <Link to="/">
-                        <Button className="bg-teal-500 hover:bg-teal-600">
-                          שלח בקשה חדשה
-                        </Button>
-                      </Link>
+                      <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button className="bg-teal-500 hover:bg-teal-600">
+                            שלח בקשה חדשה
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" dir="rtl">
+                          <DialogHeader>
+                            <DialogTitle className="text-xl font-bold">יצירת בקשה חדשה</DialogTitle>
+                            <DialogDescription>
+                              מלא את הפרטים כדי ליצור בקשה חדשה לבעלי מקצוע
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="py-4">
+                            <RequestForm skipAuthStep={true} />
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   )}
                 </div>
@@ -493,18 +554,58 @@ const Dashboard = () => {
                   </p>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div className="col-span-full text-center py-12">
-                      <AlertCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-xl font-semibold text-gray-700 mb-2">אין הפניות עדיין</h3>
-                      <p className="text-gray-500 mb-4">
-                        כאשר תיצור הפניות לבעלי מקצוע, הן יופיעו כאן כדי שתוכל לעקוב אחריהן
-                      </p>
-                      <Link to="/search">
-                        <Button className="border-teal-500 text-teal-500 hover:bg-teal-50" variant="outline">
-                          חפש בעלי מקצוע
-                        </Button>
-                      </Link>
-                    </div>
+                    {referrals.length > 0 ? (
+                      referrals.map(referral => (
+                        <Card key={referral.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                          <CardContent className="p-0">
+                            <div className="p-5">
+                              <div className="flex justify-between items-start mb-3">
+                                <div>
+                                  <h3 className="text-lg font-semibold">{referral.professionalName}</h3>
+                                  <p className="text-gray-500 text-sm">{referral.profession}</p>
+                                </div>
+                                <div className="flex items-center text-sm">
+                                  {referral.status === 'new' ? (
+                                    <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">חדש</span>
+                                  ) : (
+                                    <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">נוצר קשר</span>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              <div className="text-gray-700 mb-3">
+                                <p className="text-gray-700 font-medium">{referral.phoneNumber}</p>
+                                <p className="text-sm text-gray-500">{referral.date}</p>
+                              </div>
+                              
+                              <div className="flex justify-end">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  className="text-blue-700 border-blue-200 hover:bg-blue-50"
+                                  onClick={() => window.open(`/professional/${referral.professionalId}`, '_blank')}
+                                >
+                                  צפה בפרופיל
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))
+                    ) : (
+                      <div className="col-span-full text-center py-12">
+                        <AlertCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-xl font-semibold text-gray-700 mb-2">אין הפניות עדיין</h3>
+                        <p className="text-gray-500 mb-4">
+                          כאשר תיצור הפניות לבעלי מקצוע, הן יופיעו כאן כדי שתוכל לעקוב אחריהן
+                        </p>
+                        <Link to="/search">
+                          <Button className="border-teal-500 text-teal-500 hover:bg-teal-50" variant="outline">
+                            חפש בעלי מקצוע
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
