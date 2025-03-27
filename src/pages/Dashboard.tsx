@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,7 +19,6 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import CreditCard from '@/components/dashboard/CreditCard';
 
-// Sample data for requests
 const requests = [
   {
     id: '1',
@@ -51,7 +49,6 @@ const requests = [
   },
 ];
 
-// Sample data for quotes
 const quotes = [
   {
     id: '1',
@@ -70,7 +67,7 @@ const quotes = [
     price: '450',
     estimatedTime: 'יום אחד',
     description: 'אבדוק את המזגן, אבצע ניקוי יסודי ואתקן את התקלה. כולל אחריות של 3 חודשים על התיקון.',
-    status: 'pending', // pending, accepted, rejected
+    status: 'pending',
   },
   {
     id: '2',
@@ -331,28 +328,8 @@ const Dashboard = () => {
     toast({
       title: "הצעה התקבלה",
       description: "הודעה נשלחה לבעל המקצוע. הוא יצור איתך קשר בהקדם.",
-      variant: "success",
-    });
-  };
-
-  const handleRejectQuote = (quoteId: string) => {
-    setQuotesData(prevQuotes => 
-      prevQuotes.map(quote => 
-        quote.id === quoteId 
-          ? { ...quote, status: 'rejected' } 
-          : quote
-      )
-    );
-    
-    toast({
-      title: "הצעה נדחתה",
-      description: "הודעה נשלחה לבעל המקצוע.",
       variant: "default",
     });
-  };
-
-  const handleViewProfile = (professionalId: string) => {
-    window.open(`/professional/${professionalId}`, '_blank');
   };
 
   return (
@@ -379,7 +356,6 @@ const Dashboard = () => {
             
             <TabsContent value="requests">
               <div className="flex flex-col-reverse lg:flex-row gap-8">
-                {/* Sidebar with requests list */}
                 <div className="w-full lg:w-1/3">
                   <div className="mb-6 flex justify-between items-center">
                     <h2 className="text-xl font-semibold text-blue-700">הבקשות שלי</h2>
@@ -399,7 +375,6 @@ const Dashboard = () => {
                   </div>
                 </div>
                 
-                {/* Main content with request details and quotes */}
                 <div className="w-full lg:w-2/3">
                   {selectedRequest ? (
                     <div className="space-y-6 animate-fade-in">
@@ -498,7 +473,6 @@ const Dashboard = () => {
                   </p>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {/* Empty state for now */}
                     <div className="col-span-full text-center py-12">
                       <AlertCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                       <h3 className="text-xl font-semibold text-gray-700 mb-2">אין הפניות עדיין</h3>

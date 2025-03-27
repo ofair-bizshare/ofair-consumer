@@ -26,7 +26,7 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
     toast({
       title: "פרטי התקשרות נשמרו",
       description: `פרטי ההפניה ל${professionalName} נשמרו באזור האישי שלך`,
-      variant: "success",
+      variant: "default",
     });
     
     // Simulate saving to "My Referrals" section

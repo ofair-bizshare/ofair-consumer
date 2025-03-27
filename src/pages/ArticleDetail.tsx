@@ -111,7 +111,7 @@ const ArticleDetail = () => {
         toast({
           title: "הקישור הועתק",
           description: "קישור למאמר הועתק ללוח",
-          variant: "success",
+          variant: "default",
         });
       })
       .catch(() => {
