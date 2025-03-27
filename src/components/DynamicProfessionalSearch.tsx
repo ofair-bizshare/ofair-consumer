@@ -109,6 +109,7 @@ const DynamicProfessionalSearch: React.FC<DynamicProfessionalSearchProps> = ({ c
         </h2>
         
         <div className="grid grid-cols-1 md:grid-cols-7 gap-3">
+          {/* Category input */}
           <div className="space-y-2 md:col-span-3">
             <Label htmlFor="dynamic-category" className="text-gray-700">קטגוריה</Label>
             <div className="relative" ref={categoryInputRef}>
@@ -127,7 +128,7 @@ const DynamicProfessionalSearch: React.FC<DynamicProfessionalSearchProps> = ({ c
                 onClick={() => setShowCategorySuggestions(true)}
                 className="pl-10"
               />
-              {showCategorySuggestions && (
+              {showCategorySuggestions && filteredCategories && (
                 <div className="absolute z-50 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200 max-h-60 overflow-y-auto">
                   {filteredCategories.length > 0 ? (
                     filteredCategories.map((category) => (
@@ -147,6 +148,7 @@ const DynamicProfessionalSearch: React.FC<DynamicProfessionalSearchProps> = ({ c
             </div>
           </div>
 
+          {/* City input */}
           <div className="space-y-2 md:col-span-3">
             <Label htmlFor="dynamic-city" className="text-gray-700">עיר</Label>
             <div className="relative" ref={cityInputRef}>
@@ -165,7 +167,7 @@ const DynamicProfessionalSearch: React.FC<DynamicProfessionalSearchProps> = ({ c
                 onClick={() => setShowCitySuggestions(true)}
                 className="pl-10"
               />
-              {showCitySuggestions && (
+              {showCitySuggestions && filteredCities && (
                 <div className="absolute z-50 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200 max-h-60 overflow-y-auto">
                   {filteredCities.length > 0 ? (
                     filteredCities.map((city) => (
@@ -185,6 +187,7 @@ const DynamicProfessionalSearch: React.FC<DynamicProfessionalSearchProps> = ({ c
             </div>
           </div>
 
+          {/* Search button */}
           <div className="flex items-end md:col-span-1">
             <Button
               type="button"

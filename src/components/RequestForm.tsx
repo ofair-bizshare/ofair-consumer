@@ -9,7 +9,7 @@ import { Upload, MapPin, Calendar, Briefcase, UserRound, CheckCircle } from 'luc
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface RequestFormProps {
@@ -321,21 +321,23 @@ const RequestForm: React.FC<RequestFormProps> = ({
                 <PopoverContent className="p-0" align="start" dir="rtl">
                   <Command>
                     <CommandInput placeholder="חפש סוג עבודה..." dir="rtl" className="h-9" />
-                    <CommandEmpty>לא נמצאו תוצאות</CommandEmpty>
-                    <CommandGroup className="max-h-64 overflow-auto">
-                      {professions.map((profession) => (
-                        <CommandItem
-                          key={profession}
-                          onSelect={() => {
-                            setFormData(prev => ({ ...prev, profession }));
-                            setOpenProfessionPopover(false);
-                          }}
-                          className="cursor-pointer"
-                        >
-                          {profession}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
+                    <CommandList>
+                      <CommandEmpty>לא נמצאו תוצאות</CommandEmpty>
+                      <CommandGroup className="max-h-64 overflow-auto">
+                        {professions.map((profession) => (
+                          <CommandItem
+                            key={profession}
+                            onSelect={() => {
+                              setFormData(prev => ({ ...prev, profession }));
+                              setOpenProfessionPopover(false);
+                            }}
+                            className="cursor-pointer"
+                          >
+                            {profession}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
                   </Command>
                 </PopoverContent>
               </Popover>
@@ -361,21 +363,23 @@ const RequestForm: React.FC<RequestFormProps> = ({
                 <PopoverContent className="p-0" align="start" dir="rtl">
                   <Command>
                     <CommandInput placeholder="חפש עיר..." dir="rtl" className="h-9" />
-                    <CommandEmpty>לא נמצאו תוצאות</CommandEmpty>
-                    <CommandGroup className="max-h-64 overflow-auto">
-                      {cities.map((city) => (
-                        <CommandItem
-                          key={city}
-                          onSelect={() => {
-                            setFormData(prev => ({ ...prev, location: city }));
-                            setOpenCityPopover(false);
-                          }}
-                          className="cursor-pointer"
-                        >
-                          {city}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
+                    <CommandList>
+                      <CommandEmpty>לא נמצאו תוצאות</CommandEmpty>
+                      <CommandGroup className="max-h-64 overflow-auto">
+                        {cities.map((city) => (
+                          <CommandItem
+                            key={city}
+                            onSelect={() => {
+                              setFormData(prev => ({ ...prev, location: city }));
+                              setOpenCityPopover(false);
+                            }}
+                            className="cursor-pointer"
+                          >
+                            {city}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
                   </Command>
                 </PopoverContent>
               </Popover>
