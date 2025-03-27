@@ -11,71 +11,62 @@ import { ArrowLeft, Star, Shield, Clock, CheckCircle, FileText, Search, Gift } f
 import { Helmet } from 'react-helmet-async';
 
 // Sample data for the professionals
-const professionals = [
-  {
-    id: '1',
-    name: 'אבי כהן',
-    profession: 'חשמלאי מוסמך',
-    rating: 4.8,
-    reviewCount: 124,
-    location: 'תל אביב והמרכז',
-    image: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1180&q=80',
-    verified: true,
-    specialties: ['תיקוני חשמל', 'התקנות', 'תאורה'],
-  },
-  {
-    id: '2',
-    name: 'מיכל לוי',
-    profession: 'מעצבת פנים',
-    rating: 4.9,
-    reviewCount: 89,
-    location: 'השרון',
-    image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1161&q=80',
-    verified: true,
-    specialties: ['עיצוב דירות', 'תכנון חללים', 'צביעה'],
-  },
-  {
-    id: '3',
-    name: 'יוסי אברהם',
-    profession: 'שיפוצניק כללי',
-    rating: 4.7,
-    reviewCount: 156,
-    location: 'ירושלים והסביבה',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80',
-    verified: false,
-    specialties: ['שיפוצים כלליים', 'ריצוף', 'גבס'],
-  },
-];
+const professionals = [{
+  id: '1',
+  name: 'אבי כהן',
+  profession: 'חשמלאי מוסמך',
+  rating: 4.8,
+  reviewCount: 124,
+  location: 'תל אביב והמרכז',
+  image: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1180&q=80',
+  verified: true,
+  specialties: ['תיקוני חשמל', 'התקנות', 'תאורה']
+}, {
+  id: '2',
+  name: 'מיכל לוי',
+  profession: 'מעצבת פנים',
+  rating: 4.9,
+  reviewCount: 89,
+  location: 'השרון',
+  image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1161&q=80',
+  verified: true,
+  specialties: ['עיצוב דירות', 'תכנון חללים', 'צביעה']
+}, {
+  id: '3',
+  name: 'יוסי אברהם',
+  profession: 'שיפוצניק כללי',
+  rating: 4.7,
+  reviewCount: 156,
+  location: 'ירושלים והסביבה',
+  image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80',
+  verified: false,
+  specialties: ['שיפוצים כלליים', 'ריצוף', 'גבס']
+}];
 
 // Sample data for articles
-const articles = [
-  {
-    id: '1',
-    title: '10 טיפים לחיסכון בחשמל בבית',
-    excerpt: 'למדו כיצד לחסוך בהוצאות החשמל באמצעות שינויים קטנים בהרגלי השימוש היומיומיים שלכם.',
-    image: 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
-    date: '10 במאי, 2023',
-    category: 'חשמל וחיסכון',
-  },
-  {
-    id: '2',
-    title: 'מדריך לבחירת קבלן שיפוצים אמין',
-    excerpt: 'כיצד לבחור את הקבלן הנכון לפרויקט השיפוץ שלכם וכיצד להימנע מטעויות נפוצות בתהליך.',
-    image: 'https://images.unsplash.com/photo-1581165825571-4d25acd0e396?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
-    date: '18 באפריל, 2023',
-    category: 'שיפוצים',
-  },
-];
-
+const articles = [{
+  id: '1',
+  title: '10 טיפים לחיסכון בחשמל בבית',
+  excerpt: 'למדו כיצד לחסוך בהוצאות החשמל באמצעות שינויים קטנים בהרגלי השימוש היומיומיים שלכם.',
+  image: 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
+  date: '10 במאי, 2023',
+  category: 'חשמל וחיסכון'
+}, {
+  id: '2',
+  title: 'מדריך לבחירת קבלן שיפוצים אמין',
+  excerpt: 'כיצד לבחור את הקבלן הנכון לפרויקט השיפוץ שלכם וכיצד להימנע מטעויות נפוצות בתהליך.',
+  image: 'https://images.unsplash.com/photo-1581165825571-4d25acd0e396?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
+  date: '18 באפריל, 2023',
+  category: 'שיפוצים'
+}];
 const Index = () => {
   const requestFormRef = useRef<HTMLDivElement>(null);
-  
   const scrollToRequestForm = () => {
-    requestFormRef.current?.scrollIntoView({ behavior: 'smooth' });
+    requestFormRef.current?.scrollIntoView({
+      behavior: 'smooth'
+    });
   };
-
-  return (
-    <div className="flex flex-col min-h-screen" dir="rtl">
+  return <div className="flex flex-col min-h-screen" dir="rtl">
       <Helmet>
         <title>oFair - מציאת בעלי מקצוע מובילים בכל תחום | פלטפורמת חיבור בין לקוחות למקצוענים</title>
         <meta name="description" content="פלטפורמה חינמית המחברת בין בעלי בתים לבעלי מקצוע אמינים ומקצועיים. קבלו הצעות מחיר ללא התחייבות ובחרו את המקצוען הנכון עבורכם." />
@@ -112,11 +103,7 @@ const Index = () => {
                 פלטפורמה חינמית המחברת בין בעלי בתים לבעלי מקצוע מובילים בתחומם. קבלו הצעות מחיר ללא התחייבות ובחרו את המקצוען הנכון עבורכם.
               </p>
               <div className="flex flex-wrap gap-4 mb-8 lg:mb-0">
-                <Button 
-                  size="lg" 
-                  className="bg-[#00D09E] hover:bg-[#00C090] text-white button-transition flex items-center gap-2 shadow-md"
-                  onClick={scrollToRequestForm}
-                >
+                <Button size="lg" className="bg-[#00D09E] hover:bg-[#00C090] text-white button-transition flex items-center gap-2 shadow-md" onClick={scrollToRequestForm}>
                   <FileText size={20} />
                   שליחת פנייה לבעלי מקצוע
                 </Button>
@@ -200,12 +187,7 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-10 stagger-animation">
-            {professionals.map(professional => (
-              <ProfessionalCard 
-                key={professional.id}
-                {...professional}
-              />
-            ))}
+            {professionals.map(professional => <ProfessionalCard key={professional.id} {...professional} />)}
           </div>
           
           <div className="text-center">
@@ -272,12 +254,7 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10 stagger-animation">
-            {articles.map(article => (
-              <ArticleCard 
-                key={article.id}
-                {...article}
-              />
-            ))}
+            {articles.map(article => <ArticleCard key={article.id} {...article} />)}
           </div>
           
           <div className="text-center">
@@ -303,16 +280,12 @@ const Index = () => {
             אלפי בעלי מקצוע מחכים לעזור לכם. שלחו בקשה עכשיו וקבלו הצעות מחיר בחינם.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Button 
-              size="lg" 
-              className="bg-[#00D09E] hover:bg-[#00C090] text-white button-transition flex items-center gap-2"
-              onClick={scrollToRequestForm}
-            >
+            <Button size="lg" className="bg-[#00D09E] hover:bg-[#00C090] text-white button-transition flex items-center gap-2" onClick={scrollToRequestForm}>
               <FileText size={20} />
               שלח בקשה עכשיו
             </Button>
             <Link to="/search">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/20 button-transition flex items-center gap-2">
+              <Button size="lg" variant="outline" className="border-white button-transition flex items-center gap-2 text-green-50 bg-blue-950 hover:bg-blue-800">
                 <Search size={20} />
                 חפש בעלי מקצוע
               </Button>
@@ -322,8 +295,6 @@ const Index = () => {
       </section>
       
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
