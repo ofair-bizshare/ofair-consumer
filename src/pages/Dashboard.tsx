@@ -1,10 +1,12 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import DashboardTabs from '@/components/dashboard/DashboardTabs';
 import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent } from '@/components/ui/card';
+import { UserCircle, Gift } from 'lucide-react';
 
 const Dashboard = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -41,6 +43,27 @@ const Dashboard = () => {
               צפה בבקשות הקודמות שלך, הצעות המחיר שקיבלת והסטטוס שלהן
             </p>
           </div>
+          
+          {isLoggedIn && (
+            <div className="glass-card p-6 mb-8 flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="bg-blue-100 rounded-full p-3 mr-4">
+                  <UserCircle size={36} className="text-blue-700" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold">ברוך הבא!</h2>
+                  <p className="text-gray-600">שמחים לראות אותך שוב</p>
+                </div>
+              </div>
+              <div className="flex items-center bg-gradient-to-r from-teal-500 to-blue-600 text-white px-4 py-2 rounded-lg">
+                <Gift className="ml-2 h-5 w-5" />
+                <div>
+                  <div className="text-sm opacity-80">הקרדיט שלי</div>
+                  <div className="font-bold">250 ₪</div>
+                </div>
+              </div>
+            </div>
+          )}
           
           <DashboardTabs isLoggedIn={isLoggedIn} />
         </div>

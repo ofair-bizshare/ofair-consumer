@@ -26,9 +26,9 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ onLogout, isMobile = false 
           <User className="mr-2 h-4 w-4" />
           <span>אזור אישי</span>
         </Button>
-        <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/dashboard/requests')}>
+        <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/referrals')}>
           <Inbox className="mr-2 h-4 w-4" />
-          <span>הפניות שלי</span>
+          <span>ההפניות שלי</span>
         </Button>
         <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/dashboard/settings')}>
           <Settings className="mr-2 h-4 w-4" />
@@ -58,9 +58,9 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ onLogout, isMobile = false 
           <User className="mr-2 h-4 w-4" />
           <span>אזור אישי</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate('/dashboard/requests')}>
+        <DropdownMenuItem onClick={() => navigate('/referrals')}>
           <Inbox className="mr-2 h-4 w-4" />
-          <span>הפניות שלי</span>
+          <span>ההפניות שלי</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate('/dashboard/settings')}>
           <Settings className="mr-2 h-4 w-4" />

@@ -1,32 +1,21 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Link, useNavigate } from 'react-router-dom';
 import RequestsTab from './RequestsTab';
 import ReferralsTab from './ReferralsTab';
-import CreditCard from './CreditCard';
 
 interface DashboardTabsProps {
   isLoggedIn: boolean;
 }
 
 const DashboardTabs: React.FC<DashboardTabsProps> = ({ isLoggedIn }) => {
-  const navigate = useNavigate();
-  
-  const handleTabChange = (value: string) => {
-    if (value === "referrals") {
-      navigate("/referrals");
-    }
-  };
-  
   return (
-    <Tabs defaultValue="requests" className="mb-8" onValueChange={handleTabChange}>
+    <Tabs defaultValue="requests" className="mb-8">
       <TabsList className="w-full mb-6">
         <TabsTrigger value="requests" className="flex-1">הבקשות והצעות שלי</TabsTrigger>
         <TabsTrigger value="referrals" className="flex-1">
           ההפניות שלי
         </TabsTrigger>
-        {isLoggedIn && <TabsTrigger value="credits" className="flex-1">הקרדיט שלי</TabsTrigger>}
       </TabsList>
       
       <TabsContent value="requests">
@@ -35,12 +24,6 @@ const DashboardTabs: React.FC<DashboardTabsProps> = ({ isLoggedIn }) => {
       
       <TabsContent value="referrals">
         <ReferralsTab />
-      </TabsContent>
-      
-      <TabsContent value="credits">
-        <div className="max-w-md mx-auto">
-          <CreditCard creditAmount={250} />
-        </div>
       </TabsContent>
     </Tabs>
   );
