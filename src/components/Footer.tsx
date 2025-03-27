@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 
 const Footer = () => {
   return (
@@ -65,6 +66,7 @@ const Footer = () => {
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="inline-block bg-teal-500 hover:bg-teal-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                aria-label="דף הצטרפות לבעלי מקצוע"
               >
                 בעל מקצוע? הצטרף עכשיו
               </a>

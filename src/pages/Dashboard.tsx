@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import DashboardTabs from '@/components/dashboard/DashboardTabs';
@@ -31,6 +32,12 @@ const Dashboard = () => {
 
   return (
     <div className="flex flex-col min-h-screen" dir="rtl">
+      <Helmet>
+        <title>האזור האישי שלי | oFair - ניהול הבקשות, ההצעות וההפניות שלך</title>
+        <meta name="description" content="צפה בבקשות הקודמות שלך, הצעות המחיר שקיבלת, ההפניות שלך וסטטוס התקדמות הפרויקטים שלך באזור האישי." />
+        <meta name="keywords" content="אזור אישי, בקשות, הצעות מחיר, הפניות, ניהול פרויקטים, בעלי מקצוע, סטטוס פרויקט" />
+      </Helmet>
+      
       <Header />
       
       <main className="flex-grow pt-28 pb-16">
@@ -56,7 +63,7 @@ const Dashboard = () => {
                 </div>
               </div>
               <div className="flex items-center bg-gradient-to-r from-teal-500 to-blue-600 text-white px-4 py-2 rounded-lg">
-                <Gift className="ml-2 h-5 w-5" />
+                <Gift className="ml-2 h-5 w-5" aria-hidden="true" />
                 <div>
                   <div className="text-sm opacity-80">הקרדיט שלי</div>
                   <div className="font-bold">250 ₪</div>
@@ -65,7 +72,9 @@ const Dashboard = () => {
             </div>
           )}
           
-          <DashboardTabs isLoggedIn={isLoggedIn} />
+          <div id="requests-section">
+            <DashboardTabs isLoggedIn={isLoggedIn} />
+          </div>
         </div>
       </main>
       

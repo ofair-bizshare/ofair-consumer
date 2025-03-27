@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import RequestDialog from '@/components/dashboard/RequestDialog';
 import UserDropdown from './header/UserDropdown';
 import MobileMenu from './header/MobileMenu';
 import DesktopNav from './header/DesktopNav';
@@ -12,7 +11,6 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -41,7 +39,15 @@ const Header = () => {
 
   const handleSendRequest = () => {
     if (isLoggedIn) {
-      setIsRequestDialogOpen(true);
+      if (location.pathname === '/dashboard') {
+        // If we're already on the dashboard, scroll to the requests section
+        const requestsSection = document.getElementById('requests-section');
+        if (requestsSection) {
+          requestsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      } else {
+        navigate('/dashboard');
+      }
     } else {
       if (location.pathname === '/') {
         const formSection = document.getElementById('request-form-section');
@@ -98,11 +104,6 @@ const Header = () => {
         onSendRequest={handleSendRequest}
         onLogout={handleLogout}
         onClose={() => setIsMenuOpen(false)}
-      />
-
-      <RequestDialog 
-        isOpen={isRequestDialogOpen} 
-        onOpenChange={setIsRequestDialogOpen}
       />
     </header>
   );
