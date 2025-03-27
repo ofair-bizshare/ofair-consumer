@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 
 const ReferralsTab: React.FC = () => {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir="rtl">
       <div className="glass-card p-6">
         <h2 className="text-2xl font-semibold text-blue-700 mb-4">ההפניות שלי</h2>
         <p className="text-gray-600 mb-6">

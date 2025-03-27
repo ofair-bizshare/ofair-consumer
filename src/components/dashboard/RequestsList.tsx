@@ -12,7 +12,7 @@ interface RequestsListProps {
 
 const RequestsList: React.FC<RequestsListProps> = ({ requests, onSelect }) => {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" dir="rtl">
       {requests.map(request => (
         <RequestCard 
           key={request.id} 

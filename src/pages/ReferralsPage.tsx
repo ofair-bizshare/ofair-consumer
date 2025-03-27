@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
@@ -9,7 +9,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Phone, AlertCircle, Eye, MessageSquare } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Link } from 'react-router-dom';
 
 // Import requests from mock data
 import { requests } from '@/data/dashboardData';
@@ -57,6 +56,12 @@ const ReferralsPage = () => {
     }
   }, [navigate, toast]);
 
+  const handleTabChange = (value: string) => {
+    if (value === "dashboard") {
+      navigate("/dashboard");
+    }
+  };
+
   const markAsContacted = (id: string) => {
     const updatedReferrals = referrals.map(referral => {
       if (referral.professionalId === id) {
@@ -90,10 +95,11 @@ const ReferralsPage = () => {
             </p>
           </div>
           
-          <Tabs defaultValue="professionals" className="mb-10">
+          <Tabs defaultValue="professionals" className="mb-10" onValueChange={handleTabChange}>
             <TabsList className="w-full mb-6">
               <TabsTrigger value="professionals" className="flex-1">הפניות לבעלי מקצוע</TabsTrigger>
               <TabsTrigger value="requests" className="flex-1">הבקשות שלי</TabsTrigger>
+              <TabsTrigger value="dashboard" className="flex-1">האזור האישי</TabsTrigger>
             </TabsList>
             
             <TabsContent value="professionals">
@@ -172,24 +178,24 @@ const ReferralsPage = () => {
             <TabsContent value="requests">
               <div className="glass-card p-6">
                 {requests.length > 0 ? (
-                  <Table>
+                  <Table dir="rtl">
                     <TableHeader>
                       <TableRow>
-                        <TableHead>כותרת</TableHead>
-                        <TableHead>תאריך</TableHead>
-                        <TableHead>מיקום</TableHead>
-                        <TableHead>סטטוס</TableHead>
-                        <TableHead className="text-left">פעולות</TableHead>
+                        <TableHead className="text-right">כותרת</TableHead>
+                        <TableHead className="text-right">תאריך</TableHead>
+                        <TableHead className="text-right">מיקום</TableHead>
+                        <TableHead className="text-right">סטטוס</TableHead>
+                        <TableHead className="text-right">פעולות</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {requests.map((request) => (
                         <TableRow key={request.id}>
-                          <TableCell className="font-medium">{request.title}</TableCell>
-                          <TableCell>{request.date}</TableCell>
-                          <TableCell>{request.location}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center">
+                          <TableCell className="font-medium text-right">{request.title}</TableCell>
+                          <TableCell className="text-right">{request.date}</TableCell>
+                          <TableCell className="text-right">{request.location}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end">
                               {request.status === 'active' ? (
                                 <span className="inline-flex items-center text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">פעיל</span>
                               ) : (
@@ -197,7 +203,7 @@ const ReferralsPage = () => {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">
                             <Button 
                               variant="outline" 
                               size="sm"
