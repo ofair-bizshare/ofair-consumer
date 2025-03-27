@@ -33,10 +33,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Check user's metadata for phone verification
     const hasPhone = user.user_metadata?.phone !== undefined;
-    const isVerified = user.user_metadata?.phone_verified === true;
     
-    setPhoneVerified(isVerified || false);
-    return isVerified || false;
+    setPhoneVerified(hasPhone || false);
+    return hasPhone || false;
   };
 
   useEffect(() => {
@@ -176,8 +175,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Update the user metadata to include phone
         const { error: updateError } = await supabase.auth.updateUser({
           data: { 
-            phone: formattedPhone,
-            phone_verified: true 
+            phone: formattedPhone
           }
         });
           
@@ -222,7 +220,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { error };
     }
   };
-
+  
   const signOut = async () => {
     try {
       await supabase.auth.signOut();

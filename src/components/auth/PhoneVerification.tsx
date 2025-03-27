@@ -55,8 +55,7 @@ const PhoneVerification: React.FC<PhoneVerificationProps> = ({
       // Update the user metadata to include phone
       const { error: updateError } = await supabase.auth.updateUser({
         data: { 
-          phone: formattedPhone,
-          phone_verified: true 
+          phone: formattedPhone
         }
       });
         
@@ -89,7 +88,7 @@ const PhoneVerification: React.FC<PhoneVerificationProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" dir="rtl">
       <div className="bg-blue-50 p-4 rounded-md">
         <p className="text-sm text-blue-700">
           כדי להמשיך להשתמש באפליקציה, אנא הזן את מספר הטלפון שלך.

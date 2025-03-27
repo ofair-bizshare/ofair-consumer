@@ -35,6 +35,7 @@ const Login = () => {
     password: '',
     passwordConfirm: '',
     agreeTerms: false,
+    phone: '',
   });
 
   const [phoneData, setPhoneData] = useState({
@@ -108,7 +109,7 @@ const Login = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!registerData.name || !registerData.email || !registerData.password || !registerData.passwordConfirm) {
+    if (!registerData.name || !registerData.email || !registerData.password || !registerData.passwordConfirm || !registerData.phone) {
       toast({
         title: "שדות חסרים",
         description: "אנא מלא את כל השדות הנדרשים",
@@ -119,7 +120,7 @@ const Login = () => {
     
     if (registerData.password !== registerData.passwordConfirm) {
       toast({
-        title: "סיסמאות לא תואמ��ת",
+        title: "סיסמאות לא תואמות",
         description: "אנא ודא שהסיסמאות שהזנת זהות",
         variant: "destructive",
       });
@@ -137,6 +138,7 @@ const Login = () => {
 
     const { error } = await signUp(registerData.email, registerData.password, {
       name: registerData.name,
+      phone: registerData.phone,
     });
     
     if (!error) {

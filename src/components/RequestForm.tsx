@@ -4,65 +4,88 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Upload, MapPin, Calendar, Briefcase, UserRound, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
 interface RequestFormProps {
   onSuccess?: (value: boolean) => void;
 }
-const professions = [{
-  label: 'שיפוצים',
-  value: 'renovations'
-}, {
-  label: 'חשמל',
-  value: 'electricity'
-}, {
-  label: 'אינסטלציה',
-  value: 'plumbing'
-}, {
-  label: 'נגרות',
-  value: 'carpentry'
-}, {
-  label: 'מיזוג אוויר',
-  value: 'air_conditioning'
-}, {
-  label: 'גינון',
-  value: 'gardening'
-}, {
-  label: 'ניקיון',
-  value: 'cleaning'
-}, {
-  label: 'צביעה',
-  value: 'painting'
-}, {
-  label: 'הובלות',
-  value: 'moving'
-}, {
-  label: 'אחר',
-  value: 'other'
-}];
-const locations = [{
-  label: 'תל אביב והמרכז',
-  value: 'tel_aviv'
-}, {
-  label: 'ירושלים והסביבה',
-  value: 'jerusalem'
-}, {
-  label: 'חיפה והצפון',
-  value: 'haifa'
-}, {
-  label: 'באר שבע והדרום',
-  value: 'beer_sheva'
-}, {
-  label: 'אזור השרון',
-  value: 'sharon'
-}, {
-  label: 'השפלה',
-  value: 'shfela'
-}];
+
+// List of professions for suggestions
+const professions = [
+  'שיפוצים',
+  'חשמל',
+  'אינסטלציה',
+  'נגרות',
+  'מיזוג אוויר',
+  'גינון',
+  'ניקיון',
+  'צביעה',
+  'הובלות',
+  'עבודות בניה',
+  'אלומיניום',
+  'איטום',
+  'אינסטלטור',
+  'דלתות',
+  'חלונות',
+  'מטבחים',
+  'ריצוף',
+  'שליכט',
+  'בנייה'
+];
+
+// List of cities for suggestions
+const cities = [
+  'תל אביב',
+  'ירושלים',
+  'חיפה',
+  'ראשון לציון',
+  'פתח תקווה',
+  'אשדוד',
+  'נתניה',
+  'באר שבע',
+  'חולון',
+  'בני ברק',
+  'רמת גן',
+  'אשקלון',
+  'רחובות',
+  'בת ים',
+  'הרצליה',
+  'כפר סבא',
+  'מודיעין',
+  'לוד',
+  'רמלה',
+  'רעננה',
+  'הוד השרון',
+  'נצרת',
+  'קרית אתא',
+  'קרית גת',
+  'אילת',
+  'עכו',
+  'קרית מוצקין',
+  'רהט',
+  'נהריה',
+  'דימונה',
+  'טבריה',
+  'קרית ים',
+  'עפולה',
+  'יבנה',
+  'אום אל פחם',
+  'צפת',
+  'רמת השרון',
+  'טייבה',
+  'קרית שמונה',
+  'מגדל העמק',
+  'טמרה',
+  'סח\'נין',
+  'קרית ביאליק'
+];
+
 const RequestForm: React.FC<RequestFormProps> = ({
   onSuccess
 }) => {
@@ -72,10 +95,11 @@ const RequestForm: React.FC<RequestFormProps> = ({
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [newRequestId, setNewRequestId] = useState<string>("");
+  const [openProfessionPopover, setOpenProfessionPopover] = useState(false);
+  const [openCityPopover, setOpenCityPopover] = useState(false);
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+  
   const [formData, setFormData] = useState({
     profession: '',
     description: '',
@@ -85,6 +109,7 @@ const RequestForm: React.FC<RequestFormProps> = ({
     phone: '',
     email: ''
   });
+  
   const [loginData, setLoginData] = useState({
     email: '',
     password: '',
@@ -105,16 +130,15 @@ const RequestForm: React.FC<RequestFormProps> = ({
     setIsLoggedIn(hasSession);
     return hasSession;
   };
+  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const {
-      name,
-      value
-    } = e.target;
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
   };
+  
   const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const {
       name,
@@ -145,6 +169,7 @@ const RequestForm: React.FC<RequestFormProps> = ({
       [name]: value
     }));
   };
+  
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const fileArray = Array.from(e.target.files);
@@ -154,6 +179,7 @@ const RequestForm: React.FC<RequestFormProps> = ({
       setPreviewUrls([...previewUrls, ...newPreviewUrls]);
     }
   };
+  
   const removeImage = (index: number) => {
     const newImages = [...images];
     const newPreviewUrls = [...previewUrls];
@@ -163,6 +189,7 @@ const RequestForm: React.FC<RequestFormProps> = ({
     setImages(newImages);
     setPreviewUrls(newPreviewUrls);
   };
+  
   const handleNext = () => {
     if (!formData.profession || !formData.description || !formData.location) {
       toast({
@@ -172,45 +199,41 @@ const RequestForm: React.FC<RequestFormProps> = ({
       });
       return;
     }
+    
     if (checkLoginStatus()) {
       handleFormSubmit();
     } else {
       setStep(2);
     }
   };
+  
   const handleFormSubmit = () => {
     console.log('Submitting form data:', formData);
     const requestId = Date.now().toString();
     setNewRequestId(requestId);
     const newRequest = {
       id: requestId,
-      title: getProfessionLabel(formData.profession),
+      title: formData.profession,
       description: formData.description,
       date: new Date().toLocaleDateString('he-IL'),
-      location: getLocationLabel(formData.location),
+      location: formData.location,
       status: 'active' as const,
       quotesCount: 0
     };
+    
     const existingRequests = JSON.parse(localStorage.getItem('myRequests') || '[]');
     existingRequests.push(newRequest);
     localStorage.setItem('myRequests', JSON.stringify(existingRequests));
-
+    
     // Show success dialog instead of just toast
     setShowSuccessDialog(true);
-
+    
     // If we're in a dialog and have onSuccess callback, close dialog
     if (onSuccess) {
       onSuccess(false);
     }
   };
-  const getProfessionLabel = (value: string): string => {
-    const profession = professions.find(p => p.value === value);
-    return profession ? profession.label : value;
-  };
-  const getLocationLabel = (value: string): string => {
-    const location = locations.find(l => l.value === value);
-    return location ? location.label : value;
-  };
+  
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginData.email || !loginData.password) {
@@ -272,55 +295,117 @@ const RequestForm: React.FC<RequestFormProps> = ({
       }
     }, 500);
   };
+  
   const renderFormContent = () => {
     if (step === 1) {
-      return <div className="space-y-6 animate-fade-in">
+      return (
+        <div className="space-y-6 animate-fade-in">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="profession" className="text-gray-700">סוג עבודה</Label>
-              <div className="relative">
-                <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                <Select onValueChange={value => handleSelectChange('profession', value)} value={formData.profession}>
-                  <SelectTrigger className="pl-10">
-                    <SelectValue placeholder="בחר סוג עבודה" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {professions.map(profession => <SelectItem key={profession.value} value={profession.value}>
-                        {profession.label}
-                      </SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
+              <Popover open={openProfessionPopover} onOpenChange={setOpenProfessionPopover}>
+                <PopoverTrigger asChild>
+                  <div className="relative">
+                    <Briefcase className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                    <Input
+                      id="profession"
+                      name="profession"
+                      value={formData.profession}
+                      onChange={handleInputChange}
+                      placeholder="בחר סוג עבודה"
+                      className="pr-10"
+                      onClick={() => setOpenProfessionPopover(true)}
+                    />
+                  </div>
+                </PopoverTrigger>
+                <PopoverContent className="p-0" align="start" dir="rtl">
+                  <Command>
+                    <CommandInput placeholder="חפש סוג עבודה..." dir="rtl" className="h-9" />
+                    <CommandEmpty>לא נמצאו תוצאות</CommandEmpty>
+                    <CommandGroup className="max-h-64 overflow-auto">
+                      {professions.map((profession) => (
+                        <CommandItem
+                          key={profession}
+                          onSelect={() => {
+                            setFormData(prev => ({ ...prev, profession }));
+                            setOpenProfessionPopover(false);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          {profession}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="location" className="text-gray-700">אזור גיאוגרפי</Label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                <Select onValueChange={value => handleSelectChange('location', value)} value={formData.location}>
-                  <SelectTrigger className="pl-10">
-                    <SelectValue placeholder="בחר אזור" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {locations.map(location => <SelectItem key={location.value} value={location.value}>
-                        {location.label}
-                      </SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
+              <Label htmlFor="location" className="text-gray-700">עיר</Label>
+              <Popover open={openCityPopover} onOpenChange={setOpenCityPopover}>
+                <PopoverTrigger asChild>
+                  <div className="relative">
+                    <MapPin className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                    <Input
+                      id="location"
+                      name="location"
+                      value={formData.location}
+                      onChange={handleInputChange}
+                      placeholder="בחר עיר"
+                      className="pr-10"
+                      onClick={() => setOpenCityPopover(true)}
+                    />
+                  </div>
+                </PopoverTrigger>
+                <PopoverContent className="p-0" align="start" dir="rtl">
+                  <Command>
+                    <CommandInput placeholder="חפש עיר..." dir="rtl" className="h-9" />
+                    <CommandEmpty>לא נמצאו תוצאות</CommandEmpty>
+                    <CommandGroup className="max-h-64 overflow-auto">
+                      {cities.map((city) => (
+                        <CommandItem
+                          key={city}
+                          onSelect={() => {
+                            setFormData(prev => ({ ...prev, location: city }));
+                            setOpenCityPopover(false);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          {city}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="description" className="text-gray-700">תיאור מפורט של העבודה</Label>
-            <Textarea id="description" name="description" placeholder="תאר את העבודה שברצונך לבצע באופן מפורט ככל האפשר" className="h-32" value={formData.description} onChange={handleInputChange} />
+            <Textarea 
+              id="description" 
+              name="description" 
+              placeholder="תאר את העבודה שברצונך לבצע באופן מפורט ככל האפשר" 
+              className="h-32" 
+              value={formData.description} 
+              onChange={handleInputChange} 
+            />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="timing" className="text-gray-700">מועד ביצוע (אופציונלי)</Label>
             <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <Input id="timing" name="timing" placeholder="מתי תרצה שהעבודה תתבצע?" className="pl-10" value={formData.timing} onChange={handleInputChange} />
+              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <Input 
+                id="timing" 
+                name="timing" 
+                placeholder="מתי תרצה שהעבודה תתבצע?" 
+                className="pr-10" 
+                value={formData.timing} 
+                onChange={handleInputChange} 
+              />
             </div>
           </div>
 
@@ -334,18 +419,28 @@ const RequestForm: React.FC<RequestFormProps> = ({
               </label>
             </div>
 
-            {previewUrls.length > 0 && <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                {previewUrls.map((url, index) => <div key={index} className="relative rounded-md overflow-hidden h-20">
+            {previewUrls.length > 0 && (
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                {previewUrls.map((url, index) => (
+                  <div key={index} className="relative rounded-md overflow-hidden h-20">
                     <img src={url} alt={`Uploaded ${index}`} className="w-full h-full object-cover" />
-                    <button type="button" className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs" onClick={() => removeImage(index)}>
+                    <button 
+                      type="button" 
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs" 
+                      onClick={() => removeImage(index)}
+                    >
                       ×
                     </button>
-                  </div>)}
-              </div>}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </div>;
+        </div>
+      );
     } else {
-      return <div className="space-y-6 animate-fade-in">
+      return (
+        <div className="space-y-6 animate-fade-in">
           <div className="text-center mb-4">
             <UserRound className="mx-auto h-12 w-12 text-blue-500 mb-2" />
             <h3 className="text-lg font-medium text-gray-700">כניסה או הרשמה לשליחת הבקשה</h3>
@@ -423,10 +518,13 @@ const RequestForm: React.FC<RequestFormProps> = ({
               </form>
             </TabsContent>
           </Tabs>
-        </div>;
+        </div>
+      );
     }
   };
-  return <>
+
+  return (
+    <>
       <Card className="glass-card overflow-hidden animate-fade-in-up w-full max-w-md mx-auto" aria-labelledby="service-request-form-title">
         <div className="p-5 md:p-6">
           <div className="flex justify-between items-center mb-6">
@@ -441,14 +539,27 @@ const RequestForm: React.FC<RequestFormProps> = ({
           {renderFormContent()}
 
           <div className="flex justify-between mt-8">
-            {step > 1 && <Button type="button" variant="outline" onClick={handleBack} className="border-[#00D09E] text-[#00D09E] hover:bg-teal-50">
+            {step > 1 && (
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handleBack} 
+                className="border-[#00D09E] text-[#00D09E] hover:bg-teal-50"
+              >
                 חזרה
-              </Button>}
-            {step === 1 && <div className="ml-auto">
-                <Button type="button" onClick={handleNext} className="bg-[#00D09E] hover:bg-[#00C090]">
+              </Button>
+            )}
+            {step === 1 && (
+              <div className="mr-auto">
+                <Button 
+                  type="button" 
+                  onClick={handleNext} 
+                  className="bg-[#00D09E] hover:bg-[#00C090]"
+                >
                   {isLoggedIn ? 'שלח בקשה' : 'המשך'}
                 </Button>
-              </div>}
+              </div>
+            )}
           </div>
         </div>
       </Card>
@@ -476,12 +587,18 @@ const RequestForm: React.FC<RequestFormProps> = ({
             </div>
           </div>
           <DialogFooter className="sm:justify-center">
-            <Button type="button" className="bg-[#00D09E] hover:bg-[#00C090] text-white w-full" onClick={handleGoToDashboard}>
+            <Button 
+              type="button" 
+              className="bg-[#00D09E] hover:bg-[#00C090] text-white w-full" 
+              onClick={handleGoToDashboard}
+            >
               עבור לאזור האישי
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>;
+    </>
+  );
 };
+
 export default RequestForm;

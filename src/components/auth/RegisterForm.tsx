@@ -16,6 +16,7 @@ interface RegisterFormProps {
     password: string;
     passwordConfirm: string;
     agreeTerms: boolean;
+    phone?: string; // Add phone field
   };
   phoneData: {
     phone: string;
@@ -52,7 +53,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
   return (
     <>
       {/* Social registration button */}
-      <div className="space-y-3">
+      <div className="space-y-3" dir="rtl">
         <Button 
           type="button"
           variant="outline"
@@ -84,7 +85,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
         />
       ) : (
         <>
-          <form onSubmit={handleRegister}>
+          <form onSubmit={handleRegister} dir="rtl">
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="register-name">שם מלא</Label>
@@ -107,6 +108,25 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
                   value={registerData.email}
                   onChange={handleRegisterChange}
                 />
+              </div>
+              
+              {/* Add required phone field */}
+              <div className="space-y-2">
+                <Label htmlFor="register-phone-required">מספר טלפון <span className="text-red-500">*</span></Label>
+                <div className="relative">
+                  <PhoneIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                  <Input 
+                    id="register-phone-required" 
+                    name="phone"
+                    type="tel" 
+                    dir="ltr"
+                    className="text-left pr-10"
+                    placeholder="05X-XXX-XXXX"
+                    value={registerData.phone || ''}
+                    onChange={handleRegisterChange}
+                    required
+                  />
+                </div>
               </div>
               
               <div className="space-y-2">
@@ -144,7 +164,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
                     } as React.ChangeEvent<HTMLInputElement>)
                   }
                 />
-                <Label htmlFor="agree-terms" className="text-sm cursor-pointer">
+                <Label htmlFor="agree-terms" className="text-sm cursor-pointer mr-2">
                   אני מסכים/ה ל
                   <Link to="/terms" className="text-teal-500 mx-1 hover:underline">
                     תנאי השימוש
@@ -176,7 +196,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
             </div>
           </div>
 
-          <form onSubmit={onPhoneLoginSubmit} className="pt-2">
+          <form onSubmit={onPhoneLoginSubmit} className="pt-2" dir="rtl">
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="register-phone">מספר טלפון</Label>

@@ -50,7 +50,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
   return (
     <>
       {/* Social login buttons */}
-      <div className="space-y-3">
+      <div className="space-y-3" dir="rtl">
         <Button 
           type="button"
           variant="outline"
@@ -82,7 +82,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         />
       ) : (
         <>
-          <form onSubmit={handleLogin}>
+          <form onSubmit={handleLogin} dir="rtl">
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="login-email">דוא"ל</Label>
@@ -124,7 +124,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
                     } as React.ChangeEvent<HTMLInputElement>)
                   }
                 />
-                <Label htmlFor="remember-me" className="text-sm cursor-pointer">
+                <Label htmlFor="remember-me" className="text-sm cursor-pointer mr-2">
                   זכור אותי
                 </Label>
               </div>
@@ -149,7 +149,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
             </div>
           </div>
 
-          <form onSubmit={onPhoneLoginSubmit} className="pt-2">
+          <form onSubmit={onPhoneLoginSubmit} className="pt-2" dir="rtl">
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="login-phone">מספר טלפון</Label>
