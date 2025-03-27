@@ -1,0 +1,92 @@
+
+import { RequestInterface, QuoteInterface } from '@/types/dashboard';
+
+export const requests: RequestInterface[] = [
+  {
+    id: '1',
+    title: 'תיקון מזגן',
+    description: 'המזגן לא מקרר, רועש ונדרש תיקון בהקדם',
+    date: '15.05.2023',
+    location: 'תל אביב והמרכז',
+    status: 'active',
+    quotesCount: 3,
+  },
+  {
+    id: '2',
+    title: 'שיפוץ מטבח',
+    description: 'החלפת ארונות מטבח, חיפוי קירות ושיש',
+    date: '10.04.2023',
+    location: 'ירושלים והסביבה',
+    status: 'completed',
+    quotesCount: 5,
+  },
+  {
+    id: '3',
+    title: 'צביעת דירה',
+    description: 'צביעה של דירת 4 חדרים, כולל תקרות וקירות',
+    date: '02.03.2023',
+    location: 'השרון',
+    status: 'active',
+    quotesCount: 0,
+  },
+];
+
+export const quotes: QuoteInterface[] = [
+  {
+    id: '1',
+    requestId: '1',
+    professional: {
+      id: '1',
+      name: 'אבי כהן',
+      profession: 'טכנאי מזגנים',
+      rating: 4.8,
+      reviewCount: 124,
+      location: 'תל אביב והמרכז',
+      image: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1180&q=80',
+      verified: true,
+      specialties: ['תיקוני מזגנים', 'התקנות מזגנים', 'ניקוי מזגנים'],
+    },
+    price: '450',
+    estimatedTime: 'יום אחד',
+    description: 'אבדוק את המזגן, אבצע ניקוי יסודי ואתקן את התקלה. כולל אחריות של 3 חודשים על התיקון.',
+    status: 'pending',
+  },
+  {
+    id: '2',
+    requestId: '1',
+    professional: {
+      id: '2',
+      name: 'יוסי לוי',
+      profession: 'טכנאי מזגנים',
+      rating: 4.6,
+      reviewCount: 87,
+      location: 'תל אביב והמרכז',
+      image: 'https://images.unsplash.com/photo-1566753323558-f4e0952af115?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2122&q=80',
+      verified: true,
+      specialties: ['תיקוני מזגנים', 'התקנות מזגנים'],
+    },
+    price: '350',
+    estimatedTime: '2-3 שעות',
+    description: 'בדיקה וטיפול בתקלה באותו יום. עלות כוללת חלקים במידת הצורך.',
+    status: 'pending',
+  },
+  {
+    id: '3',
+    requestId: '1',
+    professional: {
+      id: '3',
+      name: 'דני שטרן',
+      profession: 'טכנאי מיזוג אוויר',
+      rating: 4.9,
+      reviewCount: 112,
+      location: 'רמת גן',
+      image: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=774&q=80',
+      verified: false,
+      specialties: ['תיקון מזגנים', 'מזגנים מרכזיים'],
+    },
+    price: '500',
+    estimatedTime: 'יומיים',
+    description: 'בדיקה מקיפה של המזגן, טיפול בתקלה ושדרוג המערכת במידת הצורך. אחריות של 6 חודשים.',
+    status: 'pending',
+  },
+];
