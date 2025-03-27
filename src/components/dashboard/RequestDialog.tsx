@@ -33,9 +33,9 @@ const RequestDialog: React.FC<RequestDialogProps> = ({
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" dir="rtl">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">יצירת בקשה חדשה</DialogTitle>
+          <DialogTitle className="text-xl font-bold">שליחת פנייה לבעלי מקצוע</DialogTitle>
           <DialogDescription>
-            מלא את הפרטים כדי ליצור בקשה חדשה לבעלי מקצוע
+            מלא את הפרטים כדי ליצור פנייה חדשה לבעלי מקצוע
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">

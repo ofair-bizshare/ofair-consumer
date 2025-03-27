@@ -16,6 +16,8 @@ import ArticleDetail from "./pages/ArticleDetail";
 import About from "./pages/About";
 import MyReferrals from "./pages/MyReferrals";
 import ReferralsPage from "./pages/ReferralsPage";
+import MyRequests from "./pages/MyRequests";
+import UserSettings from "./pages/UserSettings";
 import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
@@ -33,6 +35,8 @@ const App = () => (
                 <Route path="/search" element={<Search />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/dashboard/requests" element={<MyRequests />} />
+                <Route path="/dashboard/settings" element={<UserSettings />} />
                 <Route path="/professional/:id" element={<ProfessionalProfile />} />
                 <Route path="/articles" element={<Articles />} />
                 <Route path="/article/:id" element={<ArticleDetail />} />

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, User, LogOut, Settings, Inbox, UserCircle, Send } from 'lucide-react';
@@ -9,11 +10,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import RequestDialog from '@/components/dashboard/RequestDialog';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Simulate auth state
+  const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -43,13 +46,17 @@ const Header = () => {
   };
 
   const handleSendRequest = () => {
-    if (location.pathname === '/') {
-      const formSection = document.getElementById('request-form-section');
-      if (formSection) {
-        formSection.scrollIntoView({ behavior: 'smooth' });
-      }
+    if (isLoggedIn) {
+      setIsRequestDialogOpen(true);
     } else {
-      navigate('/#request-form-section');
+      if (location.pathname === '/') {
+        const formSection = document.getElementById('request-form-section');
+        if (formSection) {
+          formSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      } else {
+        navigate('/#request-form-section');
+      }
     }
   };
 
@@ -67,7 +74,7 @@ const Header = () => {
           >
             <span className="flex items-center">
               <Send size={18} className="ml-1" />
-              <span className="font-medium text-teal-600">שליחת פניה</span>
+              <span className="font-medium text-teal-600">שליחת פנייה</span>
             </span>
           </button>
           <Link to="/search" className="text-gray-800 hover:text-teal-500 transition-colors mx-[23px]">
@@ -148,7 +155,7 @@ const Header = () => {
               className="text-teal-600 font-medium py-2 border-b border-gray-100 flex items-center bg-transparent border-none text-right w-full"
             >
               <Send size={18} className="ml-2" />
-              שליחת פניה
+              שליחת פנייה
             </button>
             <Link to="/" className="text-gray-800 py-2 border-b border-gray-100" onClick={() => setIsMenuOpen(false)}>
               חיפוש בעלי מקצוע
@@ -212,6 +219,12 @@ const Header = () => {
           </div>
         </div>
       )}
+
+      {/* Request Dialog */}
+      <RequestDialog 
+        isOpen={isRequestDialogOpen} 
+        onOpenChange={setIsRequestDialogOpen}
+      />
     </header>
   );
 };
