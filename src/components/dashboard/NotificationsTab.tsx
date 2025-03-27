@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Bell, CheckCircle, X, MessageSquare, Clock, Calendar, Tool } from 'lucide-react';
+import { Bell, CheckCircle, X, MessageSquare, Clock, Calendar, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
@@ -115,7 +115,7 @@ const NotificationsTab: React.FC = () => {
       case 'reminder':
         return <Clock className="text-orange-500" />;
       case 'professional':
-        return <Tool className="text-purple-500" />;
+        return <Wrench className="text-purple-500" />;
       case 'system':
         return <Bell className="text-gray-500" />;
       default:

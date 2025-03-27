@@ -120,7 +120,7 @@ const Dashboard = () => {
                       </label>
                     </div>
                   </div>
-                  <div className="mr-2">
+                  <div className="mr-4">
                     <h2 className="text-xl font-semibold">ברוך הבא, {user.user_metadata?.name || user.email}!</h2>
                     <p className="text-gray-600">שמחים לראות אותך שוב</p>
                   </div>

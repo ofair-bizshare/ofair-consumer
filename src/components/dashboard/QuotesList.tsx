@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -75,6 +74,10 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   const handleCancelAccept = () => {
     onRejectQuote(quote.id);
     setShowCancelConfirm(false);
+  };
+  
+  const isQuoteDisabled = () => {
+    return hasAcceptedQuote && quote.status !== 'accepted' && quote.status !== 'rejected';
   };
   
   return (
@@ -199,7 +202,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
               </AlertDialog>
             ) : (
               <>
-                {!hasAcceptedQuote && !quote.isDisabled && quote.status !== 'rejected' && (
+                {!hasAcceptedQuote && quote.status !== 'rejected' && (
                   <>
                     <Button 
                       variant="outline" 

@@ -41,7 +41,7 @@ const DashboardTabs: React.FC<DashboardTabsProps> = ({ isLoggedIn }) => {
     <Tabs defaultValue="requests" dir="rtl" className="animate-fade-in">
       <TabsList className="grid grid-cols-3 md:w-[400px] mb-8">
         <TabsTrigger value="requests">הפניות שלי</TabsTrigger>
-        <TabsTrigger value="referrals">הפניות שלי</TabsTrigger>
+        <TabsTrigger value="referrals">הפניות שהעברתי</TabsTrigger>
         <TabsTrigger value="notifications">התראות</TabsTrigger>
       </TabsList>
       
