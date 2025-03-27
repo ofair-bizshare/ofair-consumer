@@ -23,6 +23,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   hasAcceptedQuote
 }) => {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [isContactActive, setIsContactActive] = useState(false);
   
   const handleAcceptClick = () => {
     if (quote.status === 'accepted') {
@@ -35,6 +36,10 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   const handleCancelAccept = () => {
     onRejectQuote(quote.id);
     setShowCancelConfirm(false);
+  };
+
+  const handleContactClick = () => {
+    setIsContactActive(!isContactActive);
   };
   
   return (
@@ -84,12 +89,13 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
         <div className="p-4 flex flex-wrap justify-between items-center gap-2 bg-gray-50">
           <div className="flex space-x-2 space-x-reverse">
             <Button 
-              variant="outline" 
+              variant={isContactActive ? "default" : "outline"}
               size="sm"
-              className="space-x-1 space-x-reverse border-gray-300"
+              className={`space-x-1 space-x-reverse ${isContactActive ? 'bg-blue-600' : 'border-gray-300'}`}
+              onClick={handleContactClick}
             >
               <MessageSquare size={16} />
-              <span>שלח הודעה</span>
+              <span>{isContactActive ? 'חזור' : 'שלח הודעה'}</span>
             </Button>
             
             <QuoteDetailDialog 

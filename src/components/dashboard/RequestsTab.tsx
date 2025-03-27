@@ -36,8 +36,8 @@ const RequestsTab: React.FC = () => {
       prevQuotes.map(quote => 
         quote.id === quoteId 
           ? { ...quote, status: 'accepted' } 
-          : quote.requestId === quotesState.find(q => q.id === quoteId)?.requestId
-            ? { ...quote, status: 'rejected' }
+          : quote.requestId === prevQuotes.find(q => q.id === quoteId)?.requestId
+            ? { ...quote, status: quote.status === 'pending' ? 'rejected' : quote.status }
             : quote
       )
     );
