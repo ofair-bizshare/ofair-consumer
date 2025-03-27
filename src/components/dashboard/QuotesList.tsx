@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Star, MessageSquare, Eye } from 'lucide-react';
+import { Star, MessageSquare, Eye, CheckCircle } from 'lucide-react';
 import { QuoteInterface } from '@/types/dashboard';
 import {
   Dialog,
@@ -11,8 +11,10 @@ import {
   DialogTitle,
   DialogDescription,
   DialogClose,
-  DialogTrigger
+  DialogTrigger,
+  DialogFooter
 } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 
 interface QuotesListProps {
   quotes: QuoteInterface[];
@@ -27,6 +29,8 @@ const QuotesList: React.FC<QuotesListProps> = ({
   onRejectQuote, 
   onViewProfile 
 }) => {
+  const hasAcceptedQuote = quotes.some(quote => quote.status === 'accepted');
+  
   return (
     <div className="space-y-4">
       {quotes.map(quote => (
@@ -36,6 +40,7 @@ const QuotesList: React.FC<QuotesListProps> = ({
           onAcceptQuote={onAcceptQuote}
           onRejectQuote={onRejectQuote}
           onViewProfile={onViewProfile}
+          hasAcceptedQuote={hasAcceptedQuote}
         />
       ))}
     </div>
@@ -47,14 +52,31 @@ interface QuoteCardProps {
   onAcceptQuote: (quoteId: string) => void;
   onRejectQuote: (quoteId: string) => void;
   onViewProfile: (professionalId: string) => void;
+  hasAcceptedQuote: boolean;
 }
 
 const QuoteCard: React.FC<QuoteCardProps> = ({ 
   quote, 
   onAcceptQuote, 
   onRejectQuote, 
-  onViewProfile 
+  onViewProfile,
+  hasAcceptedQuote
 }) => {
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  
+  const handleAcceptClick = () => {
+    if (quote.status === 'accepted') {
+      setShowCancelConfirm(true);
+    } else {
+      onAcceptQuote(quote.id);
+    }
+  };
+  
+  const handleCancelAccept = () => {
+    onRejectQuote(quote.id);
+    setShowCancelConfirm(false);
+  };
+  
   return (
     <Card className="overflow-hidden mb-8">
       <CardContent className="p-0">
@@ -87,6 +109,16 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
               {quote.description}
             </p>
           </div>
+          
+          {quote.status === 'accepted' && (
+            <div className="mt-3 bg-green-50 border border-green-200 rounded-md p-3 flex items-center">
+              <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
+              <div>
+                <p className="font-semibold text-green-700">הצעה זו התקבלה</p>
+                <p className="text-sm text-green-600">בעל המקצוע קיבל הודעה על כך</p>
+              </div>
+            </div>
+          )}
         </div>
         
         <div className="p-4 flex flex-wrap justify-between items-center gap-2 bg-gray-50">
@@ -141,22 +173,62 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
           </div>
           
           <div className="flex space-x-2 space-x-reverse">
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="border-red-500 text-red-500 hover:bg-red-50"
-              onClick={() => onRejectQuote(quote.id)}
-            >
-              דחה הצעה
-            </Button>
-            
-            <Button 
-              size="sm"
-              className="bg-teal-500 hover:bg-teal-600"
-              onClick={() => onAcceptQuote(quote.id)}
-            >
-              קבל הצעה
-            </Button>
+            {quote.status === 'accepted' ? (
+              <AlertDialog open={showCancelConfirm} onOpenChange={setShowCancelConfirm}>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    className="border-red-500 text-red-500 hover:bg-red-50"
+                  >
+                    בטל קבלת הצעה
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent dir="rtl">
+                  <AlertDialogTitle>האם אתה בטוח שברצונך לבטל את קבלת ההצעה?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    ביטול קבלת ההצעה יודיע לבעל המקצוע שההצעה נדחתה. ניתן לבחור הצעה אחרת לאחר מכן.
+                  </AlertDialogDescription>
+                  <div className="flex justify-end gap-3 mt-4">
+                    <AlertDialogCancel>ביטול</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleCancelAccept} className="bg-red-500 hover:bg-red-600">
+                      כן, בטל את קבלת ההצעה
+                    </AlertDialogAction>
+                  </div>
+                </AlertDialogContent>
+              </AlertDialog>
+            ) : (
+              <>
+                {!hasAcceptedQuote && !quote.isDisabled && quote.status !== 'rejected' && (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="border-red-500 text-red-500 hover:bg-red-50"
+                      onClick={() => onRejectQuote(quote.id)}
+                      disabled={quote.status === 'rejected'}
+                    >
+                      דחה הצעה
+                    </Button>
+                    
+                    <Button 
+                      size="sm"
+                      className="bg-teal-500 hover:bg-teal-600"
+                      onClick={handleAcceptClick}
+                      disabled={quote.status === 'rejected'}
+                    >
+                      קבל הצעה
+                    </Button>
+                  </>
+                )}
+                {quote.status === 'rejected' && (
+                  <span className="text-sm text-gray-500">הצעה נדחתה</span>
+                )}
+                {hasAcceptedQuote && quote.status !== 'accepted' && quote.status !== 'rejected' && (
+                  <span className="text-sm text-gray-500">הצעה אחרת התקבלה</span>
+                )}
+              </>
+            )}
           </div>
         </div>
       </CardContent>
