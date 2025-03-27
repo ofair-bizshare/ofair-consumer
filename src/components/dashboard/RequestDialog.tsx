@@ -39,7 +39,7 @@ const RequestDialog: React.FC<RequestDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
-          <RequestForm skipAuthStep={true} />
+          <RequestForm />
         </div>
       </DialogContent>
     </Dialog>
