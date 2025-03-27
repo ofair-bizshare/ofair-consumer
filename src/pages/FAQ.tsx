@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, BookOpen, Info, Tool, CreditCard, MessageCircle } from 'lucide-react';
+import { Search, BookOpen, Info, Wrench, CreditCard, MessageCircle } from 'lucide-react';
 
 const FAQ = () => {
   return (
@@ -50,7 +50,7 @@ const FAQ = () => {
                 כללי
               </TabsTrigger>
               <TabsTrigger value="professionals" className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-700 border-b-2 border-transparent rounded-none">
-                <Tool className="w-4 h-4 mr-2" />
+                <Wrench className="w-4 h-4 mr-2" />
                 בעלי מקצוע
               </TabsTrigger>
               <TabsTrigger value="payment" className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-700 border-b-2 border-transparent rounded-none">
