@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,14 @@ const PhoneVerificationForm: React.FC<PhoneVerificationFormProps> = ({
   onVerified,
   isPostLogin = false
 }) => {
+  const [showVerification, setShowVerification] = useState(false);
+  
+  const handleSendCode = (e: React.FormEvent) => {
+    e.preventDefault();
+    onPhoneLogin(e);
+    setShowVerification(true);
+  };
+
   return (
     <div className="space-y-4">
       <Label htmlFor="phone-for-verification">מספר טלפון</Label>
@@ -39,14 +47,14 @@ const PhoneVerificationForm: React.FC<PhoneVerificationFormProps> = ({
       </div>
       
       <Button 
-        onClick={onPhoneLogin}
+        onClick={handleSendCode}
         type="button"
         className="w-full bg-teal-500 hover:bg-teal-600 text-white"
       >
         שלח קוד אימות
       </Button>
       
-      {phone && (
+      {showVerification && phone && (
         <div className="mt-6">
           <PhoneVerification 
             phone={phone} 
