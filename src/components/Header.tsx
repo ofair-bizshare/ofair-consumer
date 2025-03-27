@@ -1,21 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, User, LogOut, Settings, Inbox, UserCircle, Send } from 'lucide-react';
+import { Menu, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import RequestDialog from '@/components/dashboard/RequestDialog';
+import UserDropdown from './header/UserDropdown';
+import MobileMenu from './header/MobileMenu';
+import DesktopNav from './header/DesktopNav';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Simulate auth state
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,9 +24,7 @@ const Header = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Check if user is logged in (this would normally use your auth system)
   useEffect(() => {
-    // For demo purposes, check localStorage or similar
     const hasSession = localStorage.getItem('isLoggedIn') === 'true';
     setIsLoggedIn(hasSession);
   }, []);
@@ -67,26 +61,7 @@ const Header = () => {
           <img alt="Ofair Logo" src="/lovable-uploads/52b937d1-acd7-4831-b19e-79a55a774829.png" className="h-7 animate-fade-in object-contain" />
         </Link>
 
-        <nav className="hidden md:flex mx-0 px-0">
-          <button 
-            onClick={handleSendRequest}
-            className="text-gray-800 hover:text-teal-500 transition-colors mx-[20px] bg-transparent border-none cursor-pointer"
-          >
-            <span className="flex items-center">
-              <Send size={18} className="ml-1" />
-              <span className="font-medium text-teal-600">שליחת פנייה</span>
-            </span>
-          </button>
-          <Link to="/search" className="text-gray-800 hover:text-teal-500 transition-colors mx-[23px]">
-            חיפוש בעלי מקצוע
-          </Link>
-          <Link to="/articles" className="text-gray-800 hover:text-teal-500 transition-colors mx-[23px]">
-            טיפים ומאמרים
-          </Link>
-          <Link to="/about" className="text-gray-800 hover:text-teal-500 transition-colors mx-[23px] px-[8px]">
-            אודות
-          </Link>
-        </nav>
+        <DesktopNav onSendRequest={handleSendRequest} />
 
         <div className="flex items-center gap-4 animate-fade-in">
           <a 
@@ -99,36 +74,7 @@ const Header = () => {
           </a>
 
           {isLoggedIn ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  className="hidden md:flex items-center space-x-2 text-blue-700 hover:text-blue-800 hover:bg-blue-50"
-                >
-                  <UserCircle size={18} />
-                  <span>פרופיל</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>אזור אישי</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/dashboard/requests')}>
-                  <Inbox className="mr-2 h-4 w-4" />
-                  <span>הפניות שלי</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/dashboard/settings')}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>הגדרות</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>יציאה</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <UserDropdown onLogout={handleLogout} />
           ) : (
             <Button 
               variant="ghost" 
@@ -146,81 +92,14 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-white shadow-lg border-t border-gray-100 animate-fade-in-down">
-          <div className="container mx-auto px-6 py-4 flex flex-col space-y-4">
-            <button
-              onClick={handleSendRequest}
-              className="text-teal-600 font-medium py-2 border-b border-gray-100 flex items-center bg-transparent border-none text-right w-full"
-            >
-              <Send size={18} className="ml-2" />
-              שליחת פנייה
-            </button>
-            <Link to="/" className="text-gray-800 py-2 border-b border-gray-100" onClick={() => setIsMenuOpen(false)}>
-              חיפוש בעלי מקצוע
-            </Link>
-            <Link to="/articles" className="text-gray-800 py-2 border-b border-gray-100" onClick={() => setIsMenuOpen(false)}>
-              טיפים ומאמרים
-            </Link>
-            <Link to="/about" className="text-gray-800 py-2 border-b border-gray-100" onClick={() => setIsMenuOpen(false)}>
-              אודות
-            </Link>
-            <a 
-              href="https://biz.ofair.co.il" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-gray-800 py-2 border-b border-gray-100 text-teal-500 font-medium"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              בעל מקצוע? הצטרף עכשיו
-            </a>
-            <div className="py-2">
-              {isLoggedIn ? (
-                <div className="space-y-2">
-                  <Button variant="outline" className="w-full justify-start" onClick={() => {
-                    setIsMenuOpen(false);
-                    navigate('/dashboard');
-                  }}>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>אזור אישי</span>
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start" onClick={() => {
-                    setIsMenuOpen(false);
-                    navigate('/dashboard/requests');
-                  }}>
-                    <Inbox className="mr-2 h-4 w-4" />
-                    <span>הפניות שלי</span>
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start" onClick={() => {
-                    setIsMenuOpen(false);
-                    navigate('/dashboard/settings');
-                  }}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>הגדרות</span>
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start text-red-600" onClick={() => {
-                    setIsMenuOpen(false);
-                    handleLogout();
-                  }}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>יציאה</span>
-                  </Button>
-                </div>
-              ) : (
-                <Button variant="outline" className="w-full justify-center" onClick={() => {
-                  setIsMenuOpen(false);
-                  navigate('/login');
-                }}>
-                  כניסה / הרשמה
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <MobileMenu 
+        isLoggedIn={isLoggedIn}
+        isOpen={isMenuOpen}
+        onSendRequest={handleSendRequest}
+        onLogout={handleLogout}
+        onClose={() => setIsMenuOpen(false)}
+      />
 
-      {/* Request Dialog */}
       <RequestDialog 
         isOpen={isRequestDialogOpen} 
         onOpenChange={setIsRequestDialogOpen}
