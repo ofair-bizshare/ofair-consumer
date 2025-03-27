@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
@@ -312,12 +311,11 @@ const Dashboard = () => {
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [quotesData, setQuotesData] = useState(quotes);
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Added state for isLoggedIn
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const { toast } = useToast();
   const selectedRequestRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   
-  // Check if user is logged in
   useEffect(() => {
     const hasSession = localStorage.getItem('isLoggedIn') === 'true';
     setIsLoggedIn(hasSession);
@@ -372,26 +370,18 @@ const Dashboard = () => {
     window.open(`/professional/${professionalId}`, '_blank');
   };
 
-  const referrals = [
-    {
-      id: '1',
-      professionalId: '1',
-      professionalName: 'אבי כהן',
-      profession: 'טכנאי מזגנים',
-      phoneNumber: '052-1234567',
-      date: '15.05.2023',
-      status: 'new'
-    },
-    {
-      id: '2',
-      professionalId: '2',
-      professionalName: 'יוסי לוי',
-      profession: 'אינסטלטור',
-      phoneNumber: '050-7654321',
-      date: '12.05.2023',
-      status: 'contacted'
+  const getReferrals = () => {
+    const storedReferrals = localStorage.getItem('myReferrals');
+    if (storedReferrals) {
+      try {
+        return JSON.parse(storedReferrals);
+      } catch (error) {
+        console.error('Error parsing referrals:', error);
+        return [];
+      }
     }
-  ];
+    return [];
+  };
 
   return (
     <div className="flex flex-col min-h-screen" dir="rtl">
@@ -401,7 +391,7 @@ const Dashboard = () => {
         <div className="container mx-auto px-6">
           <div className="mb-10">
             <h1 className="text-3xl font-bold text-blue-700 mb-2">
-              <span className="text-teal-500">האזור</span> האישי שלי
+              <span className="text-[#00D09E]">האזור</span> האישי שלי
             </h1>
             <p className="text-gray-600">
               צפה בבקשות הקודמות שלך, הצעות המחיר שקיבלת והסטטוס שלהן
@@ -411,7 +401,11 @@ const Dashboard = () => {
           <Tabs defaultValue="requests" className="mb-8">
             <TabsList className="w-full mb-6">
               <TabsTrigger value="requests" className="flex-1">הבקשות והצעות שלי</TabsTrigger>
-              <TabsTrigger value="referrals" className="flex-1">ההפניות שלי</TabsTrigger>
+              <TabsTrigger value="referrals" className="flex-1">
+                <Link to="/referrals" className="w-full h-full flex items-center justify-center">
+                  ההפניות שלי
+                </Link>
+              </TabsTrigger>
               {isLoggedIn && <TabsTrigger value="credits" className="flex-1">הקרדיט שלי</TabsTrigger>}
             </TabsList>
             
@@ -423,7 +417,7 @@ const Dashboard = () => {
                     
                     <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
                       <DialogTrigger asChild>
-                        <Button className="text-teal-500 hover:text-teal-600 bg-teal-50 hover:bg-teal-100 text-sm font-medium">
+                        <Button className="text-white bg-[#00D09E] hover:bg-[#00C090] text-sm font-medium">
                           בקשה חדשה +
                         </Button>
                       </DialogTrigger>
@@ -517,7 +511,7 @@ const Dashboard = () => {
                           <p className="text-gray-500 mb-4">
                             עדיין לא התקבלו הצעות מחיר לבקשה זו. בדרך כלל לוקח 24-48 שעות לקבלת הצעות.
                           </p>
-                          <Button variant="outline" className="border-teal-500 text-teal-500 hover:bg-teal-50">
+                          <Button variant="outline" className="border-[#00D09E] text-[#00D09E] hover:bg-[#00D09E]/10">
                             רענן
                           </Button>
                         </div>
@@ -532,7 +526,7 @@ const Dashboard = () => {
                       </p>
                       <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
                         <DialogTrigger asChild>
-                          <Button className="bg-teal-500 hover:bg-teal-600">
+                          <Button className="bg-[#00D09E] hover:bg-[#00C090]">
                             שלח בקשה חדשה
                           </Button>
                         </DialogTrigger>
@@ -562,59 +556,13 @@ const Dashboard = () => {
                     כאן תוכל לראות את ההפניות שיצרת לבעלי מקצוע, את הסטטוס שלהן ואת הפרטים שנשלחו
                   </p>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {referrals.length > 0 ? (
-                      referrals.map(referral => (
-                        <Card key={referral.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                          <CardContent className="p-0">
-                            <div className="p-5">
-                              <div className="flex justify-between items-start mb-3">
-                                <div>
-                                  <h3 className="text-lg font-semibold">{referral.professionalName}</h3>
-                                  <p className="text-gray-500 text-sm">{referral.profession}</p>
-                                </div>
-                                <div className="flex items-center text-sm">
-                                  {referral.status === 'new' ? (
-                                    <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">חדש</span>
-                                  ) : (
-                                    <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">נוצר קשר</span>
-                                  )}
-                                </div>
-                              </div>
-                              
-                              <div className="text-gray-700 mb-3">
-                                <p className="text-gray-700 font-medium">{referral.phoneNumber}</p>
-                                <p className="text-sm text-gray-500">{referral.date}</p>
-                              </div>
-                              
-                              <div className="flex justify-end">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  className="text-blue-700 border-blue-200 hover:bg-blue-50"
-                                  onClick={() => window.open(`/professional/${referral.professionalId}`, '_blank')}
-                                >
-                                  צפה בפרופיל
-                                </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))
-                    ) : (
-                      <div className="col-span-full text-center py-12">
-                        <AlertCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-gray-700 mb-2">אין הפניות עדיין</h3>
-                        <p className="text-gray-500 mb-4">
-                          כאשר תיצור הפניות לבעלי מקצוע, הן יופיעו כאן כדי שתוכל לעקוב אחריהן
-                        </p>
-                        <Link to="/search">
-                          <Button className="border-teal-500 text-teal-500 hover:bg-teal-50" variant="outline">
-                            חפש בעלי מקצוע
-                          </Button>
-                        </Link>
-                      </div>
-                    )}
+                  <div className="text-center p-6">
+                    <p className="text-lg mb-4">לצפייה בהפניות שלך, עבור לעמוד ההפניות המלא</p>
+                    <Link to="/referrals">
+                      <Button className="bg-[#00D09E] hover:bg-[#00C090]">
+                        עבור להפניות שלי
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               </div>

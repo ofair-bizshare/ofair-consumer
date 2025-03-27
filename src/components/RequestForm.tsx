@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -84,6 +84,7 @@ const RequestForm = () => {
   const [step, setStep] = useState(1);
   const [images, setImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -110,6 +111,11 @@ const RequestForm = () => {
     passwordConfirm: '',
     agreeTerms: false,
   });
+
+  useEffect(() => {
+    const hasSession = localStorage.getItem('isLoggedIn') === 'true';
+    setIsLoggedIn(hasSession);
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -173,8 +179,40 @@ const RequestForm = () => {
         });
         return;
       }
-      setStep(2);
+      
+      if (isLoggedIn) {
+        handleFormSubmit();
+      } else {
+        setStep(2);
+      }
     }
+  };
+
+  const handleFormSubmit = () => {
+    console.log('Submitting form data:', formData);
+    
+    const newRequest = {
+      id: Date.now().toString(),
+      title: formData.profession,
+      description: formData.description,
+      date: new Date().toLocaleDateString('he-IL'),
+      location: formData.location,
+      status: 'active',
+      quotesCount: 0,
+    };
+    
+    const existingRequests = JSON.parse(localStorage.getItem('myRequests') || '[]');
+    
+    existingRequests.push(newRequest);
+    
+    localStorage.setItem('myRequests', JSON.stringify(existingRequests));
+    
+    toast({
+      title: "בקשתך נשלחה בהצלחה!",
+      description: "בעלי מקצוע רלוונטיים יצרו איתך קשר בקרוב"
+    });
+    
+    navigate('/dashboard');
   };
 
   const handleLogin = (e: React.FormEvent) => {
@@ -189,14 +227,10 @@ const RequestForm = () => {
       return;
     }
     
-    console.log('Submitting form data with login:', formData, loginData);
+    localStorage.setItem('isLoggedIn', 'true');
+    setIsLoggedIn(true);
     
-    toast({
-      title: "בקשתך נשלחה בהצלחה!",
-      description: "בעלי מקצוע רלוונטיים יצרו איתך קשר בקרוב"
-    });
-    
-    navigate('/dashboard');
+    handleFormSubmit();
   };
   
   const handleRegister = (e: React.FormEvent) => {
@@ -229,14 +263,10 @@ const RequestForm = () => {
       return;
     }
     
-    console.log('Submitting form data with registration:', formData, registerData);
+    localStorage.setItem('isLoggedIn', 'true');
+    setIsLoggedIn(true);
     
-    toast({
-      title: "ההרשמה ובקשתך נשלחו בהצלחה!",
-      description: "בעלי מקצוע רלוונטיים יצרו איתך קשר בקרוב"
-    });
-    
-    navigate('/dashboard');
+    handleFormSubmit();
   };
 
   const handleBack = () => {

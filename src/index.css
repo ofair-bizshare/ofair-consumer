@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
@@ -16,7 +15,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 224 71% 4%;
     
-    --primary: 166 100% 41%;
+    --primary: 168 100% 41%;
     --primary-foreground: 210 40% 98%;
     
     --secondary: 214 100% 24%;
@@ -33,7 +32,7 @@
     
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 166 100% 41%;
+    --ring: 168 100% 41%;
     
     --radius: 0.5rem;
   }

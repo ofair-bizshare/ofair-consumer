@@ -54,7 +54,7 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
   return (
     <Button
       variant={isRevealed ? "outline" : "default"}
-      className={`w-full ${isRevealed ? "border-blue-500 text-blue-700" : "bg-blue-600 hover:bg-blue-700"}`}
+      className={`w-full ${isRevealed ? "border-blue-500 text-blue-700" : "bg-[#00D09E] hover:bg-[#00C090]"}`}
       onClick={handleReveal}
     >
       <Phone className="ml-2 h-4 w-4" />

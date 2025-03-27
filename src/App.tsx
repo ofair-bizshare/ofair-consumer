@@ -14,6 +14,7 @@ import ProfessionalProfile from "./pages/ProfessionalProfile";
 import Articles from "./pages/Articles";
 import ArticleDetail from "./pages/ArticleDetail";
 import About from "./pages/About";
+import MyReferrals from "./pages/MyReferrals";
 import ScrollToTop from "./components/ScrollToTop";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
                 <Route path="/article/:id" element={<ArticleDetail />} />
                 <Route path="/articles/:id" element={<ArticleDetail />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/referrals" element={<MyReferrals />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
