@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,9 +7,21 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Upload, MapPin, Calendar, Briefcase, UserRound } from 'lucide-react';
+import { Upload, MapPin, Calendar, Briefcase, UserRound, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+interface RequestFormProps {
+  onSuccess?: (value: boolean) => void;
+}
 
 const professions = [
   {
@@ -80,11 +93,13 @@ const locations = [
   }
 ];
 
-const RequestForm = () => {
+const RequestForm: React.FC<RequestFormProps> = ({ onSuccess }) => {
   const [step, setStep] = useState(1);
   const [images, setImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [newRequestId, setNewRequestId] = useState<string>("");
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -194,12 +209,15 @@ const RequestForm = () => {
   const handleFormSubmit = () => {
     console.log('Submitting form data:', formData);
     
+    const requestId = Date.now().toString();
+    setNewRequestId(requestId);
+    
     const newRequest = {
-      id: Date.now().toString(),
-      title: formData.profession,
+      id: requestId,
+      title: getProfessionLabel(formData.profession),
       description: formData.description,
       date: new Date().toLocaleDateString('he-IL'),
-      location: formData.location,
+      location: getLocationLabel(formData.location),
       status: 'active' as const,
       quotesCount: 0,
     };
@@ -208,12 +226,23 @@ const RequestForm = () => {
     existingRequests.push(newRequest);
     localStorage.setItem('myRequests', JSON.stringify(existingRequests));
     
-    toast({
-      title: "בקשתך נשלחה בהצלחה!",
-      description: "בעלי מקצוע רלוונטיים יצרו איתך קשר בקרוב"
-    });
+    // Show success dialog instead of just toast
+    setShowSuccessDialog(true);
     
-    navigate('/dashboard');
+    // If we're in a dialog and have onSuccess callback, close dialog
+    if (onSuccess) {
+      onSuccess(false);
+    }
+  };
+
+  const getProfessionLabel = (value: string): string => {
+    const profession = professions.find(p => p.value === value);
+    return profession ? profession.label : value;
+  };
+  
+  const getLocationLabel = (value: string): string => {
+    const location = locations.find(l => l.value === value);
+    return location ? location.label : value;
   };
 
   const handleLogin = (e: React.FormEvent) => {
@@ -272,6 +301,19 @@ const RequestForm = () => {
 
   const handleBack = () => {
     setStep(step - 1);
+  };
+
+  const handleGoToDashboard = () => {
+    setShowSuccessDialog(false);
+    navigate('/dashboard');
+    
+    // Scroll to the relevant section in dashboard
+    setTimeout(() => {
+      const element = document.getElementById('request-' + newRequestId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 500);
   };
 
   const renderFormContent = () => {
@@ -388,7 +430,7 @@ const RequestForm = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <Label htmlFor="login-password">סיסמה</Label>
-                    <Link to="/forgot-password" className="text-xs text-teal-500 hover:text-teal-600">
+                    <Link to="/forgot-password" className="text-xs text-[#00D09E] hover:text-[#00C090]">
                       שכחת סיסמה?
                     </Link>
                   </div>
@@ -496,39 +538,75 @@ const RequestForm = () => {
   };
 
   return (
-    <Card className="glass-card overflow-hidden animate-fade-in-up w-full max-w-md mx-auto" aria-labelledby="service-request-form-title">
-      <div className="p-5 md:p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 id="service-request-form-title" className="text-xl font-bold text-blue-700">
-            <span className="text-[#00D09E]">שליחת</span> בקשה לבעלי מקצוע
-          </h2>
-          <div className="text-sm text-gray-500">
-            {isLoggedIn ? 'שלב 1/1' : `שלב ${step}/2`}
+    <>
+      <Card className="glass-card overflow-hidden animate-fade-in-up w-full max-w-md mx-auto" aria-labelledby="service-request-form-title">
+        <div className="p-5 md:p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 id="service-request-form-title" className="text-xl font-bold text-blue-700">
+              <span className="text-[#00D09E]">שליחת</span> בקשה לבעלי מקצוע
+            </h2>
+            <div className="text-sm text-gray-500">
+              {isLoggedIn ? 'שלב 1/1' : `שלב ${step}/2`}
+            </div>
+          </div>
+
+          {renderFormContent()}
+
+          <div className="flex justify-between mt-8">
+            {step > 1 && (
+              <Button type="button" variant="outline" onClick={handleBack} className="border-[#00D09E] text-[#00D09E] hover:bg-teal-50">
+                חזרה
+              </Button>
+            )}
+            {step === 1 && (
+              <div className="ml-auto">
+                <Button 
+                  type="button" 
+                  onClick={handleNext} 
+                  className="bg-[#00D09E] hover:bg-[#00C090]"
+                >
+                  {isLoggedIn ? 'שלח בקשה' : 'המשך'}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
+      </Card>
 
-        {renderFormContent()}
-
-        <div className="flex justify-between mt-8">
-          {step > 1 && (
-            <Button type="button" variant="outline" onClick={handleBack} className="border-[#00D09E] text-[#00D09E] hover:bg-teal-50">
-              חזרה
-            </Button>
-          )}
-          {step === 1 && (
-            <div className="ml-auto">
-              <Button 
-                type="button" 
-                onClick={handleNext} 
-                className="bg-[#00D09E] hover:bg-[#00C090]"
-              >
-                {isLoggedIn ? 'שלח בקשה' : 'המשך'}
-              </Button>
+      {/* Success Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-center flex items-center justify-center gap-2">
+              <CheckCircle className="h-6 w-6 text-[#00D09E]" />
+              <span>בקשתך נשלחה בהצלחה!</span>
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              בעלי מקצוע רלוונטיים יצרו איתך קשר בקרוב עם הצעות מחיר
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center py-4">
+            <div className="mb-5 text-center">
+              <p className="text-gray-700 mb-2">
+                הבקשה שלך נוספה לאזור האישי שלך
+              </p>
+              <p className="text-gray-500 text-sm">
+                תוכל לעקוב אחרי הסטטוס שלה ולראות את הצעות המחיר שיתקבלו
+              </p>
             </div>
-          )}
-        </div>
-      </div>
-    </Card>
+          </div>
+          <DialogFooter className="sm:justify-center">
+            <Button
+              type="button"
+              className="bg-[#00D09E] hover:bg-[#00C090] text-white w-full"
+              onClick={handleGoToDashboard}
+            >
+              עבור לאזור האישי
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

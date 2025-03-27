@@ -39,7 +39,7 @@ const RequestDialog: React.FC<RequestDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
-          <RequestForm />
+          <RequestForm onSuccess={onOpenChange} />
         </div>
       </DialogContent>
     </Dialog>

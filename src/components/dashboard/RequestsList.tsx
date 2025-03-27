@@ -35,7 +35,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ request, onSelect }) => {
       case 'active':
         return <Clock className="h-5 w-5 text-blue-500" />;
       case 'completed':
-        return <CheckCircle className="h-5 w-5 text-teal-500" />;
+        return <CheckCircle className="h-5 w-5 text-[#00D09E]" />;
       default:
         return <AlertCircle className="h-5 w-5 text-gray-500" />;
     }
@@ -53,7 +53,7 @@ const RequestCard: React.FC<RequestCardProps> = ({ request, onSelect }) => {
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-md transition-shadow">
+    <Card id={`request-${request.id}`} className="overflow-hidden hover:shadow-md transition-shadow">
       <CardContent className="p-0">
         <div className="p-5">
           <div className="flex justify-between items-start mb-3">

@@ -99,13 +99,13 @@ const Index = () => {
         <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-[-1]"></div>
         
         <div className="container mx-auto px-6">
-          <div className="flex flex-col lg:flex-row items-start gap-8 lg:items-center">
+          <div className="flex flex-col lg:flex-row items-start lg:items-start gap-8">
             {/* Left side - Text content */}
-            <div className="w-full lg:w-1/2 animate-fade-in-up lg:pr-4">
-              <div className="text-base font-semibold text-teal-500 mb-3">oFair - הפתרון המושלם לבעלי בתים</div>
+            <div className="w-full lg:w-1/2 animate-fade-in-up">
+              <div className="text-base font-semibold text-[#00D09E] mb-3">oFair - הפתרון המושלם לבעלי בתים</div>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-blue-800 mb-4 leading-tight">
                 מצאו את 
-                <span className="text-teal-500 mx-2">בעל המקצוע</span>
+                <span className="text-[#00D09E] mx-2">בעל המקצוע</span>
                 המושלם לכל עבודה
               </h1>
               <p className="text-lg text-gray-700 mb-6">
@@ -114,7 +114,7 @@ const Index = () => {
               <div className="flex flex-wrap gap-4 mb-8 lg:mb-0">
                 <Button 
                   size="lg" 
-                  className="bg-teal-600 hover:bg-teal-700 text-white button-transition flex items-center gap-2 shadow-md"
+                  className="bg-[#00D09E] hover:bg-[#00C090] text-white button-transition flex items-center gap-2 shadow-md"
                   onClick={scrollToRequestForm}
                 >
                   <FileText size={20} />
@@ -130,11 +130,11 @@ const Index = () => {
               {/* Add new cashback benefit info */}
               <div className="mt-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg shadow-sm">
                 <div className="flex items-start">
-                  <Gift className="h-6 w-6 text-teal-500 mt-1 ml-2 flex-shrink-0" />
+                  <Gift className="h-6 w-6 text-[#00D09E] mt-1 ml-2 flex-shrink-0" />
                   <div>
                     <h3 className="font-bold text-blue-800 text-lg">5% חזרה לעבודה הבאה!</h3>
                     <p className="text-gray-700">קבלו 5% חזרה על העבודה הראשונה דרך oFair, לשימוש בעבודה הבאה שלכם.</p>
-                    <Link to="/dashboard" className="text-teal-600 hover:underline mt-2 inline-block font-medium">
+                    <Link to="/dashboard" className="text-[#00D09E] hover:underline mt-2 inline-block font-medium">
                       הצג את הקרדיט שלי →
                     </Link>
                   </div>
@@ -143,7 +143,7 @@ const Index = () => {
             </div>
             
             {/* Right side - Form */}
-            <div className="w-full lg:w-1/2 animate-fade-in lg:pl-4">
+            <div className="w-full lg:w-1/2 animate-fade-in pt-0">
               <div id="request-form" ref={requestFormRef}>
                 <RequestForm />
               </div>
@@ -191,7 +191,7 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Featured Professionals - Add border back around "verified" badge */}
+      {/* Featured Professionals */}
       <section className="py-16 md:py-24 bg-gradient-to-br from-blue-50 to-teal-50">
         <div className="container mx-auto px-6">
           <div className="text-center mb-12">
@@ -291,12 +291,12 @@ const Index = () => {
         </div>
       </section>
       
-      {/* CTA Section - Fix button visibility */}
+      {/* CTA Section */}
       <section className="py-16 md:py-24 bg-blue-700 text-white">
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
             מוכנים למצוא את
-            <span className="text-teal-300 mx-2">בעל המקצוע</span>
+            <span className="text-[#00D09E] mx-2">בעל המקצוע</span>
             המושלם?
           </h2>
           <p className="text-blue-100 max-w-2xl mx-auto mb-10 text-lg">
@@ -305,7 +305,7 @@ const Index = () => {
           <div className="flex flex-wrap justify-center gap-4">
             <Button 
               size="lg" 
-              className="bg-teal-500 hover:bg-teal-600 text-white button-transition flex items-center gap-2"
+              className="bg-[#00D09E] hover:bg-[#00C090] text-white button-transition flex items-center gap-2"
               onClick={scrollToRequestForm}
             >
               <FileText size={20} />
