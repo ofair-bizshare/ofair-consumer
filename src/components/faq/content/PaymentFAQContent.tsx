@@ -28,7 +28,7 @@ const PaymentFAQContent = () => {
       answer: (
         <>
           קרדיטים הם מערכת התגמול שלנו, המאפשרת לך לקבל הנחות או שירותים נוספים בפלטפורמה. אתה יכול לצבור קרדיטים באמצעות:
-          <ul className="list-disc list-inside mt-2 space-y-2">
+          <ul className="list-disc list-inside mt-2 space-y-2 pr-4">
             <li>הזמנת חברים להצטרף לפלטפורמה</li>
             <li>כתיבת ביקורות על בעלי מקצוע שעבדת איתם</li>
             <li>השתתפות במבצעים ופעילויות מיוחדות</li>
@@ -43,9 +43,9 @@ const PaymentFAQContent = () => {
     <Accordion type="single" collapsible className="w-full">
       {paymentFAQs.map((item) => (
         <AccordionItem key={item.id} value={item.id} className="border-b border-gray-200">
-          <AccordionTrigger className="text-lg font-medium py-4 hover:text-blue-700">{item.question}</AccordionTrigger>
+          <AccordionTrigger className="text-lg font-medium py-4 hover:text-blue-700 text-right">{item.question}</AccordionTrigger>
           <AccordionContent className="text-gray-700 pb-4">
-            <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="p-4 bg-gray-50 rounded-lg text-right">
               {item.answer}
             </div>
           </AccordionContent>

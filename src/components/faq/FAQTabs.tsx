@@ -6,27 +6,28 @@ import GeneralFAQContent from './content/GeneralFAQContent';
 import ProfessionalsFAQContent from './content/ProfessionalsFAQContent';
 import PaymentFAQContent from './content/PaymentFAQContent';
 import ReferralsFAQContent from './content/ReferralsFAQContent';
+import FAQTabContent from './FAQTabContent';
 
 const FAQTabs = () => {
   const [activeTab, setActiveTab] = useState("general");
 
   return (
-    <Tabs defaultValue="general" className="mb-16" value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="border-b w-full justify-start mb-8 bg-transparent">
+    <Tabs defaultValue="general" className="mb-16" value={activeTab} onValueChange={setActiveTab} dir="rtl">
+      <TabsList className="flex w-full justify-start mb-8 bg-transparent overflow-x-auto">
         <TabsTrigger value="general" className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-700 border-b-2 border-transparent rounded-none">
-          <Info className="w-4 h-4 mr-2" />
+          <Info className="w-4 h-4 ml-2" />
           כללי
         </TabsTrigger>
         <TabsTrigger value="professionals" className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-700 border-b-2 border-transparent rounded-none">
-          <Wrench className="w-4 h-4 mr-2" />
+          <Wrench className="w-4 h-4 ml-2" />
           בעלי מקצוע
         </TabsTrigger>
         <TabsTrigger value="payment" className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-700 border-b-2 border-transparent rounded-none">
-          <CreditCard className="w-4 h-4 mr-2" />
+          <CreditCard className="w-4 h-4 ml-2" />
           תשלומים
         </TabsTrigger>
         <TabsTrigger value="referrals" className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-700 border-b-2 border-transparent rounded-none">
-          <MessageCircle className="w-4 h-4 mr-2" />
+          <MessageCircle className="w-4 h-4 ml-2" />
           הפניות
         </TabsTrigger>
       </TabsList>
