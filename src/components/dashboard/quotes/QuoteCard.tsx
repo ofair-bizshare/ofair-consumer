@@ -6,6 +6,7 @@ import { Star, MessageSquare, Eye, CheckCircle } from 'lucide-react';
 import { QuoteInterface } from '@/types/dashboard';
 import QuoteDetailDialog from './QuoteDetailDialog';
 import QuoteCancelDialog from './QuoteCancelDialog';
+import PhoneRevealButton from '@/components/PhoneRevealButton';
 
 interface QuoteCardProps {
   quote: QuoteInterface;
@@ -84,6 +85,14 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
               </div>
             </div>
           )}
+          
+          <div className="mt-4">
+            <PhoneRevealButton 
+              phoneNumber={quote.professional.phoneNumber || "050-1234567"}
+              professionalName={quote.professional.name}
+              professionalId={quote.professional.id}
+            />
+          </div>
         </div>
         
         <div className="p-4 flex flex-wrap justify-between items-center gap-2 bg-gray-50">

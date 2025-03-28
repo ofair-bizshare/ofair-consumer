@@ -9,6 +9,7 @@ export interface ProfessionalInterface {
   image: string;
   verified: boolean;
   specialties: string[];
+  phoneNumber?: string;
 }
 
 export interface RequestInterface {
@@ -37,4 +38,6 @@ export interface ReferralInterface {
   phoneNumber: string;
   date: string;
   status: string;
+  profession?: string;
+  completedWork?: boolean;
 }

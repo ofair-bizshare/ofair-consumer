@@ -5,19 +5,10 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Phone, AlertCircle, Eye, CheckCircle, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface Referral {
-  professionalId: string;
-  professionalName: string;
-  phoneNumber: string;
-  date: string;
-  status: string;
-  profession?: string;
-  completedWork?: boolean;
-}
+import { ReferralInterface } from '@/types/dashboard';
 
 const ReferralsTab: React.FC = () => {
-  const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [referrals, setReferrals] = useState<ReferralInterface[]>([]);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -26,13 +17,24 @@ const ReferralsTab: React.FC = () => {
     if (storedReferrals) {
       try {
         const parsedReferrals = JSON.parse(storedReferrals);
-        setReferrals(parsedReferrals);
+        // Sort referrals by date (newest first)
+        const sortedReferrals = [...parsedReferrals].sort((a, b) => {
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
+        });
+        setReferrals(sortedReferrals);
       } catch (error) {
         console.error('Error parsing referrals:', error);
         setReferrals([]);
       }
     }
   }, []);
+
+  // Save referrals to localStorage whenever they change
+  useEffect(() => {
+    if (referrals.length > 0) {
+      localStorage.setItem('myReferrals', JSON.stringify(referrals));
+    }
+  }, [referrals]);
 
   const toggleContactStatus = (id: string) => {
     const updatedReferrals = referrals.map(referral => {
@@ -47,7 +49,6 @@ const ReferralsTab: React.FC = () => {
     });
     
     setReferrals(updatedReferrals);
-    localStorage.setItem('myReferrals', JSON.stringify(updatedReferrals));
     
     const referral = referrals.find(r => r.professionalId === id);
     const isNowContacted = referral?.status === 'new'; // It will be toggled, so check the opposite
@@ -71,11 +72,22 @@ const ReferralsTab: React.FC = () => {
     });
     
     setReferrals(updatedReferrals);
-    localStorage.setItem('myReferrals', JSON.stringify(updatedReferrals));
     
     toast({
       title: "סומן כ'עבודה הושלמה'",
       description: "הפניה עודכנה לסטטוס 'עבודה הושלמה'",
+      variant: "default"
+    });
+  };
+
+  const deleteReferral = (id: string) => {
+    const updatedReferrals = referrals.filter(referral => referral.professionalId !== id);
+    setReferrals(updatedReferrals);
+    localStorage.setItem('myReferrals', JSON.stringify(updatedReferrals));
+    
+    toast({
+      title: "הפניה נמחקה",
+      description: "ההפניה נמחקה בהצלחה",
       variant: "default"
     });
   };
@@ -132,6 +144,16 @@ const ReferralsTab: React.FC = () => {
                         צפה בפרופיל
                       </Button>
                       
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="text-red-500 border-red-200 hover:bg-red-50"
+                        onClick={() => deleteReferral(referral.professionalId)}
+                      >
+                        <X size={16} className="ml-1" />
+                        הסר
+                      </Button>
+                      
                       {!referral.completedWork && (
                         referral.status === 'new' ? (
                           <Button 
@@ -146,7 +168,7 @@ const ReferralsTab: React.FC = () => {
                             <Button 
                               size="sm" 
                               variant="outline"
-                              className="text-red-500 border-red-200 hover:bg-red-50" 
+                              className="text-gray-500 border-gray-200 hover:bg-gray-50" 
                               onClick={() => toggleContactStatus(referral.professionalId)}
                             >
                               <X size={16} className="ml-1" />

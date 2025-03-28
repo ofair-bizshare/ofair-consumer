@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { Star, MapPin, CheckCircle } from 'lucide-react';
+import { Star, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import PhoneRevealButton from '@/components/PhoneRevealButton';
 
 interface ProfessionalCardProps {
   id: string;
@@ -14,6 +15,7 @@ interface ProfessionalCardProps {
   image: string;
   verified: boolean;
   specialties: string[];
+  phoneNumber?: string;
 }
 
 const ProfessionalCard: React.FC<ProfessionalCardProps> = ({
@@ -24,8 +26,8 @@ const ProfessionalCard: React.FC<ProfessionalCardProps> = ({
   reviewCount,
   location,
   image,
-  verified,
   specialties,
+  phoneNumber = "050-5555555", // Default phone number if not provided
 }) => {
   return (
     <div className="glass-card group hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
@@ -35,12 +37,6 @@ const ProfessionalCard: React.FC<ProfessionalCardProps> = ({
           alt={name} 
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        {verified && (
-          <div className="absolute top-3 right-3 bg-teal-500 text-white text-xs px-2 py-1 rounded-full flex items-center border-2 border-white shadow-sm">
-            <CheckCircle size={12} className="mr-1" />
-            מאומת
-          </div>
-        )}
       </div>
       
       <div className="p-5">
@@ -74,10 +70,17 @@ const ProfessionalCard: React.FC<ProfessionalCardProps> = ({
           </div>
         </div>
         
-        <div className="mt-4">
+        <div className="mt-4 space-y-2">
+          <PhoneRevealButton 
+            phoneNumber={phoneNumber}
+            professionalName={name}
+            professionalId={id}
+          />
+          
           <Button 
             asChild
-            className="w-full bg-teal-500 hover:bg-teal-600 text-white transition-all"
+            variant="outline"
+            className="w-full border-teal-500 text-teal-600 hover:bg-teal-50"
           >
             <Link to={`/professional/${id}`}>צפה בפרופיל</Link>
           </Button>
