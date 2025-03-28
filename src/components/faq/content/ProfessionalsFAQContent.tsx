@@ -1,6 +1,6 @@
 
 import React from 'react';
-import FAQTabContent from '../FAQTabContent';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 
 const ProfessionalsFAQContent = () => {
   const professionalsFAQs = [
@@ -47,7 +47,20 @@ const ProfessionalsFAQContent = () => {
     }
   ];
 
-  return <FAQTabContent value="professionals" items={professionalsFAQs} />;
+  return (
+    <Accordion type="single" collapsible className="w-full">
+      {professionalsFAQs.map((item) => (
+        <AccordionItem key={item.id} value={item.id} className="border-b border-gray-200">
+          <AccordionTrigger className="text-lg font-medium py-4 hover:text-blue-700">{item.question}</AccordionTrigger>
+          <AccordionContent className="text-gray-700 pb-4">
+            <div className="p-4 bg-gray-50 rounded-lg">
+              {item.answer}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      ))}
+    </Accordion>
+  );
 };
 
 export default ProfessionalsFAQContent;
