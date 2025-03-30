@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -15,6 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/providers/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfileInterface } from '@/types/dashboard';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 const UserSettings = () => {
   const { user, loading } = useAuth();
@@ -778,4 +780,52 @@ const UserSettings = () => {
                             </h3>
                             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
                               <p className="text-sm text-gray-700">
-                                אנו משתמשים בעוגיות כדי לספק לך ח
+                                אנו משתמשים בעוגיות כדי לספק לך חווית שימוש טובה יותר ולהתאים את התוכן והפרסומות עבורך
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <Separator />
+                          
+                          <div>
+                            <h3 className="text-lg font-medium mb-4 flex items-center text-red-600">
+                              <AlertCircle className="ml-2 h-5 w-5 text-red-600" />
+                              מחיקת חשבון
+                            </h3>
+                            
+                            <div className="bg-red-50 p-4 rounded-md border border-red-100">
+                              <p className="text-sm text-red-700">
+                                מחיקת חשבון היא פעולה בלתי הפיכה. כל הנתונים שלך, כולל היסטוריית הבקשות והפניות, יימחקו לצמיתות.
+                              </p>
+                              
+                              <Button
+                                variant="outline"
+                                className="mt-4 border-red-300 text-red-600 hover:bg-red-50"
+                                onClick={handleDeleteAccount}
+                              >
+                                מחק את החשבון שלי לצמיתות
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          <Button type="submit" className="mt-4 bg-[#00D09E] hover:bg-[#00C090]">
+                            <Check className="ml-2 h-4 w-4" />
+                            שמור הגדרות פרטיות
+                          </Button>
+                        </div>
+                      </form>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
+        </div>
+      </main>
+      
+      <Footer />
+    </div>
+  );
+};
+
+export default UserSettings;
