@@ -179,6 +179,7 @@ export type Database = {
       }
       professionals: {
         Row: {
+          about: string | null
           created_at: string | null
           id: string
           image: string | null
@@ -192,6 +193,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          about?: string | null
           created_at?: string | null
           id?: string
           image?: string | null
@@ -205,6 +207,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          about?: string | null
           created_at?: string | null
           id?: string
           image?: string | null
