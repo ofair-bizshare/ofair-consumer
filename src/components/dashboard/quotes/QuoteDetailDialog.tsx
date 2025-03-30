@@ -35,7 +35,7 @@ const QuoteDetailDialog: React.FC<QuoteDetailDialogProps> = ({
           <span>צפה בפרופיל</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto backdrop-blur-lg bg-white/95" dir="rtl">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-lg" dir="rtl">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">פרופיל בעל מקצוע</DialogTitle>
           <DialogDescription>

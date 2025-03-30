@@ -26,8 +26,9 @@ export const fetchProfessionals = async (): Promise<ProfessionalInterface[]> => 
       reviewCount: item.review_count,
       location: item.location,
       image: item.image,
-      specialties: item.specialties,
-      phoneNumber: item.phone_number
+      specialties: item.specialties || [],
+      phoneNumber: item.phone_number,
+      about: item.about || '' // Add with default empty string if not available
     }));
   } catch (error) {
     console.error('Error fetching professionals:', error);
@@ -60,8 +61,9 @@ export const getProfessionalById = async (id: string): Promise<ProfessionalInter
       reviewCount: data.review_count,
       location: data.location,
       image: data.image,
-      specialties: data.specialties,
-      phoneNumber: data.phone_number
+      specialties: data.specialties || [],
+      phoneNumber: data.phone_number,
+      about: data.about || '' // Add with default empty string if not available
     };
   } catch (error) {
     console.error('Error fetching professional by ID:', error);

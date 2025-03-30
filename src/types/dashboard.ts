@@ -1,4 +1,3 @@
-
 export interface ProfessionalInterface {
   id: string;
   name: string;
@@ -10,6 +9,7 @@ export interface ProfessionalInterface {
   verified?: boolean; // Keeping for backward compatibility
   specialties: string[];
   phoneNumber?: string;
+  about?: string; // Adding about property as optional
 }
 
 export interface RequestInterface {
