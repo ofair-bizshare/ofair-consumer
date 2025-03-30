@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -39,15 +38,20 @@ const RequestsTab: React.FC = () => {
     const acceptedQuote = quotesState.find(q => q.id === quoteId);
     if (!acceptedQuote || !user) return;
     
-    // Update local state
+    // Update local state - mark this quote as accepted and others for this request as rejected
     setQuotesState(prevQuotes => 
-      prevQuotes.map(quote => 
-        quote.id === quoteId 
-          ? { ...quote, status: 'accepted' } 
-          : quote.requestId === prevQuotes.find(q => q.id === quoteId)?.requestId
-            ? { ...quote, status: quote.status === 'pending' ? 'rejected' : quote.status }
-            : quote
-      )
+      prevQuotes.map(quote => {
+        // The accepted quote
+        if (quote.id === quoteId) {
+          return { ...quote, status: 'accepted' };
+        }
+        // Other quotes for the same request should be rejected
+        else if (quote.requestId === acceptedQuote.requestId && quote.status === 'pending') {
+          return { ...quote, status: 'rejected' };
+        }
+        // All other quotes remain unchanged
+        return quote;
+      })
     );
     
     // Save the accepted quote to the database
@@ -77,6 +81,7 @@ const RequestsTab: React.FC = () => {
       
       // Also save phone reveal in referrals automatically
       const referral = {
+        id: crypto.randomUUID(),
         user_id: user.id,
         professional_id: acceptedQuote.professional.id,
         professional_name: acceptedQuote.professional.name,
@@ -89,10 +94,7 @@ const RequestsTab: React.FC = () => {
       
       const { error: referralError } = await supabase
         .from('referrals')
-        .upsert(referral, {
-          onConflict: 'user_id,professional_id',
-          ignoreDuplicates: false
-        });
+        .insert(referral);
       
       if (referralError) console.error("Error saving referral:", referralError);
       
@@ -108,19 +110,40 @@ const RequestsTab: React.FC = () => {
   };
 
   const handleRejectQuote = (quoteId: string) => {
-    setQuotesState(prevQuotes => 
-      prevQuotes.map(quote => 
-        quote.id === quoteId 
-          ? { ...quote, status: 'rejected' } 
-          : quote
-      )
-    );
+    const rejectedQuote = quotesState.find(q => q.id === quoteId);
     
-    toast({
-      title: "הצעה נדחתה",
-      description: "הודעה נשלחה לבעל המקצוע.",
-      variant: "default",
-    });
+    // If this is canceling an accepted quote
+    if (rejectedQuote && rejectedQuote.status === 'accepted') {
+      // Reset all quotes for this request to pending
+      setQuotesState(prevQuotes => 
+        prevQuotes.map(quote => 
+          quote.requestId === rejectedQuote.requestId 
+            ? { ...quote, status: quote.id === quoteId ? 'rejected' : 'pending' } 
+            : quote
+        )
+      );
+      
+      toast({
+        title: "קבלת הצעה בוטלה",
+        description: "אפשר לבחור הצעה אחרת כעת.",
+        variant: "default",
+      });
+    } else {
+      // Normal rejection of a quote
+      setQuotesState(prevQuotes => 
+        prevQuotes.map(quote => 
+          quote.id === quoteId 
+            ? { ...quote, status: 'rejected' } 
+            : quote
+        )
+      );
+      
+      toast({
+        title: "הצעה נדחתה",
+        description: "הודעה נשלחה לבעל המקצוע.",
+        variant: "default",
+      });
+    }
   };
 
   const handleViewProfile = (professionalId: string) => {

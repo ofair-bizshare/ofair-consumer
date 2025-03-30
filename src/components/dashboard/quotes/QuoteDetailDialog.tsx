@@ -35,7 +35,7 @@ const QuoteDetailDialog: React.FC<QuoteDetailDialogProps> = ({
           <span>צפה בפרופיל</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" dir="rtl">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto backdrop-blur-lg bg-white/95" dir="rtl">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">פרופיל בעל מקצוע</DialogTitle>
           <DialogDescription>
@@ -45,7 +45,7 @@ const QuoteDetailDialog: React.FC<QuoteDetailDialogProps> = ({
         <div className="py-4">
           <iframe 
             src={`/professional/${professional.id}`} 
-            className="w-full h-[70vh] border-none"
+            className="w-full h-[70vh] border-none rounded-md shadow-md"
             title={`פרופיל של ${professional.name}`}
           />
         </div>

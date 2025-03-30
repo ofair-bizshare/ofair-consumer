@@ -73,8 +73,12 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
       console.log("Professional Name:", professionalName);
       console.log("Phone Number:", phoneNumber);
       
+      // Generate a unique ID for the referral
+      const referralId = crypto.randomUUID();
+      
       // Construct referral object with all required fields
       const referral = {
+        id: referralId,
         user_id: user.id,
         professional_id: professionalId,
         professional_name: professionalName,
@@ -86,13 +90,17 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
       };
       
       // First check if there's an existing record
-      const { data: existingData } = await supabase
+      const { data: existingData, error: checkError } = await supabase
         .from('referrals')
         .select('id')
         .eq('user_id', user.id)
         .eq('professional_id', professionalId)
         .maybeSingle();
-        
+      
+      if (checkError) {
+        console.error('Error checking existing referral:', checkError);
+      }
+      
       let result;
       
       if (existingData) {
@@ -105,14 +113,12 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
             profession: profession || "בעל מקצוע",
             updated_at: new Date().toISOString()
           })
-          .eq('id', existingData.id)
-          .select();
+          .eq('id', existingData.id);
       } else {
         // If no record exists, insert new one
         result = await supabase
           .from('referrals')
-          .insert(referral)
-          .select();
+          .insert(referral);
       }
       
       if (result.error) {

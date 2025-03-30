@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { 
@@ -9,12 +10,82 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PhoneRevealButton from '@/components/PhoneRevealButton';
+import { supabase } from '@/integrations/supabase/client';
 
-const getProfessionalData = (id: string) => {
+// Fetch professional data from Supabase
+const fetchProfessionalData = async (id: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('professionals')
+      .select('*')
+      .eq('id', id)
+      .single();
+      
+    if (error) {
+      console.error('Error fetching professional:', error);
+      return getFallbackProfessionalData(id);
+    }
+    
+    if (data) {
+      return {
+        ...data,
+        reviewCount: data.review_count || 0,
+        yearEstablished: 2015,
+        contactInfo: {
+          phone: data.phone_number || '050-5555555',
+          email: `${data.name.replace(/\s+/g, '').toLowerCase()}@example.com`,
+          address: `רחוב הרצל 1, ${data.location}`
+        },
+        about: data.about || 'בעל ניסיון רב בתחום, מבצע את העבודה באיכות גבוהה, במחירים הוגנים ובזמנים מוסכמים.',
+        certifications: ['מוסמך מקצועי', 'בעל רישיון'],
+        workHours: 'ימים א-ה: 8:00-18:00, יום ו: 8:00-13:00',
+        projects: [
+          {
+            id: 1,
+            title: `עבודה לדוגמה - ${data.profession}`,
+            description: 'דוגמה לעבודה שבוצעה לאחרונה',
+            image: data.image || '/lovable-uploads/1a2c3d92-c7dd-41ef-bc39-b244797da4b2.png',
+            location: data.location
+          },
+          {
+            id: 2,
+            title: 'עבודה נוספת',
+            description: 'דוגמה נוספת לעבודה שבוצעה',
+            image: '/lovable-uploads/52b937d1-acd7-4831-b19e-79a55a774829.png',
+            location: data.location
+          }
+        ],
+        reviews: [
+          {
+            id: 1,
+            author: 'רחל כהן',
+            rating: 5,
+            date: '15/04/2023',
+            comment: 'עבודה מקצועית ומהירה. מרוצה מאוד מהתוצאה!'
+          },
+          {
+            id: 2,
+            author: 'דוד לוי',
+            rating: 4,
+            date: '02/03/2023',
+            comment: 'שירות טוב, מחיר הוגן. קצת איחר בלוחות הזמנים אבל התוצאה הסופית טובה מאוד.'
+          }
+        ]
+      };
+    }
+    
+    return getFallbackProfessionalData(id);
+  } catch (error) {
+    console.error('Error:', error);
+    return getFallbackProfessionalData(id);
+  }
+};
+
+// Fallback data in case the API fails
+const getFallbackProfessionalData = (id: string) => {
   return {
     id,
     name: 'ישראל ישראלי',
@@ -71,17 +142,45 @@ const getProfessionalData = (id: string) => {
 
 const ProfessionalProfile = () => {
   const { id } = useParams<{ id: string }>();
-  const professional = getProfessionalData(id || '');
+  const [professional, setProfessional] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
+    const loadProfessional = async () => {
+      setLoading(true);
+      const data = await fetchProfessionalData(id || '');
+      setProfessional(data);
+      setLoading(false);
+    };
+    
+    loadProfessional();
     window.scrollTo(0, 0);
   }, [id]);
 
   const isInIframe = window !== window.parent && window.parent;
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (!professional) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600">בעל המקצוע לא נמצא</h1>
+          <p className="mt-2">לא הצלחנו למצוא את בעל המקצוע המבוקש</p>
+        </div>
+      </div>
+    );
+  }
+
   if (isInIframe) {
     return (
-      <div className="py-6 px-4" dir="rtl">
+      <div className="py-6 px-4 bg-white" dir="rtl">
         <div className="mb-8 p-6 bg-gradient-to-r from-blue-600 to-teal-500 rounded-xl text-white shadow-lg">
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="relative">
@@ -117,12 +216,6 @@ const ProfessionalProfile = () => {
                 </div>
               </div>
             </div>
-            
-            <div>
-              <Button className="bg-white text-teal-600 hover:bg-blue-50 py-5 text-lg shadow-md transition-all hover:shadow-lg">
-                שלח הודעה
-              </Button>
-            </div>
           </div>
         </div>
 
@@ -150,7 +243,7 @@ const ProfessionalProfile = () => {
                     התמחויות
                   </h3>
                   <div className="flex flex-wrap gap-2">
-                    {professional.specialties.map((specialty, index) => (
+                    {professional.specialties && professional.specialties.map((specialty: string, index: number) => (
                       <Badge key={index} variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100">{specialty}</Badge>
                     ))}
                   </div>
@@ -162,7 +255,7 @@ const ProfessionalProfile = () => {
                     תעודות והסמכות
                   </h3>
                   <div className="space-y-2">
-                    {professional.certifications.map((cert, index) => (
+                    {professional.certifications && professional.certifications.map((cert: string, index: number) => (
                       <div key={index} className="flex items-center p-1 hover:bg-gray-50 rounded-md transition-colors">
                         <Award className="h-4 w-4 text-blue-500 ml-2" />
                         <span>{cert}</span>
@@ -182,6 +275,7 @@ const ProfessionalProfile = () => {
                         phoneNumber={professional.contactInfo.phone}
                         professionalName={professional.name}
                         professionalId={professional.id}
+                        profession={professional.profession}
                       />
                     </div>
                     <div className="flex items-center p-1 hover:bg-white/70 rounded-md transition-colors">
@@ -218,7 +312,7 @@ const ProfessionalProfile = () => {
               
               <TabsContent value="projects" className="mt-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {professional.projects.map(project => (
+                  {professional.projects && professional.projects.map((project: any) => (
                     <Card key={project.id} className="overflow-hidden shadow-md hover:shadow-lg transition-shadow border-blue-100">
                       <div className="aspect-video overflow-hidden rounded-t-lg relative">
                         <img 
@@ -245,7 +339,7 @@ const ProfessionalProfile = () => {
               
               <TabsContent value="reviews" className="mt-4">
                 <div className="space-y-4">
-                  {professional.reviews.map(review => (
+                  {professional.reviews && professional.reviews.map((review: any) => (
                     <Card key={review.id} className="shadow-md hover:shadow-lg transition-shadow border-blue-100">
                       <CardContent className="p-4">
                         <div className="flex justify-between items-start">
@@ -322,12 +416,6 @@ const ProfessionalProfile = () => {
                   </div>
                 </div>
               </div>
-              
-              <div>
-                <Button className="bg-white text-teal-600 hover:bg-blue-50 py-5 text-lg shadow-md transition-all hover:shadow-lg">
-                  שלח הודעה
-                </Button>
-              </div>
             </div>
           </div>
 
@@ -355,7 +443,7 @@ const ProfessionalProfile = () => {
                       התמחויות
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {professional.specialties.map((specialty, index) => (
+                      {professional.specialties && professional.specialties.map((specialty: string, index: number) => (
                         <Badge key={index} variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100">{specialty}</Badge>
                       ))}
                     </div>
@@ -367,7 +455,7 @@ const ProfessionalProfile = () => {
                       תעודות והסמכות
                     </h3>
                     <div className="space-y-2">
-                      {professional.certifications.map((cert, index) => (
+                      {professional.certifications && professional.certifications.map((cert: string, index: number) => (
                         <div key={index} className="flex items-center p-1 hover:bg-gray-50 rounded-md transition-colors">
                           <Award className="h-4 w-4 text-blue-500 ml-2" />
                           <span>{cert}</span>
@@ -387,6 +475,7 @@ const ProfessionalProfile = () => {
                           phoneNumber={professional.contactInfo.phone}
                           professionalName={professional.name}
                           professionalId={professional.id}
+                          profession={professional.profession}
                         />
                       </div>
                       <div className="flex items-center p-1 hover:bg-white/70 rounded-md transition-colors">
@@ -423,7 +512,7 @@ const ProfessionalProfile = () => {
                 
                 <TabsContent value="projects" className="mt-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {professional.projects.map(project => (
+                    {professional.projects && professional.projects.map((project: any) => (
                       <Card key={project.id} className="overflow-hidden shadow-md hover:shadow-lg transition-shadow border-blue-100">
                         <div className="aspect-video overflow-hidden rounded-t-lg relative">
                           <img 
@@ -450,7 +539,7 @@ const ProfessionalProfile = () => {
                 
                 <TabsContent value="reviews" className="mt-4">
                   <div className="space-y-4">
-                    {professional.reviews.map(review => (
+                    {professional.reviews && professional.reviews.map((review: any) => (
                       <Card key={review.id} className="shadow-md hover:shadow-lg transition-shadow border-blue-100">
                         <CardContent className="p-4">
                           <div className="flex justify-between items-start">
