@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      articles: {
+        Row: {
+          author: string | null
+          content: string
+          created_at: string | null
+          id: string
+          image: string | null
+          published: boolean | null
+          summary: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          author?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          image?: string | null
+          published?: boolean | null
+          summary?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          author?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          image?: string | null
+          published?: boolean | null
+          summary?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       business_accounts: {
         Row: {
           business_name: string
@@ -96,6 +132,131 @@ export type Database = {
           rating_value?: number
           recommendation?: string | null
           weighted_average?: number
+        }
+        Relationships: []
+      }
+      professionals: {
+        Row: {
+          created_at: string | null
+          id: string
+          image: string | null
+          location: string
+          name: string
+          phone_number: string | null
+          profession: string
+          rating: number | null
+          review_count: number | null
+          specialties: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          image?: string | null
+          location: string
+          name: string
+          phone_number?: string | null
+          profession: string
+          rating?: number | null
+          review_count?: number | null
+          specialties?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          image?: string | null
+          location?: string
+          name?: string
+          phone_number?: string | null
+          profession?: string
+          rating?: number | null
+          review_count?: number | null
+          specialties?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          completed_work: boolean | null
+          created_at: string | null
+          date: string | null
+          id: string
+          phone_number: string
+          profession: string | null
+          professional_id: string | null
+          professional_name: string
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          completed_work?: boolean | null
+          created_at?: string | null
+          date?: string | null
+          id?: string
+          phone_number: string
+          profession?: string | null
+          professional_id?: string | null
+          professional_name: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          completed_work?: boolean | null
+          created_at?: string | null
+          date?: string | null
+          id?: string
+          phone_number?: string
+          profession?: string | null
+          professional_id?: string | null
+          professional_name?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_profiles: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          name: string | null
+          phone: string | null
+          profile_image: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          email?: string | null
+          id: string
+          name?: string | null
+          phone?: string | null
+          profile_image?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          name?: string | null
+          phone?: string | null
+          profile_image?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }

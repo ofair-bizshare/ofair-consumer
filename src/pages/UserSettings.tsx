@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -13,17 +12,27 @@ import { useToast } from '@/hooks/use-toast';
 import { User, Bell, Lock, Shield, Check, AlertCircle, Smartphone, Key, Clock, FileText, Globe, Mail, BookOpen } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/providers/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
+import { UserProfileInterface } from '@/types/dashboard';
 
 const UserSettings = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [userProfile, setUserProfile] = useState<UserProfileInterface | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
   
-  // Mock user data
+  // Form state
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: ''
+  });
+
+  // Notifications and settings (keep as state as these might not be stored in DB yet)
   const [userData, setUserData] = useState({
-    name: 'ישראל ישראלי',
-    email: 'israel@example.com',
-    phone: '050-1234567',
     notifications: {
       email: true,
       sms: false,
@@ -50,22 +59,91 @@ const UserSettings = () => {
     }
   });
 
+  // Fetch user profile data
   useEffect(() => {
-    // Check if user is logged in
-    const hasSession = localStorage.getItem('isLoggedIn') === 'true';
-    setIsLoggedIn(hasSession);
-    
-    if (!hasSession) {
+    if (!user) {
       navigate('/login');
+      return;
     }
-  }, [navigate]);
+    
+    const fetchUserProfile = async () => {
+      try {
+        setLoadingProfile(true);
+        
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
+          
+        if (error) throw error;
+        
+        if (data) {
+          setUserProfile(data);
+          // Update form data with profile data
+          setFormData({
+            name: data.name || '',
+            email: data.email || '',
+            phone: data.phone || '',
+            address: data.address || ''
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        toast({
+          title: "שגיאה בטעינת פרופיל",
+          description: "אירעה שגיאה בטעינת נתוני הפרופיל",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+    
+    fetchUserProfile();
+  }, [user, navigate, toast]);
 
-  const handleProfileUpdate = (e: React.FormEvent) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "הפרופיל עודכן בהצלחה",
-      description: "השינויים שביצעת נשמרו",
-    });
+    
+    if (!user) return;
+    
+    try {
+      // Update user profile in database
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          name: formData.name,
+          phone: formData.phone,
+          address: formData.address
+        })
+        .eq('id', user.id);
+        
+      if (error) throw error;
+      
+      // Update local state
+      setUserProfile(prev => {
+        if (!prev) return null;
+        return { ...prev, ...formData };
+      });
+      
+      toast({
+        title: "הפרופיל עודכן בהצלחה",
+        description: "השינויים שביצעת נשמרו",
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "שגיאה בעדכון פרופיל",
+        description: "אירעה שגיאה בעדכון הפרופיל",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleNotificationChange = (key: keyof typeof userData.notifications) => {
@@ -106,18 +184,36 @@ const UserSettings = () => {
     });
   };
 
-  const handleDeleteAccount = () => {
-    // Show confirmation dialog before actually deleting
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    
+    // Show confirmation dialog before deleting
     if (window.confirm('האם אתה בטוח שברצונך למחוק את החשבון? פעולה זו אינה ניתנת לביטול.')) {
-      toast({
-        title: "החשבון נמחק",
-        description: "החשבון שלך נמחק בהצלחה. מקווים לראותך שוב בעתיד!",
-        variant: "destructive",
-      });
-      
-      // Logout the user
-      localStorage.removeItem('isLoggedIn');
-      navigate('/');
+      try {
+        // Delete user profile and account
+        const { error } = await supabase.auth.admin.deleteUser(
+          user.id
+        );
+        
+        if (error) throw error;
+        
+        toast({
+          title: "החשבון נמחק",
+          description: "החשבון שלך נמחק בהצלחה. מקווים לראותך שוב בעתיד!",
+          variant: "destructive",
+        });
+        
+        // Logout the user
+        await supabase.auth.signOut();
+        navigate('/');
+      } catch (error) {
+        console.error('Error deleting account:', error);
+        toast({
+          title: "שגיאה במחיקת חשבון",
+          description: "אירעה שגיאה במחיקת החשבון",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -146,7 +242,15 @@ const UserSettings = () => {
     });
   };
 
-  if (!isLoggedIn) {
+  if (loading || loadingProfile) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
     return null; // Will redirect to login
   }
 
@@ -181,19 +285,19 @@ const UserSettings = () => {
                   <Tabs defaultValue="profile" orientation="vertical" className="w-full">
                     <TabsList className="flex flex-col items-stretch h-auto p-0 bg-transparent">
                       <TabsTrigger value="profile" className="justify-start px-4 py-3 data-[state=active]:bg-blue-50">
-                        <User className="mr-2 h-4 w-4" />
+                        <User className="ml-2 h-4 w-4" />
                         פרטים אישיים
                       </TabsTrigger>
                       <TabsTrigger value="notifications" className="justify-start px-4 py-3 data-[state=active]:bg-blue-50">
-                        <Bell className="mr-2 h-4 w-4" />
+                        <Bell className="ml-2 h-4 w-4" />
                         התראות
                       </TabsTrigger>
                       <TabsTrigger value="security" className="justify-start px-4 py-3 data-[state=active]:bg-blue-50">
-                        <Lock className="mr-2 h-4 w-4" />
+                        <Lock className="ml-2 h-4 w-4" />
                         אבטחה
                       </TabsTrigger>
                       <TabsTrigger value="privacy" className="justify-start px-4 py-3 data-[state=active]:bg-blue-50">
-                        <Shield className="mr-2 h-4 w-4" />
+                        <Shield className="ml-2 h-4 w-4" />
                         פרטיות
                       </TabsTrigger>
                     </TabsList>
@@ -216,55 +320,45 @@ const UserSettings = () => {
                             <Label htmlFor="name">שם מלא</Label>
                             <Input 
                               id="name" 
-                              value={userData.name}
-                              onChange={(e) => setUserData({...userData, name: e.target.value})}
+                              name="name"
+                              value={formData.name}
+                              onChange={handleInputChange}
                             />
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor="email">דוא"ל</Label>
                             <Input 
                               id="email" 
+                              name="email"
                               type="email" 
-                              value={userData.email}
-                              onChange={(e) => setUserData({...userData, email: e.target.value})}
+                              value={formData.email}
+                              onChange={handleInputChange}
+                              disabled
                             />
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor="phone">טלפון</Label>
                             <Input 
                               id="phone" 
-                              value={userData.phone}
-                              onChange={(e) => setUserData({...userData, phone: e.target.value})}
+                              name="phone"
+                              value={formData.phone}
+                              onChange={handleInputChange}
                             />
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor="address">כתובת</Label>
                             <Input 
                               id="address" 
+                              name="address"
                               placeholder="הכנס את כתובתך"
+                              value={formData.address}
+                              onChange={handleInputChange}
                             />
                           </div>
                         </div>
                         
-                        <div className="mt-8 space-y-4">
-                          <h3 className="text-lg font-medium">העדפות כלליות</h3>
-                          <div className="space-y-2">
-                            <Label htmlFor="language">שפה מועדפת</Label>
-                            <select 
-                              id="language" 
-                              className="w-full p-2 border rounded-md"
-                              defaultValue="he"
-                            >
-                              <option value="he">עברית</option>
-                              <option value="en">אנגלית</option>
-                              <option value="ar">ערבית</option>
-                              <option value="ru">רוסית</option>
-                            </select>
-                          </div>
-                        </div>
-                        
                         <Button type="submit" className="mt-6 bg-[#00D09E] hover:bg-[#00C090]">
-                          <Check className="mr-2 h-4 w-4" />
+                          <Check className="ml-2 h-4 w-4" />
                           שמור שינויים
                         </Button>
                       </form>
@@ -286,7 +380,7 @@ const UserSettings = () => {
                               <div className="flex items-center justify-between border-b pb-3">
                                 <div>
                                   <h3 className="font-medium flex items-center">
-                                    <Mail className="mr-2 h-4 w-4 text-blue-600" />
+                                    <Mail className="ml-2 h-4 w-4 text-blue-600" />
                                     התראות במייל
                                   </h3>
                                   <p className="text-sm text-gray-500">קבל עדכונים חשובים לתיבת הדואר האלקטרוני שלך</p>
@@ -300,7 +394,7 @@ const UserSettings = () => {
                               <div className="flex items-center justify-between border-b pb-3">
                                 <div>
                                   <h3 className="font-medium flex items-center">
-                                    <Smartphone className="mr-2 h-4 w-4 text-blue-600" />
+                                    <Smartphone className="ml-2 h-4 w-4 text-blue-600" />
                                     התראות SMS
                                   </h3>
                                   <p className="text-sm text-gray-500">קבל הודעות טקסט עם עדכונים דחופים</p>
@@ -414,7 +508,7 @@ const UserSettings = () => {
                           </div>
 
                           <Button type="submit" className="mt-4 bg-[#00D09E] hover:bg-[#00C090]">
-                            <Check className="mr-2 h-4 w-4" />
+                            <Check className="ml-2 h-4 w-4" />
                             שמור הגדרות התראות
                           </Button>
                         </div>
@@ -448,7 +542,7 @@ const UserSettings = () => {
                             </div>
                             
                             <Button type="submit" className="mt-2 bg-[#00D09E] hover:bg-[#00C090]">
-                              <Check className="mr-2 h-4 w-4" />
+                              <Check className="ml-2 h-4 w-4" />
                               עדכן סיסמה
                             </Button>
                           </div>
@@ -460,7 +554,7 @@ const UserSettings = () => {
                             <div className="flex items-center justify-between mb-4">
                               <div>
                                 <p className="font-medium flex items-center">
-                                  <Key className="mr-2 h-4 w-4 text-blue-600" />
+                                  <Key className="ml-2 h-4 w-4 text-blue-600" />
                                   הפעל אימות דו-שלבי
                                 </p>
                                 <p className="text-sm text-gray-500">הגן על חשבונך עם שכבת אבטחה נוספת</p>
@@ -472,7 +566,7 @@ const UserSettings = () => {
                             </div>
                             <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
                               <p className="text-sm text-blue-700 flex">
-                                <AlertCircle className="mr-2 h-4 w-4 flex-shrink-0 text-blue-500 mt-0.5" />
+                                <AlertCircle className="ml-2 h-4 w-4 flex-shrink-0 text-blue-500 mt-0.5" />
                                 <span>
                                   אימות דו-שלבי מספק שכבת הגנה נוספת לחשבון שלך על ידי דרישת קוד אימות נוסף בנוסף לסיסמה שלך. הקוד יישלח למכשיר הנייד שלך בכל פעם שתתחבר לחשבונך.
                                 </span>
@@ -516,7 +610,7 @@ const UserSettings = () => {
                           
                           <div>
                             <h3 className="text-lg font-medium mb-4 flex items-center">
-                              <Clock className="mr-2 h-5 w-5 text-blue-600" />
+                              <Clock className="ml-2 h-5 w-5 text-blue-600" />
                               יומן האבטחה
                             </h3>
                             <p className="text-sm text-gray-600 mb-4">היסטוריית הפעילות ואירועי האבטחה בחשבונך</p>
@@ -602,7 +696,7 @@ const UserSettings = () => {
                         <div className="space-y-6">
                           <div className="pb-6">
                             <h3 className="text-lg font-medium mb-4 flex items-center">
-                              <Shield className="mr-2 h-5 w-5 text-blue-600" />
+                              <Shield className="ml-2 h-5 w-5 text-blue-600" />
                               הגדרות פרטיות
                             </h3>
                             
@@ -679,99 +773,9 @@ const UserSettings = () => {
                           
                           <div className="pb-6">
                             <h3 className="text-lg font-medium mb-4 flex items-center">
-                              <Globe className="mr-2 h-5 w-5 text-blue-600" />
+                              <Globe className="ml-2 h-5 w-5 text-blue-600" />
                               עוגיות ומעקב מקוון
                             </h3>
                             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
                               <p className="text-sm text-gray-700">
-                                אנו משתמשים בעוגיות כדי לספק לך חוויה מותאמת אישית. באפשרותך לנהל את העדפות העוגיות שלך בכל עת.
-                              </p>
-                              <div className="mt-3 space-y-2">
-                                <div className="flex items-center">
-                                  <input type="checkbox" id="essential-cookies" checked disabled className="mr-2" />
-                                  <Label htmlFor="essential-cookies">עוגיות הכרחיות (לא ניתן לכיבוי)</Label>
-                                </div>
-                                <div className="flex items-center">
-                                  <input type="checkbox" id="functional-cookies" defaultChecked className="mr-2" />
-                                  <Label htmlFor="functional-cookies">עוגיות פונקציונליות</Label>
-                                </div>
-                                <div className="flex items-center">
-                                  <input type="checkbox" id="analytics-cookies" defaultChecked className="mr-2" />
-                                  <Label htmlFor="analytics-cookies">עוגיות אנליטיקה</Label>
-                                </div>
-                                <div className="flex items-center">
-                                  <input type="checkbox" id="marketing-cookies" className="mr-2" />
-                                  <Label htmlFor="marketing-cookies">עוגיות שיווקיות</Label>
-                                </div>
-                              </div>
-                            </div>
-                            <Button variant="outline" className="text-blue-600 border-blue-300">
-                              נהל העדפות עוגיות
-                            </Button>
-                          </div>
-                          
-                          <Separator />
-                          
-                          <div className="pb-6">
-                            <h3 className="text-lg font-medium mb-2 flex items-center">
-                              <FileText className="mr-2 h-5 w-5 text-blue-600" />
-                              גיבוי וייצוא נתונים
-                            </h3>
-                            <p className="text-sm text-gray-600 mb-4">ייצא את המידע האישי שלך בפורמט מובנה</p>
-                            <div className="flex space-x-3">
-                              <Button variant="outline" className="border-blue-500 text-blue-600 hover:bg-blue-50">
-                                ייצוא נתונים (JSON)
-                              </Button>
-                              <Button variant="outline" className="border-blue-500 text-blue-600 hover:bg-blue-50">
-                                ייצוא נתונים (CSV)
-                              </Button>
-                            </div>
-                          </div>
-                          
-                          <Separator />
-                          
-                          <div>
-                            <h3 className="text-lg font-medium text-red-600 mb-2">מחיקת חשבון</h3>
-                            <p className="text-sm text-gray-600 mb-4">מחיקת החשבון תסיר לצמיתות את כל המידע והפעילות שלך</p>
-                            <div className="p-4 bg-red-50 border border-red-200 rounded-lg mb-4">
-                              <h4 className="font-medium text-red-700 mb-2">שים לב לפני המחיקה:</h4>
-                              <ul className="list-disc list-inside text-sm text-red-600 space-y-1">
-                                <li>כל הבקשות וההצעות שקיבלת יימחקו</li>
-                                <li>כל הקרדיטים שנותרו בחשבונך יאבדו</li>
-                                <li>לא ניתן לשחזר את החשבון לאחר המחיקה</li>
-                              </ul>
-                            </div>
-                            <Button 
-                              variant="destructive" 
-                              className="bg-red-500 hover:bg-red-600"
-                              onClick={handleDeleteAccount}
-                            >
-                              מחק את החשבון שלי
-                            </Button>
-                          </div>
-
-                          <Separator />
-                          
-                          <div className="pt-4">
-                            <Button type="submit" className="bg-[#00D09E] hover:bg-[#00C090]">
-                              <Check className="mr-2 h-4 w-4" />
-                              שמור הגדרות פרטיות
-                            </Button>
-                          </div>
-                        </div>
-                      </form>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-            </div>
-          </div>
-        </div>
-      </main>
-      
-      <Footer />
-    </div>
-  );
-};
-
-export default UserSettings;
+                                אנו משתמשים בעוגיות כדי לספק לך ח

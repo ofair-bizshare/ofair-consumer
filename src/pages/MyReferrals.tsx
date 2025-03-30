@@ -7,28 +7,20 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Phone, AlertCircle, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface Referral {
-  professionalId: string;
-  professionalName: string;
-  phoneNumber: string;
-  date: string;
-  status: string;
-  profession?: string;
-}
+import { useAuth } from '@/providers/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
+import { ReferralInterface } from '@/types/dashboard';
 
 const MyReferrals = () => {
-  const [referrals, setReferrals] = useState<Referral[]>([]);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [referrals, setReferrals] = useState<ReferralInterface[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     // Check if user is logged in
-    const hasSession = localStorage.getItem('isLoggedIn') === 'true';
-    setIsLoggedIn(hasSession);
-    
-    if (!hasSession) {
+    if (!user) {
       toast({
         title: "התחברות נדרשת",
         description: "עליך להתחבר כדי לצפות בהפניות שלך",
@@ -38,36 +30,93 @@ const MyReferrals = () => {
       return;
     }
     
-    // Get referrals from localStorage
-    const storedReferrals = localStorage.getItem('myReferrals');
-    if (storedReferrals) {
+    // Fetch referrals from Supabase
+    const fetchReferrals = async () => {
       try {
-        const parsedReferrals = JSON.parse(storedReferrals);
-        setReferrals(parsedReferrals);
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('referrals')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date', { ascending: false });
+        
+        if (error) throw error;
+        
+        if (data) {
+          // Convert Supabase data to our interface format
+          const formattedReferrals: ReferralInterface[] = data.map(item => ({
+            id: item.id,
+            user_id: item.user_id,
+            professionalId: item.professional_id,
+            professionalName: item.professional_name,
+            phoneNumber: item.phone_number,
+            date: new Date(item.date).toLocaleDateString('he-IL'),
+            status: item.status,
+            profession: item.profession,
+            completedWork: item.completed_work
+          }));
+          
+          setReferrals(formattedReferrals);
+        }
       } catch (error) {
-        console.error('Error parsing referrals:', error);
-        setReferrals([]);
+        console.error('Error fetching referrals:', error);
+        toast({
+          title: "שגיאה בטעינת הפניות",
+          description: "אירעה שגיאה בטעינת ההפניות שלך",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
       }
-    }
-  }, [navigate, toast]);
+    };
 
-  const markAsContacted = (id: string) => {
-    const updatedReferrals = referrals.map(referral => {
-      if (referral.professionalId === id) {
-        return { ...referral, status: 'contacted' };
-      }
-      return referral;
-    });
+    fetchReferrals();
+  }, [navigate, toast, user]);
+
+  const markAsContacted = async (id: string) => {
+    if (!id) return;
     
-    setReferrals(updatedReferrals);
-    localStorage.setItem('myReferrals', JSON.stringify(updatedReferrals));
-    
-    toast({
-      title: "סטטוס עודכן",
-      description: "ההפניה סומנה כ'נוצר קשר'",
-      variant: "default",
-    });
+    try {
+      // Update in Supabase
+      const { error } = await supabase
+        .from('referrals')
+        .update({ status: 'contacted' })
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setReferrals(prevReferrals => 
+        prevReferrals.map(r => {
+          if (r.id === id) {
+            return { ...r, status: 'contacted' };
+          }
+          return r;
+        })
+      );
+      
+      toast({
+        title: "סטטוס עודכן",
+        description: "ההפניה סומנה כ'נוצר קשר'",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Error updating referral status:', error);
+      toast({
+        title: "שגיאה בעדכון סטטוס",
+        description: "אירעה שגיאה בעדכון סטטוס ההפניה",
+        variant: "destructive",
+      });
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen" dir="rtl">
@@ -87,8 +136,8 @@ const MyReferrals = () => {
           <div className="glass-card p-6 mb-10">
             {referrals.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {referrals.map((referral, index) => (
-                  <Card key={index} className="overflow-hidden hover:shadow-md transition-shadow">
+                {referrals.map((referral) => (
+                  <Card key={referral.id} className="overflow-hidden hover:shadow-md transition-shadow">
                     <CardContent className="p-0">
                       <div className="p-5">
                         <div className="flex justify-between items-start mb-3">
@@ -128,7 +177,7 @@ const MyReferrals = () => {
                             <Button 
                               size="sm"
                               className="bg-[#00D09E] hover:bg-[#00C090]"
-                              onClick={() => markAsContacted(referral.professionalId)}
+                              onClick={() => markAsContacted(referral.id!)}
                             >
                               סמן כנוצר קשר
                             </Button>

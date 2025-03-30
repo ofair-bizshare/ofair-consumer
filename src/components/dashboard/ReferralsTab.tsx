@@ -6,91 +6,180 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Phone, AlertCircle, Eye, CheckCircle, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ReferralInterface } from '@/types/dashboard';
+import { useAuth } from '@/providers/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
 
 const ReferralsTab: React.FC = () => {
   const [referrals, setReferrals] = useState<ReferralInterface[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
   
+  // Fetch referrals from Supabase
   useEffect(() => {
-    // Get referrals from localStorage
-    const storedReferrals = localStorage.getItem('myReferrals');
-    if (storedReferrals) {
+    const fetchReferrals = async () => {
+      if (!user) return;
+      
       try {
-        const parsedReferrals = JSON.parse(storedReferrals);
-        // Sort referrals by date (newest first)
-        const sortedReferrals = [...parsedReferrals].sort((a, b) => {
-          return new Date(b.date).getTime() - new Date(a.date).getTime();
-        });
-        setReferrals(sortedReferrals);
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('referrals')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date', { ascending: false });
+        
+        if (error) throw error;
+        
+        if (data) {
+          // Convert Supabase data to our interface format
+          const formattedReferrals: ReferralInterface[] = data.map(item => ({
+            id: item.id,
+            user_id: item.user_id,
+            professionalId: item.professional_id,
+            professionalName: item.professional_name,
+            phoneNumber: item.phone_number,
+            date: new Date(item.date).toLocaleDateString('he-IL'),
+            status: item.status,
+            profession: item.profession,
+            completedWork: item.completed_work
+          }));
+          
+          setReferrals(formattedReferrals);
+        }
       } catch (error) {
-        console.error('Error parsing referrals:', error);
-        setReferrals([]);
+        console.error('Error fetching referrals:', error);
+        toast({
+          title: "שגיאה בטעינת הפניות",
+          description: "אירעה שגיאה בטעינת ההפניות שלך",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
       }
+    };
+
+    fetchReferrals();
+  }, [user, toast]);
+
+  const toggleContactStatus = async (id: string) => {
+    if (!id) return;
+    
+    try {
+      // Find the referral to toggle
+      const referral = referrals.find(r => r.id === id);
+      if (!referral) return;
+      
+      const newStatus = referral.status === 'contacted' ? 'new' : 'contacted';
+      
+      // Update in Supabase
+      const { error } = await supabase
+        .from('referrals')
+        .update({ status: newStatus })
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setReferrals(prevReferrals => 
+        prevReferrals.map(r => {
+          if (r.id === id) {
+            return { ...r, status: newStatus };
+          }
+          return r;
+        })
+      );
+      
+      const isNowContacted = newStatus === 'contacted';
+      
+      toast({
+        title: isNowContacted ? "סומן כ'נוצר קשר'" : "סומן כ'טרם נוצר קשר'",
+        description: isNowContacted ? "הפניה עודכנה לסטטוס 'נוצר קשר'" : "הפניה עודכנה לסטטוס 'טרם נוצר קשר'", 
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error updating referral status:', error);
+      toast({
+        title: "שגיאה בעדכון סטטוס",
+        description: "אירעה שגיאה בעדכון סטטוס ההפניה",
+        variant: "destructive",
+      });
     }
-  }, []);
+  };
 
-  // Save referrals to localStorage whenever they change
-  useEffect(() => {
-    if (referrals.length > 0) {
-      localStorage.setItem('myReferrals', JSON.stringify(referrals));
+  const markAsCompleted = async (id: string) => {
+    if (!id) return;
+    
+    try {
+      // Update in Supabase
+      const { error } = await supabase
+        .from('referrals')
+        .update({ completed_work: true })
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setReferrals(prevReferrals => 
+        prevReferrals.map(r => {
+          if (r.id === id) {
+            return { ...r, completedWork: true };
+          }
+          return r;
+        })
+      );
+      
+      toast({
+        title: "סומן כ'עבודה הושלמה'",
+        description: "הפניה עודכנה לסטטוס 'עבודה הושלמה'",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error marking referral as completed:', error);
+      toast({
+        title: "שגיאה בעדכון סטטוס",
+        description: "אירעה שגיאה בעדכון סטטוס ההפניה",
+        variant: "destructive",
+      });
     }
-  }, [referrals]);
-
-  const toggleContactStatus = (id: string) => {
-    const updatedReferrals = referrals.map(referral => {
-      if (referral.professionalId === id) {
-        const newStatus = referral.status === 'contacted' ? 'new' : 'contacted';
-        return {
-          ...referral,
-          status: newStatus
-        };
-      }
-      return referral;
-    });
-    
-    setReferrals(updatedReferrals);
-    
-    const referral = referrals.find(r => r.professionalId === id);
-    const isNowContacted = referral?.status === 'new'; // It will be toggled, so check the opposite
-    
-    toast({
-      title: isNowContacted ? "סומן כ'נוצר קשר'" : "סומן כ'טרם נוצר קשר'",
-      description: isNowContacted ? "הפניה עודכנה לסטטוס 'נוצר קשר'" : "הפניה עודכנה לסטטוס 'טרם נוצר קשר'", 
-      variant: "default"
-    });
   };
 
-  const markAsCompleted = (id: string) => {
-    const updatedReferrals = referrals.map(referral => {
-      if (referral.professionalId === id) {
-        return {
-          ...referral,
-          completedWork: true
-        };
-      }
-      return referral;
-    });
+  const deleteReferral = async (id: string) => {
+    if (!id) return;
     
-    setReferrals(updatedReferrals);
-    
-    toast({
-      title: "סומן כ'עבודה הושלמה'",
-      description: "הפניה עודכנה לסטטוס 'עבודה הושלמה'",
-      variant: "default"
-    });
+    try {
+      // Delete from Supabase
+      const { error } = await supabase
+        .from('referrals')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setReferrals(prevReferrals => prevReferrals.filter(r => r.id !== id));
+      
+      toast({
+        title: "הפניה נמחקה",
+        description: "ההפניה נמחקה בהצלחה",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error deleting referral:', error);
+      toast({
+        title: "שגיאה במחיקת הפניה",
+        description: "אירעה שגיאה במחיקת ההפניה",
+        variant: "destructive",
+      });
+    }
   };
 
-  const deleteReferral = (id: string) => {
-    const updatedReferrals = referrals.filter(referral => referral.professionalId !== id);
-    setReferrals(updatedReferrals);
-    localStorage.setItem('myReferrals', JSON.stringify(updatedReferrals));
-    
-    toast({
-      title: "הפניה נמחקה",
-      description: "ההפניה נמחקה בהצלחה",
-      variant: "default"
-    });
-  };
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6" dir="rtl">
@@ -102,8 +191,8 @@ const ReferralsTab: React.FC = () => {
         
         {referrals.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {referrals.map((referral, index) => (
-              <Card key={index} className="overflow-hidden hover:shadow-md transition-shadow">
+            {referrals.map((referral) => (
+              <Card key={referral.id} className="overflow-hidden hover:shadow-md transition-shadow">
                 <CardContent className="p-0">
                   <div className="p-5">
                     <div className="flex justify-between items-start mb-3">
@@ -148,7 +237,7 @@ const ReferralsTab: React.FC = () => {
                         variant="outline" 
                         size="sm" 
                         className="text-red-500 border-red-200 hover:bg-red-50"
-                        onClick={() => deleteReferral(referral.professionalId)}
+                        onClick={() => deleteReferral(referral.id!)}
                       >
                         <X size={16} className="ml-1" />
                         הסר
@@ -159,7 +248,7 @@ const ReferralsTab: React.FC = () => {
                           <Button 
                             size="sm" 
                             className="bg-[#00D09E] hover:bg-[#00C090]" 
-                            onClick={() => toggleContactStatus(referral.professionalId)}
+                            onClick={() => toggleContactStatus(referral.id!)}
                           >
                             סמן כנוצר קשר
                           </Button>
@@ -169,7 +258,7 @@ const ReferralsTab: React.FC = () => {
                               size="sm" 
                               variant="outline"
                               className="text-gray-500 border-gray-200 hover:bg-gray-50" 
-                              onClick={() => toggleContactStatus(referral.professionalId)}
+                              onClick={() => toggleContactStatus(referral.id!)}
                             >
                               <X size={16} className="ml-1" />
                               בטל סימון
@@ -177,7 +266,7 @@ const ReferralsTab: React.FC = () => {
                             <Button 
                               size="sm" 
                               className="bg-blue-500 hover:bg-blue-600" 
-                              onClick={() => markAsCompleted(referral.professionalId)}
+                              onClick={() => markAsCompleted(referral.id!)}
                             >
                               עבודה הושלמה
                             </Button>

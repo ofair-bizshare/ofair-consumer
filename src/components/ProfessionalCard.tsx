@@ -13,7 +13,6 @@ interface ProfessionalCardProps {
   reviewCount: number;
   location: string;
   image: string;
-  verified: boolean;
   specialties: string[];
   phoneNumber?: string;
 }
@@ -45,7 +44,7 @@ const ProfessionalCard: React.FC<ProfessionalCardProps> = ({
             <h3 className="text-lg font-semibold">{name}</h3>
             <p className="text-gray-600 text-sm">{profession}</p>
           </div>
-          <div className="flex items-center space-x-1 space-x-reverse">
+          <div className="flex items-center gap-1">
             <span className="text-sm font-medium">{rating}</span>
             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
             <span className="text-xs text-gray-500">({reviewCount})</span>
@@ -75,6 +74,7 @@ const ProfessionalCard: React.FC<ProfessionalCardProps> = ({
             phoneNumber={phoneNumber}
             professionalName={name}
             professionalId={id}
+            profession={profession}
           />
           
           <Button 

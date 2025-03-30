@@ -6,16 +6,19 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import DashboardTabs from '@/components/dashboard/DashboardTabs';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent } from '@/components/ui/card';
 import { UserCircle, Gift, Upload } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { UserProfileInterface } from '@/types/dashboard';
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
   const { toast } = useToast();
   const location = useLocation();
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfileInterface | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
   
   useEffect(() => {
     // Check if we need to scroll to a specific section
@@ -29,15 +32,39 @@ const Dashboard = () => {
       }
     }
 
-    // Load profile image from localStorage if available
-    const savedImage = localStorage.getItem('profileImage');
-    if (savedImage) {
-      setProfileImage(savedImage);
-    }
-  }, [location]);
+    // Load user profile from Supabase when user is available
+    const fetchUserProfile = async () => {
+      if (!user) return;
+      
+      try {
+        setLoadingProfile(true);
+        
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
+          
+        if (error) throw error;
+        
+        if (data) {
+          setUserProfile(data);
+          if (data.profile_image) {
+            setProfileImage(data.profile_image);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+    
+    fetchUserProfile();
+  }, [location, user]);
 
   // If still loading, show loading spinner
-  if (loading) {
+  if (loading || loadingProfile) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -50,21 +77,53 @@ const Dashboard = () => {
     return <Navigate to="/login" />;
   }
 
-  const handleProfileImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setProfileImage(base64String);
-        localStorage.setItem('profileImage', base64String);
-        toast({
-          title: "תמונת פרופיל עודכנה",
-          description: "תמונת הפרופיל שלך עודכנה בהצלחה",
-          variant: "default",
-        });
-      };
-      reader.readAsDataURL(file);
+    if (!file || !user) return;
+
+    try {
+      // 1. Upload to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `profile-images/${fileName}`;
+      
+      // Upload the file
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, file);
+        
+      if (uploadError) throw uploadError;
+      
+      // Get the public URL
+      const { data: publicURL } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
+      
+      if (!publicURL) throw new Error('Failed to get public URL');
+      
+      // 2. Update user profile with new image URL
+      const { error: updateError } = await supabase
+        .from('user_profiles')
+        .update({ profile_image: publicURL.publicUrl })
+        .eq('id', user.id);
+        
+      if (updateError) throw updateError;
+      
+      // 3. Update local state
+      setProfileImage(publicURL.publicUrl);
+      
+      toast({
+        title: "תמונת פרופיל עודכנה",
+        description: "תמונת הפרופיל שלך עודכנה בהצלחה",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      toast({
+        title: "שגיאה בהעלאת תמונה",
+        description: "אירעה שגיאה בהעלאת תמונת הפרופיל",
+        variant: "destructive",
+      });
     }
   };
 
@@ -93,7 +152,7 @@ const Dashboard = () => {
             <div className="glass-card p-6 mb-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <div className="relative mr-6">
+                  <div className="relative ml-6"> {/* Changed from mr-6 to ml-6 for RTL */}
                     {profileImage ? (
                       <img 
                         src={profileImage} 
@@ -120,8 +179,8 @@ const Dashboard = () => {
                       </label>
                     </div>
                   </div>
-                  <div className="mr-4">
-                    <h2 className="text-xl font-semibold">ברוך הבא, {user.user_metadata?.name || user.email}!</h2>
+                  <div className="ml-4"> {/* Changed from mr-4 to ml-4 for RTL */}
+                    <h2 className="text-xl font-semibold">ברוך הבא, {userProfile?.name || user.user_metadata?.name || user.email}!</h2>
                     <p className="text-gray-600">שמחים לראות אותך שוב</p>
                   </div>
                 </div>

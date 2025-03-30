@@ -7,7 +7,7 @@ export interface ProfessionalInterface {
   reviewCount: number;
   location: string;
   image: string;
-  verified: boolean;
+  verified?: boolean; // Keeping for backward compatibility
   specialties: string[];
   phoneNumber?: string;
 }
@@ -33,6 +33,8 @@ export interface QuoteInterface {
 }
 
 export interface ReferralInterface {
+  id?: string;
+  user_id?: string;
   professionalId: string;
   professionalName: string;
   phoneNumber: string;
@@ -40,4 +42,24 @@ export interface ReferralInterface {
   status: string;
   profession?: string;
   completedWork?: boolean;
+}
+
+export interface UserProfileInterface {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  profile_image?: string;
+}
+
+export interface ArticleInterface {
+  id: string;
+  title: string;
+  content: string;
+  summary?: string;
+  image?: string;
+  author?: string;
+  created_at: string;
+  published: boolean;
 }
