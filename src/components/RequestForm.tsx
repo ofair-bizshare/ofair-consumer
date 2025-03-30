@@ -11,6 +11,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { useAuth } from '@/providers/AuthProvider';
 
 interface RequestFormProps {
   onSuccess?: (value: boolean) => void;
@@ -92,13 +95,15 @@ const RequestForm: React.FC<RequestFormProps> = ({
   const [step, setStep] = useState(1);
   const [images, setImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [newRequestId, setNewRequestId] = useState<string>("");
   const [openProfessionPopover, setOpenProfessionPopover] = useState(false);
   const [openCityPopover, setOpenCityPopover] = useState(false);
+  const [openCalendar, setOpenCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, signIn, signUp } = useAuth();
   
   const [formData, setFormData] = useState({
     profession: '',
@@ -122,14 +127,17 @@ const RequestForm: React.FC<RequestFormProps> = ({
     passwordConfirm: '',
     agreeTerms: false
   });
+  
   useEffect(() => {
-    checkLoginStatus();
-  }, []);
-  const checkLoginStatus = () => {
-    const hasSession = localStorage.getItem('isLoggedIn') === 'true';
-    setIsLoggedIn(hasSession);
-    return hasSession;
-  };
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        contactName: user.user_metadata?.name || '',
+        email: user.email || '',
+        phone: user.user_metadata?.phone || ''
+      }));
+    }
+  }, [user]);
   
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -190,6 +198,17 @@ const RequestForm: React.FC<RequestFormProps> = ({
     setPreviewUrls(newPreviewUrls);
   };
   
+  const handleSelectDate = (date: Date | undefined) => {
+    setSelectedDate(date);
+    if (date) {
+      setFormData(prev => ({
+        ...prev,
+        timing: format(date, 'dd/MM/yyyy')
+      }));
+    }
+    setOpenCalendar(false);
+  };
+  
   const handleNext = () => {
     if (!formData.profession || !formData.description || !formData.location) {
       toast({
@@ -200,7 +219,7 @@ const RequestForm: React.FC<RequestFormProps> = ({
       return;
     }
     
-    if (checkLoginStatus()) {
+    if (user) {
       handleFormSubmit();
     } else {
       setStep(2);
@@ -225,16 +244,14 @@ const RequestForm: React.FC<RequestFormProps> = ({
     existingRequests.push(newRequest);
     localStorage.setItem('myRequests', JSON.stringify(existingRequests));
     
-    // Show success dialog instead of just toast
     setShowSuccessDialog(true);
     
-    // If we're in a dialog and have onSuccess callback, close dialog
     if (onSuccess) {
       onSuccess(false);
     }
   };
   
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginData.email || !loginData.password) {
       toast({
@@ -244,11 +261,13 @@ const RequestForm: React.FC<RequestFormProps> = ({
       });
       return;
     }
-    localStorage.setItem('isLoggedIn', 'true');
-    setIsLoggedIn(true);
-    handleFormSubmit();
+    
+    const { error } = await signIn(loginData.email, loginData.password);
+    if (!error) {
+      handleFormSubmit();
+    }
   };
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!registerData.name || !registerData.email || !registerData.password || !registerData.passwordConfirm) {
       toast({
@@ -274,9 +293,15 @@ const RequestForm: React.FC<RequestFormProps> = ({
       });
       return;
     }
-    localStorage.setItem('isLoggedIn', 'true');
-    setIsLoggedIn(true);
-    handleFormSubmit();
+
+    const { error } = await signUp(registerData.email, registerData.password, {
+      name: registerData.name,
+      phone: registerData.phone,
+    });
+    
+    if (!error) {
+      handleFormSubmit();
+    }
   };
   const handleBack = () => {
     setStep(step - 1);
@@ -285,7 +310,6 @@ const RequestForm: React.FC<RequestFormProps> = ({
     setShowSuccessDialog(false);
     navigate('/dashboard');
 
-    // Scroll to the relevant section in dashboard
     setTimeout(() => {
       const element = document.getElementById('request-' + newRequestId);
       if (element) {
@@ -400,17 +424,33 @@ const RequestForm: React.FC<RequestFormProps> = ({
 
           <div className="space-y-2">
             <Label htmlFor="timing" className="text-gray-700">מועד ביצוע (אופציונלי)</Label>
-            <div className="relative">
-              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <Input 
-                id="timing" 
-                name="timing" 
-                placeholder="מתי תרצה שהעבודה תתבצע?" 
-                className="pr-10" 
-                value={formData.timing} 
-                onChange={handleInputChange} 
-              />
-            </div>
+            <Popover open={openCalendar} onOpenChange={setOpenCalendar}>
+              <PopoverTrigger asChild>
+                <div className="relative cursor-pointer">
+                  <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <Input 
+                    id="timing" 
+                    name="timing" 
+                    placeholder="מתי תרצה שהעבודה תתבצע?" 
+                    className="pr-10"
+                    value={formData.timing} 
+                    onChange={handleInputChange} 
+                    onClick={() => setOpenCalendar(true)}
+                    readOnly
+                  />
+                </div>
+              </PopoverTrigger>
+              <PopoverContent className="p-0 w-auto" align="start">
+                <CalendarComponent
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={handleSelectDate}
+                  className="border rounded-md"
+                  disabled={(date) => date < new Date()}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="space-y-2">
@@ -536,7 +576,7 @@ const RequestForm: React.FC<RequestFormProps> = ({
               <span className="text-[#00D09E]">שליחת</span> בקשה לבעלי מקצוע
             </h2>
             <div className="text-sm text-gray-500">
-              {isLoggedIn ? 'שלב 1/1' : `שלב ${step}/2`}
+              {user ? 'שלב 1/1' : `שלב ${step}/2`}
             </div>
           </div>
 
@@ -560,7 +600,7 @@ const RequestForm: React.FC<RequestFormProps> = ({
                   onClick={handleNext} 
                   className="bg-[#00D09E] hover:bg-[#00C090]"
                 >
-                  {isLoggedIn ? 'שלח בקשה' : 'המשך'}
+                  {user ? 'שלח בקשה' : 'המשך'}
                 </Button>
               </div>
             )}
@@ -568,7 +608,6 @@ const RequestForm: React.FC<RequestFormProps> = ({
         </div>
       </Card>
 
-      {/* Success Dialog */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
         <DialogContent className="sm:max-w-md" dir="rtl">
           <DialogHeader>

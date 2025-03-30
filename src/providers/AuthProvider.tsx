@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -87,6 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
+      localStorage.setItem('isLoggedIn', 'true');
       return { error: null };
     } catch (error) {
       console.error('Error signing in:', error);
@@ -186,6 +188,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
       
+      localStorage.setItem('isLoggedIn', 'true');
       return { error: null };
     } catch (error) {
       console.error('Error verifying OTP:', error);
@@ -209,6 +212,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
       });
       if (error) throw error;
+      localStorage.setItem('isLoggedIn', 'true');
       return { error: null };
     } catch (error) {
       console.error('Error signing up:', error);

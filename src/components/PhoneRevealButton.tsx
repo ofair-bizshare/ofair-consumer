@@ -22,6 +22,7 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
   autoReveal = false // Default is false
 }) => {
   const [isRevealed, setIsRevealed] = useState(autoReveal);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -64,6 +65,8 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
       return;
     }
     
+    setIsLoading(true);
+    
     // Create a referral in the database
     try {
       const referral = {
@@ -104,6 +107,8 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
         description: "אירעה שגיאה בשמירת פרטי ההפניה",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -112,9 +117,10 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
       variant={isRevealed ? "outline" : "default"}
       className={`w-full ${isRevealed ? "border-blue-500 text-blue-700" : "bg-[#00D09E] hover:bg-[#00C090]"}`}
       onClick={isRevealed ? undefined : handleReveal}
+      disabled={isLoading}
     >
       <Phone className="ml-2 h-4 w-4" />
-      {isRevealed ? phoneNumber : "הצג מספר טלפון"}
+      {isLoading ? "טוען..." : isRevealed ? phoneNumber : "הצג מספר טלפון"}
     </Button>
   );
 };
