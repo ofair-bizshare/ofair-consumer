@@ -71,13 +71,16 @@ export const getProfessionalById = async (id: string): Promise<ProfessionalInter
 
 export const seedProfessionals = async () => {
   try {
+    console.log('Calling seed-professionals function...');
     // Call the edge function to seed professionals
     const { data, error } = await supabase.functions.invoke('seed-professionals');
     
     if (error) {
+      console.error('Error from seed-professionals function:', error);
       throw error;
     }
     
+    console.log('Seed professionals result:', data);
     return data;
   } catch (error) {
     console.error('Error seeding professionals:', error);
