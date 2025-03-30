@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -224,12 +223,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { error };
     }
   };
-  
+
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      console.log("Attempting to sign out...");
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error("Error during sign out:", error);
+        throw error;
+      }
+      
+      console.log("Sign out successful");
       localStorage.removeItem('isLoggedIn');
       setPhoneVerified(false);
+      
+      // Force update of auth state
+      setUser(null);
+      setSession(null);
+      
+      toast({
+        title: "יצאת מהמערכת",
+        description: "התנתקת בהצלחה מהמערכת",
+      });
+      
+      // Optionally, redirect to home page
+      window.location.href = '/';
     } catch (error) {
       console.error('Error signing out:', error);
       toast({
