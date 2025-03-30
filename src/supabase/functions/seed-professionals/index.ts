@@ -1,5 +1,11 @@
 
-/// <reference types="https://deno.land/x/xhr@0.3.0/mod.ts" />
+// deno-lint-ignore-file
+/// <reference no-default-lib="true" />
+/// <reference lib="dom" />
+/// <reference lib="dom.iterable" />
+/// <reference lib="dom.asynciterable" />
+/// <reference lib="deno.ns" />
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
