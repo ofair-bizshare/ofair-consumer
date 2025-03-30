@@ -67,8 +67,8 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
     
     setIsLoading(true);
     
-    // Create a referral in the database
     try {
+      // Construct referral object with all required fields
       const referral = {
         user_id: user.id,
         professional_id: professionalId,
@@ -80,15 +80,19 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
         completed_work: false
       };
       
-      // Insert into Supabase
-      const { error } = await supabase
+      // Insert into Supabase with proper error handling
+      const { error, data } = await supabase
         .from('referrals')
         .upsert(referral, {
           onConflict: 'user_id,professional_id',
           ignoreDuplicates: false
-        });
+        })
+        .select();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error details:', error);
+        throw error;
+      }
       
       setIsRevealed(true);
       
@@ -99,7 +103,7 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
         variant: "default",
       });
       
-      console.log("Referral saved to Supabase");
+      console.log("Referral saved to Supabase:", data);
     } catch (error) {
       console.error('Error saving referral:', error);
       toast({
