@@ -1,9 +1,10 @@
-
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/providers/AuthProvider';
 import RequestsList from './RequestsList';
 import RequestDetail from './RequestDetail';
 import { QuoteInterface, RequestInterface } from '@/types/dashboard';
@@ -18,6 +19,7 @@ const RequestsTab: React.FC = () => {
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const selectedRequestRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
   const navigate = useNavigate();
   
   const selectedRequest = requests.find(r => r.id === selectedRequestId);
@@ -31,7 +33,12 @@ const RequestsTab: React.FC = () => {
     }
   }, [selectedRequestId]);
 
-  const handleAcceptQuote = (quoteId: string) => {
+  const handleAcceptQuote = async (quoteId: string) => {
+    // Find the quote that's being accepted
+    const acceptedQuote = quotesState.find(q => q.id === quoteId);
+    if (!acceptedQuote || !user) return;
+    
+    // Update local state
     setQuotesState(prevQuotes => 
       prevQuotes.map(quote => 
         quote.id === quoteId 
@@ -41,6 +48,55 @@ const RequestsTab: React.FC = () => {
             : quote
       )
     );
+    
+    // Save the accepted quote to the database
+    try {
+      const acceptedQuoteData = {
+        user_id: user.id,
+        quote_id: quoteId,
+        request_id: acceptedQuote.requestId,
+        professional_id: acceptedQuote.professional.id,
+        professional_name: acceptedQuote.professional.name,
+        price: acceptedQuote.price,
+        date: new Date().toISOString(),
+        status: 'accepted',
+        description: acceptedQuote.description
+      };
+      
+      // Save to Supabase
+      const { error } = await supabase
+        .from('accepted_quotes')
+        .upsert(acceptedQuoteData, {
+          onConflict: 'quote_id',
+          ignoreDuplicates: false
+        });
+        
+      if (error) throw error;
+      
+      // Also save phone reveal in referrals automatically
+      const referral = {
+        user_id: user.id,
+        professional_id: acceptedQuote.professional.id,
+        professional_name: acceptedQuote.professional.name,
+        phone_number: acceptedQuote.professional.phoneNumber || "050-1234567",
+        date: new Date().toISOString(),
+        status: "accepted_quote",
+        profession: acceptedQuote.professional.profession,
+        completed_work: false
+      };
+      
+      const { error: referralError } = await supabase
+        .from('referrals')
+        .upsert(referral, {
+          onConflict: 'user_id,professional_id',
+          ignoreDuplicates: false
+        });
+      
+      if (referralError) console.error("Error saving referral:", referralError);
+      
+    } catch (error) {
+      console.error("Error saving accepted quote:", error);
+    }
     
     toast({
       title: "הצעה התקבלה",

@@ -91,6 +91,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
               phoneNumber={quote.professional.phoneNumber || "050-1234567"}
               professionalName={quote.professional.name}
               professionalId={quote.professional.id}
+              autoReveal={quote.status === 'accepted'} // Auto reveal for accepted quotes
             />
           </div>
         </div>

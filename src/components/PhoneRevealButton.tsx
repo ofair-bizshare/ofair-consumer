@@ -11,15 +11,17 @@ interface PhoneRevealButtonProps {
   professionalName: string;
   professionalId: string;
   profession?: string;
+  autoReveal?: boolean; // New prop for automatically revealing the number
 }
 
 const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({ 
   phoneNumber, 
   professionalName,
   professionalId,
-  profession
+  profession,
+  autoReveal = false // Default is false
 }) => {
-  const [isRevealed, setIsRevealed] = useState(false);
+  const [isRevealed, setIsRevealed] = useState(autoReveal);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -44,8 +46,12 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
       }
     };
 
-    checkExistingReferral();
-  }, [user, professionalId]);
+    if (autoReveal) {
+      setIsRevealed(true);
+    } else {
+      checkExistingReferral();
+    }
+  }, [user, professionalId, autoReveal]);
 
   const handleReveal = async () => {
     if (!user) {
