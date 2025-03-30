@@ -125,7 +125,8 @@ const RequestForm: React.FC<RequestFormProps> = ({
     email: '',
     password: '',
     passwordConfirm: '',
-    agreeTerms: false
+    agreeTerms: false,
+    phone: ''
   });
   
   useEffect(() => {
