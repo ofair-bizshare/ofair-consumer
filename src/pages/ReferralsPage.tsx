@@ -1,24 +1,20 @@
 
-import React, { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Phone, AlertCircle, Eye } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
-import { supabase } from '@/integrations/supabase/client';
-import { ReferralInterface } from '@/types/dashboard';
+import { useReferrals } from '@/hooks/useReferrals';
+import ReferralsGrid from '@/components/referrals/ReferralsGrid';
 
-const ReferralsPage = () => {
-  const [referrals, setReferrals] = useState<ReferralInterface[]>([]);
-  const [loading, setLoading] = useState(true);
+const ReferralsPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { referrals, loading, markAsContacted } = useReferrals(user?.id);
   
-  useEffect(() => {
+  React.useEffect(() => {
     // Check if user is logged in
     if (!user) {
       toast({
@@ -31,88 +27,8 @@ const ReferralsPage = () => {
           returnUrl: '/referrals'
         }
       });
-      return;
     }
-
-    // Fetch referrals from Supabase
-    const fetchReferrals = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from('referrals')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('date', { ascending: false });
-        
-        if (error) throw error;
-        
-        if (data) {
-          // Convert Supabase data to our interface format
-          const formattedReferrals: ReferralInterface[] = data.map(item => ({
-            id: item.id,
-            user_id: item.user_id,
-            professionalId: item.professional_id,
-            professionalName: item.professional_name,
-            phoneNumber: item.phone_number,
-            date: new Date(item.date).toLocaleDateString('he-IL'),
-            status: item.status,
-            profession: item.profession,
-            completedWork: item.completed_work
-          }));
-          
-          setReferrals(formattedReferrals);
-        }
-      } catch (error) {
-        console.error('Error fetching referrals:', error);
-        toast({
-          title: "שגיאה בטעינת הפניות",
-          description: "אירעה שגיאה בטעינת ההפניות שלך",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchReferrals();
   }, [navigate, toast, user]);
-
-  const markAsContacted = async (id: string) => {
-    if (!id) return;
-    
-    try {
-      // Update in Supabase
-      const { error } = await supabase
-        .from('referrals')
-        .update({ status: 'contacted' })
-        .eq('id', id);
-      
-      if (error) throw error;
-      
-      // Update local state
-      setReferrals(prevReferrals => 
-        prevReferrals.map(r => {
-          if (r.id === id) {
-            return { ...r, status: 'contacted' };
-          }
-          return r;
-        })
-      );
-      
-      toast({
-        title: "סטטוס עודכן",
-        description: "ההפניה סומנה כ'נוצר קשר'",
-        variant: "default"
-      });
-    } catch (error) {
-      console.error('Error updating referral status:', error);
-      toast({
-        title: "שגיאה בעדכון סטטוס",
-        description: "אירעה שגיאה בעדכון סטטוס ההפניה",
-        variant: "destructive",
-      });
-    }
-  };
 
   if (loading) {
     return (
@@ -138,74 +54,10 @@ const ReferralsPage = () => {
           </div>
           
           <div className="glass-card p-6 mb-10">
-            {referrals.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {referrals.map((referral) => (
-                  <Card key={referral.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                    <CardContent className="p-0">
-                      <div className="p-5">
-                        <div className="flex justify-between items-start mb-3">
-                          <div>
-                            <h3 className="text-lg font-semibold">{referral.professionalName}</h3>
-                            <p className="text-gray-500 text-sm">{referral.profession || "בעל מקצוע"}</p>
-                          </div>
-                          <div className="flex items-center text-sm">
-                            {referral.status === 'new' ? (
-                              <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">חדש</span>
-                            ) : (
-                              <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">נוצר קשר</span>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <div className="text-gray-700 mb-3">
-                          <div className="flex items-center mb-1">
-                            <Phone className="h-4 w-4 text-[#00D09E] ml-2" />
-                            <p className="font-medium">{referral.phoneNumber}</p>
-                          </div>
-                          <p className="text-sm text-gray-500">{referral.date}</p>
-                        </div>
-                        
-                        <div className="flex justify-between pt-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="text-blue-700 border-blue-200 hover:bg-blue-50" 
-                            onClick={() => window.open(`/professional/${referral.professionalId}`, '_blank')}
-                          >
-                            <Eye size={16} className="ml-1" />
-                            צפה בפרופיל
-                          </Button>
-                          
-                          {referral.status === 'new' && (
-                            <Button 
-                              size="sm" 
-                              className="bg-[#00D09E] hover:bg-[#00C090]" 
-                              onClick={() => markAsContacted(referral.id!)}
-                            >
-                              סמן כנוצר קשר
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <AlertCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">אין הפניות עדיין</h3>
-                <p className="text-gray-500 mb-4">
-                  כאשר תיצור הפניות לבעלי מקצוע, הן יופיעו כאן כדי שתוכל לעקוב אחריהן
-                </p>
-                <Link to="/search">
-                  <Button className="bg-[#00D09E] hover:bg-[#00C090]">
-                    חפש בעלי מקצוע
-                  </Button>
-                </Link>
-              </div>
-            )}
+            <ReferralsGrid 
+              referrals={referrals} 
+              onMarkContacted={markAsContacted} 
+            />
           </div>
         </div>
       </main>
