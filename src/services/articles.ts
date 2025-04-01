@@ -96,6 +96,8 @@ const initializeArticlesIfEmpty = async (): Promise<void> => {
 
 export const getArticleById = async (id: string): Promise<ArticleInterface | null> => {
   try {
+    console.log('Fetching article by ID:', id);
+    
     const { data, error } = await supabase
       .from('articles')
       .select('*')
@@ -104,8 +106,11 @@ export const getArticleById = async (id: string): Promise<ArticleInterface | nul
       .maybeSingle();
       
     if (error) {
+      console.error('Error fetching article by ID:', error);
       throw error;
     }
+    
+    console.log('Article data:', data);
     
     if (!data) {
       return null;

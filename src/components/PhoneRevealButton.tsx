@@ -84,12 +84,8 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
         throw new Error("Missing required referral data");
       }
       
-      // Generate a unique ID for the referral
-      const referralId = crypto.randomUUID();
-      
-      // Construct referral object with all required fields
+      // Important: Let Supabase generate the UUID, don't generate it client-side
       const referral = {
-        id: referralId,
         user_id: user.id,
         professional_id: professionalId,
         professional_name: professionalName,

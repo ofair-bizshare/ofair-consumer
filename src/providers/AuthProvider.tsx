@@ -27,30 +27,76 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [phoneVerified, setPhoneVerified] = useState(false);
   const { toast } = useToast();
 
-  // Check if user has a phone number in their metadata
   const checkPhoneVerification = async (): Promise<boolean> => {
     if (!user) return false;
     
-    // Check user's metadata for phone verification
     const hasPhone = user.user_metadata?.phone !== undefined;
     
     setPhoneVerified(hasPhone || false);
     return hasPhone || false;
   };
 
+  const ensureUserProfile = async (userId: string, userData: { name?: string, email: string, phone?: string }) => {
+    try {
+      console.log("Ensuring user profile exists for:", userId);
+      
+      const { data: existingProfile, error: checkError } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('id', userId)
+        .maybeSingle();
+        
+      if (checkError) throw checkError;
+      
+      if (existingProfile) {
+        const { error: updateError } = await supabase
+          .from('user_profiles')
+          .update({
+            name: userData.name || userData.email,
+            email: userData.email,
+            phone: userData.phone
+          })
+          .eq('id', userId);
+          
+        if (updateError) throw updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('user_profiles')
+          .insert({
+            id: userId,
+            name: userData.name || userData.email,
+            email: userData.email,
+            phone: userData.phone
+          });
+          
+        if (insertError) throw insertError;
+      }
+      
+      console.log("User profile ensured successfully");
+    } catch (error) {
+      console.error("Error ensuring user profile:", error);
+    }
+  };
+
   useEffect(() => {
-    // Set up the auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
         console.log('Auth state changed:', event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
-        // Store login status in localStorage for components that check it
         if (currentSession?.user) {
           localStorage.setItem('isLoggedIn', 'true');
           
-          // Check phone verification on login
+          await ensureUserProfile(
+            currentSession.user.id, 
+            {
+              name: currentSession.user.user_metadata?.name,
+              email: currentSession.user.email || '',
+              phone: currentSession.user.user_metadata?.phone
+            }
+          );
+          
           setTimeout(async () => {
             await checkPhoneVerification();
           }, 0);
@@ -61,7 +107,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
@@ -69,7 +114,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (currentSession?.user) {
         localStorage.setItem('isLoggedIn', 'true');
         
-        // Check phone verification status on init
+        await ensureUserProfile(
+          currentSession.user.id, 
+          {
+            name: currentSession.user.user_metadata?.name,
+            email: currentSession.user.email || '',
+            phone: currentSession.user.user_metadata?.phone
+          }
+        );
+        
         setTimeout(async () => {
           await checkPhoneVerification();
         }, 0);
@@ -85,8 +138,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error, data } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
+      
+      if (data?.user) {
+        await ensureUserProfile(
+          data.user.id, 
+          {
+            name: data.user.user_metadata?.name,
+            email: data.user.email || '',
+            phone: data.user.user_metadata?.phone
+          }
+        );
+      }
+      
       localStorage.setItem('isLoggedIn', 'true');
       return { error: null };
     } catch (error) {
@@ -123,10 +188,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithPhone = async (phone: string) => {
     try {
-      // Format phone number to E.164 format if needed
       let formattedPhone = phone;
       if (!phone.startsWith('+')) {
-        // Israeli phone numbers: add +972 prefix and remove leading 0
         if (phone.startsWith('0')) {
           formattedPhone = '+972' + phone.substring(1);
         } else {
@@ -152,10 +215,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const verifyOtp = async (phone: string, token: string) => {
     try {
-      // Format phone number to E.164 format if needed
       let formattedPhone = phone;
       if (!phone.startsWith('+')) {
-        // Israeli phone numbers: add +972 prefix and remove leading 0
         if (phone.startsWith('0')) {
           formattedPhone = '+972' + phone.substring(1);
         } else {
@@ -163,7 +224,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-      const { error } = await supabase.auth.verifyOtp({
+      const { error, data } = await supabase.auth.verifyOtp({
         phone: formattedPhone,
         token,
         type: 'sms',
@@ -171,9 +232,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) throw error;
       
-      // If the user is already logged in (e.g., via Google), update their metadata
       if (user) {
-        // Update the user metadata to include phone
         const { error: updateError } = await supabase.auth.updateUser({
           data: { 
             phone: formattedPhone
@@ -184,7 +243,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.error('Error updating user metadata:', updateError);
         } else {
           setPhoneVerified(true);
+          
+          if (user.id) {
+            await ensureUserProfile(
+              user.id, 
+              {
+                name: user.user_metadata?.name,
+                email: user.email || '',
+                phone: formattedPhone
+              }
+            );
+          }
         }
+      }
+      
+      if (data?.user) {
+        await ensureUserProfile(
+          data.user.id, 
+          {
+            name: data.user.user_metadata?.name,
+            email: data.user.email || '',
+            phone: formattedPhone
+          }
+        );
       }
       
       localStorage.setItem('isLoggedIn', 'true');
@@ -202,7 +283,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, metadata?: { [key: string]: any }) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { error, data } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -211,6 +292,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
       });
       if (error) throw error;
+      
+      if (data?.user) {
+        await ensureUserProfile(
+          data.user.id, 
+          {
+            name: metadata?.name || email,
+            email: email,
+            phone: metadata?.phone
+          }
+        );
+      }
+      
       localStorage.setItem('isLoggedIn', 'true');
       return { error: null };
     } catch (error) {
@@ -238,7 +331,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem('isLoggedIn');
       setPhoneVerified(false);
       
-      // Force update of auth state
       setUser(null);
       setSession(null);
       
@@ -247,7 +339,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: "התנתקת בהצלחה מהמערכת",
       });
       
-      // Optionally, redirect to home page
       window.location.href = '/';
     } catch (error) {
       console.error('Error signing out:', error);

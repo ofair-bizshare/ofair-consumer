@@ -18,6 +18,8 @@ export const useReferrals = (userId: string | undefined) => {
     const fetchReferrals = async () => {
       try {
         setLoading(true);
+        console.log("Fetching referrals for user:", userId);
+        
         const { data, error } = await supabase
           .from('referrals')
           .select('*')
@@ -25,6 +27,8 @@ export const useReferrals = (userId: string | undefined) => {
           .order('date', { ascending: false });
         
         if (error) throw error;
+        
+        console.log("Referrals data received:", data);
         
         if (data) {
           // Convert Supabase data to our interface format
@@ -61,6 +65,8 @@ export const useReferrals = (userId: string | undefined) => {
     if (!id) return;
     
     try {
+      console.log("Marking referral as contacted:", id);
+      
       // Update in Supabase
       const { error } = await supabase
         .from('referrals')
@@ -68,6 +74,8 @@ export const useReferrals = (userId: string | undefined) => {
         .eq('id', id);
       
       if (error) throw error;
+      
+      console.log("Referral marked as contacted successfully");
       
       // Update local state
       setReferrals(prevReferrals => 

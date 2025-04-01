@@ -10,19 +10,28 @@ interface ReferralsGridProps {
 }
 
 const ReferralsGrid: React.FC<ReferralsGridProps> = ({ referrals, onMarkContacted }) => {
-  if (referrals.length === 0) {
+  console.log("Rendering ReferralsGrid with referrals:", referrals);
+  
+  if (!referrals || referrals.length === 0) {
     return <EmptyReferralsMessage />;
   }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {referrals.map((referral) => (
-        <ReferralCard 
-          key={referral.id} 
-          referral={referral} 
-          onMarkContacted={onMarkContacted} 
-        />
-      ))}
+      {referrals.map((referral) => {
+        if (!referral.id) {
+          console.warn("Referral missing ID:", referral);
+          return null;
+        }
+        
+        return (
+          <ReferralCard 
+            key={referral.id} 
+            referral={referral} 
+            onMarkContacted={onMarkContacted} 
+          />
+        );
+      })}
     </div>
   );
 };

@@ -32,12 +32,51 @@ const Dashboard = () => {
       }
     }
 
+    // Create user profile if it doesn't exist yet
+    const createUserProfileIfNeeded = async () => {
+      if (!user) return;
+      
+      try {
+        // Check if profile exists
+        const { data: existingProfile, error: checkError } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
+          
+        if (checkError) throw checkError;
+        
+        // If profile doesn't exist, create it
+        if (!existingProfile) {
+          console.log("Creating new user profile for:", user.id);
+          const newProfile = {
+            id: user.id,
+            name: user.user_metadata?.name || user.email,
+            email: user.email
+          };
+          
+          const { error: insertError } = await supabase
+            .from('user_profiles')
+            .insert(newProfile);
+            
+          if (insertError) throw insertError;
+          
+          console.log("New user profile created");
+        }
+      } catch (error) {
+        console.error("Error managing user profile:", error);
+      }
+    };
+    
     // Load user profile from Supabase when user is available
     const fetchUserProfile = async () => {
       if (!user) return;
       
       try {
         setLoadingProfile(true);
+        
+        // Ensure user profile exists
+        await createUserProfileIfNeeded();
         
         const { data, error } = await supabase
           .from('user_profiles')
@@ -48,6 +87,7 @@ const Dashboard = () => {
         if (error) throw error;
         
         if (data) {
+          console.log("User profile loaded:", data);
           setUserProfile(data);
           if (data.profile_image) {
             setProfileImage(data.profile_image);
@@ -87,6 +127,18 @@ const Dashboard = () => {
       const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `profile-images/${fileName}`;
       
+      // Create the bucket if it doesn't exist
+      const { data: bucketData, error: bucketError } = await supabase.storage
+        .getBucket('images');
+        
+      if (bucketError && bucketError.message.includes('The resource was not found')) {
+        console.log('Creating images bucket...');
+        const { error: createBucketError } = await supabase.storage
+          .createBucket('images', { public: true });
+          
+        if (createBucketError) throw createBucketError;
+      }
+      
       // Upload the file
       const { error: uploadError } = await supabase.storage
         .from('images')
@@ -100,6 +152,8 @@ const Dashboard = () => {
         .getPublicUrl(filePath);
       
       if (!publicURL) throw new Error('Failed to get public URL');
+      
+      console.log("Image uploaded, public URL:", publicURL.publicUrl);
       
       // 2. Update user profile with new image URL
       const { error: updateError } = await supabase
