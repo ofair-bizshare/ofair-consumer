@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import RequestsTab from './RequestsTab';
 import ReferralsTab from './ReferralsTab';
@@ -16,6 +16,7 @@ interface DashboardTabsProps {
 const DashboardTabs: React.FC<DashboardTabsProps> = ({ isLoggedIn }) => {
   const [activeTab, setActiveTab] = useState('requests');
   const location = useLocation();
+  const navigate = useNavigate();
   
   useEffect(() => {
     // Check URL query parameters
@@ -24,9 +25,21 @@ const DashboardTabs: React.FC<DashboardTabsProps> = ({ isLoggedIn }) => {
     
     // Set active tab if valid tab parameter found
     if (tabParam && ['requests', 'referrals', 'notifications'].includes(tabParam)) {
+      console.log('Setting active tab from URL parameter:', tabParam);
       setActiveTab(tabParam);
     }
   }, [location.search]);
+  
+  // Update URL when tab changes
+  const handleTabChange = (value: string) => {
+    console.log('Tab changed to:', value);
+    setActiveTab(value);
+    
+    // Update URL query parameter without full page reload
+    const searchParams = new URLSearchParams(location.search);
+    searchParams.set('tab', value);
+    navigate(`${location.pathname}?${searchParams.toString()}`, { replace: true });
+  };
   
   if (!isLoggedIn) {
     return (
@@ -52,8 +65,10 @@ const DashboardTabs: React.FC<DashboardTabsProps> = ({ isLoggedIn }) => {
     );
   }
 
+  console.log('Rendering DashboardTabs with active tab:', activeTab);
+
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} dir="rtl" className="animate-fade-in">
+    <Tabs value={activeTab} onValueChange={handleTabChange} dir="rtl" className="animate-fade-in">
       <TabsList className="grid grid-cols-3 md:w-[400px] mb-8">
         <TabsTrigger value="requests">הפניות שלי</TabsTrigger>
         <TabsTrigger value="referrals">הפניות שהעברתי</TabsTrigger>

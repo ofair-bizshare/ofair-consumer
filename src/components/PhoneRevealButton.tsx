@@ -32,12 +32,21 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
       if (!user) return;
       
       try {
-        const { data } = await supabase
+        console.log("Checking existing referral for user:", user.id, "and professional:", professionalId);
+        
+        const { data, error } = await supabase
           .from('referrals')
           .select('*')
           .eq('user_id', user.id)
           .eq('professional_id', professionalId)
           .maybeSingle();
+        
+        if (error) {
+          console.error("Error checking referrals:", error);
+          return;
+        }
+        
+        console.log("Existing referral data:", data);
         
         if (data) {
           setIsRevealed(true);
@@ -105,6 +114,7 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
       
       if (existingData) {
         // If record exists, update it
+        console.log("Updating existing referral:", existingData.id);
         result = await supabase
           .from('referrals')
           .update({
@@ -116,6 +126,7 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
           .eq('id', existingData.id);
       } else {
         // If no record exists, insert new one
+        console.log("Inserting new referral");
         result = await supabase
           .from('referrals')
           .insert(referral);
@@ -126,6 +137,7 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
         throw result.error;
       }
       
+      console.log("Referral operation result:", result);
       setIsRevealed(true);
       
       // Show success toast
@@ -134,8 +146,6 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
         description: `פרטי ההפניה ל${professionalName} נשמרו באזור האישי שלך`,
         variant: "default",
       });
-      
-      console.log("Referral saved to Supabase:", result.data);
     } catch (error) {
       console.error('Error saving referral:', error);
       toast({

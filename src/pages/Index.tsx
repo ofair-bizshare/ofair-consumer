@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -10,6 +9,7 @@ import ArticleCard from '@/components/ArticleCard';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Star, Shield, Clock, CheckCircle, FileText, Search, Gift, ChevronDown } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
+import ScrollIndicator from '@/components/ScrollIndicator';
 
 // Sample data for the professionals
 const professionals = [{
@@ -165,7 +165,7 @@ const Index = () => {
       </section>
       
       {/* Search Section */}
-      <section ref={searchSectionRef} className="py-12 bg-white">
+      <section id="professional-search-section" className="py-16 bg-white">
         <div className="container mx-auto px-6">
           <div className="animate-fade-in">
             <DynamicProfessionalSearch />
