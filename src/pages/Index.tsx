@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -7,7 +8,7 @@ import DynamicProfessionalSearch from '@/components/DynamicProfessionalSearch';
 import ProfessionalCard from '@/components/ProfessionalCard';
 import ArticleCard from '@/components/ArticleCard';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Star, Shield, Clock, CheckCircle, FileText, Search, Gift } from 'lucide-react';
+import { ArrowLeft, Star, Shield, Clock, CheckCircle, FileText, Search, Gift, ChevronDown } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 
 // Sample data for the professionals
@@ -59,15 +60,31 @@ const articles = [{
   date: '18 באפריל, 2023',
   category: 'שיפוצים'
 }];
+
 const Index = () => {
   const requestFormRef = useRef<HTMLDivElement>(null);
+  const searchSectionRef = useRef<HTMLDivElement>(null);
+  
   const scrollToRequestForm = () => {
     requestFormRef.current?.scrollIntoView({
       behavior: 'smooth'
     });
   };
+  
+  const scrollToSearchSection = () => {
+    searchSectionRef.current?.scrollIntoView({
+      behavior: 'smooth'
+    });
+  };
+  
   return <div className="flex flex-col min-h-screen" dir="rtl">
       <Helmet>
+        {/* Preload critical assets for performance */}
+        <link rel="preload" href="/lovable-uploads/52b937d1-acd7-4831-b19e-79a55a774829.png" as="image" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+        
         <title>oFair - מציאת בעלי מקצוע מובילים בכל תחום | פלטפורמת חיבור בין לקוחות למקצוענים</title>
         <meta name="description" content="פלטפורמה חינמית המחברת בין בעלי בתים לבעלי מקצוע אמינים ומקצועיים. קבלו הצעות מחיר ללא התחייבות ובחרו את המקצוען הנכון עבורכם." />
         <meta name="keywords" content="בעלי מקצוע, שיפוצים, חשמלאי, אינסטלציה, נגרות, גינון, ניקיון, צביעה, הובלות, מיזוג אוויר, תיקונים, שירותי בית" />
@@ -83,7 +100,7 @@ const Index = () => {
       
       <Header />
       
-      {/* Hero Section - Updated for better layout */}
+      {/* Hero Section - Updated for better layout and added scroll indicator */}
       <section className="relative pt-28 pb-16 md:pt-32 md:pb-24">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-teal-50 z-[-1]"></div>
         <div className="absolute inset-0 z-[-1] opacity-70 bg-[url('https://images.unsplash.com/photo-1600607687644-c7e39cf7d8b7?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80')] bg-cover bg-center"></div>
@@ -134,11 +151,21 @@ const Index = () => {
               </div>
             </div>
           </div>
+          
+          {/* Scroll indicator */}
+          <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 text-center hidden md:block animate-bounce">
+            <div className="flex flex-col items-center cursor-pointer" onClick={scrollToSearchSection}>
+              <p className="text-blue-700 mb-2 font-medium">חפש בעלי מקצוע מובילים</p>
+              <div className="bg-[#00D09E] rounded-full p-2 text-white">
+                <ChevronDown size={24} />
+              </div>
+            </div>
+          </div>
         </div>
       </section>
       
       {/* Search Section */}
-      <section className="py-12 bg-white">
+      <section ref={searchSectionRef} className="py-12 bg-white">
         <div className="container mx-auto px-6">
           <div className="animate-fade-in">
             <DynamicProfessionalSearch />
@@ -164,7 +191,7 @@ const Index = () => {
             <div className="text-center p-6 rounded-xl bg-blue-50/50 border border-blue-100 hover:shadow-lg transition-all duration-300">
               <div className="w-16 h-16 bg-teal-500 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-4">2</div>
               <h3 className="text-xl font-semibold text-blue-700 mb-3">קבלו הצעות מחיר וזמינות</h3>
-              <p className="text-gray-600">בעלי מקצוע מובילים ישלחו לכם הצעות מותאמות אישית </p>
+              <p className="text-gray-600">בעלי מקצוע מובילים ישלחו לכם הצעות מותאמות אישית </p>
             </div>
             
             <div className="text-center p-6 rounded-xl bg-blue-50/50 border border-blue-100 hover:shadow-lg transition-all duration-300">
@@ -181,7 +208,7 @@ const Index = () => {
         <div className="container mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-blue-700 mb-3">בעלי מקצוע <span className="text-teal-500">מובילים</span></h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">אפשר גם פשוט לחפש -  בעלי המקצוע המובילים שלנו עברו תהליך אימות קפדני ומספקים שירות איכותי</p>
+            <p className="text-gray-600 max-w-2xl mx-auto">אפשר גם פשוט לחפש -  בעלי המקצוע המובילים שלנו עברו תהליך אימות קפדני ומספקים שירות איכותי</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-10 stagger-animation">

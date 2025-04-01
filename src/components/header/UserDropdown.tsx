@@ -36,6 +36,12 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
     
     fetchNotifications();
   }, [user]);
+
+  // Navigate to dashboard with notifications tab active
+  const handleNotificationsClick = () => {
+    // Navigate to dashboard with a query param to activate notifications tab
+    navigate('/dashboard?tab=notifications');
+  };
   
   if (isMobile) {
     return (
@@ -48,7 +54,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
           <Inbox className="mr-2 h-4 w-4" />
           <span>הפניות שלי</span>
         </Button>
-        <Button variant="outline" className="w-full justify-start relative" onClick={() => navigate('/dashboard')}>
+        <Button variant="outline" className="w-full justify-start relative" onClick={handleNotificationsClick}>
           <Bell className="mr-2 h-4 w-4" />
           <span>התראות</span>
           {notificationsCount > 0 && (
@@ -91,7 +97,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
           <Inbox className="mr-2 h-4 w-4" />
           <span>ההפניות שלי</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate('/dashboard')} className="relative">
+        <DropdownMenuItem onClick={handleNotificationsClick} className="relative">
           <Bell className="mr-2 h-4 w-4" />
           <span>התראות</span>
           {notificationsCount > 0 && (

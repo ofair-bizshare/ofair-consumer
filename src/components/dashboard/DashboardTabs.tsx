@@ -1,5 +1,6 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import RequestsTab from './RequestsTab';
 import ReferralsTab from './ReferralsTab';
@@ -13,6 +14,20 @@ interface DashboardTabsProps {
 }
 
 const DashboardTabs: React.FC<DashboardTabsProps> = ({ isLoggedIn }) => {
+  const [activeTab, setActiveTab] = useState('requests');
+  const location = useLocation();
+  
+  useEffect(() => {
+    // Check URL query parameters
+    const searchParams = new URLSearchParams(location.search);
+    const tabParam = searchParams.get('tab');
+    
+    // Set active tab if valid tab parameter found
+    if (tabParam && ['requests', 'referrals', 'notifications'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [location.search]);
+  
   if (!isLoggedIn) {
     return (
       <div className="glass-card p-10 text-center">
@@ -38,7 +53,7 @@ const DashboardTabs: React.FC<DashboardTabsProps> = ({ isLoggedIn }) => {
   }
 
   return (
-    <Tabs defaultValue="requests" dir="rtl" className="animate-fade-in">
+    <Tabs value={activeTab} onValueChange={setActiveTab} dir="rtl" className="animate-fade-in">
       <TabsList className="grid grid-cols-3 md:w-[400px] mb-8">
         <TabsTrigger value="requests">הפניות שלי</TabsTrigger>
         <TabsTrigger value="referrals">הפניות שהעברתי</TabsTrigger>
