@@ -5,6 +5,7 @@ import { Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/providers/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 interface PhoneRevealButtonProps {
   phoneNumber: string;
@@ -25,6 +26,7 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Check if this referral already exists in the database
   useEffect(() => {
@@ -70,17 +72,17 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
         description: "עליך להתחבר כדי לראות את פרטי ההתקשרות",
         variant: "destructive",
       });
+      navigate('/login', { state: { returnUrl: window.location.pathname } });
       return;
     }
     
     setIsLoading(true);
     
     try {
-      // Log the values to debug
-      console.log("User ID:", user.id);
-      console.log("Professional ID:", professionalId);
-      console.log("Professional Name:", professionalName);
-      console.log("Phone Number:", phoneNumber);
+      // Validate data before proceeding
+      if (!professionalId || !professionalName || !phoneNumber) {
+        throw new Error("Missing required referral data");
+      }
       
       // Generate a unique ID for the referral
       const referralId = crypto.randomUUID();
@@ -108,6 +110,7 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
       
       if (checkError) {
         console.error('Error checking existing referral:', checkError);
+        throw checkError;
       }
       
       let result;
@@ -150,7 +153,7 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
       console.error('Error saving referral:', error);
       toast({
         title: "שגיאה בשמירת ההפניה",
-        description: "אירעה שגיאה בשמירת פרטי ההפניה",
+        description: "אירעה שגיאה בשמירת פרטי ההפניה. נסה שוב מאוחר יותר.",
         variant: "destructive",
       });
     } finally {

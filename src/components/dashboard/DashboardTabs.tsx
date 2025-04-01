@@ -23,12 +23,24 @@ const DashboardTabs: React.FC<DashboardTabsProps> = ({ isLoggedIn }) => {
     const searchParams = new URLSearchParams(location.search);
     const tabParam = searchParams.get('tab');
     
+    // Check URL hash for backward compatibility (if someone uses #notifications)
+    const hash = location.hash.replace('#', '');
+    
     // Set active tab if valid tab parameter found
     if (tabParam && ['requests', 'referrals', 'notifications'].includes(tabParam)) {
       console.log('Setting active tab from URL parameter:', tabParam);
       setActiveTab(tabParam);
+    } 
+    // Check if the hash matches a valid tab name
+    else if (hash && ['requests', 'referrals', 'notifications'].includes(hash)) {
+      console.log('Setting active tab from URL hash:', hash);
+      setActiveTab(hash);
+      // Update URL to use query parameter format
+      const newSearchParams = new URLSearchParams(location.search);
+      newSearchParams.set('tab', hash);
+      navigate(`${location.pathname}?${newSearchParams.toString()}`, { replace: true });
     }
-  }, [location.search]);
+  }, [location.search, location.hash, navigate, location.pathname]);
   
   // Update URL when tab changes
   const handleTabChange = (value: string) => {
