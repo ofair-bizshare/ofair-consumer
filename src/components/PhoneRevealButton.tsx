@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/providers/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { v4 as uuidv4 } from 'uuid';
 
 interface PhoneRevealButtonProps {
   phoneNumber: string;
@@ -48,9 +49,15 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
         }
       }
       
-      // Then check the database
+      // Then check the database - only if we have a valid UUID for the professional
       try {
         console.log("Checking existing referral for user:", user.id, "and professional:", professionalId);
+        
+        // Skip database check if we know the professional ID is not a valid UUID
+        if (!isValidUUID(professionalId)) {
+          console.log("Skipping database check for non-UUID professional ID:", professionalId);
+          return;
+        }
         
         const { data, error } = await supabase
           .from('referrals')
@@ -81,6 +88,12 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
     }
   }, [user, professionalId, autoReveal]);
 
+  // Helper function to check if a string is a valid UUID
+  const isValidUUID = (id: string): boolean => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id);
+  };
+
   const handleReveal = async () => {
     if (!user) {
       toast({
@@ -100,63 +113,127 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
         throw new Error("Missing required referral data");
       }
       
-      // Important: Let Supabase generate the UUID, don't generate it client-side
-      const referral = {
-        user_id: user.id,
-        professional_id: professionalId,
-        professional_name: professionalName,
-        phone_number: phoneNumber,
-        date: new Date().toISOString(),
-        status: "new",
-        profession: profession || "בעל מקצוע",
-        completed_work: false
-      };
+      // Generate a unique local ID for this referral
+      const localReferralId = `local-${Date.now()}-${uuidv4().substring(0, 8)}`;
       
-      console.log("Attempting to save referral:", referral);
-      
-      // First check if there's an existing record
-      const { data: existingData, error: checkError } = await supabase
-        .from('referrals')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('professional_id', professionalId)
-        .maybeSingle();
-      
-      if (checkError) {
-        console.error('Error checking existing referral:', checkError);
-        // Continue with local storage fallback
-      }
-      
-      let result;
-      
-      if (existingData) {
-        // If record exists, update it
-        console.log("Updating existing referral:", existingData.id);
-        result = await supabase
-          .from('referrals')
-          .update({
-            phone_number: phoneNumber,
-            professional_name: professionalName,
+      // For non-UUID professional IDs, only save to localStorage
+      if (!isValidUUID(professionalId)) {
+        const localReferral = {
+          id: localReferralId,
+          user_id: user.id,
+          professionalId: professionalId,
+          professionalName: professionalName,
+          phoneNumber: phoneNumber,
+          date: new Date().toLocaleDateString('he-IL'),
+          status: "new",
+          profession: profession || "בעל מקצוע",
+          completedWork: false
+        };
+        
+        console.log("Saving non-UUID professional to localStorage only:", localReferral);
+        
+        // Save to localStorage
+        const localReferralsStr = localStorage.getItem(`referrals-${user.id}`);
+        let localReferrals = [];
+        if (localReferralsStr) {
+          try {
+            localReferrals = JSON.parse(localReferralsStr);
+          } catch (e) {
+            console.error("Error parsing local referrals:", e);
+          }
+        }
+        
+        // Check if this professional is already in the local storage
+        const existingIndex = localReferrals.findIndex((ref: any) => ref.professionalId === professionalId);
+        
+        if (existingIndex >= 0) {
+          // Update existing entry
+          localReferrals[existingIndex] = {
+            ...localReferrals[existingIndex],
+            phoneNumber,
+            professionalName,
             profession: profession || "בעל מקצוע",
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingData.id);
-      } else {
-        // If no record exists, insert new one
-        console.log("Inserting new referral");
-        result = await supabase
+            updatedAt: new Date().toISOString()
+          };
+        } else {
+          // Add new entry
+          localReferrals.push(localReferral);
+        }
+        
+        localStorage.setItem(`referrals-${user.id}`, JSON.stringify(localReferrals));
+        setIsRevealed(true);
+        
+        toast({
+          title: "פרטי התקשרות נשמרו",
+          description: `פרטי ההפניה ל${professionalName} נשמרו מקומית באזור האישי שלך`,
+          variant: "default",
+        });
+        
+        setIsLoading(false);
+        return;
+      }
+      
+      // Check if there's an existing record only if professional ID is a valid UUID
+      try {
+        console.log("Checking existing referral before saving");
+        const { data: existingData, error: checkError } = await supabase
           .from('referrals')
-          .insert(referral);
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('professional_id', professionalId)
+          .maybeSingle();
+        
+        if (checkError) {
+          console.error('Error checking existing referral:', checkError);
+          throw checkError;
+        }
+        
+        let result;
+        
+        if (existingData) {
+          // If record exists, update it
+          console.log("Updating existing referral:", existingData.id);
+          result = await supabase
+            .from('referrals')
+            .update({
+              phone_number: phoneNumber,
+              professional_name: professionalName,
+              profession: profession || "בעל מקצוע",
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingData.id);
+        } else {
+          // If no record exists, insert new one
+          console.log("Inserting new referral");
+          const referral = {
+            user_id: user.id,
+            professional_id: professionalId,
+            professional_name: professionalName,
+            phone_number: phoneNumber,
+            date: new Date().toISOString(),
+            status: "new",
+            profession: profession || "בעל מקצוע",
+            completed_work: false
+          };
+          
+          console.log("Attempting to save referral:", referral);
+          result = await supabase
+            .from('referrals')
+            .insert(referral);
+        }
+        
+        if (result.error) {
+          console.error('Error details:', result.error);
+          throw result.error;
+        }
+        
+        console.log("Referral operation result:", result);
+      } catch (dbErr) {
+        console.error('Database error:', dbErr);
+        throw dbErr;
       }
       
-      if (result.error) {
-        console.error('Error details:', result.error);
-        throw result.error;
-      }
-      
-      console.log("Referral operation result:", result);
-      
-      // Regardless of the result, save to localStorage as a fallback
+      // Always save to localStorage as a fallback
       const localReferralsStr = localStorage.getItem(`referrals-${user.id}`);
       let localReferrals = [];
       
@@ -183,7 +260,7 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
       } else {
         // Add new entry
         localReferrals.push({
-          id: `local-${Date.now()}`,
+          id: localReferralId,
           user_id: user.id,
           professionalId,
           professionalName,

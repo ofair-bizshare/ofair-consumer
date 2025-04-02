@@ -17,9 +17,9 @@ export const fetchProfessionals = async (): Promise<ProfessionalInterface[]> => 
       return [];
     }
     
-    // Map the database columns to our interface
+    // Map the database columns to our interface and ensure ID is a string
     return data.map(item => ({
-      id: item.id,
+      id: item.id.toString(),
       name: item.name,
       profession: item.profession,
       rating: item.rating,
@@ -28,7 +28,7 @@ export const fetchProfessionals = async (): Promise<ProfessionalInterface[]> => 
       image: item.image,
       specialties: item.specialties || [],
       phoneNumber: item.phone_number,
-      about: item.about || '' // Add with default empty string if not available
+      about: item.about || ''
     }));
   } catch (error) {
     console.error('Error fetching professionals:', error);
@@ -52,9 +52,9 @@ export const getProfessionalById = async (id: string): Promise<ProfessionalInter
       return null;
     }
     
-    // Map the database columns to our interface
+    // Ensure ID is consistently a string
     return {
-      id: data.id,
+      id: data.id.toString(),
       name: data.name,
       profession: data.profession,
       rating: data.rating,
@@ -63,7 +63,7 @@ export const getProfessionalById = async (id: string): Promise<ProfessionalInter
       image: data.image,
       specialties: data.specialties || [],
       phoneNumber: data.phone_number,
-      about: data.about || '' // Add with default empty string if not available
+      about: data.about || ''
     };
   } catch (error) {
     console.error('Error fetching professional by ID:', error);

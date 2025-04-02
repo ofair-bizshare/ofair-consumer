@@ -28,26 +28,27 @@ export const useReferrals = (userId: string | undefined) => {
 
   // Function to merge local and remote referrals
   const mergeReferrals = useCallback((remoteReferrals: ReferralInterface[], localReferrals: ReferralInterface[]) => {
-    // Create a map of existing remote referrals by ID
-    const remoteMap = new Map(remoteReferrals.map(r => [r.id, r]));
+    // Create a map of existing remote referrals by professionalId
+    const remoteMap = new Map(remoteReferrals.map(r => [r.professionalId, r]));
     
     // Add local-only referrals to the result
     const mergedReferrals = [...remoteReferrals];
     
     for (const localRef of localReferrals) {
-      // Check if this local referral exists in remote data
-      if (!remoteMap.has(localRef.id) && !localRef.id.startsWith('local-')) {
-        // If it has a real ID but isn't in remote data, it might be due to RLS,
-        // so include it
-        mergedReferrals.push(localRef);
-      } else if (localRef.id.startsWith('local-')) {
-        // Always include local-generated IDs
+      // If this professional isn't in the remote data, add the local entry
+      if (!remoteMap.has(localRef.professionalId)) {
         mergedReferrals.push(localRef);
       }
     }
     
     return mergedReferrals;
   }, []);
+
+  // Helper function to check if a string is a valid UUID
+  const isValidUUID = (id: string): boolean => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id);
+  };
 
   useEffect(() => {
     if (!userId) {
@@ -76,19 +77,6 @@ export const useReferrals = (userId: string | undefined) => {
           
           if (error) {
             console.error("Error details:", error);
-            // If we get a permissions error, it might be due to RLS policies not being applied yet
-            if (error.code === '42501') {
-              console.log("Permission error, likely RLS policy issue");
-              
-              // Use only local referrals if available
-              if (localReferrals.length > 0) {
-                console.log("Using only local referrals due to permission error");
-                setReferrals(localReferrals);
-              } else {
-                setReferrals([]);
-              }
-              return;
-            }
             throw error;
           }
           
@@ -181,22 +169,26 @@ export const useReferrals = (userId: string | undefined) => {
         });
       }
       
-      // Try to update in Supabase
-      try {
-        const { error } = await supabase
-          .from('referrals')
-          .update({ status: 'contacted' })
-          .eq('id', id);
-        
-        if (error) {
-          console.error("Update error details:", error);
-          throw error;
+      // Try to update in Supabase only if the ID is a valid UUID
+      if (isValidUUID(id)) {
+        try {
+          const { error } = await supabase
+            .from('referrals')
+            .update({ status: 'contacted' })
+            .eq('id', id);
+          
+          if (error) {
+            console.error("Update error details:", error);
+            throw error;
+          }
+          
+          console.log("Referral marked as contacted successfully in database");
+        } catch (dbError) {
+          console.error('Error updating referral in database:', dbError);
+          // We already updated the local state, so we don't need to do anything else
         }
-        
-        console.log("Referral marked as contacted successfully in database");
-      } catch (dbError) {
-        console.error('Error updating referral in database:', dbError);
-        // We already updated the local state, so we don't need to do anything else
+      } else {
+        console.log("Skipping database update for local-only referral ID:", id);
       }
       
       toast({
@@ -232,31 +224,35 @@ export const useReferrals = (userId: string | undefined) => {
     // Save to localStorage
     saveLocalReferral(newReferral);
     
-    // Try to save to Supabase
-    try {
-      const dbReferral = {
-        user_id: userId,
-        professional_id: referral.professionalId,
-        professional_name: referral.professionalName,
-        phone_number: referral.phoneNumber,
-        date: new Date().toISOString(),
-        status: referral.status || "new",
-        profession: referral.profession || "בעל מקצוע",
-        completed_work: referral.completedWork || false
-      };
-      
-      supabase
-        .from('referrals')
-        .insert(dbReferral)
-        .then(({ error }) => {
-          if (error) {
-            console.error('Error saving referral to database:', error);
-          } else {
-            console.log('Referral saved to database successfully');
-          }
-        });
-    } catch (error) {
-      console.error('Error preparing referral for database:', error);
+    // Try to save to Supabase only if professionalId is a valid UUID
+    if (isValidUUID(referral.professionalId)) {
+      try {
+        const dbReferral = {
+          user_id: userId,
+          professional_id: referral.professionalId,
+          professional_name: referral.professionalName,
+          phone_number: referral.phoneNumber,
+          date: new Date().toISOString(),
+          status: referral.status || "new",
+          profession: referral.profession || "בעל מקצוע",
+          completed_work: referral.completedWork || false
+        };
+        
+        supabase
+          .from('referrals')
+          .insert(dbReferral)
+          .then(({ error }) => {
+            if (error) {
+              console.error('Error saving referral to database:', error);
+            } else {
+              console.log('Referral saved to database successfully');
+            }
+          });
+      } catch (error) {
+        console.error('Error preparing referral for database:', error);
+      }
+    } else {
+      console.log("Skipping database insert for non-UUID professional ID:", referral.professionalId);
     }
     
     return newReferral;

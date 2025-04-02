@@ -41,32 +41,78 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log("Ensuring user profile exists for:", userId);
       
-      const { data: existingProfile, error: checkError } = await supabase
-        .from('user_profiles')
-        .select('id')
-        .eq('id', userId)
-        .maybeSingle();
-        
-      if (checkError) throw checkError;
+      // Always check localStorage first
+      const localProfile = localStorage.getItem(`userProfile-${userId}`);
+      let existingLocalProfile = null;
       
-      if (existingProfile) {
+      if (localProfile) {
         try {
+          existingLocalProfile = JSON.parse(localProfile);
+          console.log("Found local profile:", existingLocalProfile);
+        } catch (e) {
+          console.error("Error parsing local profile:", e);
+        }
+      }
+      
+      // If we have a local profile, use it and try to update in background
+      if (existingLocalProfile) {
+        // Update the local profile with any new data
+        const updatedLocalProfile = {
+          ...existingLocalProfile,
+          name: userData.name || existingLocalProfile.name || userData.email,
+          email: userData.email || existingLocalProfile.email,
+          phone: userData.phone || existingLocalProfile.phone,
+          updated_at: new Date().toISOString()
+        };
+        
+        // Save updated profile back to localStorage
+        localStorage.setItem(`userProfile-${userId}`, JSON.stringify(updatedLocalProfile));
+      } else {
+        // Create a new profile in localStorage
+        console.log("Creating new user profile for:", userId);
+        const newLocalProfile = {
+          id: userId,
+          name: userData.name || userData.email,
+          email: userData.email,
+          phone: userData.phone,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        localStorage.setItem(`userProfile-${userId}`, JSON.stringify(newLocalProfile));
+        console.log("New profile saved to localStorage");
+      }
+      
+      // Try to update the database in the background - don't wait for it
+      try {
+        const { data: existingProfile, error: checkError } = await supabase
+          .from('user_profiles')
+          .select('id')
+          .eq('id', userId)
+          .maybeSingle();
+          
+        if (checkError) {
+          console.log("Error checking profile, proceeding with localStorage only:", checkError);
+          return;
+        }
+        
+        if (existingProfile) {
           const { error: updateError } = await supabase
             .from('user_profiles')
             .update({
               name: userData.name || userData.email,
               email: userData.email,
-              phone: userData.phone
+              phone: userData.phone,
+              updated_at: new Date().toISOString()
             })
             .eq('id', userId);
             
-          if (updateError) throw updateError;
-        } catch (updateError) {
-          console.error("Profile update failed, but continuing:", updateError);
-          // Continue execution even if update fails
-        }
-      } else {
-        try {
+          if (updateError) {
+            console.log("Profile update failed, continuing with localStorage:", updateError);
+          } else {
+            console.log("Profile updated in database successfully");
+          }
+        } else {
           const { error: insertError } = await supabase
             .from('user_profiles')
             .insert({
@@ -76,35 +122,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               phone: userData.phone
             });
             
-          if (insertError) throw insertError;
-        } catch (insertError) {
-          console.error("Profile creation failed, but continuing:", insertError);
-          
-          // Store profile data in localStorage as fallback
-          const fallbackProfile = {
-            id: userId,
-            name: userData.name || userData.email,
-            email: userData.email,
-            phone: userData.phone,
-            created_at: new Date().toISOString()
-          };
-          
-          localStorage.setItem(`userProfile-${userId}`, JSON.stringify(fallbackProfile));
-          console.log("Saved profile to localStorage as fallback");
+          if (insertError) {
+            console.log("Profile creation failed, continuing with localStorage:", insertError);
+          } else {
+            console.log("Profile created in database successfully");
+          }
         }
+      } catch (dbError) {
+        console.error("Error ensuring user profile in database:", dbError);
+        console.log("Continuing with localStorage profile only");
       }
       
       console.log("User profile ensured successfully");
     } catch (error) {
-      console.error("Error ensuring user profile:", error);
-      
+      console.error("Error in profile management:", error);
       // Store profile data in localStorage as fallback
       const fallbackProfile = {
         id: userId,
         name: userData.name || userData.email,
         email: userData.email,
         phone: userData.phone,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
       
       localStorage.setItem(`userProfile-${userId}`, JSON.stringify(fallbackProfile));
@@ -112,63 +151,78 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        console.log('Auth state changed:', event);
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        
-        if (currentSession?.user) {
-          localStorage.setItem('isLoggedIn', 'true');
-          localStorage.setItem('userId', currentSession.user.id);
-          
-          // Use setTimeout to avoid possible deadlocks with Supabase auth
-          setTimeout(async () => {
-            await ensureUserProfile(
-              currentSession.user.id, 
-              {
-                name: currentSession.user.user_metadata?.name,
-                email: currentSession.user.email || '',
-                phone: currentSession.user.user_metadata?.phone
-              }
-            );
-            
-            await checkPhoneVerification();
-          }, 100);
-        } else {
-          localStorage.removeItem('isLoggedIn');
-          localStorage.removeItem('userId');
-          setPhoneVerified(false);
-        }
-      }
-    );
-
-    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
+  // Lazy initialization of auth state
+  const initAuth = async () => {
+    try {
+      const { data } = await supabase.auth.getSession();
       
-      if (currentSession?.user) {
+      if (data?.session) {
+        setSession(data.session);
+        setUser(data.session.user);
+        
         localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('userId', currentSession.user.id);
+        localStorage.setItem('userId', data.session.user.id);
         
         // Use setTimeout to avoid possible deadlocks with Supabase auth
         setTimeout(async () => {
           await ensureUserProfile(
-            currentSession.user.id, 
+            data.session.user.id, 
             {
-              name: currentSession.user.user_metadata?.name,
-              email: currentSession.user.email || '',
-              phone: currentSession.user.user_metadata?.phone
+              name: data.session.user.user_metadata?.name,
+              email: data.session.user.email || '',
+              phone: data.session.user.user_metadata?.phone
             }
           );
           
           await checkPhoneVerification();
         }, 100);
       }
-      
+    } catch (error) {
+      console.error("Error initializing auth:", error);
+    } finally {
       setLoading(false);
-    });
+    }
+  };
+
+  useEffect(() => {
+    // Initialize auth state
+    initAuth();
+    
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, currentSession) => {
+        console.log('Auth state changed:', event);
+        
+        // Only update state if there's an actual change
+        if ((currentSession?.user?.id !== user?.id) || event === 'SIGNED_OUT') {
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+          
+          if (currentSession?.user) {
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('userId', currentSession.user.id);
+            
+            // Use setTimeout to avoid possible deadlocks with Supabase auth
+            setTimeout(async () => {
+              await ensureUserProfile(
+                currentSession.user.id, 
+                {
+                  name: currentSession.user.user_metadata?.name,
+                  email: currentSession.user.email || '',
+                  phone: currentSession.user.user_metadata?.phone
+                }
+              );
+              
+              await checkPhoneVerification();
+            }, 100);
+          } else {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userId');
+            setPhoneVerified(false);
+          }
+        }
+      }
+    );
 
     return () => {
       subscription.unsubscribe();
