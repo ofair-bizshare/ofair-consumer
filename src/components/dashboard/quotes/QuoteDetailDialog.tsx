@@ -10,7 +10,8 @@ import {
   DialogTitle,
   DialogDescription,
   DialogClose,
-  DialogFooter
+  DialogFooter,
+  DialogTrigger
 } from '@/components/ui/dialog';
 
 interface QuoteDetailDialogProps {
