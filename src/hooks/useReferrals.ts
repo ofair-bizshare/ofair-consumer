@@ -26,7 +26,10 @@ export const useReferrals = (userId: string | undefined) => {
           .eq('user_id', userId)
           .order('date', { ascending: false });
         
-        if (error) throw error;
+        if (error) {
+          console.error("Error details:", error);
+          throw error;
+        }
         
         console.log("Referrals data received:", data);
         
@@ -73,7 +76,10 @@ export const useReferrals = (userId: string | undefined) => {
         .update({ status: 'contacted' })
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) {
+        console.error("Update error details:", error);
+        throw error;
+      }
       
       console.log("Referral marked as contacted successfully");
       

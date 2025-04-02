@@ -96,6 +96,8 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
         completed_work: false
       };
       
+      console.log("Attempting to save referral:", referral);
+      
       // First check if there's an existing record
       const { data: existingData, error: checkError } = await supabase
         .from('referrals')
