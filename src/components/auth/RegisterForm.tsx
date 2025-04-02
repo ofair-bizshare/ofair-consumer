@@ -95,6 +95,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
                   placeholder="הזן את שמך המלא"
                   value={registerData.name}
                   onChange={handleRegisterChange}
+                  autoComplete="name"
                 />
               </div>
               
@@ -107,6 +108,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
                   placeholder="הזן את כתובת הדואל שלך"
                   value={registerData.email}
                   onChange={handleRegisterChange}
+                  autoComplete="email"
                 />
               </div>
               
@@ -125,6 +127,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
                     value={registerData.phone || ''}
                     onChange={handleRegisterChange}
                     required
+                    autoComplete="tel"
                   />
                 </div>
               </div>
@@ -138,6 +141,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
                   placeholder="בחר סיסמה (לפחות 8 תווים)"
                   value={registerData.password}
                   onChange={handleRegisterChange}
+                  autoComplete="new-password"
                 />
               </div>
               
@@ -150,6 +154,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
                   placeholder="הזן שוב את הסיסמה"
                   value={registerData.passwordConfirm}
                   onChange={handleRegisterChange}
+                  autoComplete="new-password"
                 />
               </div>
               
@@ -211,6 +216,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
                     placeholder="05X-XXX-XXXX"
                     value={phoneData.phone}
                     onChange={handlePhoneChange}
+                    autoComplete="tel"
                   />
                 </div>
               </div>

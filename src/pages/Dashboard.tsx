@@ -11,14 +11,15 @@ import { useAuth } from '@/providers/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { UserProfileInterface } from '@/types/dashboard';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
+  const { profile, loading: profileLoading, updateProfile } = useUserProfile();
   const { toast } = useToast();
   const location = useLocation();
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfileInterface | null>(null);
-  const [loadingProfile, setLoadingProfile] = useState(false);
+  const [isSavingImage, setIsSavingImage] = useState(false);
   
   useEffect(() => {
     // Check if we need to scroll to a specific section
@@ -32,79 +33,14 @@ const Dashboard = () => {
       }
     }
 
-    // Create user profile if it doesn't exist yet
-    const createUserProfileIfNeeded = async () => {
-      if (!user) return;
-      
-      try {
-        // Check if profile exists
-        const { data: existingProfile, error: checkError } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('id', user.id)
-          .maybeSingle();
-          
-        if (checkError) throw checkError;
-        
-        // If profile doesn't exist, create it
-        if (!existingProfile) {
-          console.log("Creating new user profile for:", user.id);
-          const newProfile = {
-            id: user.id,
-            name: user.user_metadata?.name || user.email,
-            email: user.email
-          };
-          
-          const { error: insertError } = await supabase
-            .from('user_profiles')
-            .insert(newProfile);
-            
-          if (insertError) throw insertError;
-          
-          console.log("New user profile created");
-        }
-      } catch (error) {
-        console.error("Error managing user profile:", error);
-      }
-    };
-    
-    // Load user profile from Supabase when user is available
-    const fetchUserProfile = async () => {
-      if (!user) return;
-      
-      try {
-        setLoadingProfile(true);
-        
-        // Ensure user profile exists
-        await createUserProfileIfNeeded();
-        
-        const { data, error } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('id', user.id)
-          .maybeSingle();
-          
-        if (error) throw error;
-        
-        if (data) {
-          console.log("User profile loaded:", data);
-          setUserProfile(data);
-          if (data.profile_image) {
-            setProfileImage(data.profile_image);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching user profile:', error);
-      } finally {
-        setLoadingProfile(false);
-      }
-    };
-    
-    fetchUserProfile();
-  }, [location, user]);
+    // Set profile image if available in profile
+    if (profile?.profile_image) {
+      setProfileImage(profile.profile_image);
+    }
+  }, [location, profile]);
 
   // If still loading, show loading spinner
-  if (loading || loadingProfile) {
+  if (loading || profileLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -122,55 +58,79 @@ const Dashboard = () => {
     if (!file || !user) return;
 
     try {
+      setIsSavingImage(true);
+      
       // 1. Upload to Supabase Storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `profile-images/${fileName}`;
       
-      // Create the bucket if it doesn't exist
-      const { data: bucketData, error: bucketError } = await supabase.storage
-        .getBucket('images');
-        
-      if (bucketError && bucketError.message.includes('The resource was not found')) {
-        console.log('Creating images bucket...');
-        const { error: createBucketError } = await supabase.storage
-          .createBucket('images', { public: true });
+      try {
+        // Create the bucket if it doesn't exist
+        const { data: bucketData, error: bucketError } = await supabase.storage
+          .getBucket('images');
           
-        if (createBucketError) throw createBucketError;
+        if (bucketError && bucketError.message.includes('The resource was not found')) {
+          console.log('Creating images bucket...');
+          const { error: createBucketError } = await supabase.storage
+            .createBucket('images', { public: true });
+            
+          if (createBucketError) throw createBucketError;
+        }
+        
+        // Upload the file
+        const { error: uploadError } = await supabase.storage
+          .from('images')
+          .upload(filePath, file);
+          
+        if (uploadError) throw uploadError;
+        
+        // Get the public URL
+        const { data: publicURL } = supabase.storage
+          .from('images')
+          .getPublicUrl(filePath);
+        
+        if (!publicURL) throw new Error('Failed to get public URL');
+        
+        console.log("Image uploaded, public URL:", publicURL.publicUrl);
+        
+        // 2. Update user profile with new image URL
+        await updateProfile({ profile_image: publicURL.publicUrl });
+        
+        // 3. Update local state
+        setProfileImage(publicURL.publicUrl);
+        
+        toast({
+          title: "תמונת פרופיל עודכנה",
+          description: "תמונת הפרופיל שלך עודכנה בהצלחה",
+          variant: "default",
+        });
+      } catch (storageError) {
+        console.error('Error with Supabase storage:', storageError);
+        
+        // Fallback to localStorage if Supabase storage fails
+        const reader = new FileReader();
+        reader.onloadend = function() {
+          const base64data = reader.result as string;
+          
+          // Save to localStorage (with size limits in mind)
+          try {
+            localStorage.setItem(`profileImage-${user.id}`, base64data);
+            setProfileImage(base64data);
+            updateProfile({ profile_image: base64data });
+            
+            toast({
+              title: "תמונת פרופיל נשמרה מקומית",
+              description: "התמונה נשמרה מקומית בלבד",
+              variant: "default",
+            });
+          } catch (localStorageError) {
+            console.error('Error saving to localStorage:', localStorageError);
+            throw localStorageError;
+          }
+        };
+        reader.readAsDataURL(file);
       }
-      
-      // Upload the file
-      const { error: uploadError } = await supabase.storage
-        .from('images')
-        .upload(filePath, file);
-        
-      if (uploadError) throw uploadError;
-      
-      // Get the public URL
-      const { data: publicURL } = supabase.storage
-        .from('images')
-        .getPublicUrl(filePath);
-      
-      if (!publicURL) throw new Error('Failed to get public URL');
-      
-      console.log("Image uploaded, public URL:", publicURL.publicUrl);
-      
-      // 2. Update user profile with new image URL
-      const { error: updateError } = await supabase
-        .from('user_profiles')
-        .update({ profile_image: publicURL.publicUrl })
-        .eq('id', user.id);
-        
-      if (updateError) throw updateError;
-      
-      // 3. Update local state
-      setProfileImage(publicURL.publicUrl);
-      
-      toast({
-        title: "תמונת פרופיל עודכנה",
-        description: "תמונת הפרופיל שלך עודכנה בהצלחה",
-        variant: "default",
-      });
     } catch (error) {
       console.error('Error uploading profile image:', error);
       toast({
@@ -178,6 +138,8 @@ const Dashboard = () => {
         description: "אירעה שגיאה בהעלאת תמונת הפרופיל",
         variant: "destructive",
       });
+    } finally {
+      setIsSavingImage(false);
     }
   };
 
@@ -229,12 +191,13 @@ const Dashboard = () => {
                           className="hidden" 
                           accept="image/*"
                           onChange={handleProfileImageUpload}
+                          disabled={isSavingImage}
                         />
                       </label>
                     </div>
                   </div>
                   <div className="ml-4"> {/* Changed from mr-4 to ml-4 for RTL */}
-                    <h2 className="text-xl font-semibold">ברוך הבא, {userProfile?.name || user.user_metadata?.name || user.email}!</h2>
+                    <h2 className="text-xl font-semibold">ברוך הבא, {profile?.name || user.user_metadata?.name || user.email}!</h2>
                     <p className="text-gray-600">שמחים לראות אותך שוב</p>
                   </div>
                 </div>

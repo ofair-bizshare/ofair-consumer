@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/providers/AuthProvider';
@@ -23,20 +22,48 @@ export const useUserProfile = () => {
       try {
         setLoading(true);
         
-        // First check if profile exists
-        const { data, error } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('id', user.id)
-          .maybeSingle();
-          
-        if (error) {
-          console.error('Error fetching user profile:', error);
-          throw error;
+        // First check localStorage for a cached profile
+        const cachedProfileStr = localStorage.getItem(`userProfile-${user.id}`);
+        let cachedProfile = null;
+        
+        if (cachedProfileStr) {
+          try {
+            cachedProfile = JSON.parse(cachedProfileStr);
+            console.log("Found cached profile in localStorage:", cachedProfile);
+          } catch (e) {
+            console.error("Error parsing cached profile:", e);
+          }
         }
         
-        // If profile doesn't exist, create it
-        if (!data) {
+        // Try fetching from database
+        try {
+          const { data, error } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+            
+          if (error) {
+            console.error('Error fetching user profile:', error);
+            throw error;
+          }
+          
+          if (data) {
+            console.log('Existing profile found:', data);
+            setProfile(data);
+            // Update cache
+            localStorage.setItem(`userProfile-${user.id}`, JSON.stringify(data));
+            setLoading(false);
+            return;
+          } else if (cachedProfile) {
+            // If no remote profile but we have a cached one, use it
+            console.log('Using cached profile:', cachedProfile);
+            setProfile(cachedProfile as UserProfileInterface);
+            setLoading(false);
+            return;
+          }
+          
+          // If profile doesn't exist, create it
           console.log('Profile not found, attempting to create:', user.id);
           
           const newProfile = {
@@ -55,13 +82,35 @@ export const useUserProfile = () => {
             console.error('Error creating user profile:', insertError);
             // Still try to use the local profile object even if insert failed
             setProfile(newProfile);
+            // Cache the profile
+            localStorage.setItem(`userProfile-${user.id}`, JSON.stringify(newProfile));
           } else {
             console.log('Profile created successfully:', createdProfile);
             setProfile(createdProfile);
+            // Cache the profile
+            localStorage.setItem(`userProfile-${user.id}`, JSON.stringify(createdProfile));
           }
-        } else {
-          console.log('Existing profile found:', data);
-          setProfile(data);
+        } catch (dbErr) {
+          console.error('Database error in profile management:', dbErr);
+          
+          // If we have a cached profile, use it
+          if (cachedProfile) {
+            console.log('Using cached profile after error:', cachedProfile);
+            setProfile(cachedProfile as UserProfileInterface);
+          } else {
+            // Otherwise create a fallback profile from user data
+            console.log('Creating fallback profile');
+            const fallbackProfile = {
+              id: user.id,
+              name: user.user_metadata?.name || user.email,
+              email: user.email
+            };
+            setProfile(fallbackProfile as UserProfileInterface);
+            // Cache the fallback profile
+            localStorage.setItem(`userProfile-${user.id}`, JSON.stringify(fallbackProfile));
+          }
+          
+          throw dbErr;
         }
       } catch (err) {
         console.error('Error in profile management:', err);
@@ -98,6 +147,18 @@ export const useUserProfile = () => {
     try {
       setLoading(true);
       
+      // Update the local cache first
+      const cachedProfileStr = localStorage.getItem(`userProfile-${user.id}`);
+      if (cachedProfileStr) {
+        try {
+          const cachedProfile = JSON.parse(cachedProfileStr);
+          const updatedCache = {...cachedProfile, ...updates};
+          localStorage.setItem(`userProfile-${user.id}`, JSON.stringify(updatedCache));
+        } catch (e) {
+          console.error("Error updating profile cache:", e);
+        }
+      }
+      
       // Try to update the remote profile
       const { data, error } = await supabase
         .from('user_profiles')
@@ -117,6 +178,8 @@ export const useUserProfile = () => {
       return data;
     } catch (err) {
       console.error('Error updating user profile:', err);
+      // Still update the local profile
+      setProfile(prev => prev ? {...prev, ...updates} : null);
       setError(err as Error);
       return null;
     } finally {

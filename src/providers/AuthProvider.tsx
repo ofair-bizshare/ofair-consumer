@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -49,32 +50,65 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (checkError) throw checkError;
       
       if (existingProfile) {
-        const { error: updateError } = await supabase
-          .from('user_profiles')
-          .update({
-            name: userData.name || userData.email,
-            email: userData.email,
-            phone: userData.phone
-          })
-          .eq('id', userId);
-          
-        if (updateError) throw updateError;
+        try {
+          const { error: updateError } = await supabase
+            .from('user_profiles')
+            .update({
+              name: userData.name || userData.email,
+              email: userData.email,
+              phone: userData.phone
+            })
+            .eq('id', userId);
+            
+          if (updateError) throw updateError;
+        } catch (updateError) {
+          console.error("Profile update failed, but continuing:", updateError);
+          // Continue execution even if update fails
+        }
       } else {
-        const { error: insertError } = await supabase
-          .from('user_profiles')
-          .insert({
+        try {
+          const { error: insertError } = await supabase
+            .from('user_profiles')
+            .insert({
+              id: userId,
+              name: userData.name || userData.email,
+              email: userData.email,
+              phone: userData.phone
+            });
+            
+          if (insertError) throw insertError;
+        } catch (insertError) {
+          console.error("Profile creation failed, but continuing:", insertError);
+          
+          // Store profile data in localStorage as fallback
+          const fallbackProfile = {
             id: userId,
             name: userData.name || userData.email,
             email: userData.email,
-            phone: userData.phone
-          });
+            phone: userData.phone,
+            created_at: new Date().toISOString()
+          };
           
-        if (insertError) throw insertError;
+          localStorage.setItem(`userProfile-${userId}`, JSON.stringify(fallbackProfile));
+          console.log("Saved profile to localStorage as fallback");
+        }
       }
       
       console.log("User profile ensured successfully");
     } catch (error) {
       console.error("Error ensuring user profile:", error);
+      
+      // Store profile data in localStorage as fallback
+      const fallbackProfile = {
+        id: userId,
+        name: userData.name || userData.email,
+        email: userData.email,
+        phone: userData.phone,
+        created_at: new Date().toISOString()
+      };
+      
+      localStorage.setItem(`userProfile-${userId}`, JSON.stringify(fallbackProfile));
+      console.log("Saved profile to localStorage as fallback");
     }
   };
 
@@ -87,21 +121,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (currentSession?.user) {
           localStorage.setItem('isLoggedIn', 'true');
+          localStorage.setItem('userId', currentSession.user.id);
           
-          await ensureUserProfile(
-            currentSession.user.id, 
-            {
-              name: currentSession.user.user_metadata?.name,
-              email: currentSession.user.email || '',
-              phone: currentSession.user.user_metadata?.phone
-            }
-          );
-          
+          // Use setTimeout to avoid possible deadlocks with Supabase auth
           setTimeout(async () => {
+            await ensureUserProfile(
+              currentSession.user.id, 
+              {
+                name: currentSession.user.user_metadata?.name,
+                email: currentSession.user.email || '',
+                phone: currentSession.user.user_metadata?.phone
+              }
+            );
+            
             await checkPhoneVerification();
-          }, 0);
+          }, 100);
         } else {
           localStorage.removeItem('isLoggedIn');
+          localStorage.removeItem('userId');
           setPhoneVerified(false);
         }
       }
@@ -113,19 +150,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (currentSession?.user) {
         localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userId', currentSession.user.id);
         
-        await ensureUserProfile(
-          currentSession.user.id, 
-          {
-            name: currentSession.user.user_metadata?.name,
-            email: currentSession.user.email || '',
-            phone: currentSession.user.user_metadata?.phone
-          }
-        );
-        
+        // Use setTimeout to avoid possible deadlocks with Supabase auth
         setTimeout(async () => {
+          await ensureUserProfile(
+            currentSession.user.id, 
+            {
+              name: currentSession.user.user_metadata?.name,
+              email: currentSession.user.email || '',
+              phone: currentSession.user.user_metadata?.phone
+            }
+          );
+          
           await checkPhoneVerification();
-        }, 0);
+        }, 100);
       }
       
       setLoading(false);

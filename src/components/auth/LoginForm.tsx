@@ -93,6 +93,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
                   placeholder="הזן את כתובת הדואל שלך"
                   value={loginData.email}
                   onChange={handleLoginChange}
+                  autoComplete="email"
                 />
               </div>
               
@@ -110,6 +111,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
                   placeholder="הזן את הסיסמה שלך"
                   value={loginData.password}
                   onChange={handleLoginChange}
+                  autoComplete="current-password"
                 />
               </div>
               
@@ -164,6 +166,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
                     placeholder="05X-XXX-XXXX"
                     value={phoneData.phone}
                     onChange={handlePhoneChange}
+                    autoComplete="tel"
                   />
                 </div>
               </div>
