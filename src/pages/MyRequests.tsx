@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -10,81 +9,64 @@ import { Button } from '@/components/ui/button';
 import { Clock, CheckCircle, AlertCircle, X, ExternalLink } from 'lucide-react';
 import RequestDialog from '@/components/dashboard/RequestDialog';
 import { useToast } from '@/hooks/use-toast';
-
-type RequestStatus = 'active' | 'complete' | 'expired' | 'canceled';
-
-interface Request {
-  id: string;
-  title: string;
-  description: string;
-  date: string;
-  location: string;
-  status: RequestStatus;
-  quotesCount: number;
-}
+import { fetchUserRequests, updateRequestStatus, deleteRequest } from '@/services/requests';
+import { useAuth } from '@/providers/AuthProvider';
+import { RequestInterface } from '@/types/dashboard';
+import { countQuotesForRequest } from '@/services/quotes';
 
 const MyRequests = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
-  const [requests, setRequests] = useState<Request[]>([]);
+  const [requests, setRequests] = useState<RequestInterface[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     // Check if user is logged in
-    const hasSession = localStorage.getItem('isLoggedIn') === 'true';
-    setIsLoggedIn(hasSession);
-    
-    if (!hasSession) {
+    if (!user) {
       navigate('/login');
       return;
     }
     
-    // Load user's requests from localStorage
-    const savedRequests = localStorage.getItem('myRequests');
-    if (savedRequests) {
-      setRequests(JSON.parse(savedRequests));
-    } else {
-      // If no requests found, initialize with sample data
-      const sampleRequests: Request[] = [
-        {
-          id: "1001",
-          title: "שיפוץ אמבטיה",
-          description: "שיפוץ חדר אמבטיה כולל החלפת אסלה, כיור וריצוף",
-          date: "01/05/2023",
-          location: "תל אביב",
-          status: "active",
-          quotesCount: 3
-        },
-        {
-          id: "1002",
-          title: "התקנת מזגן",
-          description: "התקנת מזגן עילי בחדר שינה",
-          date: "15/04/2023",
-          location: "רמת גן",
-          status: "complete",
-          quotesCount: 4
-        },
-        {
-          id: "1003",
-          title: "עבודות חשמל",
-          description: "החלפת לוח חשמל ישן והוספת נקודות חשמל",
-          date: "10/03/2023",
-          location: "ירושלים",
-          status: "expired",
-          quotesCount: 0
-        }
-      ];
-      setRequests(sampleRequests);
-      localStorage.setItem('myRequests', JSON.stringify(sampleRequests));
-    }
-  }, [navigate]);
+    const loadRequests = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch requests from the database
+        const data = await fetchUserRequests();
+        
+        // For each request, fetch the quotes count
+        const requestsWithCounts = await Promise.all(
+          data.map(async request => {
+            const count = await countQuotesForRequest(request.id);
+            return {
+              ...request,
+              quotesCount: count
+            };
+          })
+        );
+        
+        setRequests(requestsWithCounts);
+      } catch (error) {
+        console.error('Error loading requests:', error);
+        toast({
+          title: "שגיאה בטעינת הבקשות",
+          description: "אירעה שגיאה בטעינת הבקשות. אנא נסה שוב מאוחר יותר.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadRequests();
+  }, [user, navigate, toast]);
 
-  const getStatusBadge = (status: RequestStatus) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
         return <Badge className="bg-green-500">פעילה</Badge>;
-      case 'complete':
+      case 'completed':
         return <Badge className="bg-blue-500">הושלמה</Badge>;
       case 'expired':
         return <Badge className="bg-amber-500">פגה תוקף</Badge>;
@@ -95,11 +77,11 @@ const MyRequests = () => {
     }
   };
 
-  const getStatusIcon = (status: RequestStatus) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
       case 'active':
         return <Clock className="h-5 w-5 text-green-500" />;
-      case 'complete':
+      case 'completed':
         return <CheckCircle className="h-5 w-5 text-blue-500" />;
       case 'expired':
         return <AlertCircle className="h-5 w-5 text-amber-500" />;
@@ -110,14 +92,26 @@ const MyRequests = () => {
     }
   };
 
-  const handleCancelRequest = (id: string) => {
+  const handleCancelRequest = async (id: string) => {
     if (window.confirm('האם אתה בטוח שברצונך לבטל את הבקשה?')) {
+      // Update status in the database
+      const success = await updateRequestStatus(id, 'canceled');
+      
+      if (!success) {
+        toast({
+          title: "שגיאה בביטול הבקשה",
+          description: "אירעה שגיאה בביטול הבקשה. אנא נסה שוב.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Update local state
       const updatedRequests = requests.map(req => 
-        req.id === id ? {...req, status: 'canceled' as RequestStatus} : req
+        req.id === id ? {...req, status: 'canceled'} : req
       );
       
       setRequests(updatedRequests);
-      localStorage.setItem('myRequests', JSON.stringify(updatedRequests));
       
       toast({
         title: "הבקשה בוטלה",
@@ -126,12 +120,23 @@ const MyRequests = () => {
     }
   };
 
-  const handleDeleteRequest = (id: string) => {
+  const handleDeleteRequest = async (id: string) => {
     if (window.confirm('האם אתה בטוח שברצונך למחוק את הבקשה לצמיתות?')) {
-      const updatedRequests = requests.filter(req => req.id !== id);
+      // Delete from the database
+      const success = await deleteRequest(id);
       
+      if (!success) {
+        toast({
+          title: "שגיאה במחיקת הבקשה",
+          description: "אירעה שגיאה במחיקת הבקשה. אנא נסה שוב.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Update local state
+      const updatedRequests = requests.filter(req => req.id !== id);
       setRequests(updatedRequests);
-      localStorage.setItem('myRequests', JSON.stringify(updatedRequests));
       
       toast({
         title: "הבקשה נמחקה",
@@ -144,12 +149,12 @@ const MyRequests = () => {
     navigate(`/dashboard/request/${id}`);
   };
 
-  if (!isLoggedIn) {
+  if (!user) {
     return null; // Will redirect to login
   }
 
   const activeRequests = requests.filter(req => req.status === 'active');
-  const completedRequests = requests.filter(req => req.status === 'complete');
+  const completedRequests = requests.filter(req => req.status === 'completed');
   const expiredOrCanceledRequests = requests.filter(req => ['expired', 'canceled'].includes(req.status));
 
   return (

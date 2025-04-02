@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -21,7 +20,6 @@ interface RequestFormProps {
   saveToRequests?: boolean;
 }
 
-// List of professions for suggestions
 const professions = [
   'שיפוצים',
   'חשמל',
@@ -44,7 +42,6 @@ const professions = [
   'בנייה'
 ];
 
-// List of cities for suggestions
 const cities = [
   'תל אביב',
   'ירושלים',
@@ -230,31 +227,47 @@ const RequestForm: React.FC<RequestFormProps> = ({
     }
   };
   
-  const handleFormSubmit = () => {
+  const handleFormSubmit = async () => {
     console.log('Submitting form data:', formData);
-    const requestId = Date.now().toString();
-    setNewRequestId(requestId);
-    const newRequest = {
-      id: requestId,
-      title: formData.profession,
-      description: formData.description,
-      date: new Date().toLocaleDateString('he-IL'),
-      location: formData.location,
-      status: 'active' as const,
-      quotesCount: 0
-    };
     
-    // Only save to myRequests if saveToRequests is true
-    if (saveToRequests) {
-      const existingRequests = JSON.parse(localStorage.getItem('myRequests') || '[]');
-      existingRequests.push(newRequest);
-      localStorage.setItem('myRequests', JSON.stringify(existingRequests));
+    if (!user) {
+      console.error('No user found, cannot create request');
+      toast({
+        title: "שגיאה בשליחת הבקשה",
+        description: "אנא התחבר כדי לשלוח בקשה",
+        variant: "destructive",
+      });
+      return;
     }
     
-    setShowSuccessDialog(true);
-    
-    if (onSuccess) {
-      onSuccess(false);
+    try {
+      const { createRequest } = await import('@/services/requests');
+      
+      const requestId = await createRequest({
+        title: formData.profession,
+        description: formData.description,
+        location: formData.location,
+        timing: formData.timing
+      });
+      
+      if (!requestId) {
+        throw new Error('Failed to create request');
+      }
+      
+      setNewRequestId(requestId);
+      
+      setShowSuccessDialog(true);
+      
+      if (onSuccess) {
+        onSuccess(false);
+      }
+    } catch (error) {
+      console.error('Error submitting request:', error);
+      toast({
+        title: "שגיאה בשליחת הבקשה",
+        description: "אירעה שגיאה בשליחת הבקשה, אנא נסה שוב.",
+        variant: "destructive",
+      });
     }
   };
   
@@ -278,7 +291,7 @@ const RequestForm: React.FC<RequestFormProps> = ({
     e.preventDefault();
     if (!registerData.name || !registerData.email || !registerData.password || !registerData.passwordConfirm) {
       toast({
-        title: "שדות חסרים",
+        title: "שדו�� חסרים",
         description: "אנא מלא את כל השדות הנדרשים",
         variant: "destructive"
       });

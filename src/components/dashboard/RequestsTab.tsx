@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,8 @@ import RequestsList from './RequestsList';
 import RequestDetail from './RequestDetail';
 import { QuoteInterface, RequestInterface } from '@/types/dashboard';
 import RequestDialog from './RequestDialog';
+import { fetchUserRequests } from '@/services/requests';
+import { fetchQuotesForRequest, updateQuoteStatus } from '@/services/quotes';
 
 const RequestsTab: React.FC = () => {
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
@@ -29,30 +30,24 @@ const RequestsTab: React.FC = () => {
   useEffect(() => {
     if (!user) return;
 
-    const fetchRequests = async () => {
+    const loadData = async () => {
       setIsLoading(true);
       try {
         console.log("Fetching requests for user:", user.id);
         
-        // In a real implementation, this would fetch from the database
-        // For now we return an empty array since the table might not exist yet
+        // Fetch requests from the database
+        const userRequests = await fetchUserRequests();
+        setRequests(userRequests);
         
-        // Example of how we would fetch from a real table:
-        // const { data, error } = await supabase
-        //   .from('requests')
-        //   .select('*')
-        //   .eq('user_id', user.id)
-        //   .order('created_at', { ascending: false });
-        
-        // if (error) throw error;
-        
-        // Converting to the expected format
-        const loadedRequests: RequestInterface[] = [];
-        setRequests(loadedRequests);
-        
-        // Also fetch quotes
-        const loadedQuotes: QuoteInterface[] = [];
-        setQuotes(loadedQuotes);
+        // If we have a selected request, fetch the quotes for it
+        if (selectedRequestId) {
+          const requestQuotes = await fetchQuotesForRequest(selectedRequestId);
+          setQuotes(prevQuotes => {
+            // Keep quotes for other requests and add the new ones
+            const otherQuotes = prevQuotes.filter(q => q.requestId !== selectedRequestId);
+            return [...otherQuotes, ...requestQuotes];
+          });
+        }
         
       } catch (error) {
         console.error("Error loading requests:", error);
@@ -66,8 +61,8 @@ const RequestsTab: React.FC = () => {
       }
     };
 
-    fetchRequests();
-  }, [user, toast]);
+    loadData();
+  }, [user, selectedRequestId, toast]);
 
   React.useEffect(() => {
     if (selectedRequestId && selectedRequestRef.current) {
@@ -82,6 +77,18 @@ const RequestsTab: React.FC = () => {
     const acceptedQuote = quotes.find(q => q.id === quoteId);
     if (!acceptedQuote || !user) return;
     
+    // Update the quote status in the database
+    const success = await updateQuoteStatus(quoteId, 'accepted');
+    
+    if (!success) {
+      toast({
+        title: "שגיאה בקבלת ההצעה",
+        description: "אירעה שגיאה בקבלת ההצעה. אנא נסה שוב.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Update local state - mark this quote as accepted and others for this request as rejected
     setQuotes(prevQuotes => 
       prevQuotes.map(quote => {
@@ -91,6 +98,10 @@ const RequestsTab: React.FC = () => {
         }
         // Other quotes for the same request should be rejected
         else if (quote.requestId === acceptedQuote.requestId && quote.status === 'pending') {
+          // Update their status in the database
+          updateQuoteStatus(quote.id, 'rejected').catch(error => {
+            console.error("Error updating quote status:", error);
+          });
           return { ...quote, status: 'rejected' };
         }
         // All other quotes remain unchanged
@@ -151,12 +162,38 @@ const RequestsTab: React.FC = () => {
     });
   };
 
-  const handleRejectQuote = (quoteId: string) => {
+  const handleRejectQuote = async (quoteId: string) => {
     const rejectedQuote = quotes.find(q => q.id === quoteId);
+    if (!rejectedQuote) return;
+    
+    // Update quote status in the database
+    const success = await updateQuoteStatus(quoteId, 'rejected');
+    
+    if (!success) {
+      toast({
+        title: "שגיאה בדחיית ההצעה",
+        description: "אירעה שגיאה בדחיית ההצעה. אנא נסה שוב.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     // If this is canceling an accepted quote
-    if (rejectedQuote && rejectedQuote.status === 'accepted') {
-      // Reset all quotes for this request to pending
+    if (rejectedQuote.status === 'accepted') {
+      // Reset all quotes for this request to pending in the database
+      const quotesToUpdate = quotes.filter(q => 
+        q.requestId === rejectedQuote.requestId && q.id !== quoteId
+      );
+      
+      try {
+        await Promise.all(
+          quotesToUpdate.map(quote => updateQuoteStatus(quote.id, 'pending'))
+        );
+      } catch (error) {
+        console.error("Error updating quote statuses:", error);
+      }
+      
+      // Reset quotes in local state
       setQuotes(prevQuotes => 
         prevQuotes.map(quote => 
           quote.requestId === rejectedQuote.requestId 
@@ -171,7 +208,7 @@ const RequestsTab: React.FC = () => {
         variant: "default",
       });
     } else {
-      // Normal rejection of a quote
+      // Normal rejection of a quote - just update local state
       setQuotes(prevQuotes => 
         prevQuotes.map(quote => 
           quote.id === quoteId 
