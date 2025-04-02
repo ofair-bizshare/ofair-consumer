@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/providers/AuthProvider';
@@ -30,6 +31,9 @@ export const useUserProfile = () => {
           try {
             cachedProfile = JSON.parse(cachedProfileStr);
             console.log("Found cached profile in localStorage:", cachedProfile);
+            
+            // Immediately set the cached profile while we fetch a fresh one
+            setProfile(cachedProfile as UserProfileInterface);
           } catch (e) {
             console.error("Error parsing cached profile:", e);
           }
@@ -60,35 +64,69 @@ export const useUserProfile = () => {
             console.log('Using cached profile:', cachedProfile);
             setProfile(cachedProfile as UserProfileInterface);
             setLoading(false);
+            
+            // Try to create the profile in database in the background
+            try {
+              const newProfile = {
+                id: user.id,
+                name: cachedProfile.name || user.user_metadata?.name || user.email,
+                email: cachedProfile.email || user.email,
+                phone: cachedProfile.phone || user.user_metadata?.phone,
+                updated_at: new Date().toISOString()
+              };
+              
+              console.log('Trying to create profile from cache:', newProfile);
+              
+              await supabase
+                .from('user_profiles')
+                .upsert(newProfile)
+                .select();
+                
+              console.log('Profile created from cache successfully');
+            } catch (createError) {
+              console.error('Error creating profile from cache:', createError);
+              // Continue with cached profile regardless
+            }
+            
             return;
           }
           
-          // If profile doesn't exist, create it
+          // If profile doesn't exist and no cache, create it
           console.log('Profile not found, attempting to create:', user.id);
           
           const newProfile = {
             id: user.id,
             name: user.user_metadata?.name || user.email,
-            email: user.email
+            email: user.email,
+            phone: user.user_metadata?.phone
           };
           
-          const { data: createdProfile, error: insertError } = await supabase
-            .from('user_profiles')
-            .insert(newProfile)
-            .select()
-            .single();
-            
-          if (insertError) {
-            console.error('Error creating user profile:', insertError);
-            // Still try to use the local profile object even if insert failed
-            setProfile(newProfile);
-            // Cache the profile
-            localStorage.setItem(`userProfile-${user.id}`, JSON.stringify(newProfile));
-          } else {
-            console.log('Profile created successfully:', createdProfile);
-            setProfile(createdProfile);
-            // Cache the profile
-            localStorage.setItem(`userProfile-${user.id}`, JSON.stringify(createdProfile));
+          // Save to localStorage immediately
+          localStorage.setItem(`userProfile-${user.id}`, JSON.stringify(newProfile));
+          
+          // Set the profile in state 
+          setProfile(newProfile as UserProfileInterface);
+          
+          // Try to insert into database
+          try {
+            const { data: createdProfile, error: insertError } = await supabase
+              .from('user_profiles')
+              .upsert(newProfile)
+              .select()
+              .single();
+              
+            if (insertError) {
+              console.error('Error creating user profile:', insertError);
+              // Continue using the local profile object
+            } else {
+              console.log('Profile created successfully:', createdProfile);
+              setProfile(createdProfile);
+              // Update cache
+              localStorage.setItem(`userProfile-${user.id}`, JSON.stringify(createdProfile));
+            }
+          } catch (insertErr) {
+            console.error('Database error creating profile:', insertErr);
+            // Continue using the local profile object
           }
         } catch (dbErr) {
           console.error('Database error in profile management:', dbErr);
@@ -103,14 +141,13 @@ export const useUserProfile = () => {
             const fallbackProfile = {
               id: user.id,
               name: user.user_metadata?.name || user.email,
-              email: user.email
+              email: user.email,
+              phone: user.user_metadata?.phone
             };
             setProfile(fallbackProfile as UserProfileInterface);
             // Cache the fallback profile
             localStorage.setItem(`userProfile-${user.id}`, JSON.stringify(fallbackProfile));
           }
-          
-          throw dbErr;
         }
       } catch (err) {
         console.error('Error in profile management:', err);
@@ -121,9 +158,13 @@ export const useUserProfile = () => {
           const fallbackProfile = {
             id: user.id,
             name: user.user_metadata?.name || user.email,
-            email: user.email
+            email: user.email,
+            phone: user.user_metadata?.phone
           };
           setProfile(fallbackProfile as UserProfileInterface);
+          
+          // Cache the fallback profile
+          localStorage.setItem(`userProfile-${user.id}`, JSON.stringify(fallbackProfile));
           
           toast({
             title: "שים לב",
@@ -152,36 +193,56 @@ export const useUserProfile = () => {
       if (cachedProfileStr) {
         try {
           const cachedProfile = JSON.parse(cachedProfileStr);
-          const updatedCache = {...cachedProfile, ...updates};
+          const updatedCache = {...cachedProfile, ...updates, updated_at: new Date().toISOString()};
           localStorage.setItem(`userProfile-${user.id}`, JSON.stringify(updatedCache));
+          
+          // Update local state immediately for responsive UI
+          setProfile(prev => prev ? {...prev, ...updates} : null);
         } catch (e) {
           console.error("Error updating profile cache:", e);
         }
       }
       
       // Try to update the remote profile
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .update(updates)
-        .eq('id', user.id)
-        .select()
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .upsert({
+            id: user.id, 
+            ...updates,
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+          
+        if (error) {
+          console.error('Error updating user profile:', error);
+          throw error;
+        }
         
-      if (error) {
-        console.error('Error updating user profile:', error);
-        // Still update the local profile
-        setProfile(prev => prev ? {...prev, ...updates} : null);
-        throw error;
+        console.log('Profile updated successfully:', data);
+        setProfile(data);
+        
+        // Update cache with the data from server
+        localStorage.setItem(`userProfile-${user.id}`, JSON.stringify(data));
+        
+        return data;
+      } catch (updateError) {
+        console.error('Error in profile update request:', updateError);
+        // We already updated the local state, so let that remain
+        throw updateError;
       }
-      
-      setProfile(data);
-      return data;
     } catch (err) {
       console.error('Error updating user profile:', err);
-      // Still update the local profile
-      setProfile(prev => prev ? {...prev, ...updates} : null);
       setError(err as Error);
-      return null;
+      
+      toast({
+        title: "שגיאה בעדכון פרופיל",
+        description: "השינויים נשמרו מקומית בלבד",
+        variant: "destructive",
+      });
+      
+      return profile; // Return current profile as fallback
     } finally {
       setLoading(false);
     }

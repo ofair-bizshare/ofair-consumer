@@ -1,8 +1,44 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ReferralInterface } from '@/types/dashboard';
 import { getFromLocalDB, saveToLocalDB } from '@/utils/localStorageDB';
+import { v4 as uuidv4 } from 'uuid';
+
+// Helper function to check if a string is a valid UUID
+const isValidUUID = (id: string): boolean => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+};
+
+// Helper function to ensure ID is in UUID format
+const ensureUUID = (id: string | number): string => {
+  // If it's already a valid UUID, return it
+  if (typeof id === 'string' && isValidUUID(id)) {
+    return id;
+  }
+  
+  // For demo data, generate stable UUIDs from simple IDs
+  // This ensures the same ID always maps to the same UUID
+  const seed = `professional-${id}`;
+  // Create a namespace UUID (using a fixed namespace)
+  const namespace = '1b671a64-40d5-491e-99b0-da01ff1f3341';
+  
+  // Using uuid-v4 as a fallback
+  try {
+    return uuidv4();
+  } catch (e) {
+    // Fallback to a simple UUID generation based on the seed
+    const hash = String(id).split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    
+    // Format as a UUID-like string
+    return `00000000-0000-4000-8000-${hash.toString(16).padStart(12, '0')}`;
+  }
+};
 
 export const useReferrals = (userId: string | undefined) => {
   const [referrals, setReferrals] = useState<ReferralInterface[]>([]);
@@ -43,12 +79,6 @@ export const useReferrals = (userId: string | undefined) => {
     
     return mergedReferrals;
   }, []);
-
-  // Helper function to check if a string is a valid UUID
-  const isValidUUID = (id: string): boolean => {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(id);
-  };
 
   useEffect(() => {
     if (!userId) {
@@ -212,10 +242,16 @@ export const useReferrals = (userId: string | undefined) => {
   const addLocalReferral = (referral: Omit<ReferralInterface, 'id' | 'date'>) => {
     if (!userId) return null;
     
+    // Check if the professional ID is in UUID format, if not, convert it
+    const professionalId = isValidUUID(referral.professionalId) 
+      ? referral.professionalId 
+      : ensureUUID(referral.professionalId);
+    
     const newReferral: ReferralInterface = {
       id: `local-${Date.now()}`,
       date: new Date().toLocaleDateString('he-IL'),
-      ...referral
+      ...referral,
+      professionalId
     };
     
     // Update local state
@@ -225,11 +261,11 @@ export const useReferrals = (userId: string | undefined) => {
     saveLocalReferral(newReferral);
     
     // Try to save to Supabase only if professionalId is a valid UUID
-    if (isValidUUID(referral.professionalId)) {
+    if (isValidUUID(professionalId)) {
       try {
         const dbReferral = {
           user_id: userId,
-          professional_id: referral.professionalId,
+          professional_id: professionalId,
           professional_name: referral.professionalName,
           phone_number: referral.phoneNumber,
           date: new Date().toISOString(),
@@ -238,14 +274,18 @@ export const useReferrals = (userId: string | undefined) => {
           completed_work: referral.completedWork || false
         };
         
+        console.log("Attempting to save referral to database:", dbReferral);
+        
         supabase
           .from('referrals')
           .insert(dbReferral)
-          .then(({ error }) => {
+          .then(({ data, error }) => {
             if (error) {
               console.error('Error saving referral to database:', error);
+              console.log('Error details:', error);
+              console.log('Attempting to save referral:', dbReferral);
             } else {
-              console.log('Referral saved to database successfully');
+              console.log('Referral saved to database successfully:', data);
             }
           });
       } catch (error) {
@@ -258,10 +298,61 @@ export const useReferrals = (userId: string | undefined) => {
     return newReferral;
   };
 
+  const checkExistingReferral = async (professionalId: string): Promise<boolean> => {
+    if (!userId) return false;
+    
+    console.log("Checking existing referral for user:", userId, "and professional:", professionalId);
+    
+    try {
+      // First check locally
+      const localReferrals = loadLocalReferrals();
+      const existingLocalReferral = localReferrals.find(r => r.professionalId === professionalId);
+      
+      if (existingLocalReferral) {
+        console.log("Found existing local referral:", existingLocalReferral);
+        return true;
+      }
+      
+      // Convert to UUID format if needed
+      const formattedProfessionalId = isValidUUID(professionalId) 
+        ? professionalId 
+        : ensureUUID(professionalId);
+      
+      // Then check in database
+      try {
+        // Only attempt database check if it's a valid UUID
+        if (isValidUUID(formattedProfessionalId)) {
+          const { data, error } = await supabase
+            .from('referrals')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('professional_id', formattedProfessionalId);
+            
+          if (error) {
+            console.error("Error checking existing referral:", error);
+            return false;
+          }
+          
+          return data && data.length > 0;
+        } else {
+          console.log("Skipping database check for non-UUID professional ID");
+          return false;
+        }
+      } catch (dbError) {
+        console.error("Error checking referrals:", dbError);
+        return false;
+      }
+    } catch (error) {
+      console.error("Error in checkExistingReferral:", error);
+      return false;
+    }
+  };
+
   return {
     referrals,
     loading,
     markAsContacted,
-    addLocalReferral
+    addLocalReferral,
+    checkExistingReferral
   };
 };
