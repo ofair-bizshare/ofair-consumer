@@ -19,7 +19,7 @@ const ReferralsPage: React.FC = () => {
     if (!user) {
       toast({
         title: "התחברות נדרשת",
-        description: "עליך להתחבר כדי לצפות בהפניות שלך",
+        description: "עליך להתחבר כדי לצפות באנשי הקשר השמורים שלך",
         variant: "destructive"
       });
       navigate('/login', {
@@ -46,7 +46,7 @@ const ReferralsPage: React.FC = () => {
         <div className="container mx-auto px-6">
           <div className="mb-10">
             <h1 className="text-3xl font-bold text-blue-700 mb-2">
-              <span className="text-[#00D09E]">הפניות</span> שלי
+              <span className="text-[#00D09E]">אנשי הקשר</span> השמורים שלי
             </h1>
             <p className="text-gray-600">
               צפה ברשימת בעלי המקצוע שקיבלת את פרטי ההתקשרות שלהם

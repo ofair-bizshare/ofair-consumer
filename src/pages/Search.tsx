@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import SearchBar from '@/components/SearchBar';
@@ -8,7 +8,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Filter, Check, Star, Award } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useAuth } from '@/providers/AuthProvider';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 // Sample data for professionals
 const allProfessionals = [
@@ -18,7 +23,7 @@ const allProfessionals = [
     profession: 'חשמלאי מוסמך',
     rating: 4.8,
     reviewCount: 124,
-    location: 'תל אביב והמרכז',
+    location: 'תל אביב',
     image: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1180&q=80',
     verified: true,
     specialties: ['תיקוני חשמל', 'התקנות', 'תאורה'],
@@ -31,12 +36,12 @@ const allProfessionals = [
     profession: 'מעצבת פנים',
     rating: 4.9,
     reviewCount: 89,
-    location: 'השרון',
+    location: 'רמת גן',
     image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1161&q=80',
     verified: true,
     specialties: ['עיצוב דירות', 'תכנון חללים', 'צביעה'],
     category: 'interior_design',
-    area: 'sharon',
+    area: 'ramat_gan',
   },
   {
     id: '3',
@@ -44,7 +49,7 @@ const allProfessionals = [
     profession: 'שיפוצניק כללי',
     rating: 4.7,
     reviewCount: 156,
-    location: 'ירושלים והסביבה',
+    location: 'ירושלים',
     image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80',
     verified: false,
     specialties: ['שיפוצים כלליים', 'ריצוף', 'גבס'],
@@ -57,7 +62,7 @@ const allProfessionals = [
     profession: 'אדריכלית',
     rating: 5.0,
     reviewCount: 47,
-    location: 'חיפה והצפון',
+    location: 'חיפה',
     image: 'https://images.unsplash.com/photo-1534751516642-a1af1ef26a56?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=778&q=80',
     verified: true,
     specialties: ['תכנון אדריכלי', 'תכנון דירות', 'בנייה ירוקה'],
@@ -70,7 +75,7 @@ const allProfessionals = [
     profession: 'אינסטלטור',
     rating: 4.6,
     reviewCount: 112,
-    location: 'באר שבע והדרום',
+    location: 'באר שבע',
     image: 'https://images.unsplash.com/photo-1566753323558-f4e0952af115?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2122&q=80',
     verified: true,
     specialties: ['אינסטלציה כללית', 'פתיחת סתימות', 'ברזים וברזיות'],
@@ -83,14 +88,25 @@ const allProfessionals = [
     profession: 'נגר',
     rating: 4.8,
     reviewCount: 67,
-    location: 'השפלה',
+    location: 'הרצליה',
     image: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=774&q=80',
     verified: false,
     specialties: ['ארונות', 'מטבחים', 'רהיטים'],
     category: 'carpentry',
-    area: 'shfela',
+    area: 'herzliya',
   },
 ];
+
+// Specialties mapping by profession category
+const specialtiesByCategory = {
+  electricity: ['תיקוני חשמל', 'התקנות', 'תאורה', 'לוחות חשמל', 'חשמל חכם'],
+  plumbing: ['אינסטלציה כללית', 'פתיחת סתימות', 'ברזים וברזיות', 'דודי שמש', 'ביוב'],
+  renovations: ['שיפוצים כלליים', 'ריצוף', 'גבס', 'החלפת אמבטיה', 'צביעה'],
+  carpentry: ['ארונות', 'מטבחים', 'רהיטים', 'פרקט', 'דלתות'],
+  interior_design: ['עיצוב דירות', 'תכנון חללים', 'צביעה', 'הום סטיילינג', 'אביזרים'],
+  architecture: ['תכנון אדריכלי', 'תכנון דירות', 'בנייה ירוקה', 'היתרי בנייה', 'הרחבות'],
+  all: ['תיקוני חשמל', 'שיפוצים כלליים', 'אינסטלציה כללית', 'ארונות', 'צביעה', 'תכנון אדריכלי']
+};
 
 const Search = () => {
   const [professionals, setProfessionals] = useState(allProfessionals);
@@ -99,10 +115,30 @@ const Search = () => {
     verified: false,
     minRating: [4],
     categories: [] as string[],
+    sortBy: 'rating'
   });
+  const [currentCategory, setCurrentCategory] = useState<string>('all');
+  const [currentCity, setCurrentCity] = useState<string>('all');
+  const [specialtiesList, setSpecialtiesList] = useState<string[]>(specialtiesByCategory.all);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  // Update specialties list when category changes
+  useEffect(() => {
+    if (currentCategory in specialtiesByCategory) {
+      setSpecialtiesList(specialtiesByCategory[currentCategory as keyof typeof specialtiesByCategory]);
+      // Reset categories filter when category changes
+      setFilters(prev => ({ ...prev, categories: [] }));
+    }
+  }, [currentCategory]);
 
   const handleSearch = (profession: string, location: string) => {
     let filtered = [...allProfessionals];
+    
+    setCurrentCategory(profession);
+    setCurrentCity(location);
     
     // Filter by profession
     if (profession !== 'all') {
@@ -129,6 +165,19 @@ const Search = () => {
       );
     }
     
+    // Apply sorting
+    switch (filters.sortBy) {
+      case 'rating':
+        filtered = filtered.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'reviews':
+        filtered = filtered.sort((a, b) => b.reviewCount - a.reviewCount);
+        break;
+      case 'name':
+        filtered = filtered.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+    }
+    
     setProfessionals(filtered);
   };
   
@@ -143,7 +192,7 @@ const Search = () => {
   };
   
   const applyFilters = () => {
-    handleSearch('all', 'all'); // This will apply the current filters
+    handleSearch(currentCategory, currentCity);
     setMobileFiltersOpen(false);
   };
   
@@ -152,8 +201,42 @@ const Search = () => {
       verified: false,
       minRating: [4],
       categories: [],
+      sortBy: 'rating'
     });
     setProfessionals(allProfessionals);
+  };
+  
+  const handleSortChange = (value: string) => {
+    setFilters(prev => ({ ...prev, sortBy: value }));
+    
+    // Apply the sorting immediately
+    let sorted = [...professionals];
+    switch (value) {
+      case 'rating':
+        sorted = sorted.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'reviews':
+        sorted = sorted.sort((a, b) => b.reviewCount - a.reviewCount);
+        break;
+      case 'name':
+        sorted = sorted.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+    }
+    
+    setProfessionals(sorted);
+  };
+  
+  const handleLoginRedirect = () => {
+    setShowLoginDialog(false);
+    navigate('/login', { state: { returnUrl: window.location.pathname } });
+  };
+  
+  const phoneRevealRequiresLogin = (professionalName: string) => {
+    if (!user) {
+      setShowLoginDialog(true);
+      return false;
+    }
+    return true;
   };
 
   return (
@@ -174,7 +257,7 @@ const Search = () => {
           
           {/* Search bar */}
           <div className="mb-8 animate-fade-in-up">
-            <SearchBar onSearch={handleSearch} />
+            <SearchBar onSearch={handleSearch} useCities={true} />
           </div>
           
           {/* Content grid */}
@@ -231,7 +314,7 @@ const Search = () => {
                 <div className="mb-6">
                   <h4 className="text-sm font-medium text-gray-700 mb-2">תחומי התמחות</h4>
                   <div className="space-y-2">
-                    {['תיקוני חשמל', 'שיפוצים כלליים', 'אינסטלציה כללית', 'ארונות', 'צביעה'].map(category => (
+                    {specialtiesList.map(category => (
                       <div key={category} className="flex items-center space-x-2 space-x-reverse">
                         <Checkbox 
                           id={`category-${category}`} 
@@ -338,7 +421,7 @@ const Search = () => {
                       <div>
                         <h4 className="text-sm font-medium text-gray-700 mb-2">תחומי התמחות</h4>
                         <div className="space-y-2">
-                          {['תיקוני חשמל', 'שיפוצים כלליים', 'אינסטלציה כללית', 'ארונות', 'צביעה'].map(category => (
+                          {specialtiesList.map(category => (
                             <div key={category} className="flex items-center space-x-2 space-x-reverse">
                               <Checkbox 
                                 id={`category-mobile-${category}`} 
@@ -382,11 +465,16 @@ const Search = () => {
                 </h2>
                 <div className="flex items-center text-sm text-gray-500">
                   <span>מיון לפי: </span>
-                  <select className="appearance-none bg-transparent border-none px-1 font-medium focus:outline-none">
-                    <option>דירוג</option>
-                    <option>פופולריות</option>
-                    <option>שם א-ת</option>
-                  </select>
+                  <Select value={filters.sortBy} onValueChange={handleSortChange}>
+                    <SelectTrigger className="border-none px-1 font-medium focus:outline-none bg-transparent w-24 ml-2">
+                      <SelectValue placeholder="דירוג" />
+                    </SelectTrigger>
+                    <SelectContent className="z-[100] bg-white">
+                      <SelectItem value="rating">דירוג</SelectItem>
+                      <SelectItem value="reviews">פופולריות</SelectItem>
+                      <SelectItem value="name">שם א-ת</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               
@@ -396,6 +484,7 @@ const Search = () => {
                     <ProfessionalCard 
                       key={professional.id}
                       {...professional}
+                      onPhoneReveal={phoneRevealRequiresLogin}
                     />
                   ))}
                 </div>
@@ -421,6 +510,22 @@ const Search = () => {
       </main>
       
       <Footer />
+      
+      {/* Login Requirement Dialog */}
+      <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+        <DialogContent className="sm:max-w-[425px]" dir="rtl">
+          <DialogTitle className="text-center mb-4">התחברות נדרשת</DialogTitle>
+          <div className="text-center mb-6">
+            <p className="mb-4">עליך להתחבר כדי לצפות בפרטי ההתקשרות של בעלי המקצוע</p>
+            <Button 
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={handleLoginRedirect}
+            >
+              התחבר עכשיו
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

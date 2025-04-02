@@ -1,12 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/providers/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 interface PhoneRevealButtonProps {
   phoneNumber: string;
@@ -14,6 +13,7 @@ interface PhoneRevealButtonProps {
   professionalId: string;
   profession?: string;
   autoReveal?: boolean; // New prop for automatically revealing the number
+  onPhoneReveal?: (professionalName: string) => boolean; // Callback for login checks
 }
 
 const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({ 
@@ -21,20 +21,19 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
   professionalName,
   professionalId,
   profession,
-  autoReveal = false // Default is false
+  autoReveal = false, // Default is false
+  onPhoneReveal = () => true, // Default function that allows reveal
 }) => {
   const [isRevealed, setIsRevealed] = useState(autoReveal);
   const [isLoading, setIsLoading] = useState(false);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
-  const navigate = useNavigate();
 
-  // Check if this referral already exists in the database or localStorage
   useEffect(() => {
     const checkExistingReferral = async () => {
       if (!user) return;
       
-      // First, check localStorage for offline fallback
       const localReferralsStr = localStorage.getItem(`referrals-${user.id}`);
       if (localReferralsStr) {
         try {
@@ -49,11 +48,9 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
         }
       }
       
-      // Then check the database - only if we have a valid UUID for the professional
       try {
         console.log("Checking existing referral for user:", user.id, "and professional:", professionalId);
         
-        // Skip database check if we know the professional ID is not a valid UUID
         if (!isValidUUID(professionalId)) {
           console.log("Skipping database check for non-UUID professional ID:", professionalId);
           return;
@@ -88,35 +85,32 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
     }
   }, [user, professionalId, autoReveal]);
 
-  // Helper function to check if a string is a valid UUID
   const isValidUUID = (id: string): boolean => {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     return uuidRegex.test(id);
   };
 
   const handleReveal = async () => {
+    const allowReveal = onPhoneReveal(professionalName);
+    
+    if (!allowReveal) {
+      return;
+    }
+    
     if (!user) {
-      toast({
-        title: "התחברות נדרשת",
-        description: "עליך להתחבר כדי לראות את פרטי ההתקשרות",
-        variant: "destructive",
-      });
-      navigate('/login', { state: { returnUrl: window.location.pathname } });
+      setShowLoginDialog(true);
       return;
     }
     
     setIsLoading(true);
     
     try {
-      // Validate data before proceeding
       if (!professionalId || !professionalName || !phoneNumber) {
         throw new Error("Missing required referral data");
       }
       
-      // Generate a unique local ID for this referral
       const localReferralId = `local-${Date.now()}-${uuidv4().substring(0, 8)}`;
       
-      // For non-UUID professional IDs, only save to localStorage
       if (!isValidUUID(professionalId)) {
         const localReferral = {
           id: localReferralId,
@@ -132,7 +126,6 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
         
         console.log("Saving non-UUID professional to localStorage only:", localReferral);
         
-        // Save to localStorage
         const localReferralsStr = localStorage.getItem(`referrals-${user.id}`);
         let localReferrals = [];
         if (localReferralsStr) {
@@ -143,11 +136,9 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
           }
         }
         
-        // Check if this professional is already in the local storage
         const existingIndex = localReferrals.findIndex((ref: any) => ref.professionalId === professionalId);
         
         if (existingIndex >= 0) {
-          // Update existing entry
           localReferrals[existingIndex] = {
             ...localReferrals[existingIndex],
             phoneNumber,
@@ -156,7 +147,6 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
             updatedAt: new Date().toISOString()
           };
         } else {
-          // Add new entry
           localReferrals.push(localReferral);
         }
         
@@ -173,7 +163,6 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
         return;
       }
       
-      // Check if there's an existing record only if professional ID is a valid UUID
       try {
         console.log("Checking existing referral before saving");
         const { data: existingData, error: checkError } = await supabase
@@ -191,7 +180,6 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
         let result;
         
         if (existingData) {
-          // If record exists, update it
           console.log("Updating existing referral:", existingData.id);
           result = await supabase
             .from('referrals')
@@ -203,7 +191,6 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
             })
             .eq('id', existingData.id);
         } else {
-          // If no record exists, insert new one
           console.log("Inserting new referral");
           const referral = {
             user_id: user.id,
@@ -233,7 +220,6 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
         throw dbErr;
       }
       
-      // Always save to localStorage as a fallback
       const localReferralsStr = localStorage.getItem(`referrals-${user.id}`);
       let localReferrals = [];
       
@@ -245,11 +231,9 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
         }
       }
       
-      // Check if this professional is already in the local storage
       const existingIndex = localReferrals.findIndex((ref: any) => ref.professionalId === professionalId);
       
       if (existingIndex >= 0) {
-        // Update existing entry
         localReferrals[existingIndex] = {
           ...localReferrals[existingIndex],
           phoneNumber,
@@ -258,7 +242,6 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
           updatedAt: new Date().toISOString()
         };
       } else {
-        // Add new entry
         localReferrals.push({
           id: localReferralId,
           user_id: user.id,
@@ -276,7 +259,6 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
       
       setIsRevealed(true);
       
-      // Show success toast
       toast({
         title: "פרטי התקשרות נשמרו",
         description: `פרטי ההפניה ל${professionalName} נשמרו באזור האישי שלך`,
@@ -284,7 +266,6 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
       });
     } catch (error) {
       console.error('Error saving referral:', error);
-      // Still reveal the phone number
       setIsRevealed(true);
       
       toast({
@@ -297,16 +278,38 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
     }
   };
 
+  const handleLoginRedirect = () => {
+    setShowLoginDialog(false);
+    window.location.href = '/login?returnUrl=' + encodeURIComponent(window.location.pathname);
+  };
+
   return (
-    <Button
-      variant={isRevealed ? "outline" : "default"}
-      className={`w-full ${isRevealed ? "border-blue-500 text-blue-700" : "bg-[#00D09E] hover:bg-[#00C090]"}`}
-      onClick={isRevealed ? undefined : handleReveal}
-      disabled={isLoading}
-    >
-      <Phone className="ml-2 h-4 w-4" />
-      {isLoading ? "טוען..." : isRevealed ? phoneNumber : "הצג מספר טלפון"}
-    </Button>
+    <>
+      <Button
+        variant={isRevealed ? "outline" : "default"}
+        className={`w-full ${isRevealed ? "border-blue-500 text-blue-700" : "bg-[#00D09E] hover:bg-[#00C090]"}`}
+        onClick={isRevealed ? undefined : handleReveal}
+        disabled={isLoading}
+      >
+        <Phone className="ml-2 h-4 w-4" />
+        {isLoading ? "טוען..." : isRevealed ? phoneNumber : "הצג מספר טלפון"}
+      </Button>
+      
+      <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+        <DialogContent className="sm:max-w-[425px]" dir="rtl">
+          <DialogTitle className="text-center mb-4">התחברות נדרשת</DialogTitle>
+          <div className="text-center mb-6">
+            <p className="mb-4">עליך להתחבר כדי לצפות בפרטי ההתקשרות של {professionalName}</p>
+            <Button 
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={handleLoginRedirect}
+            >
+              התחבר עכשיו
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
