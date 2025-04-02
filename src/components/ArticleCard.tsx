@@ -1,8 +1,6 @@
-
 import React from 'react';
 import { Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
 interface ArticleCardProps {
   id: string;
   title: string;
@@ -11,23 +9,17 @@ interface ArticleCardProps {
   date: string;
   category: string;
 }
-
 const ArticleCard: React.FC<ArticleCardProps> = ({
   id,
   title,
   excerpt,
   image,
   date,
-  category,
+  category
 }) => {
-  return (
-    <div className="glass-card overflow-hidden group">
+  return <div className="glass-card overflow-hidden group">
       <div className="relative overflow-hidden h-48">
-        <img 
-          src={image} 
-          alt={title} 
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
+        <img src={image} alt={title} className="w-full h-full transition-transform duration-500 group-hover:scale-105 object-fill" />
         <div className="absolute top-3 right-3 bg-teal-500 text-white text-xs px-2 py-1 rounded-full">
           {category}
         </div>
@@ -47,16 +39,11 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
           {excerpt}
         </p>
         
-        <Link 
-          to={`/article/${id}`} 
-          className="text-teal-500 font-medium text-sm hover:text-teal-600 inline-flex items-center"
-        >
+        <Link to={`/article/${id}`} className="text-teal-500 font-medium text-sm hover:text-teal-600 inline-flex items-center">
           קרא עוד
           <span className="mr-1 transform group-hover:translate-x-1 transition-transform">←</span>
         </Link>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default ArticleCard;

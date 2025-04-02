@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Star, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,6 @@ import PhoneRevealButton from '@/components/PhoneRevealButton';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/providers/AuthProvider';
 import { useNavigate } from 'react-router-dom';
-
 interface ProfessionalCardProps {
   id: string;
   name: string;
@@ -21,7 +19,6 @@ interface ProfessionalCardProps {
   verified?: boolean;
   onPhoneReveal?: (professionalName: string) => boolean;
 }
-
 const ProfessionalCard: React.FC<ProfessionalCardProps> = ({
   id,
   name,
@@ -31,46 +28,39 @@ const ProfessionalCard: React.FC<ProfessionalCardProps> = ({
   location,
   image,
   specialties,
-  phoneNumber = "050-5555555", // Default phone number if not provided
+  phoneNumber = "050-5555555",
+  // Default phone number if not provided
   verified = false,
-  onPhoneReveal,
+  onPhoneReveal
 }) => {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const navigate = useNavigate();
   const [showLoginDialog, setShowLoginDialog] = useState(false);
-
   const handlePhoneClick = () => {
     if (!user) {
       setShowLoginDialog(true);
       return false;
     }
-    
     if (onPhoneReveal) {
       return onPhoneReveal(name);
     }
-    
     return true;
   };
-
   const handleLoginRedirect = () => {
     setShowLoginDialog(false);
-    navigate('/login', { state: { returnUrl: window.location.pathname } });
+    navigate('/login', {
+      state: {
+        returnUrl: window.location.pathname
+      }
+    });
   };
-
-  return (
-    <>
+  return <>
       <div className="glass-card group hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
         <div className="relative overflow-hidden rounded-t-xl h-48">
-          <img 
-            src={image} 
-            alt={name} 
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-          {verified && (
-            <div className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
-              מאומת ✓
-            </div>
-          )}
+          <img src={image} alt={name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+          {verified}
         </div>
         
         <div className="p-5">
@@ -93,31 +83,16 @@ const ProfessionalCard: React.FC<ProfessionalCardProps> = ({
           
           <div className="mt-3">
             <div className="flex flex-wrap gap-1">
-              {specialties.map((specialty, index) => (
-                <span 
-                  key={index} 
-                  className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full"
-                >
+              {specialties.map((specialty, index) => <span key={index} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">
                   {specialty}
-                </span>
-              ))}
+                </span>)}
             </div>
           </div>
           
           <div className="mt-4 space-y-2">
-            <PhoneRevealButton 
-              phoneNumber={phoneNumber}
-              professionalName={name}
-              professionalId={id}
-              profession={profession}
-              onBeforeReveal={handlePhoneClick}
-            />
+            <PhoneRevealButton phoneNumber={phoneNumber} professionalName={name} professionalId={id} profession={profession} onBeforeReveal={handlePhoneClick} />
             
-            <Button 
-              asChild
-              variant="outline"
-              className="w-full border-teal-500 text-teal-600 hover:bg-teal-50"
-            >
+            <Button asChild variant="outline" className="w-full border-teal-500 text-teal-600 hover:bg-teal-50">
               <Link to={`/professional/${id}`}>צפה בפרופיל</Link>
             </Button>
           </div>
@@ -139,24 +114,15 @@ const ProfessionalCard: React.FC<ProfessionalCardProps> = ({
             </p>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowLoginDialog(false)}
-              className="w-full sm:w-auto"
-            >
+            <Button variant="outline" onClick={() => setShowLoginDialog(false)} className="w-full sm:w-auto">
               בטל
             </Button>
-            <Button
-              onClick={handleLoginRedirect}
-              className="w-full sm:w-auto bg-[#00D09E] hover:bg-[#00C090]"
-            >
+            <Button onClick={handleLoginRedirect} className="w-full sm:w-auto bg-[#00D09E] hover:bg-[#00C090]">
               עבור לדף ההתחברות
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
-  );
+    </>;
 };
-
 export default ProfessionalCard;
