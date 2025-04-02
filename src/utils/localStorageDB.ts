@@ -51,7 +51,7 @@ export const saveToLocalDB = <T extends Record<string, any>>(
 };
 
 // Generic function to get items from localStorage
-export const getFromLocalDB = <T>(
+export const getFromLocalDB = <T extends Record<string, any>>(
   collectionName: string,
   userId: string
 ): T[] => {
@@ -68,7 +68,7 @@ export const getFromLocalDB = <T>(
     const currentTime = new Date().toISOString();
     const validItems = collection.filter(item => {
       // Check if item has an expiry and it's not expired
-      return !('expiresAt' in item) || (item as any).expiresAt > currentTime;
+      return !('expiresAt' in item) || item.expiresAt > currentTime;
     });
     
     // If we filtered out some items, save the cleaned collection back
@@ -84,7 +84,7 @@ export const getFromLocalDB = <T>(
 };
 
 // Function to get a single item by ID
-export const getItemFromLocalDB = <T extends { id: string }>(
+export const getItemFromLocalDB = <T extends Record<string, any>>(
   collectionName: string,
   userId: string,
   itemId: string
@@ -99,7 +99,7 @@ export const getItemFromLocalDB = <T extends { id: string }>(
 };
 
 // Function to update an item
-export const updateItemInLocalDB = <T extends { id: string }>(
+export const updateItemInLocalDB = <T extends Record<string, any>>(
   collectionName: string,
   userId: string,
   itemId: string,
@@ -131,7 +131,7 @@ export const updateItemInLocalDB = <T extends { id: string }>(
 };
 
 // Function to delete an item
-export const deleteItemFromLocalDB = <T extends { id: string }>(
+export const deleteItemFromLocalDB = <T extends Record<string, any>>(
   collectionName: string,
   userId: string,
   itemId: string
@@ -166,7 +166,7 @@ export const clearLocalDBCollection = (
 };
 
 // Function to synchronize local data with remote database (to be called when connectivity is restored)
-export const syncLocalWithRemoteDB = async <T extends { id: string }>(
+export const syncLocalWithRemoteDB = async <T extends Record<string, any>>(
   collectionName: string,
   userId: string,
   syncFunction: (items: T[]) => Promise<void>
