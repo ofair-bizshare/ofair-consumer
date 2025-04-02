@@ -60,7 +60,6 @@ const articles = [{
   date: '18 באפריל, 2023',
   category: 'שיפוצים'
 }];
-
 const Index = () => {
   const requestFormRef = useRef<HTMLDivElement>(null);
   const searchSectionRef = useRef<HTMLDivElement>(null);
@@ -214,7 +213,7 @@ const Index = () => {
           
           <div className="text-center">
             <Link to="/search">
-              <Button className="bg-teal-500 hover:bg-teal-600 text-white button-transition">
+              <Button className="text-white button-transition bg-[#00d09e]">
                 הצג עוד בעלי מקצוע
                 <ArrowLeft size={16} className="mr-2" />
               </Button>
@@ -281,7 +280,7 @@ const Index = () => {
           
           <div className="text-center">
             <Link to="/articles">
-              <Button className="bg-teal-500 hover:bg-teal-600 text-white button-transition">
+              <Button className="text-white button-transition bg-[#00d09e]">
                 לכל המאמרים
                 <ArrowLeft size={16} className="mr-2" />
               </Button>
@@ -307,7 +306,7 @@ const Index = () => {
               שלח בקשה עכשיו
             </Button>
             <Link to="/search">
-              <Button size="lg" variant="outline" className="border-white button-transition flex items-center gap-2 text-green-50 bg-blue-950 hover:bg-blue-800">
+              <Button size="lg" variant="outline" className="border-white button-transition flex items-center gap-2 text-green-50 bg-blue-900 hover:bg-blue-800">
                 <Search size={20} />
                 חפש בעלי מקצוע
               </Button>
