@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import SearchBar from '@/components/SearchBar';
@@ -92,16 +92,51 @@ const allProfessionals = [
   },
 ];
 
+// Dynamic specialties mapping by category
+const specialtiesByCategory = {
+  'electricity': ['תיקוני חשמל', 'התקנות', 'תאורה', 'חשמל חכם', 'לוחות חשמל'],
+  'plumbing': ['אינסטלציה כללית', 'פתיחת סתימות', 'ברזים וברזיות', 'דודי שמש', 'ביוב'],
+  'renovations': ['שיפוצים כלליים', 'ריצוף', 'גבס', 'צביעה', 'עבודות בטון'],
+  'carpentry': ['ארונות', 'מטבחים', 'רהיטים', 'דלתות', 'פרקט'],
+  'architecture': ['תכנון אדריכלי', 'תכנון דירות', 'בנייה ירוקה', 'עיצוב פנים', 'הדמיות'],
+  'interior_design': ['עיצוב דירות', 'תכנון חללים', 'צביעה', 'עיצוב מטבחים', 'אבזור'],
+  'all': ['תיקוני חשמל', 'שיפוצים כלליים', 'אינסטלציה כללית', 'ארונות', 'צביעה', 'עיצוב פנים', 'תכנון אדריכלי', 'גבס']
+};
+
 const Search = () => {
   const [professionals, setProfessionals] = useState(allProfessionals);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedLocation, setSelectedLocation] = useState('all');
+  const [availableSpecialties, setAvailableSpecialties] = useState(specialtiesByCategory.all);
+  const [sortOption, setSortOption] = useState('rating');
   const [filters, setFilters] = useState({
     verified: false,
     minRating: [4],
     categories: [] as string[],
   });
 
+  // Update available specialties when category changes
+  useEffect(() => {
+    if (selectedCategory in specialtiesByCategory) {
+      setAvailableSpecialties(specialtiesByCategory[selectedCategory as keyof typeof specialtiesByCategory]);
+      
+      // Clear selected specialties that are no longer available
+      setFilters(prev => ({
+        ...prev,
+        categories: prev.categories.filter(cat => 
+          specialtiesByCategory[selectedCategory as keyof typeof specialtiesByCategory].includes(cat)
+        )
+      }));
+    } else {
+      setAvailableSpecialties(specialtiesByCategory.all);
+    }
+  }, [selectedCategory]);
+
   const handleSearch = (profession: string, location: string) => {
+    setSelectedCategory(profession);
+    setSelectedLocation(location);
+    
     let filtered = [...allProfessionals];
     
     // Filter by profession
@@ -115,21 +150,65 @@ const Search = () => {
     }
     
     // Apply additional filters
+    applyFilters(filtered);
+  };
+  
+  const applyFilters = (baseList = [...allProfessionals]) => {
+    let filtered = [...baseList];
+    
+    // If selected category is applied
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(p => p.category === selectedCategory);
+    }
+    
+    // If selected location is applied
+    if (selectedLocation !== 'all') {
+      filtered = filtered.filter(p => p.area === selectedLocation);
+    }
+    
+    // Apply verification filter
     if (filters.verified) {
       filtered = filtered.filter(p => p.verified);
     }
     
+    // Apply rating filter
     if (filters.minRating[0] > 0) {
       filtered = filtered.filter(p => p.rating >= filters.minRating[0]);
     }
     
+    // Apply specialties filter
     if (filters.categories.length > 0) {
       filtered = filtered.filter(p => 
         filters.categories.some(cat => p.specialties.includes(cat))
       );
     }
     
-    setProfessionals(filtered);
+    // Apply sorting
+    sortProfessionals(filtered);
+  };
+  
+  const sortProfessionals = (list = professionals) => {
+    let sorted = [...list];
+    
+    switch (sortOption) {
+      case 'rating':
+        sorted.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'popularity':
+        sorted.sort((a, b) => b.reviewCount - a.reviewCount);
+        break;
+      case 'name_asc':
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'name_desc':
+        sorted.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      default:
+        // Default is rating
+        sorted.sort((a, b) => b.rating - a.rating);
+    }
+    
+    setProfessionals(sorted);
   };
   
   const toggleCategory = (category: string) => {
@@ -142,8 +221,8 @@ const Search = () => {
     });
   };
   
-  const applyFilters = () => {
-    handleSearch('all', 'all'); // This will apply the current filters
+  const handleFilterApply = () => {
+    applyFilters();
     setMobileFiltersOpen(false);
   };
   
@@ -153,7 +232,24 @@ const Search = () => {
       minRating: [4],
       categories: [],
     });
-    setProfessionals(allProfessionals);
+    
+    applyFilters();
+  };
+  
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSortOption(e.target.value);
+    sortProfessionals();
+  };
+  
+  // Apply initial filters and sorting
+  useEffect(() => {
+    applyFilters();
+  }, [filters, sortOption]);
+  
+  // This simulates a user revealing a phone number
+  const handlePhoneReveal = (professionalName: string) => {
+    console.log(`Phone revealed for: ${professionalName}`);
+    return true;
   };
 
   return (
@@ -174,7 +270,7 @@ const Search = () => {
           
           {/* Search bar */}
           <div className="mb-8 animate-fade-in-up">
-            <SearchBar onSearch={handleSearch} />
+            <SearchBar onSearch={handleSearch} useCities={true} />
           </div>
           
           {/* Content grid */}
@@ -231,7 +327,7 @@ const Search = () => {
                 <div className="mb-6">
                   <h4 className="text-sm font-medium text-gray-700 mb-2">תחומי התמחות</h4>
                   <div className="space-y-2">
-                    {['תיקוני חשמל', 'שיפוצים כלליים', 'אינסטלציה כללית', 'ארונות', 'צביעה'].map(category => (
+                    {availableSpecialties.map(category => (
                       <div key={category} className="flex items-center space-x-2 space-x-reverse">
                         <Checkbox 
                           id={`category-${category}`} 
@@ -248,7 +344,7 @@ const Search = () => {
                 
                 <div className="space-y-2">
                   <Button 
-                    onClick={applyFilters}
+                    onClick={handleFilterApply}
                     className="w-full bg-teal-500 hover:bg-teal-600 text-white"
                   >
                     החל סינון
@@ -338,7 +434,7 @@ const Search = () => {
                       <div>
                         <h4 className="text-sm font-medium text-gray-700 mb-2">תחומי התמחות</h4>
                         <div className="space-y-2">
-                          {['תיקוני חשמל', 'שיפוצים כלליים', 'אינסטלציה כללית', 'ארונות', 'צביעה'].map(category => (
+                          {availableSpecialties.map(category => (
                             <div key={category} className="flex items-center space-x-2 space-x-reverse">
                               <Checkbox 
                                 id={`category-mobile-${category}`} 
@@ -356,7 +452,7 @@ const Search = () => {
                     
                     <div className="flex gap-2 mt-6">
                       <Button 
-                        onClick={applyFilters}
+                        onClick={handleFilterApply}
                         className="flex-1 bg-teal-500 hover:bg-teal-600 text-white"
                       >
                         החל סינון
@@ -382,10 +478,15 @@ const Search = () => {
                 </h2>
                 <div className="flex items-center text-sm text-gray-500">
                   <span>מיון לפי: </span>
-                  <select className="appearance-none bg-transparent border-none px-1 font-medium focus:outline-none">
-                    <option>דירוג</option>
-                    <option>פופולריות</option>
-                    <option>שם א-ת</option>
+                  <select 
+                    className="appearance-none bg-transparent border-none px-1 font-medium focus:outline-none"
+                    value={sortOption}
+                    onChange={handleSortChange}
+                  >
+                    <option value="rating">דירוג</option>
+                    <option value="popularity">פופולריות</option>
+                    <option value="name_asc">שם א-ת</option>
+                    <option value="name_desc">שם ת-א</option>
                   </select>
                 </div>
               </div>
@@ -395,7 +496,16 @@ const Search = () => {
                   {professionals.map(professional => (
                     <ProfessionalCard 
                       key={professional.id}
-                      {...professional}
+                      id={professional.id}
+                      name={professional.name}
+                      profession={professional.profession}
+                      rating={professional.rating}
+                      reviewCount={professional.reviewCount}
+                      location={professional.location}
+                      image={professional.image}
+                      specialties={professional.specialties}
+                      verified={professional.verified}
+                      onPhoneReveal={handlePhoneReveal}
                     />
                   ))}
                 </div>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ import { useAuth } from '@/providers/AuthProvider';
 
 interface RequestFormProps {
   onSuccess?: (value: boolean) => void;
+  saveToRequests?: boolean;
 }
 
 // List of professions for suggestions
@@ -90,7 +92,8 @@ const cities = [
 ];
 
 const RequestForm: React.FC<RequestFormProps> = ({
-  onSuccess
+  onSuccess,
+  saveToRequests = false
 }) => {
   const [step, setStep] = useState(1);
   const [images, setImages] = useState<File[]>([]);
@@ -241,9 +244,12 @@ const RequestForm: React.FC<RequestFormProps> = ({
       quotesCount: 0
     };
     
-    const existingRequests = JSON.parse(localStorage.getItem('myRequests') || '[]');
-    existingRequests.push(newRequest);
-    localStorage.setItem('myRequests', JSON.stringify(existingRequests));
+    // Only save to myRequests if saveToRequests is true
+    if (saveToRequests) {
+      const existingRequests = JSON.parse(localStorage.getItem('myRequests') || '[]');
+      existingRequests.push(newRequest);
+      localStorage.setItem('myRequests', JSON.stringify(existingRequests));
+    }
     
     setShowSuccessDialog(true);
     
@@ -623,10 +629,14 @@ const RequestForm: React.FC<RequestFormProps> = ({
           <div className="flex flex-col items-center justify-center py-4">
             <div className="mb-5 text-center">
               <p className="text-gray-700 mb-2">
-                הבקשה שלך נוספה לאזור האישי שלך
+                {saveToRequests 
+                  ? "הבקשה שלך נוספה לאזור האישי שלך" 
+                  : "הבקשה שלך נשלחה בהצלחה"}
               </p>
               <p className="text-gray-500 text-sm">
-                תוכל לעקוב אחרי הסטטוס שלה ולראות את הצעות המחיר שיתקבלו
+                {saveToRequests 
+                  ? "תוכל לעקוב אחרי הסטטוס שלה ולראות את הצעות המחיר שיתקבלו" 
+                  : "בעלי מקצוע יצרו איתך קשר בהקדם"}
               </p>
             </div>
           </div>
@@ -634,9 +644,9 @@ const RequestForm: React.FC<RequestFormProps> = ({
             <Button 
               type="button" 
               className="bg-[#00D09E] hover:bg-[#00C090] text-white w-full" 
-              onClick={handleGoToDashboard}
+              onClick={saveToRequests ? handleGoToDashboard : () => setShowSuccessDialog(false)}
             >
-              עבור לאזור האישי
+              {saveToRequests ? "עבור לאזור האישי" : "סגור"}
             </Button>
           </DialogFooter>
         </DialogContent>

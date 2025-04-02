@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Phone } from 'lucide-react';
@@ -14,6 +13,7 @@ interface PhoneRevealButtonProps {
   professionalId: string;
   profession?: string;
   autoReveal?: boolean; // New prop for automatically revealing the number
+  onBeforeReveal?: () => boolean; // New prop to handle pre-reveal logic
 }
 
 const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({ 
@@ -21,7 +21,8 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
   professionalName,
   professionalId,
   profession,
-  autoReveal = false // Default is false
+  autoReveal = false, // Default is false
+  onBeforeReveal
 }) => {
   const [isRevealed, setIsRevealed] = useState(autoReveal);
   const [isLoading, setIsLoading] = useState(false);
@@ -95,6 +96,11 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
   };
 
   const handleReveal = async () => {
+    // If there's a pre-reveal hook, call it and check the result
+    if (onBeforeReveal && !onBeforeReveal()) {
+      return;
+    }
+    
     if (!user) {
       toast({
         title: "התחברות נדרשת",
