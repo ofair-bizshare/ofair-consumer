@@ -7,6 +7,7 @@ import PhoneRevealButton from '@/components/PhoneRevealButton';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/providers/AuthProvider';
 import { useNavigate } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
 
 interface ProfessionalCardProps {
   id: string;
@@ -87,9 +88,11 @@ const ProfessionalCard: React.FC<ProfessionalCardProps> = ({
           
           <div className="mt-3">
             <div className="flex flex-wrap gap-1">
-              {specialties.map((specialty, index) => <span key={index} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">
+              {specialties.map((specialty, index) => (
+                <span key={index} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">
                   {specialty}
-                </span>)}
+                </span>
+              ))}
             </div>
           </div>
           
