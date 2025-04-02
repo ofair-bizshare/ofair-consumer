@@ -60,6 +60,7 @@ const articles = [{
   date: '18 באפריל, 2023',
   category: 'שיפוצים'
 }];
+
 const Index = () => {
   const requestFormRef = useRef<HTMLDivElement>(null);
   const searchSectionRef = useRef<HTMLDivElement>(null);
@@ -173,7 +174,7 @@ const Index = () => {
       <section className="py-16 md:py-24 bg-gray-50">
         <div className="container mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-blue-700 mb-3">איך זה <span className="text-teal-500">עובד?</span></h2>
+            <h2 className="text-3xl font-bold text-blue-700 mb-3">איך זה <span className="text-custom-green">עובד?</span></h2>
             <p className="text-gray-600 max-w-2xl mx-auto">תהליך פשוט בשלושה שלבים למציאת בעל המקצוע המושלם לעבודה שלכם</p>
           </div>
           
@@ -203,7 +204,7 @@ const Index = () => {
       <section className="py-16 md:py-24 bg-gradient-to-br from-blue-50 to-teal-50">
         <div className="container mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-blue-700 mb-3">בעלי מקצוע <span className="text-teal-500">מובילים</span></h2>
+            <h2 className="text-3xl font-bold text-blue-700 mb-3">בעלי מקצוע <span className="text-custom-green">מובילים</span></h2>
             <p className="text-gray-600 max-w-2xl mx-auto">אפשר גם פשוט לחפש -  בעלי המקצוע המובילים שלנו עברו תהליך אימות קפדני ומספקים שירות איכותי</p>
           </div>
           
@@ -226,7 +227,7 @@ const Index = () => {
       <section className="py-16 md:py-24 bg-white">
         <div className="container mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-blue-700 mb-3">למה <span className="text-teal-500">oFair?</span></h2>
+            <h2 className="text-3xl font-bold text-blue-700 mb-3">למה <span className="text-custom-green">oFair?</span></h2>
             <p className="text-gray-600 max-w-2xl mx-auto">הפלטפורמה שלנו מציעה יתרונות ייחודיים שהופכים את התהליך לפשוט, בטוח ויעיל</p>
           </div>
           
@@ -270,7 +271,7 @@ const Index = () => {
       <section className="py-16 md:py-24 bg-gradient-to-br from-blue-50 to-teal-50">
         <div className="container mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-blue-700 mb-3">טיפים <span className="text-teal-500">ומאמרים</span></h2>
+            <h2 className="text-3xl font-bold text-blue-700 mb-3">טיפים <span className="text-custom-green">ומאמרים</span></h2>
             <p className="text-gray-600 max-w-2xl mx-auto">מאמרים מקצועיים וטיפים שימושיים שיעזרו לכם להפיק את המיטב מהפרויקט שלכם</p>
           </div>
           
