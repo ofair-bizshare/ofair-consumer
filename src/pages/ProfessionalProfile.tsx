@@ -14,148 +14,165 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PhoneRevealButton from '@/components/PhoneRevealButton';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+interface Project {
+  id: number;
+  title: string;
+  description: string;
+  image: string;
+  location: string;
+}
+
+interface Review {
+  id: number;
+  author: string;
+  rating: number;
+  date: string;
+  comment: string;
+}
+
+interface ProfessionalData {
+  id: string;
+  name: string;
+  profession: string;
+  image: string;
+  rating: number;
+  reviewCount: number;
+  verified?: boolean;
+  yearEstablished?: number;
+  location: string;
+  about: string;
+  contactInfo: {
+    phone: string;
+    email: string;
+    address: string;
+  };
+  specialties: string[];
+  certifications: string[];
+  workHours: string;
+  projects: Project[];
+  reviews: Review[];
+}
 
 // Fetch professional data from Supabase
-const fetchProfessionalData = async (id: string) => {
+const fetchProfessionalData = async (id: string): Promise<ProfessionalData | null> => {
   try {
     const { data, error } = await supabase
       .from('professionals')
       .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle();
       
     if (error) {
       console.error('Error fetching professional:', error);
-      return getFallbackProfessionalData(id);
+      return null;
     }
     
     if (data) {
+      // Generate some default information for fields not directly in the database
+      const yearEstablished = new Date().getFullYear() - Math.floor(Math.random() * 10) - 5; // Random year between 5-15 years ago
+      const email = `${data.name.replace(/\s+/g, '').toLowerCase()}@example.com`;
+      const address = `רחוב הרצל 1, ${data.location}`;
+      
+      // Create some sample projects based on the professional's data
+      const projects: Project[] = [
+        {
+          id: 1,
+          title: `עבודה לדוגמה - ${data.profession}`,
+          description: 'דוגמה לעבודה שבוצעה לאחרונה',
+          image: data.image || '/lovable-uploads/1a2c3d92-c7dd-41ef-bc39-b244797da4b2.png',
+          location: data.location
+        },
+        {
+          id: 2,
+          title: 'עבודה נוספת',
+          description: 'דוגמה נוספת לעבודה שבוצעה',
+          image: '/lovable-uploads/52b937d1-acd7-4831-b19e-79a55a774829.png',
+          location: data.location
+        }
+      ];
+      
+      // Sample reviews
+      const reviews: Review[] = [
+        {
+          id: 1,
+          author: 'רחל כהן',
+          rating: 5,
+          date: '15/04/2023',
+          comment: 'עבודה מקצועית ומהירה. מרוצה מאוד מהתוצאה!'
+        },
+        {
+          id: 2,
+          author: 'דוד לוי',
+          rating: 4,
+          date: '02/03/2023',
+          comment: 'שירות טוב, מחיר הוגן. קצת איחר בלוחות הזמנים אבל התוצאה הסופית טובה מאוד.'
+        }
+      ];
+      
       return {
-        ...data,
+        id: data.id,
+        name: data.name,
+        profession: data.profession,
+        rating: data.rating || 4.5,
         reviewCount: data.review_count || 0,
-        yearEstablished: 2015,
+        location: data.location,
+        image: data.image,
+        verified: true,
+        yearEstablished,
+        about: data.about || 'בעל ניסיון רב בתחום, מבצע את העבודה באיכות גבוהה, במחירים הוגנים ובזמנים מוסכמים.',
         contactInfo: {
           phone: data.phone_number || '050-5555555',
-          email: `${data.name.replace(/\s+/g, '').toLowerCase()}@example.com`,
-          address: `רחוב הרצל 1, ${data.location}`
+          email,
+          address
         },
-        about: data.about || 'בעל ניסיון רב בתחום, מבצע את העבודה באיכות גבוהה, במחירים הוגנים ובזמנים מוסכמים.',
+        specialties: data.specialties || [],
         certifications: ['מוסמך מקצועי', 'בעל רישיון'],
         workHours: 'ימים א-ה: 8:00-18:00, יום ו: 8:00-13:00',
-        projects: [
-          {
-            id: 1,
-            title: `עבודה לדוגמה - ${data.profession}`,
-            description: 'דוגמה לעבודה שבוצעה לאחרונה',
-            image: data.image || '/lovable-uploads/1a2c3d92-c7dd-41ef-bc39-b244797da4b2.png',
-            location: data.location
-          },
-          {
-            id: 2,
-            title: 'עבודה נוספת',
-            description: 'דוגמה נוספת לעבודה שבוצעה',
-            image: '/lovable-uploads/52b937d1-acd7-4831-b19e-79a55a774829.png',
-            location: data.location
-          }
-        ],
-        reviews: [
-          {
-            id: 1,
-            author: 'רחל כהן',
-            rating: 5,
-            date: '15/04/2023',
-            comment: 'עבודה מקצועית ומהירה. מרוצה מאוד מהתוצאה!'
-          },
-          {
-            id: 2,
-            author: 'דוד לוי',
-            rating: 4,
-            date: '02/03/2023',
-            comment: 'שירות טוב, מחיר הוגן. קצת איחר בלוחות הזמנים אבל התוצאה הסופית טובה מאוד.'
-          }
-        ]
+        projects,
+        reviews
       };
     }
     
-    return getFallbackProfessionalData(id);
+    return null;
   } catch (error) {
     console.error('Error:', error);
-    return getFallbackProfessionalData(id);
+    return null;
   }
-};
-
-// Fallback data in case the API fails
-const getFallbackProfessionalData = (id: string) => {
-  return {
-    id,
-    name: 'ישראל ישראלי',
-    profession: 'שיפוצניק',
-    image: '/lovable-uploads/1a2c3d92-c7dd-41ef-bc39-b244797da4b2.png',
-    rating: 4.8,
-    reviewCount: 127,
-    verified: true,
-    yearEstablished: 2015,
-    location: 'תל אביב והסביבה',
-    about: 'בעל ניסיון רב בתחום השיפוצים, מתמחה בשיפוצי דירות ובתים פרטיים. מבצע את העבודה באיכות גבוהה, במחירים הוגנים ובזמנים מוסכמים.',
-    contactInfo: {
-      phone: '0505-5524542',
-      email: 'israel@example.com',
-      address: 'רחוב הרצל 1, תל אביב'
-    },
-    specialties: ['שיפוצים כלליים', 'עבודות גבס', 'צביעה', 'ריצוף', 'אינסטלציה'],
-    certifications: ['הנדסאי בניין מוסמך', 'קבלן רשום'],
-    workHours: 'ימים א-ה: 8:00-18:00, יום ו: 8:00-13:00',
-    projects: [
-      {
-        id: 1,
-        title: 'שיפוץ דירת 4 חדרים',
-        description: 'שיפוץ כללי הכולל החלפת ריצוף, צביעה, החלפת מטבח ושיפוץ חדרי רחצה',
-        image: '/lovable-uploads/52b937d1-acd7-4831-b19e-79a55a774829.png',
-        location: 'תל אביב'
-      },
-      {
-        id: 2,
-        title: 'שיפוץ מטבח',
-        description: 'החלפת מטבח כולל ריצוף, ארונות, שיש וכיור',
-        image: '/lovable-uploads/1a2c3d92-c7dd-41ef-bc39-b244797da4b2.png',
-        location: 'רמת גן'
-      }
-    ],
-    reviews: [
-      {
-        id: 1,
-        author: 'רחל כהן',
-        rating: 5,
-        date: '15/04/2023',
-        comment: 'עבודה מקצועית ומהירה. מרוצה מאוד מהתוצאה!'
-      },
-      {
-        id: 2,
-        author: 'דוד לוי',
-        rating: 4,
-        date: '02/03/2023',
-        comment: 'שירות טוב, מחיר הוגן. קצת איחר בלוחות הזמנים אבל התוצאה הסופית טובה מאוד.'
-      }
-    ]
-  };
 };
 
 const ProfessionalProfile = () => {
   const { id } = useParams<{ id: string }>();
-  const [professional, setProfessional] = useState<any>(null);
+  const [professional, setProfessional] = useState<ProfessionalData | null>(null);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
   
   useEffect(() => {
     const loadProfessional = async () => {
+      if (!id) {
+        setLoading(false);
+        return;
+      }
+      
       setLoading(true);
-      const data = await fetchProfessionalData(id || '');
+      const data = await fetchProfessionalData(id);
+      
+      if (!data) {
+        toast({
+          title: "בעל המקצוע לא נמצא",
+          description: "לא הצלחנו למצוא את בעל המקצוע המבוקש",
+          variant: "destructive",
+        });
+      }
+      
       setProfessional(data);
       setLoading(false);
     };
     
     loadProfessional();
     window.scrollTo(0, 0);
-  }, [id]);
+  }, [id, toast]);
 
   const isInIframe = window !== window.parent && window.parent;
 

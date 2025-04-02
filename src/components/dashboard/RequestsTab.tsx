@@ -32,8 +32,10 @@ const RequestsTab: React.FC = () => {
     const fetchRequests = async () => {
       setIsLoading(true);
       try {
+        console.log("Fetching requests for user:", user.id);
+        
         // In a real implementation, this would fetch from the database
-        // For now we'll return an empty array since we're removing sample data
+        // For now we return an empty array since the table might not exist yet
         
         // Example of how we would fetch from a real table:
         // const { data, error } = await supabase

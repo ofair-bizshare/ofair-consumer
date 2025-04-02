@@ -35,11 +35,73 @@ serve(async (req) => {
       throw countError;
     }
 
+    // If professionals already exist, don't add more
+    if (count && count > 0) {
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: "Sample data not added. Professionals already exist in the database.", 
+          existingCount: count 
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    }
+
+    // Sample professionals data to seed
+    const sampleProfessionals = [
+      {
+        name: 'אבי כהן',
+        profession: 'טכנאי מזגנים',
+        rating: 4.8,
+        review_count: 124,
+        location: 'תל אביב והמרכז',
+        image: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1180&q=80',
+        specialties: ['תיקוני מזגנים', 'התקנות מזגנים', 'ניקוי מזגנים'],
+        phone_number: '052-1234567',
+        about: 'טכנאי מזגנים מוסמך עם ניסיון רב בתחום. מעניק שירות מהיר, אמין ומקצועי עם אחריות על העבודה.'
+      },
+      {
+        name: 'יוסי לוי',
+        profession: 'טכנאי מזגנים',
+        rating: 4.6,
+        review_count: 87,
+        location: 'תל אביב והמרכז',
+        image: 'https://images.unsplash.com/photo-1566753323558-f4e0952af115?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2122&q=80',
+        specialties: ['תיקוני מזגנים', 'התקנות מזגנים'],
+        phone_number: '052-2345678',
+        about: 'טכנאי מזגנים בעל ניסיון של 15 שנה בתחום. מומחה בתיקון כל סוגי המזגנים, כולל מזגנים מרכזיים ומולטי-ספליט.'
+      },
+      {
+        name: 'דני שטרן',
+        profession: 'טכנאי מיזוג אוויר',
+        rating: 4.9,
+        review_count: 112,
+        location: 'רמת גן',
+        image: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=774&q=80',
+        specialties: ['תיקון מזגנים', 'מזגנים מרכזיים'],
+        phone_number: '052-3456789',
+        about: 'מהנדס מיזוג אוויר בעל תואר ראשון. ניסיון של 20 שנה בתכנון וביצוע התקנות מיזוג אוויר בפרויקטים מורכבים.'
+      },
+    ];
+
+    // Insert the sample professionals
+    const { data, error } = await supabaseAdmin
+      .from('professionals')
+      .insert(sampleProfessionals)
+      .select();
+
+    if (error) {
+      throw error;
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: "The seed function is disabled to prevent adding sample data.", 
-        existingCount: count 
+        message: `Successfully added ${data.length} professionals to the database.`,
+        data
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
