@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { MessageSquare } from 'lucide-react';
@@ -10,12 +11,11 @@ import RequestDetail from './RequestDetail';
 import { QuoteInterface, RequestInterface } from '@/types/dashboard';
 import RequestDialog from './RequestDialog';
 
-// Mock data - this would normally come from an API
-import { requests, quotes as quotesData } from '@/data/dashboardData';
-
 const RequestsTab: React.FC = () => {
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
-  const [quotesState, setQuotesState] = useState(quotesData);
+  const [requests, setRequests] = useState<RequestInterface[]>([]);
+  const [quotes, setQuotes] = useState<QuoteInterface[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const selectedRequestRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
@@ -23,7 +23,49 @@ const RequestsTab: React.FC = () => {
   const navigate = useNavigate();
   
   const selectedRequest = requests.find(r => r.id === selectedRequestId);
-  const requestQuotes = quotesState.filter(q => q.requestId === selectedRequestId);
+  const requestQuotes = quotes.filter(q => q.requestId === selectedRequestId);
+
+  // Load real data from the database
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchRequests = async () => {
+      setIsLoading(true);
+      try {
+        // In a real implementation, this would fetch from the database
+        // For now we'll return an empty array since we're removing sample data
+        
+        // Example of how we would fetch from a real table:
+        // const { data, error } = await supabase
+        //   .from('requests')
+        //   .select('*')
+        //   .eq('user_id', user.id)
+        //   .order('created_at', { ascending: false });
+        
+        // if (error) throw error;
+        
+        // Converting to the expected format
+        const loadedRequests: RequestInterface[] = [];
+        setRequests(loadedRequests);
+        
+        // Also fetch quotes
+        const loadedQuotes: QuoteInterface[] = [];
+        setQuotes(loadedQuotes);
+        
+      } catch (error) {
+        console.error("Error loading requests:", error);
+        toast({
+          title: "שגיאה בטעינת הבקשות",
+          description: "לא ניתן לטעון את הבקשות שלך כרגע. נסה שוב מאוחר יותר.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRequests();
+  }, [user, toast]);
 
   React.useEffect(() => {
     if (selectedRequestId && selectedRequestRef.current) {
@@ -35,11 +77,11 @@ const RequestsTab: React.FC = () => {
 
   const handleAcceptQuote = async (quoteId: string) => {
     // Find the quote that's being accepted
-    const acceptedQuote = quotesState.find(q => q.id === quoteId);
+    const acceptedQuote = quotes.find(q => q.id === quoteId);
     if (!acceptedQuote || !user) return;
     
     // Update local state - mark this quote as accepted and others for this request as rejected
-    setQuotesState(prevQuotes => 
+    setQuotes(prevQuotes => 
       prevQuotes.map(quote => {
         // The accepted quote
         if (quote.id === quoteId) {
@@ -68,9 +110,7 @@ const RequestsTab: React.FC = () => {
         description: acceptedQuote.description
       };
       
-      // Save to Supabase - using `any` temporarily to bypass type checking
-      // until the types are properly generated
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('accepted_quotes')
         .upsert(acceptedQuoteData, {
           onConflict: 'quote_id',
@@ -110,12 +150,12 @@ const RequestsTab: React.FC = () => {
   };
 
   const handleRejectQuote = (quoteId: string) => {
-    const rejectedQuote = quotesState.find(q => q.id === quoteId);
+    const rejectedQuote = quotes.find(q => q.id === quoteId);
     
     // If this is canceling an accepted quote
     if (rejectedQuote && rejectedQuote.status === 'accepted') {
       // Reset all quotes for this request to pending
-      setQuotesState(prevQuotes => 
+      setQuotes(prevQuotes => 
         prevQuotes.map(quote => 
           quote.requestId === rejectedQuote.requestId 
             ? { ...quote, status: quote.id === quoteId ? 'rejected' : 'pending' } 
@@ -130,7 +170,7 @@ const RequestsTab: React.FC = () => {
       });
     } else {
       // Normal rejection of a quote
-      setQuotesState(prevQuotes => 
+      setQuotes(prevQuotes => 
         prevQuotes.map(quote => 
           quote.id === quoteId 
             ? { ...quote, status: 'rejected' } 
@@ -163,10 +203,16 @@ const RequestsTab: React.FC = () => {
           />
         </div>
         
-        <RequestsList 
-          requests={requests} 
-          onSelect={setSelectedRequestId}
-        />
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00d09e]"></div>
+          </div>
+        ) : (
+          <RequestsList 
+            requests={requests} 
+            onSelect={setSelectedRequestId}
+          />
+        )}
       </div>
       
       <div className="w-full lg:w-2/3" ref={selectedRequestRef}>
@@ -181,14 +227,24 @@ const RequestsTab: React.FC = () => {
         ) : (
           <div className="glass-card flex flex-col items-center justify-center text-center p-10">
             <MessageSquare className="h-12 w-12 text-blue-200 mb-4" />
-            <h3 className="text-xl font-semibold text-blue-700 mb-2">בחר בקשה לצפייה</h3>
+            <h3 className="text-xl font-semibold text-blue-700 mb-2">
+              {isLoading 
+                ? "טוען בקשות..." 
+                : requests.length > 0 
+                  ? "בחר בקשה לצפייה" 
+                  : "אין לך בקשות עדיין"}
+            </h3>
             <p className="text-gray-600 mb-6 max-w-md">
-              בחר אחת מהבקשות מהרשימה משמאל כדי לצפות בפרטים ובהצעות המחיר שהתקבלו
+              {isLoading 
+                ? "אנא המתן בזמן שאנו טוענים את הבקשות שלך" 
+                : requests.length > 0 
+                  ? "בחר אחת מהבקשות מהרשימה משמאל כדי לצפות בפרטים ובהצעות המחיר שהתקבלו" 
+                  : "שלח את בקשתך הראשונה ובעלי מקצוע ישלחו לך הצעות מחיר"}
             </p>
             <RequestDialog 
               isOpen={isRequestDialogOpen} 
               onOpenChange={setIsRequestDialogOpen} 
-              triggerClassName="bg-[#00D09E] hover:bg-[#00C090]"
+              triggerClassName="bg-[#00d09e] hover:bg-[#00C090]"
               triggerLabel="שלח בקשה חדשה"
             />
           </div>

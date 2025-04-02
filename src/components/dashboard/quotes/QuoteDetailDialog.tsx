@@ -10,7 +10,6 @@ import {
   DialogTitle,
   DialogDescription,
   DialogClose,
-  DialogTrigger,
   DialogFooter
 } from '@/components/ui/dialog';
 
@@ -23,6 +22,12 @@ const QuoteDetailDialog: React.FC<QuoteDetailDialogProps> = ({
   professional,
   onViewProfile
 }) => {
+  // Handle direct navigation to professional profile
+  const handleViewProfile = () => {
+    // Using window.open to ensure proper navigation
+    window.open(`/professional/${professional.id}`, '_blank');
+  };
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -55,7 +60,7 @@ const QuoteDetailDialog: React.FC<QuoteDetailDialogProps> = ({
           </DialogClose>
           <Button 
             className="bg-blue-600 hover:bg-blue-700"
-            onClick={() => onViewProfile(professional.id)}
+            onClick={handleViewProfile}
           >
             פתח בעמוד מלא
           </Button>
