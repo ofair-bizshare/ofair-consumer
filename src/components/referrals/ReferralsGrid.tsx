@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ReferralInterface } from '@/types/dashboard';
 import ReferralCard from './ReferralCard';
 import EmptyReferralsMessage from './EmptyReferralsMessage';
@@ -11,6 +11,23 @@ interface ReferralsGridProps {
 
 const ReferralsGrid: React.FC<ReferralsGridProps> = ({ referrals, onMarkContacted }) => {
   console.log("Rendering ReferralsGrid with referrals:", referrals);
+  
+  // If user is logged in but we have no data, check localStorage for offline fallback
+  useEffect(() => {
+    const userId = localStorage.getItem('userId');
+    if (userId && (!referrals || referrals.length === 0)) {
+      const localReferralsStr = localStorage.getItem(`referrals-${userId}`);
+      if (localReferralsStr) {
+        try {
+          // We don't use this directly, just logging to help debug
+          const localReferrals = JSON.parse(localReferralsStr);
+          console.log("Found local referrals:", localReferrals);
+        } catch (e) {
+          console.error("Error parsing local referrals:", e);
+        }
+      }
+    }
+  }, [referrals]);
   
   if (!referrals || referrals.length === 0) {
     return <EmptyReferralsMessage />;

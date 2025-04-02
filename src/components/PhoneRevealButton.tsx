@@ -28,11 +28,27 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Check if this referral already exists in the database
+  // Check if this referral already exists in the database or localStorage
   useEffect(() => {
     const checkExistingReferral = async () => {
       if (!user) return;
       
+      // First, check localStorage for offline fallback
+      const localReferralsStr = localStorage.getItem(`referrals-${user.id}`);
+      if (localReferralsStr) {
+        try {
+          const localReferrals = JSON.parse(localReferralsStr);
+          const exists = localReferrals.some((ref: any) => ref.professionalId === professionalId);
+          if (exists) {
+            setIsRevealed(true);
+            return;
+          }
+        } catch (e) {
+          console.error("Error parsing local referrals:", e);
+        }
+      }
+      
+      // Then check the database
       try {
         console.log("Checking existing referral for user:", user.id, "and professional:", professionalId);
         
@@ -108,7 +124,7 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
       
       if (checkError) {
         console.error('Error checking existing referral:', checkError);
-        throw checkError;
+        // Continue with local storage fallback
       }
       
       let result;
@@ -139,6 +155,48 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
       }
       
       console.log("Referral operation result:", result);
+      
+      // Regardless of the result, save to localStorage as a fallback
+      const localReferralsStr = localStorage.getItem(`referrals-${user.id}`);
+      let localReferrals = [];
+      
+      if (localReferralsStr) {
+        try {
+          localReferrals = JSON.parse(localReferralsStr);
+        } catch (e) {
+          console.error("Error parsing local referrals:", e);
+        }
+      }
+      
+      // Check if this professional is already in the local storage
+      const existingIndex = localReferrals.findIndex((ref: any) => ref.professionalId === professionalId);
+      
+      if (existingIndex >= 0) {
+        // Update existing entry
+        localReferrals[existingIndex] = {
+          ...localReferrals[existingIndex],
+          phoneNumber,
+          professionalName,
+          profession: profession || "בעל מקצוע",
+          updatedAt: new Date().toISOString()
+        };
+      } else {
+        // Add new entry
+        localReferrals.push({
+          id: `local-${Date.now()}`,
+          user_id: user.id,
+          professionalId,
+          professionalName,
+          phoneNumber,
+          date: new Date().toLocaleDateString('he-IL'),
+          status: "new",
+          profession: profession || "בעל מקצוע",
+          completedWork: false
+        });
+      }
+      
+      localStorage.setItem(`referrals-${user.id}`, JSON.stringify(localReferrals));
+      
       setIsRevealed(true);
       
       // Show success toast
@@ -149,9 +207,12 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
       });
     } catch (error) {
       console.error('Error saving referral:', error);
+      // Still reveal the phone number
+      setIsRevealed(true);
+      
       toast({
         title: "שגיאה בשמירת ההפניה",
-        description: "אירעה שגיאה בשמירת פרטי ההפניה. נסה שוב מאוחר יותר.",
+        description: "אירעה שגיאה בשמירת פרטי ההפניה, אך המספר זמין עבורך",
         variant: "destructive",
       });
     } finally {
