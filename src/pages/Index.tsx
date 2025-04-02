@@ -60,23 +60,19 @@ const articles = [{
   date: '18 באפריל, 2023',
   category: 'שיפוצים'
 }];
-
 const Index = () => {
   const requestFormRef = useRef<HTMLDivElement>(null);
   const searchSectionRef = useRef<HTMLDivElement>(null);
-  
   const scrollToRequestForm = () => {
     requestFormRef.current?.scrollIntoView({
       behavior: 'smooth'
     });
   };
-  
   const scrollToSearchSection = () => {
     searchSectionRef.current?.scrollIntoView({
       behavior: 'smooth'
     });
   };
-  
   return <div className="flex flex-col min-h-screen" dir="rtl">
       <Helmet>
         {/* Preload critical assets for performance */}
@@ -183,19 +179,19 @@ const Index = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 stagger-animation">
             <div className="text-center p-6 rounded-xl bg-blue-50/50 border border-blue-100 hover:shadow-lg transition-all duration-300">
-              <div className="w-16 h-16 bg-teal-500 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-4">1</div>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-4 bg-[#00d09e]">1</div>
               <h3 className="text-xl font-semibold text-blue-700 mb-3">שלחו בקשה</h3>
               <p className="text-gray-600">מלאו טופס קצר עם פרטי העבודה שברצונכם לבצע</p>
             </div>
             
             <div className="text-center p-6 rounded-xl bg-blue-50/50 border border-blue-100 hover:shadow-lg transition-all duration-300">
-              <div className="w-16 h-16 bg-teal-500 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-4">2</div>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-4 bg-[#00d09e]">2</div>
               <h3 className="text-xl font-semibold text-blue-700 mb-3">קבלו הצעות מחיר וזמינות</h3>
               <p className="text-gray-600">בעלי מקצוע מובילים ישלחו לכם הצעות מותאמות אישית </p>
             </div>
             
             <div className="text-center p-6 rounded-xl bg-blue-50/50 border border-blue-100 hover:shadow-lg transition-all duration-300">
-              <div className="w-16 h-16 bg-teal-500 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-4">3</div>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-4 bg-[#00d09e]">3</div>
               <h3 className="text-xl font-semibold text-blue-700 mb-3">בחרו את המתאים</h3>
               <p className="text-gray-600">השוו בין ההצעות וצרו קשר עם בעל המקצוע שהכי מתאים לצרכים שלכם</p>
             </div>
