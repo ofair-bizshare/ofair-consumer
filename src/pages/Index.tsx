@@ -137,7 +137,7 @@ const Index = () => {
                     <h3 className="font-bold text-blue-800 text-lg">5% חזרה לעבודה הבאה!</h3>
                     <p className="text-gray-700">קבלו 5% חזרה על העבודה הראשונה דרך oFair, לשימוש בעבודה הבאה שלכם.</p>
                     <Link to="/dashboard" className="text-[#00D09E] hover:underline mt-2 inline-block font-medium">
-                      הצג את הקרדיט שלי →
+                      הצג את הקרדיט שלי ←
                     </Link>
                   </div>
                 </div>
