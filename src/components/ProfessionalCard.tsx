@@ -15,10 +15,6 @@ interface ProfessionalCardProps {
   image: string;
   specialties: string[];
   phoneNumber?: string;
-  verified?: boolean;
-  category?: string;
-  area?: string;
-  onPhoneReveal?: (professionalName: string) => boolean; // Added this property to fix the TypeScript error
 }
 
 const ProfessionalCard: React.FC<ProfessionalCardProps> = ({
@@ -31,8 +27,6 @@ const ProfessionalCard: React.FC<ProfessionalCardProps> = ({
   image,
   specialties,
   phoneNumber = "050-5555555", // Default phone number if not provided
-  verified,
-  onPhoneReveal,
 }) => {
   return (
     <div className="glass-card group hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
@@ -81,7 +75,6 @@ const ProfessionalCard: React.FC<ProfessionalCardProps> = ({
             professionalName={name}
             professionalId={id}
             profession={profession}
-            onPhoneReveal={onPhoneReveal}
           />
           
           <Button 

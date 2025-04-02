@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ const MyRequests = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Check if user is logged in
     const hasSession = localStorage.getItem('isLoggedIn') === 'true';
     setIsLoggedIn(hasSession);
     
@@ -38,10 +40,12 @@ const MyRequests = () => {
       return;
     }
     
+    // Load user's requests from localStorage
     const savedRequests = localStorage.getItem('myRequests');
     if (savedRequests) {
       setRequests(JSON.parse(savedRequests));
     } else {
+      // If no requests found, initialize with sample data
       const sampleRequests: Request[] = [
         {
           id: "1001",
@@ -141,7 +145,7 @@ const MyRequests = () => {
   };
 
   if (!isLoggedIn) {
-    return null;
+    return null; // Will redirect to login
   }
 
   const activeRequests = requests.filter(req => req.status === 'active');
@@ -157,10 +161,10 @@ const MyRequests = () => {
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-bold text-blue-700 mb-2">
-                <span className="text-[#00D09E]">הפניות המקצועיות</span> שלי
+                <span className="text-[#00D09E]">הפניות</span> שלי
               </h1>
               <p className="text-gray-600">
-                צפה ונהל את כל הפניות המקצועיות שיצרת לבעלי מקצוע
+                צפה ונהל את כל הפניות שיצרת לבעלי מקצוע
               </p>
             </div>
             <Button 
@@ -351,6 +355,7 @@ const MyRequests = () => {
       
       <Footer />
       
+      {/* Request Dialog */}
       <RequestDialog 
         isOpen={isRequestDialogOpen} 
         onOpenChange={setIsRequestDialogOpen}

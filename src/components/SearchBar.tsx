@@ -28,30 +28,16 @@ const locations = [
   { label: 'השפלה', value: 'shfela' },
 ];
 
-const cities = [
-  { label: 'כל הערים', value: 'all' },
-  { label: 'תל אביב', value: 'tel_aviv' },
-  { label: 'ירושלים', value: 'jerusalem' },
-  { label: 'חיפה', value: 'haifa' },
-  { label: 'באר שבע', value: 'beer_sheva' },
-  { label: 'רמת גן', value: 'ramat_gan' },
-  { label: 'הרצליה', value: 'herzliya' },
-  { label: 'ראשון לציון', value: 'rishon' },
-  { label: 'אשדוד', value: 'ashdod' },
-  { label: 'נתניה', value: 'netanya' },
-];
-
 interface SearchBarProps {
   onSearch: (profession: string, location: string) => void;
   className?: string;
-  useCities?: boolean; // Added this property to fix the TypeScript error
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ onSearch, className = '', useCities = false }) => {
+const SearchBar: React.FC<SearchBarProps> = ({ onSearch, className = '' }) => {
   const [professionQuery, setProfessionQuery] = useState('');
   const [locationQuery, setLocationQuery] = useState('');
   const [filteredProfessions, setFilteredProfessions] = useState(professions);
-  const [filteredLocations, setFilteredLocations] = useState(useCities ? cities : locations);
+  const [filteredLocations, setFilteredLocations] = useState(locations);
   const [showProfessionSuggestions, setShowProfessionSuggestions] = useState(false);
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
   const [selectedProfession, setSelectedProfession] = useState('all');
@@ -68,13 +54,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, className = '', useCiti
   }, [professionQuery]);
 
   useEffect(() => {
-    const locationOptions = useCities ? cities : locations;
-    const filtered = locationOptions.filter(loc =>
+    const filtered = locations.filter(loc =>
       loc.label.includes(locationQuery) || 
       loc.value.includes(locationQuery.toLowerCase())
     );
     setFilteredLocations(filtered);
-  }, [locationQuery, useCities]);
+  }, [locationQuery]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -148,7 +133,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, className = '', useCiti
         <div className="relative flex-1" ref={locationInputRef}>
           <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
           <Input
-            placeholder={useCities ? "בחר עיר" : "בחר אזור"}
+            placeholder="בחר אזור"
             value={locationQuery}
             onChange={(e) => {
               setLocationQuery(e.target.value);
