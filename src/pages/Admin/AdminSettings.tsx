@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useToast } from '@/hooks/use-toast';
@@ -8,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { User, Shield, Settings, AlertTriangle, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { checkAdminStatusByEmail } from '@/utils/adminUtils';
+import { checkAdminStatusByEmail } from '@/utils/admin/diagnosticUtils';
 
 const AdminSettings = () => {
   const { toast } = useToast();
@@ -29,7 +28,6 @@ const AdminSettings = () => {
       setLoading(true);
       
       try {
-        // First get the admin users
         const { data: adminUsers, error: adminError } = await supabase
           .from('admin_users')
           .select('*');
@@ -37,7 +35,6 @@ const AdminSettings = () => {
         if (adminError) {
           console.error("Error fetching admin users:", adminError);
           
-          // If we get a recursion error, show a more helpful message
           if (adminError.message.includes('recursion')) {
             toast({
               title: "שגיאת מדיניות גישה (RLS)",
@@ -56,7 +53,6 @@ const AdminSettings = () => {
           return;
         }
 
-        // Get the emails for each admin user
         const adminDetails = await Promise.all(
           adminUsers.map(async (admin) => {
             const { data: userProfile } = await supabase
@@ -112,7 +108,7 @@ const AdminSettings = () => {
           description: result.message || `${newAdminEmail} נוסף כמנהל על במערכת`,
         });
         setNewAdminEmail('');
-        fetchCurrentAdmins(); // Refresh list after adding
+        fetchCurrentAdmins();
       } else {
         toast({
           title: "שגיאה בהוספת מנהל על",
