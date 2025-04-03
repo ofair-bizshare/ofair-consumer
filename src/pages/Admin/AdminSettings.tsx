@@ -1,165 +1,120 @@
 
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/providers/AuthProvider';
+import { createSuperAdmin } from '@/services/admin';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { supabase } from '@/integrations/supabase/client';
-import { createSuperAdmin } from '@/services/admin';
+import { User, Shield, Settings } from 'lucide-react';
 
 const AdminSettings = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
-  const [adminEmail, setAdminEmail] = React.useState('');
-  const [loading, setLoading] = React.useState(false);
-  const [adminUsers, setAdminUsers] = React.useState<any[]>([]);
-  
-  useEffect(() => {
-    // Fetch existing admin users
-    const fetchAdminUsers = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('admin_users')
-          .select('*, user_id');
-          
-        if (error) {
-          console.error('Error fetching admin users:', error);
-          return;
-        }
-        
-        console.log('Admin users:', data);
-        setAdminUsers(data || []);
-      } catch (error) {
-        console.error('Error fetching admin users:', error);
-      }
-    };
+  const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleAddSuperAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    fetchAdminUsers();
-  }, []);
-  
-  const createFirstSuperAdmin = async () => {
+    if (!newAdminEmail || !newAdminEmail.includes('@')) {
+      toast({
+        title: "שגיאה",
+        description: "יש להזין כתובת דוא״ל תקינה",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     try {
-      if (!adminEmail) {
+      setIsSubmitting(true);
+      
+      const result = await createSuperAdmin(newAdminEmail);
+      
+      if (result.success) {
         toast({
-          title: "שגיאה",
-          description: "יש להזין כתובת דוא״ל",
+          title: "מנהל על נוסף בהצלחה",
+          description: result.message || `${newAdminEmail} נוסף כמנהל על במערכת`,
+        });
+        setNewAdminEmail('');
+      } else {
+        toast({
+          title: "שגיאה בהוספת מנהל על",
+          description: result.message || "אירעה שגיאה בהוספת המנהל",
           variant: "destructive"
         });
-        return;
       }
-      
-      setLoading(true);
-      
-      const result = await createSuperAdmin(adminEmail);
-      
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-      
-      toast({
-        title: "מנהל על נוצר בהצלחה",
-        description: `משתמש ${adminEmail} הפך למנהל על`,
-      });
-      
-      // Refresh admin users list
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('*, user_id');
-        
-      if (!error && data) {
-        setAdminUsers(data);
-      }
-      
-      setAdminEmail('');
     } catch (error) {
-      console.error('Error creating super admin:', error);
+      console.error("Error adding super admin:", error);
       toast({
-        title: "שגיאה ביצירת מנהל על",
-        description: error.message || "אירעה שגיאה בלתי צפויה",
+        title: "שגיאה בהוספת מנהל על",
+        description: "אירעה שגיאה בלתי צפויה",
         variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
     <AdminLayout>
-      <h1 className="text-3xl font-bold mb-6">הגדרות מערכת</h1>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">הגדרות מערכת</h1>
+        <p className="text-gray-600 mt-1">ניהול הגדרות מערכת והרשאות</p>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>ניהול מנהלי על</CardTitle>
+            <CardTitle className="flex items-center">
+              <Shield className="mr-2 h-5 w-5 text-blue-500" />
+              ניהול מנהלים
+            </CardTitle>
             <CardDescription>הוספת מנהלי על חדשים למערכת</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <form onSubmit={handleAddSuperAdmin} className="space-y-4">
               <div className="space-y-2">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  צור מנהל על חדש על ידי הזנת כתובת הדוא״ל שלו. המשתמש חייב להיות רשום במערכת.
-                </p>
-                <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium" htmlFor="admin-email">
+                  דוא״ל המנהל החדש
+                </label>
+                <div className="flex">
+                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500">
+                    <User size={18} />
+                  </span>
                   <Input
+                    id="admin-email"
+                    type="email"
                     placeholder="הזן כתובת דוא״ל"
-                    value={adminEmail}
-                    onChange={(e) => setAdminEmail(e.target.value)}
+                    value={newAdminEmail}
+                    onChange={(e) => setNewAdminEmail(e.target.value)}
+                    className="rounded-l-none"
+                    required
                   />
-                  <Button 
-                    onClick={createFirstSuperAdmin} 
-                    disabled={loading || !adminEmail}
-                  >
-                    {loading ? 'יוצר...' : 'צור מנהל על'}
-                  </Button>
                 </div>
+                <p className="text-xs text-gray-500">
+                  המשתמש חייב להיות קיים במערכת כדי להפוך אותו למנהל על
+                </p>
               </div>
               
-              {adminUsers.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="text-md font-semibold mb-2">מנהלי על נוכחיים:</h3>
-                  <ul className="space-y-1">
-                    {adminUsers.map((admin) => (
-                      <li key={admin.id} className="text-sm">
-                        {admin.user_id} {admin.is_super_admin ? '(מנהל על)' : ''}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'מוסיף...' : 'הוסף מנהל על'}
+              </Button>
+            </form>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader>
-            <CardTitle>מידע מערכת</CardTitle>
-            <CardDescription>פרטי המערכת ומשתמש הנוכחי</CardDescription>
+            <CardTitle className="flex items-center">
+              <Settings className="mr-2 h-5 w-5 text-blue-500" />
+              הגדרות מערכת
+            </CardTitle>
+            <CardDescription>הגדרות כלליות של המערכת</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <p className="text-sm font-medium">מזהה משתמש:</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{user?.id || 'לא מזוהה'}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium">דוא״ל:</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{user?.email || 'לא מזוהה'}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium">תאריך יצירה:</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {user?.created_at 
-                    ? new Date(user.created_at).toLocaleDateString('he-IL')
-                    : 'לא מזוהה'}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium">גרסת מערכת:</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">1.0.0</p>
-              </div>
-            </div>
+            <p className="text-gray-500 text-center py-8">
+              הגדרות נוספות יתווספו בקרוב
+            </p>
           </CardContent>
         </Card>
       </div>

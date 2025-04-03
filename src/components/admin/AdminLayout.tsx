@@ -42,25 +42,40 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
         console.log("Checking admin status for user:", user.id);
         
-        // Add a small delay to ensure auth is fully initialized
+        // Wait for user to be fully loaded before checking admin status
         setTimeout(async () => {
-          const isAdmin = await checkIsSuperAdmin();
-          console.log("Admin check result in AdminLayout:", isAdmin);
-          
-          setIsSuperAdmin(isAdmin);
-          setLoading(false);
-          
-          if (!isAdmin) {
+          try {
+            const isAdmin = await checkIsSuperAdmin();
+            console.log("Admin check result in AdminLayout:", isAdmin);
+            
+            if (isAdmin) {
+              setIsSuperAdmin(true);
+              setLoading(false);
+            } else {
+              console.log("User is not an admin:", user.id);
+              setIsSuperAdmin(false);
+              setLoading(false);
+              
+              toast({
+                title: "אין גישה",
+                description: "אין לך הרשאות מנהל למערכת",
+                variant: "destructive"
+              });
+              navigate('/');
+            }
+          } catch (error) {
+            console.error("Error during admin check:", error);
+            setLoading(false);
             toast({
-              title: "אין גישה",
-              description: "אין לך הרשאות מנהל למערכת",
+              title: "שגיאה",
+              description: "אירעה שגיאה בבדיקת הרשאות המנהל",
               variant: "destructive"
             });
             navigate('/');
           }
-        }, 500);
+        }, 1000); // Increased timeout to ensure auth is fully loaded
       } catch (error) {
-        console.error("Error checking admin status:", error);
+        console.error("Error in admin access check:", error);
         setLoading(false);
         toast({
           title: "שגיאה",

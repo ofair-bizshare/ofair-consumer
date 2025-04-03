@@ -11,7 +11,7 @@ export const checkIsSuperAdmin = async (): Promise<boolean> => {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      console.log("No authenticated user found");
+      console.log("No authenticated user found in checkIsSuperAdmin");
       return false;
     }
     
@@ -53,7 +53,7 @@ export const createSuperAdmin = async (email: string): Promise<{ success: boolea
   try {
     console.log("Creating super admin with email:", email);
     
-    // First check if the user exists in auth.users
+    // First check if the user exists in user_profiles
     const { data: userResponse, error: userError } = await supabase
       .from('user_profiles')
       .select('id')
@@ -125,7 +125,7 @@ export const createSuperAdmin = async (email: string): Promise<{ success: boolea
     return { success: true };
   } catch (error) {
     console.error('Error creating super admin:', error);
-    return { success: false, message: 'An unexpected error occurred: ' + error.message };
+    return { success: false, message: 'An unexpected error occurred: ' + (error as Error).message };
   }
 };
 
