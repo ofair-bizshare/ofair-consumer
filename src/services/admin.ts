@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { AdminUserInterface, UserMessageInterface, ProfessionalInterface, ArticleInterface } from '@/types/dashboard';
 
@@ -7,12 +8,17 @@ import { AdminUserInterface, UserMessageInterface, ProfessionalInterface, Articl
  */
 export const checkIsSuperAdmin = async (): Promise<boolean> => {
   try {
+    console.log("Running checkIsSuperAdmin");
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
+      console.log("No authenticated user found");
       return false;
     }
     
+    console.log("Checking admin status for user ID:", user.id);
+    
+    // Query to check if the user is a super admin
     const { data, error } = await supabase
       .from('admin_users')
       .select('is_super_admin')
@@ -23,6 +29,8 @@ export const checkIsSuperAdmin = async (): Promise<boolean> => {
       console.error('Error checking super admin status:', error);
       return false;
     }
+    
+    console.log("Admin check result:", data);
     
     return data?.is_super_admin ?? false;
   } catch (error) {

@@ -27,14 +27,31 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   React.useEffect(() => {
     const checkAdmin = async () => {
-      const isAdmin = await checkIsSuperAdmin();
-      setIsSuperAdmin(isAdmin);
-      setLoading(false);
-      
-      if (!isAdmin) {
+      try {
+        // Add a small delay to ensure auth is fully initialized
+        setTimeout(async () => {
+          console.log("Checking admin status for user:", user?.id);
+          const isAdmin = await checkIsSuperAdmin();
+          console.log("Admin check result:", isAdmin);
+          
+          setIsSuperAdmin(isAdmin);
+          setLoading(false);
+          
+          if (!isAdmin) {
+            toast({
+              title: "אין גישה",
+              description: "אין לך הרשאות מנהל למערכת",
+              variant: "destructive"
+            });
+            navigate('/');
+          }
+        }, 500);
+      } catch (error) {
+        console.error("Error checking admin status:", error);
+        setLoading(false);
         toast({
-          title: "אין גישה",
-          description: "אין לך הרשאות מנהל למערכת",
+          title: "שגיאה",
+          description: "אירעה שגיאה בבדיקת הרשאות המנהל",
           variant: "destructive"
         });
         navigate('/');
@@ -45,7 +62,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       checkAdmin();
     } else {
       setLoading(false);
-      navigate('/login');
+      navigate('/login', { state: { returnTo: window.location.pathname } });
     }
   }, [user, navigate, toast]);
 

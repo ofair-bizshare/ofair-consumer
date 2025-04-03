@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -14,16 +13,13 @@ import { User, Bell, Lock, Shield, Check, AlertCircle, Smartphone, Key, Clock, F
 import { Helmet } from 'react-helmet-async';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/providers/AuthProvider';
-import { supabase } from '@/integrations/supabase/client';
-import { UserProfileInterface } from '@/types/dashboard';
 import { useUserProfile } from '@/hooks/useUserProfile';
 
 const UserSettings = () => {
-  const { user, loading } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [userProfile, setUserProfile] = useState<UserProfileInterface | null>(null);
-  const [loadingProfile, setLoadingProfile] = useState(false);
+  const { profile, loading: loadingProfile, updateProfile } = useUserProfile();
   
   // Form state
   const [formData, setFormData] = useState({
@@ -61,83 +57,44 @@ const UserSettings = () => {
     }
   });
 
-  // Fetch user profile data
-  useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
+  // Update form data when profile is loaded
+  React.useEffect(() => {
+    if (profile) {
+      setFormData({
+        name: profile.name || '',
+        email: profile.email || '',
+        phone: profile.phone || '',
+        address: profile.address || ''
+      });
     }
-    
-    const fetchUserProfile = async () => {
-      try {
-        setLoadingProfile(true);
-        
-        const { data, error } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('id', user.id)
-          .maybeSingle();
-          
-        if (error) throw error;
-        
-        if (data) {
-          setUserProfile(data);
-          // Update form data with profile data
-          setFormData({
-            name: data.name || '',
-            email: data.email || '',
-            phone: data.phone || '',
-            address: data.address || ''
-          });
-        }
-      } catch (error) {
-        console.error('Error fetching user profile:', error);
-        toast({
-          title: "שגיאה בטעינת פרופיל",
-          description: "אירעה שגיאה בטעינת נתוני הפרופיל",
-          variant: "destructive",
-        });
-      } finally {
-        setLoadingProfile(false);
-      }
-    };
-    
-    fetchUserProfile();
-  }, [user, navigate, toast]);
+  }, [profile]);
 
+  // Function to handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Function to handle profile update
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!user) return;
     
     try {
-      // Update user profile in database
-      const { error } = await supabase
-        .from('user_profiles')
-        .update({
-          name: formData.name,
-          phone: formData.phone,
-          address: formData.address
-        })
-        .eq('id', user.id);
-        
-      if (error) throw error;
-      
-      // Update local state
-      setUserProfile(prev => {
-        if (!prev) return null;
-        return { ...prev, ...formData };
+      // Use the updateProfile function from useUserProfile hook
+      const updated = await updateProfile({
+        name: formData.name,
+        phone: formData.phone,
+        address: formData.address
       });
       
-      toast({
-        title: "הפרופיל עודכן בהצלחה",
-        description: "השינויים שביצעת נשמרו",
-      });
+      if (updated) {
+        toast({
+          title: "הפרופיל עודכן בהצלחה",
+          description: "השינויים שביצעת נשמרו",
+        });
+      }
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
@@ -244,7 +201,7 @@ const UserSettings = () => {
     });
   };
 
-  if (loading || loadingProfile) {
+  if (loadingProfile) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -253,7 +210,8 @@ const UserSettings = () => {
   }
 
   if (!user) {
-    return null; // Will redirect to login
+    navigate('/login');
+    return null;
   }
 
   return (
