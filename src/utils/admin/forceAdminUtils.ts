@@ -32,53 +32,23 @@ export const forceSetSuperAdmin = async (email: string): Promise<{success: boole
     
     console.log("Found user with ID:", userResponse.id);
     
-    // Try direct fetch approach with the service key to override RLS 
-    try {
-      // Try inserting first
-      const insertResponse = await fetch(`${SUPABASE_URL}/rest/v1/admin_users`, {
-        method: 'POST',
-        headers: {
-          'apikey': SUPABASE_ANON_KEY,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=representation'
-        },
-        body: JSON.stringify({ 
+    // Direct insert/update since RLS is now disabled on admin_users table
+    const { error: upsertError } = await supabase
+      .from('admin_users')
+      .upsert(
+        { 
           user_id: userResponse.id,
           is_super_admin: true
-        })
-      });
-      
-      // If insertion fails due to uniqueness constraint, try update
-      if (!insertResponse.ok) {
-        console.log("Insert failed, trying update");
-        const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/admin_users?user_id=eq.${userResponse.id}`, {
-          method: 'PATCH',
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=representation'
-          },
-          body: JSON.stringify({ 
-            is_super_admin: true
-          })
-        });
-        
-        if (!updateResponse.ok) {
-          const errorText = await updateResponse.text();
-          throw new Error(`Failed to update admin status: ${updateResponse.statusText} - ${errorText}`);
+        },
+        { 
+          onConflict: 'user_id',
+          ignoreDuplicates: false 
         }
-      }
-    } catch (error) {
-      // Fall back to using RPC function
-      console.log("Direct API approach failed, using RPC function");
-      const { data, error: rpcError } = await supabase.rpc('create_super_admin', {
-        admin_email_param: email
-      });
+      );
       
-      if (rpcError) {
-        console.error("RPC function failed:", rpcError);
-        return { success: false, message: `Failed to set admin status: ${rpcError.message}` };
-      }
+    if (upsertError) {
+      console.error("Error upserting admin record:", upsertError);
+      return { success: false, message: `Failed to set admin status: ${upsertError.message}` };
     }
     
     // Force update cache

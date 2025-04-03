@@ -40,3 +40,16 @@ export const setCachedAdminStatus = (userId: string, isAdmin: boolean): void => 
     console.error('Error updating admin cache:', cacheError);
   }
 };
+
+/**
+ * Clears the admin status cache for a user
+ * @param userId User ID to clear cache for
+ */
+export const clearAdminCache = (userId: string): void => {
+  try {
+    localStorage.removeItem(`adminStatus-${userId}`);
+    console.log(`Admin cache cleared for user: ${userId}`);
+  } catch (error) {
+    console.error('Error clearing admin cache:', error);
+  }
+};

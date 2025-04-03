@@ -526,12 +526,17 @@ export type Database = {
         }
         Returns: boolean
       }
-      check_is_super_admin: {
-        Args: {
-          user_id_param: string
-        }
-        Returns: boolean
-      }
+      check_is_super_admin:
+        | {
+            Args: Record<PropertyKey, never>
+            Returns: boolean
+          }
+        | {
+            Args: {
+              user_id_param: string
+            }
+            Returns: boolean
+          }
       check_is_super_admin_user: {
         Args: {
           user_id_param: string

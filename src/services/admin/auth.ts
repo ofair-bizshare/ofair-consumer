@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { getCachedAdminStatus, setCachedAdminStatus } from './utils/adminCache';
+import { getCachedAdminStatus, setCachedAdminStatus, clearAdminCache } from './utils/adminCache';
 
 /**
  * Checks if the current user is a super admin using the security definer function
@@ -91,7 +91,7 @@ export const createSuperAdmin = async (email: string): Promise<{ success: boolea
     }
     
     // Clear and update cache
-    localStorage.removeItem(`adminStatus-${userResponse.id}`);
+    clearAdminCache(userResponse.id);
     setCachedAdminStatus(userResponse.id, true);
     
     return { success: true, message: "נוסף בהצלחה כמנהל על" };
