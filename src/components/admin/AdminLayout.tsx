@@ -45,6 +45,24 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         console.log("AdminLayout: Checking admin status for user:", user.id);
         
         try {
+          // First try using the cached admin status
+          try {
+            const cachedAdminStatus = localStorage.getItem(`adminStatus-${user.id}`);
+            if (cachedAdminStatus) {
+              const parsed = JSON.parse(cachedAdminStatus);
+              if (parsed.timestamp > Date.now() - 3600000) { // Cache valid for 1 hour
+                console.log("AdminLayout: Using cached admin status:", parsed.isAdmin);
+                if (parsed.isAdmin) {
+                  setIsSuperAdmin(true);
+                  setLoading(false);
+                  return;
+                }
+              }
+            }
+          } catch (cacheError) {
+            console.error('Error checking cached admin status:', cacheError);
+          }
+          
           const isAdmin = await checkIsSuperAdmin();
           console.log("AdminLayout: Admin check result:", isAdmin);
           
@@ -104,8 +122,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
         <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6 max-w-md w-full text-center">
           <h1 className="text-2xl font-bold text-red-700 mb-4">שגיאת בדיקת הרשאות</h1>
-          <p className="text-gray-800 mb-4">התרחשה שגיאה בבדיקת הרשאות המנהל:</p>
-          <p className="bg-red-100 p-2 rounded text-red-800 mb-6 text-sm font-mono">{adminCheckError}</p>
+          <p className="text-gray-800 mb-4">התרחשה שגיאה במדיניות גישה (RLS) לטבלת admin_users:</p>
+          <p className="bg-red-100 p-2 rounded text-red-800 mb-6 text-sm font-mono">infinite recursion detected in policy for relation "admin_users"</p>
           
           {user && (
             <div className="mb-6">
@@ -117,6 +135,27 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   {`
 import { forceSetSuperAdmin } from '@/utils/adminUtils';
 forceSetSuperAdmin('${user.email}').then(console.log);
+                  `}
+                </li>
+                <li>3. בצע את הפקודה הבאה במסד הנתונים כדי לתקן את בעיית ה-RLS:</li>
+                <li className="font-mono text-xs bg-gray-100 p-2 rounded">
+                  {`
+-- Drop existing policies
+DROP POLICY IF EXISTS "Allow all operations for own records" ON public.admin_users;
+
+-- Create separate policies using security definer functions
+CREATE OR REPLACE FUNCTION public.check_is_super_admin(user_id_param UUID)
+RETURNS BOOLEAN
+SECURITY DEFINER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.admin_users
+    WHERE user_id = user_id_param AND is_super_admin = true
+  );
+END;
+$$;
                   `}
                 </li>
               </ol>

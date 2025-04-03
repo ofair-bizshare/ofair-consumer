@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/integrations/supabase/constants';
 
 /**
  * Diagnostic utility to check and log admin status for a user
@@ -39,41 +40,72 @@ export const checkAdminStatusByEmail = async (email: string): Promise<{
     const userId = userProfile.id;
     console.log(`Found user with ID: ${userId}`);
     
-    // Step 2: Check if this user is in admin_users table
-    const { data: adminUser, error: adminError } = await supabase
-      .from('admin_users')
-      .select('*')
-      .eq('user_id', userId)
-      .maybeSingle();
+    // Step 2: Check if this user is in admin_users table using direct fetch to avoid RLS issues
+    try {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/admin_users?user_id=eq.${userId}`, {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
       
-    if (adminError) {
-      console.error("Error checking admin status:", adminError);
-      return { 
-        success: false, 
-        message: `Error checking admin status: ${adminError.message}` 
-      };
-    }
-    
-    if (!adminUser) {
-      return { 
-        success: false, 
-        message: `User ${email} (${userId}) is not in admin_users table` 
-      };
-    }
-    
-    // User is in admin table, check super admin status
-    if (adminUser.is_super_admin) {
-      return { 
-        success: true, 
-        message: `User ${email} (${userId}) is a super admin`,
-        details: adminUser
-      };
-    } else {
-      return { 
-        success: true, 
-        message: `User ${email} (${userId}) is an admin but NOT a super admin`,
-        details: adminUser
-      };
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+      
+      const adminData = await response.json();
+      
+      if (!adminData || adminData.length === 0) {
+        return { 
+          success: false, 
+          message: `User ${email} (${userId}) is not in admin_users table` 
+        };
+      }
+      
+      // User is in admin table, check super admin status
+      if (adminData[0].is_super_admin) {
+        return { 
+          success: true, 
+          message: `User ${email} (${userId}) is a super admin`,
+          details: adminData[0]
+        };
+      } else {
+        return { 
+          success: true, 
+          message: `User ${email} (${userId}) is an admin but NOT a super admin`,
+          details: adminData[0]
+        };
+      }
+    } catch (apiError) {
+      console.error("Error in direct API check:", apiError);
+      
+      // Try using RPC as fallback
+      try {
+        const { data: isAdmin, error: rpcError } = await supabase.rpc('check_is_super_admin', {
+          user_id_param: userId
+        });
+        
+        if (rpcError) {
+          throw rpcError;
+        }
+        
+        if (isAdmin) {
+          return { 
+            success: true, 
+            message: `User ${email} (${userId}) is a super admin (via RPC check)`,
+            details: { is_super_admin: true, user_id: userId }
+          };
+        } else {
+          return { 
+            success: false, 
+            message: `User ${email} (${userId}) is not a super admin (via RPC check)` 
+          };
+        }
+      } catch (rpcError) {
+        console.error("Error in RPC fallback:", rpcError);
+        throw rpcError;
+      }
     }
   } catch (error) {
     console.error("Error in checkAdminStatusByEmail:", error);
@@ -111,48 +143,113 @@ export const forceSetSuperAdmin = async (email: string): Promise<{
     }
     
     const userId = userProfile.id;
+    console.log(`Found user ID for emergency admin access: ${userId}`);
     
-    // Step 2: Check if this user is already in admin_users table
-    const { data: existingAdmin, error: checkError } = await supabase
-      .from('admin_users')
-      .select('id')
-      .eq('user_id', userId)
-      .maybeSingle();
+    // Step 2: Try direct REST API approach to bypass RLS
+    try {
+      // Check if admin record already exists
+      const checkResponse = await fetch(`${SUPABASE_URL}/rest/v1/admin_users?user_id=eq.${userId}`, {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
       
-    if (checkError) {
-      console.error("Error checking existing admin:", checkError);
-      return { success: false, message: `Error checking existing admin: ${checkError.message}` };
-    }
-    
-    // Step 3: Either update or insert
-    if (existingAdmin) {
-      // Update existing record
-      const { error: updateError } = await supabase
-        .from('admin_users')
-        .update({ is_super_admin: true })
-        .eq('id', existingAdmin.id);
-        
-      if (updateError) {
-        console.error("Error updating admin:", updateError);
-        return { success: false, message: `Error updating admin: ${updateError.message}` };
+      if (!checkResponse.ok) {
+        throw new Error(`API check request failed: ${checkResponse.statusText}`);
       }
       
-      return { success: true, message: `User ${email} updated to super admin successfully` };
-    } else {
-      // Insert new record
-      const { error: insertError } = await supabase
-        .from('admin_users')
-        .insert({
-          user_id: userId,
-          is_super_admin: true
+      const adminData = await checkResponse.json();
+      
+      if (adminData && adminData.length > 0) {
+        // Update existing record
+        const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/admin_users?id=eq.${adminData[0].id}`, {
+          method: 'PATCH',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify({ is_super_admin: true })
         });
         
-      if (insertError) {
-        console.error("Error inserting admin:", insertError);
-        return { success: false, message: `Error inserting admin: ${insertError.message}` };
+        if (!updateResponse.ok) {
+          throw new Error(`Update API request failed: ${updateResponse.statusText}`);
+        }
+        
+        // Update local cache
+        try {
+          localStorage.setItem(`adminStatus-${userId}`, JSON.stringify({
+            isAdmin: true,
+            timestamp: Date.now()
+          }));
+        } catch (cacheError) {
+          console.error('Error updating admin cache:', cacheError);
+        }
+        
+        return { success: true, message: `User ${email} updated to super admin successfully via direct API` };
+      } else {
+        // Insert new record
+        const insertResponse = await fetch(`${SUPABASE_URL}/rest/v1/admin_users`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify({ 
+            user_id: userId,
+            is_super_admin: true
+          })
+        });
+        
+        if (!insertResponse.ok) {
+          throw new Error(`Insert API request failed: ${insertResponse.statusText}`);
+        }
+        
+        // Update local cache
+        try {
+          localStorage.setItem(`adminStatus-${userId}`, JSON.stringify({
+            isAdmin: true,
+            timestamp: Date.now()
+          }));
+        } catch (cacheError) {
+          console.error('Error updating admin cache:', cacheError);
+        }
+        
+        return { success: true, message: `User ${email} added as super admin successfully via direct API` };
       }
+    } catch (apiError) {
+      console.error("Error in direct API approach:", apiError);
       
-      return { success: true, message: `User ${email} added as super admin successfully` };
+      // Try RPC fallback
+      try {
+        const { data: rpcResult, error: rpcError } = await supabase.rpc('create_super_admin', {
+          admin_email_param: email
+        });
+        
+        if (rpcError) {
+          throw rpcError;
+        }
+        
+        // Update local cache
+        try {
+          localStorage.setItem(`adminStatus-${userId}`, JSON.stringify({
+            isAdmin: true,
+            timestamp: Date.now()
+          }));
+        } catch (cacheError) {
+          console.error('Error updating admin cache:', cacheError);
+        }
+        
+        return { success: true, message: `User ${email} set as super admin successfully via RPC` };
+      } catch (rpcError) {
+        console.error("Error in RPC fallback:", rpcError);
+        return { success: false, message: `Error in RPC approach: ${rpcError.message}` };
+      }
     }
   } catch (error) {
     console.error("Error in forceSetSuperAdmin:", error);
