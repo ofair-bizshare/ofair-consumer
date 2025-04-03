@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
-import { checkIsSuperAdmin } from '@/services/admin/auth';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useAdminAccess = () => {
   const { user } = useAuth();
@@ -41,7 +41,14 @@ export const useAdminAccess = () => {
       }
       
       try {
-        const isAdmin = await checkIsSuperAdmin();
+        // Use the security definer function
+        const { data: isAdmin, error } = await supabase.rpc('is_super_admin');
+        
+        if (error) {
+          console.error("AdminAccess: Error in security definer function check:", error);
+          throw error;
+        }
+        
         console.log("AdminAccess: Admin check result:", isAdmin);
         
         if (isAdmin) {

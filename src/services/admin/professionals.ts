@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ProfessionalInterface } from '@/types/dashboard';
 
@@ -46,49 +45,45 @@ export const uploadProfessionalImage = async (file: File): Promise<string | null
     const fileExt = file.name.split('.').pop();
     const fileName = `professional-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
     
-    // Create an array of bucket names to try
-    const buckets = ['professionals', 'images', 'public'];
-    let uploadedUrl = null;
-    
-    // Try each bucket until one works
-    for (const bucket of buckets) {
-      try {
-        console.log(`Attempting to upload to ${bucket} bucket...`);
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from(bucket)
-          .upload(`professionals/${fileName}`, file, {
-            cacheControl: '3600',
-            upsert: false
-          });
-          
-        if (uploadError) {
-          console.error(`Error uploading to ${bucket} bucket:`, uploadError);
-          continue; // Try the next bucket
-        }
+    // Try uploading to the professionals bucket
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('professionals')
+      .upload(`images/${fileName}`, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+      
+    if (uploadError) {
+      console.error(`Error uploading to professionals bucket:`, uploadError);
+      
+      // Try uploading to the images bucket as fallback
+      const { data: fallbackData, error: fallbackError } = await supabase.storage
+        .from('images')
+        .upload(`professionals/${fileName}`, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
         
-        const { data: publicURL } = supabase.storage
-          .from(bucket)
-          .getPublicUrl(`professionals/${fileName}`);
-        
-        console.log(`Successfully uploaded to ${bucket} bucket:`, publicURL.publicUrl);
-        uploadedUrl = publicURL.publicUrl;
-        break; // Successfully uploaded, exit the loop
-      } catch (bucketError) {
-        console.error(`Failed to upload to ${bucket} bucket:`, bucketError);
-        // Continue to the next bucket
+      if (fallbackError) {
+        console.error(`Error uploading to images bucket:`, fallbackError);
+        return 'https://via.placeholder.com/150';
       }
+      
+      const { data: fallbackUrl } = supabase.storage
+        .from('images')
+        .getPublicUrl(`professionals/${fileName}`);
+      
+      return fallbackUrl.publicUrl;
     }
     
-    if (uploadedUrl) {
-      return uploadedUrl;
-    }
+    // Get public URL from professionals bucket
+    const { data: publicURL } = supabase.storage
+      .from('professionals')
+      .getPublicUrl(`images/${fileName}`);
     
-    // If all buckets failed, return a placeholder
-    console.warn('All bucket uploads failed, using placeholder image');
-    return 'https://via.placeholder.com/150';
+    return publicURL.publicUrl;
   } catch (error) {
     console.error('Error uploading professional image:', error);
-    // Return a placeholder image URL as fallback
     return 'https://via.placeholder.com/150';
   }
 };

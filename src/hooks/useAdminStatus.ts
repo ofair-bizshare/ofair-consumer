@@ -40,9 +40,9 @@ export const useAdminStatus = () => {
         console.error('Error checking cached admin status:', cacheError);
       }
       
-      // If no cache or expired, check from server
+      // Using the security definer function
       const adminStatus = await checkIsSuperAdmin();
-      console.log("Server returned admin status:", adminStatus);
+      console.log("Security definer function returned admin status:", adminStatus);
       setIsAdmin(adminStatus);
       
       // Update cache
