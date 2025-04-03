@@ -34,7 +34,7 @@ export const checkAdminStatusByEmail = async (email: string): Promise<{
     
     // Check admin status through RPC function
     try {
-      const { data: isAdmin, error: rpcError } = await supabase.rpc('check_is_admin', {
+      const { data: isAdmin, error: rpcError } = await supabase.rpc('check_is_admin_user', {
         user_id_param: userProfile.id
       });
       

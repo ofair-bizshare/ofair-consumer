@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { getCachedAdminStatus } from './utils/adminCache';
 import { checkAdminViaRestApi, checkAdminViaRpc } from './utils/adminCheckMethods';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/integrations/supabase/constants';
 
 /**
  * Checks if the current user is a super admin
