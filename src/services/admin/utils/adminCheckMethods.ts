@@ -9,6 +9,7 @@ import { setCachedAdminStatus } from './adminCache';
  * @returns Promise<boolean> True if user is a super admin
  */
 export const checkAdminViaRestApi = async (userId: string): Promise<boolean> => {
+  console.log("Checking admin via direct REST API for:", userId);
   const response = await fetch(`${SUPABASE_URL}/rest/v1/admin_users?user_id=eq.${userId}&select=is_super_admin`, {
     headers: {
       'apikey': SUPABASE_ANON_KEY,
@@ -34,34 +35,70 @@ export const checkAdminViaRestApi = async (userId: string): Promise<boolean> => 
 };
 
 /**
- * Checks admin status using RPC functions as a fallback
+ * Checks admin status using RPC functions
  * @param userId User ID to check
  * @returns Promise<boolean> True if user is a super admin
  */
 export const checkAdminViaRpc = async (userId: string): Promise<boolean> => {
-  console.log("Attempting RPC function fallback");
-  const { data: isAdmin, error: rpcError } = await supabase.rpc('check_is_super_admin', {
-    user_id_param: userId
-  });
+  console.log("Checking admin via RPC function for:", userId);
   
-  if (rpcError) {
-    console.error("Error in RPC fallback:", rpcError);
-    
-    // Last resort - try the create_first_super_admin function
-    console.log("Trying create_first_super_admin as last resort");
-    const { data: adminData, error: adminError } = await supabase.rpc('create_first_super_admin', {
-      admin_email: (await supabase.auth.getUser()).data.user?.email || ''
+  // First try with the check_is_super_admin_user function
+  try {
+    const { data: isAdmin, error: rpcError } = await supabase.rpc('check_is_super_admin_user', {
+      user_id_param: userId
     });
     
-    if (adminError) {
-      console.error("Error in final fallback:", adminError);
-      throw adminError;
+    if (rpcError) {
+      console.error("Error in check_is_super_admin_user RPC:", rpcError);
+      throw rpcError;
     }
     
-    setCachedAdminStatus(userId, !!adminData);
-    return !!adminData;
+    console.log("RPC check_is_super_admin_user result:", isAdmin);
+    setCachedAdminStatus(userId, !!isAdmin);
+    return !!isAdmin;
+  } catch (userRpcError) {
+    console.error("Error in check_is_super_admin_user, trying fallback:", userRpcError);
+    
+    // Try with the regular check_is_super_admin function
+    try {
+      const { data: isSuperAdmin, error: superAdminError } = await supabase.rpc('check_is_super_admin', {
+        user_id_param: userId
+      });
+      
+      if (superAdminError) {
+        console.error("Error in check_is_super_admin RPC:", superAdminError);
+        throw superAdminError;
+      }
+      
+      console.log("RPC check_is_super_admin result:", isSuperAdmin);
+      setCachedAdminStatus(userId, !!isSuperAdmin);
+      return !!isSuperAdmin;
+    } catch (superAdminRpcError) {
+      console.error("Error in check_is_super_admin, trying last resort:", superAdminRpcError);
+      
+      // Last resort - try with first super admin creation
+      try {
+        const user = await supabase.auth.getUser();
+        if (!user.data.user?.email) {
+          throw new Error("No user email available");
+        }
+        
+        const { data: firstAdminResult, error: firstAdminError } = await supabase.rpc('create_first_super_admin', {
+          admin_email: user.data.user.email
+        });
+        
+        if (firstAdminError) {
+          console.error("Error in create_first_super_admin RPC:", firstAdminError);
+          throw firstAdminError;
+        }
+        
+        console.log("RPC create_first_super_admin result:", firstAdminResult);
+        setCachedAdminStatus(userId, !!firstAdminResult);
+        return !!firstAdminResult;
+      } catch (firstAdminError) {
+        console.error("All RPC methods failed:", firstAdminError);
+        throw firstAdminError;
+      }
+    }
   }
-  
-  setCachedAdminStatus(userId, !!isAdmin);
-  return !!isAdmin;
 };

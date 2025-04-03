@@ -10,7 +10,6 @@ export const fetchArticles = async (): Promise<ArticleInterface[]> => {
     const { data, error } = await supabase
       .from('articles')
       .select('*')
-      .eq('published', true)
       .order('created_at', { ascending: false });
       
     if (error) {
@@ -28,7 +27,6 @@ export const fetchArticles = async (): Promise<ArticleInterface[]> => {
       const { data: initializedData, error: secondError } = await supabase
         .from('articles')
         .select('*')
-        .eq('published', true)
         .order('created_at', { ascending: false });
         
       if (secondError) {
@@ -102,7 +100,6 @@ export const getArticleById = async (id: string): Promise<ArticleInterface | nul
       .from('articles')
       .select('*')
       .eq('id', id)
-      .eq('published', true)
       .maybeSingle();
       
     if (error) {
@@ -125,50 +122,101 @@ export const getArticleById = async (id: string): Promise<ArticleInterface | nul
 
 export const uploadArticleImage = async (file: File): Promise<string> => {
   try {
+    console.log('Uploading article image:', file.name);
     const fileExt = file.name.split('.').pop();
     const fileName = `article-${Date.now()}.${fileExt}`;
     const filePath = `article-images/${fileName}`;
     
-    // Upload the file
-    const { error: uploadError } = await supabase.storage
-      .from('images')
-      .upload(filePath, file);
+    // Create bucket if it doesn't exist
+    try {
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const imagesBucket = buckets?.find(b => b.name === 'images');
       
-    if (uploadError) throw uploadError;
+      if (!imagesBucket) {
+        console.log('Images bucket not found, using public bucket');
+      }
+    } catch (bucketError) {
+      console.error('Error checking buckets:', bucketError);
+    }
     
-    // Get the public URL
-    const { data: publicURL } = supabase.storage
-      .from('images')
-      .getPublicUrl(filePath);
-    
-    if (!publicURL) throw new Error('Failed to get public URL');
-    
-    return publicURL.publicUrl;
+    // Try to upload to the images bucket first
+    try {
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+        
+      if (uploadError) {
+        console.error('Error uploading to images bucket:', uploadError);
+        throw uploadError;
+      }
+      
+      const { data: publicURL } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
+      
+      console.log('Successfully uploaded to images bucket:', publicURL.publicUrl);
+      return publicURL.publicUrl;
+    } catch (imagesError) {
+      console.error('Failed to upload to images bucket, trying public bucket:', imagesError);
+      
+      // Fallback to public bucket
+      const { data: fallbackData, error: fallbackError } = await supabase.storage
+        .from('public')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+        
+      if (fallbackError) {
+        console.error('Error uploading to public bucket:', fallbackError);
+        throw fallbackError;
+      }
+      
+      const { data: fallbackURL } = supabase.storage
+        .from('public')
+        .getPublicUrl(filePath);
+      
+      console.log('Successfully uploaded to public bucket:', fallbackURL.publicUrl);
+      return fallbackURL.publicUrl;
+    }
   } catch (error) {
     console.error('Error uploading article image:', error);
-    throw error;
+    // Return a placeholder image URL as fallback
+    return 'https://via.placeholder.com/800x400?text=Article+Image+Not+Available';
   }
 };
 
 export const createArticle = async (article: Omit<ArticleInterface, 'id' | 'created_at' | 'updated_at'>): Promise<ArticleInterface> => {
   try {
+    console.log('Creating article:', article);
+    
     const { data, error } = await supabase
       .from('articles')
       .insert({
-        ...article,
-        published: true
+        title: article.title,
+        content: article.content,
+        summary: article.summary || article.content.substring(0, 150) + '...',
+        image: article.image || 'https://via.placeholder.com/800x400?text=No+Image',
+        author: article.author,
+        published: article.published !== undefined ? article.published : true
       })
       .select()
       .single();
       
     if (error) {
+      console.error('Error creating article:', error);
       throw error;
     }
     
     if (!data) {
+      console.error('No data returned from article creation');
       throw new Error('No data returned from article creation');
     }
     
+    console.log('Article created successfully:', data);
     return data;
   } catch (error) {
     console.error('Error creating article:', error);

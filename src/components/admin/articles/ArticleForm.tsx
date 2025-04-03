@@ -20,6 +20,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const articleFormSchema = z.object({
   title: z.string().min(5, { message: 'כותרת חייבת להכיל לפחות 5 תווים' }),
@@ -45,6 +47,8 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
   setUploading 
 }) => {
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
   const { toast } = useToast();
   
   const form = useForm<ArticleFormValues>({
@@ -61,22 +65,50 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Check file size - 5MB limit
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "קובץ גדול מדי",
+          description: "גודל הקובץ לא יכול לעלות על 5MB",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       setImageFile(file);
     }
   };
 
   const onSubmit = async (data: ArticleFormValues) => {
     try {
+      setFormError(null);
+      setUploadProgress(0);
       setUploading(true);
       
       // Upload image if selected
       let imageUrl = '';
       if (imageFile) {
-        const uploadedUrl = await uploadArticleImage(imageFile);
-        if (uploadedUrl) {
-          imageUrl = uploadedUrl;
+        try {
+          setUploadProgress(10);
+          const uploadedUrl = await uploadArticleImage(imageFile);
+          setUploadProgress(50);
+          if (uploadedUrl) {
+            imageUrl = uploadedUrl;
+          }
+        } catch (uploadError) {
+          console.error('Error uploading image:', uploadError);
+          toast({
+            title: "שגיאה בהעלאת תמונה",
+            description: "התמונה לא הועלתה, אבל נמשיך ביצירת המאמר ללא תמונה",
+            variant: "destructive"
+          });
+          imageUrl = 'https://via.placeholder.com/800x400?text=תמונה+לא+זמינה';
         }
+      } else {
+        imageUrl = 'https://via.placeholder.com/800x400?text=אין+תמונה';
       }
+      
+      setUploadProgress(70);
       
       // Create article
       const article = {
@@ -88,21 +120,38 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
         image: imageUrl
       };
       
-      const result = await createArticle(article);
+      console.log("Submitting article:", article);
       
-      if (result) {
-        toast({
-          title: "מאמר נוצר בהצלחה",
-          description: `המאמר "${data.title}" נוסף בהצלחה`
-        });
+      try {
+        const result = await createArticle(article);
+        setUploadProgress(100);
         
-        // Reset form and close dialog
-        form.reset();
-        setImageFile(null);
-        onSuccess();
+        if (result) {
+          console.log("Article created successfully:", result);
+          toast({
+            title: "מאמר נוצר בהצלחה",
+            description: `המאמר "${data.title}" נוסף בהצלחה`
+          });
+          
+          // Reset form and close dialog
+          form.reset();
+          setImageFile(null);
+          onSuccess();
+        } else {
+          throw new Error("Failed to create article, no result returned");
+        }
+      } catch (createError) {
+        console.error('Error creating article:', createError);
+        setFormError("אירעה שגיאה ביצירת המאמר. אנא נסה שנית.");
+        toast({
+          title: "שגיאה ביצירת מאמר",
+          description: "אירעה שגיאה בעת יצירת המאמר. אנא נסה שנית.",
+          variant: "destructive"
+        });
       }
     } catch (error) {
-      console.error('Error creating article:', error);
+      console.error('Error in article submission workflow:', error);
+      setFormError("אירעה שגיאה בלתי צפויה. אנא נסה שנית.");
       toast({
         title: "שגיאה ביצירת מאמר",
         description: "אירעה שגיאה בלתי צפויה",
@@ -116,6 +165,14 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {formError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>שגיאה</AlertTitle>
+            <AlertDescription>{formError}</AlertDescription>
+          </Alert>
+        )}
+        
         <FormField
           control={form.control}
           name="title"
@@ -176,6 +233,9 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
               onChange={handleImageChange}
             />
           </FormControl>
+          <FormDescription>
+            העלה תמונה ראשית למאמר (מומלץ בגודל 800x400). מוגבל ל-5MB.
+          </FormDescription>
           <FormMessage />
         </FormItem>
         
@@ -214,6 +274,15 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
             </FormItem>
           )}
         />
+        
+        {uploading && (
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div 
+              className="bg-blue-600 h-2.5 rounded-full" 
+              style={{ width: `${uploadProgress}%` }}
+            ></div>
+          </div>
+        )}
         
         <div className="flex justify-end mt-4">
           <Button 
