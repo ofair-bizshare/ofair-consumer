@@ -5,8 +5,9 @@ import { RequestInterface } from '@/types/dashboard';
 // Fetch user requests from the database
 export const fetchUserRequests = async (): Promise<RequestInterface[]> => {
   try {
+    // Use a type assertion to allow working with the new table
     const { data, error } = await supabase
-      .from('requests')
+      .from('requests' as any)
       .select('*')
       .order('created_at', { ascending: false });
       
@@ -21,7 +22,7 @@ export const fetchUserRequests = async (): Promise<RequestInterface[]> => {
     }
     
     // Map the database columns to our interface
-    return data.map(item => ({
+    return data.map((item: any) => ({
       id: item.id,
       title: item.title,
       description: item.description,
@@ -45,14 +46,23 @@ export const createRequest = async (requestData: {
   timing?: string;
 }): Promise<string | null> => {
   try {
+    // Get current user ID
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.error('User not authenticated');
+      return null;
+    }
+
+    // Use a type assertion to allow working with the new table
     const { data, error } = await supabase
-      .from('requests')
+      .from('requests' as any)
       .insert({
         title: requestData.title,
         description: requestData.description,
         location: requestData.location,
         timing: requestData.timing || null,
-        status: 'active'
+        status: 'active',
+        user_id: user.id
       })
       .select('id')
       .single();
@@ -73,8 +83,9 @@ export const createRequest = async (requestData: {
 // Get a single request by ID
 export const getRequestById = async (id: string): Promise<RequestInterface | null> => {
   try {
+    // Use a type assertion to allow working with the new table
     const { data, error } = await supabase
-      .from('requests')
+      .from('requests' as any)
       .select('*')
       .eq('id', id)
       .maybeSingle();
@@ -109,8 +120,9 @@ export const getRequestById = async (id: string): Promise<RequestInterface | nul
 // Update request status
 export const updateRequestStatus = async (id: string, status: string): Promise<boolean> => {
   try {
+    // Use a type assertion to allow working with the new table
     const { error } = await supabase
-      .from('requests')
+      .from('requests' as any)
       .update({ status, updated_at: new Date() })
       .eq('id', id);
       
@@ -129,8 +141,9 @@ export const updateRequestStatus = async (id: string, status: string): Promise<b
 // Delete a request
 export const deleteRequest = async (id: string): Promise<boolean> => {
   try {
+    // Use a type assertion to allow working with the new table
     const { error } = await supabase
-      .from('requests')
+      .from('requests' as any)
       .delete()
       .eq('id', id);
       

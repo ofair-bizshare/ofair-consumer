@@ -1,3 +1,4 @@
+
 export interface ProfessionalInterface {
   id: string;
   name: string;
@@ -18,8 +19,9 @@ export interface RequestInterface {
   description: string;
   date: string;
   location: string;
-  status: 'active' | 'completed' | 'pending';
+  status: string; // Changed from union type to string to allow more status values
   quotesCount: number;
+  timing?: string; // Added timing property as optional
 }
 
 export interface QuoteInterface {
@@ -29,7 +31,7 @@ export interface QuoteInterface {
   price: string;
   estimatedTime: string;
   description: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: string; // Changed from union type to string
 }
 
 export interface ReferralInterface {

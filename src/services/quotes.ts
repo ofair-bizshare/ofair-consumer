@@ -6,9 +6,10 @@ import { getProfessionalById } from './professionals';
 // Fetch quotes for a specific request
 export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInterface[]> => {
   try {
+    // Use a type assertion to allow working with the new table
     const { data, error } = await supabase
-      .from('quotes')
-      .select('*, professional_id')
+      .from('quotes' as any)
+      .select('*')
       .eq('request_id', requestId)
       .order('created_at', { ascending: false });
       
@@ -24,7 +25,7 @@ export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInt
     
     // Fetch professional details for each quote
     const quotes = await Promise.all(
-      data.map(async (quote) => {
+      data.map(async (quote: any) => {
         const professional = await getProfessionalById(quote.professional_id);
         if (!professional) {
           console.error(`Professional not found for ID: ${quote.professional_id}`);
@@ -60,8 +61,9 @@ export const createQuote = async (quoteData: {
   description: string;
 }): Promise<string | null> => {
   try {
+    // Use a type assertion to allow working with the new table
     const { data, error } = await supabase
-      .from('quotes')
+      .from('quotes' as any)
       .insert({
         request_id: quoteData.requestId,
         professional_id: quoteData.professionalId,
@@ -89,8 +91,9 @@ export const createQuote = async (quoteData: {
 // Update quote status
 export const updateQuoteStatus = async (id: string, status: string): Promise<boolean> => {
   try {
+    // Use a type assertion to allow working with the new table
     const { error } = await supabase
-      .from('quotes')
+      .from('quotes' as any)
       .update({ status, updated_at: new Date() })
       .eq('id', id);
       
@@ -109,8 +112,9 @@ export const updateQuoteStatus = async (id: string, status: string): Promise<boo
 // Count quotes for a request
 export const countQuotesForRequest = async (requestId: string): Promise<number> => {
   try {
+    // Use a type assertion to allow working with the new table
     const { count, error } = await supabase
-      .from('quotes')
+      .from('quotes' as any)
       .select('*', { count: 'exact', head: true })
       .eq('request_id', requestId);
       

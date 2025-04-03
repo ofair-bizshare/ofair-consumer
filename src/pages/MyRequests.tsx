@@ -155,7 +155,9 @@ const MyRequests = () => {
 
   const activeRequests = requests.filter(req => req.status === 'active');
   const completedRequests = requests.filter(req => req.status === 'completed');
-  const expiredOrCanceledRequests = requests.filter(req => ['expired', 'canceled'].includes(req.status));
+  const expiredOrCanceledRequests = requests.filter(req => 
+    req.status === 'expired' || req.status === 'canceled'
+  );
 
   return (
     <div className="flex flex-col min-h-screen" dir="rtl">
