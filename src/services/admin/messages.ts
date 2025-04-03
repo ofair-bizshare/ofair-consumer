@@ -24,3 +24,4 @@ export const fetchUserMessages = async (): Promise<UserMessageInterface[]> => {
     return [];
   }
 };
+
