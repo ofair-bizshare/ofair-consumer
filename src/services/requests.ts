@@ -73,8 +73,8 @@ export const createRequest = async (requestData: {
     }
     
     console.log('Request created successfully:', data);
-    // Check that data exists and has id property
-    return data && 'id' in data ? data.id : null;
+    // Fix: Add type assertion to ensure data.id is a string
+    return data && 'id' in data ? String(data.id) : null;
   } catch (error) {
     console.error('Error creating request:', error);
     return null;

@@ -86,8 +86,8 @@ export const createQuote = async (quoteData: {
     }
     
     console.log('Quote created successfully:', data);
-    // Add a check that data is not null and has the id property
-    return data && 'id' in data ? data.id : null;
+    // Fix: Add type assertion to ensure data.id is a string
+    return data && 'id' in data ? String(data.id) : null;
   } catch (error) {
     console.error('Error creating quote:', error);
     return null;
