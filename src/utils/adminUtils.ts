@@ -34,7 +34,7 @@ export const forceSetSuperAdmin = async (email: string): Promise<{success: boole
     
     // Try the RPC function
     try {
-      const { data: rpcResult, error: rpcError } = await supabase.rpc('check_is_super_admin_user', {
+      const { data: rpcResult, error: rpcError } = await supabase.rpc('check_is_super_admin', {
         user_id_param: userResponse.id
       });
       
@@ -134,7 +134,7 @@ export const checkAdminStatusByEmail = async (email: string): Promise<{
     
     // Check admin status through RPC function
     try {
-      const { data: isAdmin, error: rpcError } = await supabase.rpc('check_is_admin_user', {
+      const { data: isAdmin, error: rpcError } = await supabase.rpc('check_is_admin', {
         user_id_param: userProfile.id
       });
       
@@ -155,7 +155,7 @@ export const checkAdminStatusByEmail = async (email: string): Promise<{
       }
       
       // Check if super admin
-      const { data: isSuperAdmin, error: superAdminError } = await supabase.rpc('check_is_super_admin_user', {
+      const { data: isSuperAdmin, error: superAdminError } = await supabase.rpc('check_is_super_admin', {
         user_id_param: userProfile.id
       });
       

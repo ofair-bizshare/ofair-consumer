@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/integrations/supabase/constants';
+import { getCachedAdminStatus } from './utils/adminCache';
+import { checkAdminViaRestApi, checkAdminViaRpc } from './utils/adminCheckMethods';
 
 /**
  * Checks if the current user is a super admin
@@ -19,108 +20,20 @@ export const checkIsSuperAdmin = async (): Promise<boolean> => {
     console.log("Checking admin status for user ID:", user.id);
     
     // First check local cache
-    try {
-      const cachedAdminStatus = localStorage.getItem(`adminStatus-${user.id}`);
-      if (cachedAdminStatus) {
-        const parsed = JSON.parse(cachedAdminStatus);
-        if (parsed.timestamp > Date.now() - 3600000) { // Cache valid for 1 hour
-          console.log("Using cached admin status:", parsed.isAdmin);
-          return parsed.isAdmin;
-        }
-      }
-    } catch (cacheError) {
-      console.error('Error checking cached admin status:', cacheError);
+    const cachedStatus = getCachedAdminStatus(user.id);
+    if (cachedStatus) {
+      return cachedStatus.isAdmin;
     }
     
     // Direct approach using fetch to avoid RLS issues
     try {
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/admin_users?user_id=eq.${user.id}&select=is_super_admin`, {
-        headers: {
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.statusText}`);
-      }
-      
-      const adminData = await response.json();
-      console.log("Admin check result from REST API:", adminData);
-      
-      if (!adminData || adminData.length === 0) {
-        // Update local cache for admin status
-        try {
-          localStorage.setItem(`adminStatus-${user.id}`, JSON.stringify({
-            isAdmin: false,
-            timestamp: Date.now()
-          }));
-        } catch (cacheError) {
-          console.error('Error updating admin cache:', cacheError);
-        }
-        return false;
-      }
-      
-      // Update local cache for admin status
-      try {
-        localStorage.setItem(`adminStatus-${user.id}`, JSON.stringify({
-          isAdmin: adminData[0].is_super_admin,
-          timestamp: Date.now()
-        }));
-      } catch (cacheError) {
-        console.error('Error updating admin cache:', cacheError);
-      }
-      
-      return adminData[0].is_super_admin ?? false;
+      return await checkAdminViaRestApi(user.id);
     } catch (apiError) {
       console.error('Error in REST API admin check:', apiError);
       
       // Fallback to using the security definer function
       try {
-        console.log("Attempting RPC function fallback");
-        const { data: isAdmin, error: rpcError } = await supabase.rpc('check_is_super_admin_user', {
-          user_id_param: user.id
-        });
-        
-        if (rpcError) {
-          console.error("Error in RPC fallback:", rpcError);
-          
-          // Last resort - try the create_first_super_admin function
-          console.log("Trying create_first_super_admin as last resort");
-          const { data: adminData, error: adminError } = await supabase.rpc('create_first_super_admin', {
-            admin_email: user.email
-          });
-          
-          if (adminError) {
-            console.error("Error in final fallback:", adminError);
-            throw adminError;
-          }
-          
-          // Update local cache for admin status
-          try {
-            localStorage.setItem(`adminStatus-${user.id}`, JSON.stringify({
-              isAdmin: !!adminData,
-              timestamp: Date.now()
-            }));
-          } catch (cacheError) {
-            console.error('Error updating admin cache:', cacheError);
-          }
-          
-          return !!adminData;
-        }
-        
-        // Update local cache for admin status
-        try {
-          localStorage.setItem(`adminStatus-${user.id}`, JSON.stringify({
-            isAdmin: !!isAdmin,
-            timestamp: Date.now()
-          }));
-        } catch (cacheError) {
-          console.error('Error updating admin cache:', cacheError);
-        }
-        
-        return !!isAdmin;
+        return await checkAdminViaRpc(user.id);
       } catch (fallbackError) {
         console.error('Fallback error:', fallbackError);
         throw fallbackError;
@@ -224,7 +137,7 @@ export const createSuperAdmin = async (email: string): Promise<{ success: boolea
     } catch (restError) {
       console.error('Error using REST API approach:', restError);
       
-      // Try with the new create_super_admin RPC function
+      // Try with the create_super_admin RPC function
       try {
         const { data: rpcResult, error: rpcError } = await supabase.rpc('create_super_admin', {
           admin_email_param: email
