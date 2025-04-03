@@ -28,6 +28,7 @@ import ProfessionalsManager from "./pages/Admin/ProfessionalsManager";
 import ArticlesManager from "./pages/Admin/ArticlesManager";
 import MessagesManager from "./pages/Admin/MessagesManager";
 import AdminSettings from "./pages/Admin/AdminSettings";
+import AdminLayout from "./components/admin/AdminLayout";
 
 const queryClient = new QueryClient();
 
