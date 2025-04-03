@@ -25,9 +25,9 @@ export const checkIsSuperAdmin = async (): Promise<boolean> => {
       return cachedStatus.isAdmin;
     }
     
-    // Use the updated security definer function
+    // Use the correct security definer function name
     console.log("No cache found, checking via security definer function");
-    const { data: isAdmin, error } = await supabase.rpc('is_super_admin');
+    const { data: isAdmin, error } = await supabase.rpc('check_is_super_admin');
     
     if (error) {
       console.error("Error in security definer function check:", error);

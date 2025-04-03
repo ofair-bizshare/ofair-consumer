@@ -41,8 +41,8 @@ export const useAdminAccess = () => {
       }
       
       try {
-        // Use the security definer function - now calling is_super_admin()
-        const { data: isAdmin, error } = await supabase.rpc('is_super_admin');
+        // Use the security definer function - use check_is_super_admin which is the correct function name
+        const { data: isAdmin, error } = await supabase.rpc('check_is_super_admin');
         
         if (error) {
           console.error("AdminAccess: Error in security definer function check:", error);
