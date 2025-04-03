@@ -26,9 +26,39 @@ export const checkIsSuperAdmin = async (): Promise<boolean> => {
       return cachedStatus.isAdmin;
     }
     
-    // Direct approach using fetch to avoid RLS issues
+    // Try direct approach using fetch to avoid RLS issues
     try {
-      return await checkAdminViaRestApi(user.id);
+      // Use direct REST API approach without policies
+      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      const url = `${SUPABASE_URL}/rest/v1/admin_users?user_id=eq.${user.id}&select=is_super_admin`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+      
+      const adminData = await response.json();
+      console.log("Admin check result from direct API:", adminData);
+      
+      if (!adminData || adminData.length === 0) {
+        return false;
+      }
+      
+      localStorage.setItem(`adminStatus-${user.id}`, JSON.stringify({
+        isAdmin: adminData[0].is_super_admin,
+        timestamp: Date.now()
+      }));
+      
+      return adminData[0].is_super_admin ?? false;
     } catch (apiError) {
       console.error('Error in REST API admin check:', apiError);
       

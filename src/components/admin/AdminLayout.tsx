@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { useNavigate } from 'react-router-dom';
@@ -12,7 +13,6 @@ import {
 } from 'lucide-react';
 import AdminNavLink from './AdminNavLink';
 import { checkIsSuperAdmin } from '@/services/admin/auth';
-import { forceSetSuperAdmin } from '@/utils/adminUtils';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -33,24 +33,49 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           console.log("AdminLayout: No user found, redirecting to login");
           setLoading(false);
           toast({
-            title: "אין גישה",
-            description: "יש להתחבר תחילה",
+            title: "נדרשת התחברות",
+            description: "יש להתחבר תחילה למערכת",
             variant: "destructive"
           });
-          navigate('/admin-login', { state: { returnTo: window.location.pathname } });
+          navigate('/login', { state: { returnTo: window.location.pathname } });
           return;
         }
 
         console.log("AdminLayout: Checking admin status for user:", user.id);
         
         try {
-          // First try using the cached admin status
+          const isAdmin = await checkIsSuperAdmin();
+          console.log("AdminLayout: Admin check result:", isAdmin);
+          
+          if (isAdmin) {
+            console.log("AdminLayout: User confirmed as admin");
+            setIsSuperAdmin(true);
+            localStorage.setItem(`adminStatus-${user.id}`, JSON.stringify({
+              isAdmin: true,
+              timestamp: Date.now()
+            }));
+          } else {
+            console.log("AdminLayout: User is not an admin:", user.id);
+            setIsSuperAdmin(false);
+            
+            toast({
+              title: "אין גישה",
+              description: "אין לך הרשאות מנהל למערכת",
+              variant: "destructive"
+            });
+            navigate('/dashboard');
+          }
+        } catch (error) {
+          console.error("AdminLayout: Error during admin check:", error);
+          setAdminCheckError(error.message || "שגיאה לא ידועה");
+          
+          // Check if we have a cached admin status as fallback
           try {
             const cachedAdminStatus = localStorage.getItem(`adminStatus-${user.id}`);
             if (cachedAdminStatus) {
               const parsed = JSON.parse(cachedAdminStatus);
               if (parsed.timestamp > Date.now() - 3600000) { // Cache valid for 1 hour
-                console.log("AdminLayout: Using cached admin status:", parsed.isAdmin);
+                console.log("AdminLayout: Using cached admin status as fallback:", parsed.isAdmin);
                 if (parsed.isAdmin) {
                   setIsSuperAdmin(true);
                   setLoading(false);
@@ -61,27 +86,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           } catch (cacheError) {
             console.error('Error checking cached admin status:', cacheError);
           }
-          
-          const isAdmin = await checkIsSuperAdmin();
-          console.log("AdminLayout: Admin check result:", isAdmin);
-          
-          if (isAdmin) {
-            console.log("AdminLayout: User confirmed as admin");
-            setIsSuperAdmin(true);
-          } else {
-            console.log("AdminLayout: User is not an admin:", user.id);
-            setIsSuperAdmin(false);
-            
-            toast({
-              title: "אין גישה",
-              description: "אין לך הרשאות מנהל למערכת",
-              variant: "destructive"
-            });
-            navigate('/admin-login');
-          }
-        } catch (error) {
-          console.error("AdminLayout: Error during admin check:", error);
-          setAdminCheckError(error.message || "שגיאה לא ידועה");
           
           toast({
             title: "שגיאה",
@@ -121,39 +125,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
         <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6 max-w-md w-full text-center">
           <h1 className="text-2xl font-bold text-red-700 mb-4">שגיאת בדיקת הרשאות</h1>
-          <p className="text-gray-800 mb-4">התרחשה שגיאה במדיניות גישה (RLS) לטבלת admin_users:</p>
-          <p className="bg-red-100 p-2 rounded text-red-800 mb-6 text-sm font-mono">infinite recursion detected in policy for relation "admin_users"</p>
-          
-          {user && (
-            <div className="mb-6">
-              <p className="font-bold mb-2">פעולות אפשריות לשחזור גישה:</p>
-              <ol className="text-left text-sm space-y-2">
-                <li>1. נסה להתנתק ולהתחבר מחדש דרך <a href="/admin-login" className="text-blue-600 underline">דף התחברות הניהול</a></li>
-                <li>2. השתמש באפשרות שחזור חירום בדף ההתחברות</li>
-                <li>3. בצע את הפקודה הבאה במסד הנתונים כדי לתקן את בעיית ה-RLS:</li>
-                <li className="font-mono text-xs bg-gray-100 p-2 rounded">
-                  {`
--- Drop existing policies
-DROP POLICY IF EXISTS "Allow all operations for own records" ON public.admin_users;
-
--- Create separate policies using security definer functions
-CREATE OR REPLACE FUNCTION public.check_is_super_admin(user_id_param UUID)
-RETURNS BOOLEAN
-SECURITY DEFINER
-LANGUAGE plpgsql
-AS $$
-BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM public.admin_users
-    WHERE user_id = user_id_param AND is_super_admin = true
-  );
-END;
-$$;
-                  `}
-                </li>
-              </ol>
-            </div>
-          )}
+          <p className="text-gray-800 mb-4">{adminCheckError}</p>
           
           <div className="flex justify-center space-x-3">
             <button

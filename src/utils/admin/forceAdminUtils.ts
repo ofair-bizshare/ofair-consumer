@@ -32,31 +32,7 @@ export const forceSetSuperAdmin = async (email: string): Promise<{success: boole
     
     console.log("Found user with ID:", userResponse.id);
     
-    // Try the RPC function
-    try {
-      const { data: rpcResult, error: rpcError } = await supabase.rpc('check_is_super_admin', {
-        user_id_param: userResponse.id
-      });
-      
-      // If RPC function succeeds, the user is already a super admin
-      if (!rpcError && rpcResult === true) {
-        console.log("User is already a super admin. Bypassing cache...");
-        
-        // Force update the cache to ensure we're not having a cache issue
-        localStorage.setItem(`adminStatus-${userResponse.id}`, JSON.stringify({
-          isAdmin: true,
-          timestamp: Date.now()
-        }));
-        
-        return { success: true, message: "User is already a super admin. Cache has been updated." };
-      }
-      
-      console.log("User is not a super admin or RPC error occurred. Trying direct database access...");
-    } catch (error) {
-      console.error("Error checking super admin status via RPC:", error);
-    }
-    
-    // Try direct fetch approach to override RLS 
+    // Try direct fetch approach with the service key to override RLS 
     const insertResponse = await fetch(`${SUPABASE_URL}/rest/v1/admin_users`, {
       method: 'POST',
       headers: {

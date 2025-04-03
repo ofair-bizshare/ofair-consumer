@@ -5,11 +5,12 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import DashboardTabs from '@/components/dashboard/DashboardTabs';
 import { useToast } from '@/hooks/use-toast';
-import { UserCircle, Gift, Upload, ShieldCheck } from 'lucide-react';
+import { UserCircle, Gift, Upload } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { checkIsSuperAdmin } from '@/services/admin/auth';
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
@@ -18,6 +19,7 @@ const Dashboard = () => {
   const location = useLocation();
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isSavingImage, setIsSavingImage] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   
   useEffect(() => {
     if (location.hash) {
@@ -33,7 +35,39 @@ const Dashboard = () => {
     if (profile?.profile_image) {
       setProfileImage(profile.profile_image);
     }
-  }, [location, profile]);
+    
+    const checkAdminStatus = async () => {
+      if (!user) return;
+      
+      try {
+        try {
+          const cachedAdminStatus = localStorage.getItem(`adminStatus-${user.id}`);
+          if (cachedAdminStatus) {
+            const parsed = JSON.parse(cachedAdminStatus);
+            if (parsed.timestamp > Date.now() - 3600000) {
+              setIsAdmin(parsed.isAdmin);
+              return;
+            }
+          }
+        } catch (cacheError) {
+          console.error('Error checking cached admin status:', cacheError);
+        }
+        
+        const adminStatus = await checkIsSuperAdmin();
+        setIsAdmin(adminStatus);
+        
+        localStorage.setItem(`adminStatus-${user.id}`, JSON.stringify({
+          isAdmin: adminStatus,
+          timestamp: Date.now()
+        }));
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        setIsAdmin(false);
+      }
+    };
+    
+    checkAdminStatus();
+  }, [location, profile, user]);
 
   if (loading || profileLoading) {
     return (
@@ -196,13 +230,14 @@ const Dashboard = () => {
                     </div>
                   </div>
                   
-                  <Link 
-                    to="/admin-login" 
-                    className="text-sm flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-                  >
-                    <ShieldCheck size={16} className="ml-1" />
-                    <span>כניסה לממשק ניהול</span>
-                  </Link>
+                  {isAdmin && (
+                    <Link 
+                      to="/admin" 
+                      className="text-sm flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+                    >
+                      <span>כניסה לממשק ניהול</span>
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>
