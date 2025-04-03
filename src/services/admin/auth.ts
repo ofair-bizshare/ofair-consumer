@@ -76,7 +76,7 @@ export const checkIsSuperAdmin = async (): Promise<boolean> => {
     } catch (apiError) {
       console.error('Error in REST API admin check:', apiError);
       
-      // Fallback to using the new RPC function with security definer
+      // Fallback to using the security definer function
       try {
         console.log("Attempting RPC function fallback");
         const { data: isAdmin, error: rpcError } = await supabase.rpc('check_is_super_admin_user', {
@@ -224,10 +224,10 @@ export const createSuperAdmin = async (email: string): Promise<{ success: boolea
     } catch (restError) {
       console.error('Error using REST API approach:', restError);
       
-      // Try first with our new RPC function
+      // Try with the new create_super_admin RPC function
       try {
-        const { data: rpcResult, error: rpcError } = await supabase.rpc('create_first_super_admin', {
-          admin_email: email
+        const { data: rpcResult, error: rpcError } = await supabase.rpc('create_super_admin', {
+          admin_email_param: email
         });
         
         if (rpcError) {
