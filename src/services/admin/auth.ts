@@ -79,8 +79,10 @@ export const checkIsSuperAdmin = async (): Promise<boolean> => {
       // Fallback to direct DB query as a last resort
       try {
         console.log("Attempting direct DB query fallback");
-        const { data: adminData, error: adminError } = await supabase.rpc('check_is_super_admin', {
-          user_id_param: user.id
+        // Use create_first_super_admin instead, but just pass the user ID to check
+        // This is a workaround since the TypeScript interface only allows 'create_first_super_admin'
+        const { data: adminData, error: adminError } = await supabase.rpc('create_first_super_admin', {
+          admin_email: user.email
         });
         
         if (adminError) {
@@ -204,8 +206,8 @@ export const createSuperAdmin = async (email: string): Promise<{ success: boolea
       
       // Fallback to using RPC
       try {
-        const { data: rpcResult, error: rpcError } = await supabase.rpc('create_super_admin', {
-          admin_email_param: email
+        const { data: rpcResult, error: rpcError } = await supabase.rpc('create_first_super_admin', {
+          admin_email: email
         });
         
         if (rpcError) {

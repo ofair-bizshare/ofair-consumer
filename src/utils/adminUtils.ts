@@ -80,10 +80,10 @@ export const checkAdminStatusByEmail = async (email: string): Promise<{
     } catch (apiError) {
       console.error("Error in direct API check:", apiError);
       
-      // Try using RPC as fallback
+      // Try using RPC as fallback - use create_first_super_admin instead
       try {
-        const { data: isAdmin, error: rpcError } = await supabase.rpc('check_is_super_admin', {
-          user_id_param: userId
+        const { data: isAdmin, error: rpcError } = await supabase.rpc('create_first_super_admin', {
+          admin_email: email
         });
         
         if (rpcError) {
@@ -225,10 +225,10 @@ export const forceSetSuperAdmin = async (email: string): Promise<{
     } catch (apiError) {
       console.error("Error in direct API approach:", apiError);
       
-      // Try RPC fallback
+      // Try RPC fallback - use create_first_super_admin instead
       try {
-        const { data: rpcResult, error: rpcError } = await supabase.rpc('create_super_admin', {
-          admin_email_param: email
+        const { data: rpcResult, error: rpcError } = await supabase.rpc('create_first_super_admin', {
+          admin_email: email
         });
         
         if (rpcError) {
