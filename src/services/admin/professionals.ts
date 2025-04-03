@@ -45,54 +45,102 @@ export const uploadProfessionalImage = async (file: File): Promise<string | null
     console.log('Uploading professional image:', file.name);
     const fileExt = file.name.split('.').pop();
     const fileName = `professional-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-    const filePath = `professionals/${fileName}`;
     
-    // Try to upload to images bucket first
-    try {
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('images')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
+    // Create an array of bucket names to try
+    const buckets = ['professionals', 'images', 'public'];
+    let uploadedUrl = null;
+    
+    // Try each bucket until one works
+    for (const bucket of buckets) {
+      try {
+        console.log(`Attempting to upload to ${bucket} bucket...`);
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from(bucket)
+          .upload(`professionals/${fileName}`, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+          
+        if (uploadError) {
+          console.error(`Error uploading to ${bucket} bucket:`, uploadError);
+          continue; // Try the next bucket
+        }
         
-      if (uploadError) {
-        console.error('Error uploading to images bucket:', uploadError);
-        throw uploadError;
-      }
-      
-      const { data: publicURL } = supabase.storage
-        .from('images')
-        .getPublicUrl(filePath);
-      
-      console.log('Successfully uploaded to images bucket:', publicURL.publicUrl);
-      return publicURL.publicUrl;
-    } catch (imagesError) {
-      console.error('Failed to upload to images bucket, trying public bucket:', imagesError);
-      
-      // Fallback to public bucket
-      const { data: fallbackData, error: fallbackError } = await supabase.storage
-        .from('public')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
+        const { data: publicURL } = supabase.storage
+          .from(bucket)
+          .getPublicUrl(`professionals/${fileName}`);
         
-      if (fallbackError) {
-        console.error('Error uploading to public bucket:', fallbackError);
-        throw fallbackError;
+        console.log(`Successfully uploaded to ${bucket} bucket:`, publicURL.publicUrl);
+        uploadedUrl = publicURL.publicUrl;
+        break; // Successfully uploaded, exit the loop
+      } catch (bucketError) {
+        console.error(`Failed to upload to ${bucket} bucket:`, bucketError);
+        // Continue to the next bucket
       }
-      
-      const { data: fallbackURL } = supabase.storage
-        .from('public')
-        .getPublicUrl(filePath);
-      
-      console.log('Successfully uploaded to public bucket:', fallbackURL.publicUrl);
-      return fallbackURL.publicUrl;
     }
+    
+    if (uploadedUrl) {
+      return uploadedUrl;
+    }
+    
+    // If all buckets failed, return a placeholder
+    console.warn('All bucket uploads failed, using placeholder image');
+    return 'https://via.placeholder.com/150';
   } catch (error) {
     console.error('Error uploading professional image:', error);
     // Return a placeholder image URL as fallback
     return 'https://via.placeholder.com/150';
+  }
+};
+
+/**
+ * Updates an existing professional
+ * @param id Professional ID to update
+ * @param professional Professional data to update
+ * @returns Promise<boolean> True if successful, false otherwise
+ */
+export const updateProfessional = async (id: string, professional: Partial<Omit<ProfessionalInterface, 'id' | 'reviewCount' | 'verified'>>): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('professionals')
+      .update({
+        ...professional,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error updating professional:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating professional:', error);
+    return false;
+  }
+};
+
+/**
+ * Deletes a professional
+ * @param id Professional ID to delete
+ * @returns Promise<boolean> True if successful, false otherwise
+ */
+export const deleteProfessional = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('professionals')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error deleting professional:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error deleting professional:', error);
+    return false;
   }
 };

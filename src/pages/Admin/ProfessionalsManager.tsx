@@ -19,10 +19,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Edit, Trash2, Star } from 'lucide-react';
+import { Plus, Edit, Trash2, Star, AlertCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const professionalFormSchema = z.object({
   name: z.string().min(2, { message: 'שם חייב להכיל לפחות 2 תווים' }),
@@ -42,6 +43,7 @@ const ProfessionalsManager = () => {
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [imageFile, setImageFile] = React.useState<File | null>(null);
   const [uploading, setUploading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
   const { toast } = useToast();
   
   const form = useForm<ProfessionalFormValues>({
@@ -60,10 +62,12 @@ const ProfessionalsManager = () => {
   const fetchData = React.useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await fetchProfessionals();
       setProfessionals(data);
     } catch (error) {
       console.error('Error fetching professionals:', error);
+      setError('אירעה שגיאה בטעינת בעלי המקצוע. אנא נסה שוב מאוחר יותר.');
       toast({
         title: "שגיאה בטעינת נתונים",
         description: "אירעה שגיאה בטעינת בעלי המקצוע",
@@ -81,6 +85,7 @@ const ProfessionalsManager = () => {
   const onSubmit = async (data: ProfessionalFormValues) => {
     try {
       setUploading(true);
+      setError(null);
       
       // Upload image if selected
       let imageUrl = 'https://via.placeholder.com/150';
@@ -118,9 +123,16 @@ const ProfessionalsManager = () => {
         
         // Refresh the list
         fetchData();
+      } else {
+        toast({
+          title: "שגיאה ביצירת בעל מקצוע",
+          description: "אירעה שגיאה ביצירת בעל המקצוע. אנא נסה שוב.",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error('Error creating professional:', error);
+      setError('אירעה שגיאה ביצירת בעל המקצוע. אנא נסה שוב מאוחר יותר.');
       toast({
         title: "שגיאה ביצירת בעל מקצוע",
         description: "אירעה שגיאה בלתי צפויה",
@@ -307,6 +319,14 @@ const ProfessionalsManager = () => {
           </DialogContent>
         </Dialog>
       </div>
+      
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>שגיאה</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       
       <Card>
         <CardHeader>
