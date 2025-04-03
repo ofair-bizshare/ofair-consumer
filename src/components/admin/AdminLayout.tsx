@@ -28,11 +28,24 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   React.useEffect(() => {
     const checkAdmin = async () => {
       try {
+        if (!user) {
+          console.log("No user found in AdminLayout, redirecting to login");
+          setLoading(false);
+          toast({
+            title: "אין גישה",
+            description: "יש להתחבר תחילה",
+            variant: "destructive"
+          });
+          navigate('/login', { state: { returnTo: window.location.pathname } });
+          return;
+        }
+
+        console.log("Checking admin status for user:", user.id);
+        
         // Add a small delay to ensure auth is fully initialized
         setTimeout(async () => {
-          console.log("Checking admin status for user:", user?.id);
           const isAdmin = await checkIsSuperAdmin();
-          console.log("Admin check result:", isAdmin);
+          console.log("Admin check result in AdminLayout:", isAdmin);
           
           setIsSuperAdmin(isAdmin);
           setLoading(false);
@@ -58,12 +71,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       }
     };
     
-    if (user) {
-      checkAdmin();
-    } else {
-      setLoading(false);
-      navigate('/login', { state: { returnTo: window.location.pathname } });
-    }
+    checkAdmin();
   }, [user, navigate, toast]);
 
   if (loading) {

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/providers/AuthProvider';
@@ -7,12 +7,37 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
+import { createSuperAdmin } from '@/services/admin';
 
 const AdminSettings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [adminEmail, setAdminEmail] = React.useState('');
   const [loading, setLoading] = React.useState(false);
+  const [adminUsers, setAdminUsers] = React.useState<any[]>([]);
+  
+  useEffect(() => {
+    // Fetch existing admin users
+    const fetchAdminUsers = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('admin_users')
+          .select('*, user_id');
+          
+        if (error) {
+          console.error('Error fetching admin users:', error);
+          return;
+        }
+        
+        console.log('Admin users:', data);
+        setAdminUsers(data || []);
+      } catch (error) {
+        console.error('Error fetching admin users:', error);
+      }
+    };
+    
+    fetchAdminUsers();
+  }, []);
   
   const createFirstSuperAdmin = async () => {
     try {
@@ -27,18 +52,25 @@ const AdminSettings = () => {
       
       setLoading(true);
       
-      const { data, error } = await supabase.rpc('create_first_super_admin', {
-        admin_email: adminEmail
-      });
+      const result = await createSuperAdmin(adminEmail);
       
-      if (error) {
-        throw error;
+      if (!result.success) {
+        throw new Error(result.message);
       }
       
       toast({
         title: "מנהל על נוצר בהצלחה",
         description: `משתמש ${adminEmail} הפך למנהל על`,
       });
+      
+      // Refresh admin users list
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('*, user_id');
+        
+      if (!error && data) {
+        setAdminUsers(data);
+      }
       
       setAdminEmail('');
     } catch (error) {
@@ -83,6 +115,19 @@ const AdminSettings = () => {
                   </Button>
                 </div>
               </div>
+              
+              {adminUsers.length > 0 && (
+                <div className="mt-6">
+                  <h3 className="text-md font-semibold mb-2">מנהלי על נוכחיים:</h3>
+                  <ul className="space-y-1">
+                    {adminUsers.map((admin) => (
+                      <li key={admin.id} className="text-sm">
+                        {admin.user_id} {admin.is_super_admin ? '(מנהל על)' : ''}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
