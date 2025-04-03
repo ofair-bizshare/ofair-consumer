@@ -53,10 +53,14 @@ export const checkIsSuperAdmin = async (): Promise<boolean> => {
         }
         
         // Try the REST API endpoint directly which might bypass certain RLS issues
-        const response = await fetch(`${supabase.supabaseUrl}/rest/v1/admin_users?user_id=eq.${user.id}&select=is_super_admin`, {
+        // Get the URL and API key from environment or constants
+        const SUPABASE_URL = "https://erlfsougrkzbgonumhoa.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVybGZzb3Vncmt6YmdvbnVtaG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE5NjMyMjIsImV4cCI6MjA1NzUzOTIyMn0.TRDZlAhYRDavo4ICaEgb9EKryo4qRJDoyhlz5udr8p8";
+        
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/admin_users?user_id=eq.${user.id}&select=is_super_admin`, {
           headers: {
-            'apikey': supabase.supabaseKey,
-            'Authorization': `Bearer ${supabase.auth.getSession().then(res => res.data.session?.access_token)}`,
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
             'Content-Type': 'application/json'
           }
         });
@@ -142,9 +146,13 @@ export const createSuperAdmin = async (email: string): Promise<{ success: boolea
       if (adminCheckError.message.includes('recursion')) {
         // Try direct REST API approach
         try {
-          const response = await fetch(`${supabase.supabaseUrl}/rest/v1/admin_users?user_id=eq.${userResponse.id}`, {
+          // Get the URL and API key from environment or constants
+          const SUPABASE_URL = "https://erlfsougrkzbgonumhoa.supabase.co";
+          const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVybGZzb3Vncmt6YmdvbnVtaG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE5NjMyMjIsImV4cCI6MjA1NzUzOTIyMn0.TRDZlAhYRDavo4ICaEgb9EKryo4qRJDoyhlz5udr8p8";
+          
+          const response = await fetch(`${SUPABASE_URL}/rest/v1/admin_users?user_id=eq.${userResponse.id}`, {
             headers: {
-              'apikey': supabase.supabaseKey,
+              'apikey': SUPABASE_ANON_KEY,
               'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
               'Content-Type': 'application/json'
             }
@@ -159,10 +167,10 @@ export const createSuperAdmin = async (email: string): Promise<{ success: boolea
           if (adminData && adminData.length > 0) {
             // User is already an admin, update to super admin if needed
             if (!adminData[0].is_super_admin) {
-              const updateResponse = await fetch(`${supabase.supabaseUrl}/rest/v1/admin_users?id=eq.${adminData[0].id}`, {
+              const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/admin_users?id=eq.${adminData[0].id}`, {
                 method: 'PATCH',
                 headers: {
-                  'apikey': supabase.supabaseKey,
+                  'apikey': SUPABASE_ANON_KEY,
                   'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
                   'Content-Type': 'application/json',
                   'Prefer': 'return=representation'
@@ -194,10 +202,10 @@ export const createSuperAdmin = async (email: string): Promise<{ success: boolea
           }
           
           // User is not an admin, insert new record
-          const insertResponse = await fetch(`${supabase.supabaseUrl}/rest/v1/admin_users`, {
+          const insertResponse = await fetch(`${SUPABASE_URL}/rest/v1/admin_users`, {
             method: 'POST',
             headers: {
-              'apikey': supabase.supabaseKey,
+              'apikey': SUPABASE_ANON_KEY,
               'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
               'Content-Type': 'application/json',
               'Prefer': 'return=representation'
