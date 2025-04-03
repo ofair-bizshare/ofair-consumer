@@ -6,7 +6,7 @@ import { getProfessionalById } from './professionals';
 // Fetch quotes for a specific request
 export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInterface[]> => {
   try {
-    // Use a type assertion to allow working with the new table
+    // We need to use "as any" to bypass TypeScript's type checking for tables that aren't in the generated types
     const { data, error } = await supabase
       .from('quotes' as any)
       .select('*')
@@ -26,21 +26,26 @@ export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInt
     // Fetch professional details for each quote
     const quotes = await Promise.all(
       data.map(async (quote: any) => {
-        const professional = await getProfessionalById(quote.professional_id);
-        if (!professional) {
-          console.error(`Professional not found for ID: ${quote.professional_id}`);
+        try {
+          const professional = await getProfessionalById(quote.professional_id);
+          if (!professional) {
+            console.error(`Professional not found for ID: ${quote.professional_id}`);
+            return null;
+          }
+          
+          return {
+            id: quote.id,
+            requestId: quote.request_id,
+            professional,
+            price: quote.price,
+            estimatedTime: quote.estimated_time || '',
+            description: quote.description,
+            status: quote.status
+          };
+        } catch (err) {
+          console.error(`Error processing quote:`, err);
           return null;
         }
-        
-        return {
-          id: quote.id,
-          requestId: quote.request_id,
-          professional,
-          price: quote.price,
-          estimatedTime: quote.estimated_time || '',
-          description: quote.description,
-          status: quote.status
-        };
       })
     );
     
@@ -61,7 +66,7 @@ export const createQuote = async (quoteData: {
   description: string;
 }): Promise<string | null> => {
   try {
-    // Use a type assertion to allow working with the new table
+    // We need to use "as any" to bypass TypeScript's type checking
     const { data, error } = await supabase
       .from('quotes' as any)
       .insert({
@@ -81,7 +86,8 @@ export const createQuote = async (quoteData: {
     }
     
     console.log('Quote created successfully:', data);
-    return data.id;
+    // Add a check that data is not null and has the id property
+    return data && 'id' in data ? data.id : null;
   } catch (error) {
     console.error('Error creating quote:', error);
     return null;
@@ -91,7 +97,7 @@ export const createQuote = async (quoteData: {
 // Update quote status
 export const updateQuoteStatus = async (id: string, status: string): Promise<boolean> => {
   try {
-    // Use a type assertion to allow working with the new table
+    // We need to use "as any" to bypass TypeScript's type checking
     const { error } = await supabase
       .from('quotes' as any)
       .update({ status, updated_at: new Date() })
@@ -112,7 +118,7 @@ export const updateQuoteStatus = async (id: string, status: string): Promise<boo
 // Count quotes for a request
 export const countQuotesForRequest = async (requestId: string): Promise<number> => {
   try {
-    // Use a type assertion to allow working with the new table
+    // We need to use "as any" to bypass TypeScript's type checking
     const { count, error } = await supabase
       .from('quotes' as any)
       .select('*', { count: 'exact', head: true })

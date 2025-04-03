@@ -5,7 +5,7 @@ import { RequestInterface } from '@/types/dashboard';
 // Fetch user requests from the database
 export const fetchUserRequests = async (): Promise<RequestInterface[]> => {
   try {
-    // Use a type assertion to allow working with the new table
+    // We need to use "as any" to bypass TypeScript's type checking
     const { data, error } = await supabase
       .from('requests' as any)
       .select('*')
@@ -53,7 +53,7 @@ export const createRequest = async (requestData: {
       return null;
     }
 
-    // Use a type assertion to allow working with the new table
+    // We need to use "as any" to bypass TypeScript's type checking
     const { data, error } = await supabase
       .from('requests' as any)
       .insert({
@@ -73,7 +73,8 @@ export const createRequest = async (requestData: {
     }
     
     console.log('Request created successfully:', data);
-    return data.id;
+    // Check that data exists and has id property
+    return data && 'id' in data ? data.id : null;
   } catch (error) {
     console.error('Error creating request:', error);
     return null;
@@ -83,7 +84,7 @@ export const createRequest = async (requestData: {
 // Get a single request by ID
 export const getRequestById = async (id: string): Promise<RequestInterface | null> => {
   try {
-    // Use a type assertion to allow working with the new table
+    // We need to use "as any" to bypass TypeScript's type checking
     const { data, error } = await supabase
       .from('requests' as any)
       .select('*')
@@ -100,16 +101,19 @@ export const getRequestById = async (id: string): Promise<RequestInterface | nul
       return null;
     }
     
+    // Use type assertion to ensure TypeScript knows the structure
+    const request = data as any;
+    
     // Return the request in the format expected by the interface
     return {
-      id: data.id,
-      title: data.title,
-      description: data.description,
-      date: new Date(data.date).toLocaleDateString('he-IL'),
-      location: data.location,
-      status: data.status,
+      id: request.id,
+      title: request.title,
+      description: request.description,
+      date: new Date(request.date).toLocaleDateString('he-IL'),
+      location: request.location,
+      status: request.status,
       quotesCount: 0, // This will be updated when we fetch quotes
-      timing: data.timing
+      timing: request.timing
     };
   } catch (error) {
     console.error('Error fetching request by ID:', error);
@@ -120,7 +124,7 @@ export const getRequestById = async (id: string): Promise<RequestInterface | nul
 // Update request status
 export const updateRequestStatus = async (id: string, status: string): Promise<boolean> => {
   try {
-    // Use a type assertion to allow working with the new table
+    // We need to use "as any" to bypass TypeScript's type checking
     const { error } = await supabase
       .from('requests' as any)
       .update({ status, updated_at: new Date() })
@@ -141,7 +145,7 @@ export const updateRequestStatus = async (id: string, status: string): Promise<b
 // Delete a request
 export const deleteRequest = async (id: string): Promise<boolean> => {
   try {
-    // Use a type assertion to allow working with the new table
+    // We need to use "as any" to bypass TypeScript's type checking
     const { error } = await supabase
       .from('requests' as any)
       .delete()
