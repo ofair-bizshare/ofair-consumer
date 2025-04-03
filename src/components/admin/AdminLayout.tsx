@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { useNavigate } from 'react-router-dom';
@@ -12,7 +11,7 @@ import {
   LogOut
 } from 'lucide-react';
 import AdminNavLink from './AdminNavLink';
-import { checkIsSuperAdmin } from '@/services/admin';
+import { checkIsSuperAdmin } from '@/services/admin/auth';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
