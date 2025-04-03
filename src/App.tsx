@@ -22,6 +22,13 @@ import UserSettings from "./pages/UserSettings";
 import FAQ from "./pages/FAQ";
 import ScrollToTop from "./components/ScrollToTop";
 
+// Admin Routes
+import AdminDashboard from "./pages/Admin/AdminDashboard";
+import ProfessionalsManager from "./pages/Admin/ProfessionalsManager";
+import ArticlesManager from "./pages/Admin/ArticlesManager";
+import MessagesManager from "./pages/Admin/MessagesManager";
+import AdminSettings from "./pages/Admin/AdminSettings";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -47,6 +54,14 @@ const App = () => (
                   <Route path="/about" element={<About />} />
                   <Route path="/referrals" element={<ReferralsPage />} />
                   <Route path="/faq" element={<FAQ />} />
+                  
+                  {/* Admin Routes */}
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/professionals" element={<ProfessionalsManager />} />
+                  <Route path="/admin/articles" element={<ArticlesManager />} />
+                  <Route path="/admin/messages" element={<MessagesManager />} />
+                  <Route path="/admin/settings" element={<AdminSettings />} />
+                  
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>

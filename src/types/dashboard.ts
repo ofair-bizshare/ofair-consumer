@@ -65,3 +65,21 @@ export interface ArticleInterface {
   created_at: string;
   published: boolean;
 }
+
+export interface AdminUserInterface {
+  id: string;
+  user_id: string;
+  is_super_admin: boolean;
+  created_at: string;
+}
+
+export interface UserMessageInterface {
+  id: string;
+  sender_id: string;
+  recipient_id?: string;
+  recipient_email?: string;
+  subject: string;
+  content: string;
+  read: boolean;
+  created_at: string;
+}
