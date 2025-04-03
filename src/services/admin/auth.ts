@@ -76,31 +76,51 @@ export const checkIsSuperAdmin = async (): Promise<boolean> => {
     } catch (apiError) {
       console.error('Error in REST API admin check:', apiError);
       
-      // Fallback to direct DB query as a last resort
+      // Fallback to using the new RPC function with security definer
       try {
-        console.log("Attempting direct DB query fallback");
-        // Use create_first_super_admin instead, but just pass the user ID to check
-        // This is a workaround since the TypeScript interface only allows 'create_first_super_admin'
-        const { data: adminData, error: adminError } = await supabase.rpc('create_first_super_admin', {
-          admin_email: user.email
+        console.log("Attempting RPC function fallback");
+        const { data: isAdmin, error: rpcError } = await supabase.rpc('check_is_super_admin_user', {
+          user_id_param: user.id
         });
         
-        if (adminError) {
-          console.error("Error in RPC fallback:", adminError);
-          throw adminError;
+        if (rpcError) {
+          console.error("Error in RPC fallback:", rpcError);
+          
+          // Last resort - try the create_first_super_admin function
+          console.log("Trying create_first_super_admin as last resort");
+          const { data: adminData, error: adminError } = await supabase.rpc('create_first_super_admin', {
+            admin_email: user.email
+          });
+          
+          if (adminError) {
+            console.error("Error in final fallback:", adminError);
+            throw adminError;
+          }
+          
+          // Update local cache for admin status
+          try {
+            localStorage.setItem(`adminStatus-${user.id}`, JSON.stringify({
+              isAdmin: !!adminData,
+              timestamp: Date.now()
+            }));
+          } catch (cacheError) {
+            console.error('Error updating admin cache:', cacheError);
+          }
+          
+          return !!adminData;
         }
         
         // Update local cache for admin status
         try {
           localStorage.setItem(`adminStatus-${user.id}`, JSON.stringify({
-            isAdmin: !!adminData,
+            isAdmin: !!isAdmin,
             timestamp: Date.now()
           }));
         } catch (cacheError) {
           console.error('Error updating admin cache:', cacheError);
         }
         
-        return !!adminData;
+        return !!isAdmin;
       } catch (fallbackError) {
         console.error('Fallback error:', fallbackError);
         throw fallbackError;
@@ -204,7 +224,7 @@ export const createSuperAdmin = async (email: string): Promise<{ success: boolea
     } catch (restError) {
       console.error('Error using REST API approach:', restError);
       
-      // Fallback to using RPC
+      // Try first with our new RPC function
       try {
         const { data: rpcResult, error: rpcError } = await supabase.rpc('create_first_super_admin', {
           admin_email: email

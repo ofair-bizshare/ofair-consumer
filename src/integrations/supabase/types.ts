@@ -520,9 +520,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_is_admin_user: {
+        Args: {
+          user_id_param: string
+        }
+        Returns: boolean
+      }
+      check_is_super_admin: {
+        Args: {
+          user_id_param: string
+        }
+        Returns: boolean
+      }
+      check_is_super_admin_user: {
+        Args: {
+          user_id_param: string
+        }
+        Returns: boolean
+      }
       create_first_super_admin: {
         Args: {
           admin_email: string
+        }
+        Returns: string
+      }
+      create_super_admin: {
+        Args: {
+          admin_email_param: string
         }
         Returns: string
       }
