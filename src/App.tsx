@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,6 +22,7 @@ import FAQ from "./pages/FAQ";
 import ScrollToTop from "./components/ScrollToTop";
 
 // Admin Routes
+import AdminLogin from "./pages/AdminLogin"; // New Admin Login page
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import ProfessionalsManager from "./pages/Admin/ProfessionalsManager";
 import ArticlesManager from "./pages/Admin/ArticlesManager";
@@ -56,6 +56,7 @@ const App = () => (
                   <Route path="/faq" element={<FAQ />} />
                   
                   {/* Admin Routes */}
+                  <Route path="/admin-login" element={<AdminLogin />} /> {/* New Admin Login Route */}
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/admin/professionals" element={<ProfessionalsManager />} />
                   <Route path="/admin/articles" element={<ArticlesManager />} />

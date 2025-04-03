@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { useNavigate } from 'react-router-dom';
@@ -38,7 +37,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             description: "יש להתחבר תחילה",
             variant: "destructive"
           });
-          navigate('/login', { state: { returnTo: window.location.pathname } });
+          navigate('/admin-login', { state: { returnTo: window.location.pathname } });
           return;
         }
 
@@ -78,7 +77,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               description: "אין לך הרשאות מנהל למערכת",
               variant: "destructive"
             });
-            navigate('/dashboard');
+            navigate('/admin-login');
           }
         } catch (error) {
           console.error("AdminLayout: Error during admin check:", error);
@@ -129,14 +128,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             <div className="mb-6">
               <p className="font-bold mb-2">פעולות אפשריות לשחזור גישה:</p>
               <ol className="text-left text-sm space-y-2">
-                <li>1. נסה להתנתק ולהתחבר מחדש</li>
-                <li>2. השתמש בכלי השחזור החירום בקונסול הדפדפן:</li>
-                <li className="font-mono text-xs bg-gray-100 p-2 rounded">
-                  {`
-import { forceSetSuperAdmin } from '@/utils/adminUtils';
-forceSetSuperAdmin('${user.email}').then(console.log);
-                  `}
-                </li>
+                <li>1. נסה להתנתק ולהתחבר מחדש דרך <a href="/admin-login" className="text-blue-600 underline">דף התחברות הניהול</a></li>
+                <li>2. השתמש באפשרות שחזור חירום בדף ההתחברות</li>
                 <li>3. בצע את הפקודה הבאה במסד הנתונים כדי לתקן את בעיית ה-RLS:</li>
                 <li className="font-mono text-xs bg-gray-100 p-2 rounded">
                   {`
@@ -164,17 +157,17 @@ $$;
           
           <div className="flex justify-center space-x-3">
             <button
+              onClick={() => navigate('/admin-login')}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              לדף התחברות מנהל
+            </button>
+            
+            <button
               onClick={() => navigate('/dashboard')}
               className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
             >
               חזרה לדשבורד
-            </button>
-            
-            <button
-              onClick={() => signOut()}
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-            >
-              התנתק
             </button>
           </div>
         </div>

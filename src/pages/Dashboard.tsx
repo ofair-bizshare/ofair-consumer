@@ -1,16 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
-import { useLocation, Navigate } from 'react-router-dom';
+import { useLocation, Navigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import DashboardTabs from '@/components/dashboard/DashboardTabs';
 import { useToast } from '@/hooks/use-toast';
-import { UserCircle, Gift, Upload } from 'lucide-react';
+import { UserCircle, Gift, Upload, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { UserProfileInterface } from '@/types/dashboard';
 import { useUserProfile } from '@/hooks/useUserProfile';
 
 const Dashboard = () => {
@@ -22,7 +20,6 @@ const Dashboard = () => {
   const [isSavingImage, setIsSavingImage] = useState(false);
   
   useEffect(() => {
-    // Check if we need to scroll to a specific section
     if (location.hash) {
       const id = location.hash.substring(1);
       const element = document.getElementById(id);
@@ -33,13 +30,11 @@ const Dashboard = () => {
       }
     }
 
-    // Set profile image if available in profile
     if (profile?.profile_image) {
       setProfileImage(profile.profile_image);
     }
   }, [location, profile]);
 
-  // If still loading, show loading spinner
   if (loading || profileLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -48,7 +43,6 @@ const Dashboard = () => {
     );
   }
 
-  // If not logged in and not loading, redirect to login
   if (!user && !loading) {
     return <Navigate to="/login" />;
   }
@@ -60,13 +54,11 @@ const Dashboard = () => {
     try {
       setIsSavingImage(true);
       
-      // 1. Upload to Supabase Storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `profile-images/${fileName}`;
       
       try {
-        // Create the bucket if it doesn't exist
         const { data: bucketData, error: bucketError } = await supabase.storage
           .getBucket('images');
           
@@ -78,14 +70,12 @@ const Dashboard = () => {
           if (createBucketError) throw createBucketError;
         }
         
-        // Upload the file
         const { error: uploadError } = await supabase.storage
           .from('images')
           .upload(filePath, file);
           
         if (uploadError) throw uploadError;
         
-        // Get the public URL
         const { data: publicURL } = supabase.storage
           .from('images')
           .getPublicUrl(filePath);
@@ -94,26 +84,22 @@ const Dashboard = () => {
         
         console.log("Image uploaded, public URL:", publicURL.publicUrl);
         
-        // 2. Update user profile with new image URL
         await updateProfile({ profile_image: publicURL.publicUrl });
         
-        // 3. Update local state
         setProfileImage(publicURL.publicUrl);
         
         toast({
-          title: "תמונת פרופיל עודכנה",
+          title: "תמונת פרופיל עו��כנה",
           description: "תמונת הפרופיל שלך עודכנה בהצלחה",
           variant: "default",
         });
       } catch (storageError) {
         console.error('Error with Supabase storage:', storageError);
         
-        // Fallback to localStorage if Supabase storage fails
         const reader = new FileReader();
         reader.onloadend = function() {
           const base64data = reader.result as string;
           
-          // Save to localStorage (with size limits in mind)
           try {
             localStorage.setItem(`profileImage-${user.id}`, base64data);
             setProfileImage(base64data);
@@ -168,7 +154,7 @@ const Dashboard = () => {
             <div className="glass-card p-6 mb-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <div className="relative ml-6"> {/* Changed from mr-6 to ml-6 for RTL */}
+                  <div className="relative ml-6">
                     {profileImage ? (
                       <img 
                         src={profileImage} 
@@ -196,17 +182,27 @@ const Dashboard = () => {
                       </label>
                     </div>
                   </div>
-                  <div className="ml-4"> {/* Changed from mr-4 to ml-4 for RTL */}
+                  <div className="ml-4">
                     <h2 className="text-xl font-semibold">ברוך הבא, {profile?.name || user.user_metadata?.name || user.email}!</h2>
                     <p className="text-gray-600">שמחים לראות אותך שוב</p>
                   </div>
                 </div>
-                <div className="flex items-center bg-gradient-to-r from-teal-500 to-blue-600 text-white px-4 py-2 rounded-lg">
-                  <Gift className="ml-2 h-5 w-5" aria-hidden="true" />
-                  <div>
-                    <div className="text-sm opacity-80">הקרדיט שלי</div>
-                    <div className="font-bold">250 ₪</div>
+                <div className="flex flex-col items-end gap-3">
+                  <div className="flex items-center bg-gradient-to-r from-teal-500 to-blue-600 text-white px-4 py-2 rounded-lg">
+                    <Gift className="ml-2 h-5 w-5" aria-hidden="true" />
+                    <div>
+                      <div className="text-sm opacity-80">הקרדיט שלי</div>
+                      <div className="font-bold">250 ₪</div>
+                    </div>
                   </div>
+                  
+                  <Link 
+                    to="/admin-login" 
+                    className="text-sm flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+                  >
+                    <ShieldCheck size={16} className="ml-1" />
+                    <span>כניסה לממשק ניהול</span>
+                  </Link>
                 </div>
               </div>
             </div>
