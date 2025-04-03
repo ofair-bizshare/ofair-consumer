@@ -2,36 +2,17 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { uploadArticleImage } from '@/services/articles';
 import { createArticle } from '@/services/admin';
-
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage, 
-  FormDescription 
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Button } from '@/components/ui/button';
-import { AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-
-const articleFormSchema = z.object({
-  title: z.string().min(5, { message: 'כותרת חייבת להכיל לפחות 5 תווים' }),
-  summary: z.string().min(20, { message: 'תקציר חייב להכיל לפחות 20 תווים' }),
-  content: z.string().min(50, { message: 'תוכן חייב להכיל לפחות 50 תווים' }),
-  author: z.string().min(2, { message: 'שם המחבר חייב להכיל לפחות 2 תווים' }),
-  published: z.boolean().default(true)
-});
-
-export type ArticleFormValues = z.infer<typeof articleFormSchema>;
+import { Form } from '@/components/ui/form';
+import { articleFormSchema, ArticleFormValues } from './articleSchema';
+import FormErrorAlert from './FormErrorAlert';
+import ImageUploader from './ImageUploader';
+import ArticleDetailsFields from './ArticleDetailsFields';
+import ArticleContentFields from './ArticleContentFields';
+import UploadProgressBar from './UploadProgressBar';
+import FormActions from './FormActions';
 
 interface ArticleFormProps {
   onSuccess?: () => void;
@@ -66,23 +47,6 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
       published: true
     }
   });
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Check file size - 5MB limit
-      if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "קובץ גדול מדי",
-          description: "גודל הקובץ לא יכול לעלות על 5MB",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      setImageFile(file);
-    }
-  };
 
   const handleSubmit = async (data: ArticleFormValues) => {
     try {
@@ -177,139 +141,23 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        {formError && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>שגיאה</AlertTitle>
-            <AlertDescription>{formError}</AlertDescription>
-          </Alert>
-        )}
+        <FormErrorAlert error={formError} />
         
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>כותרת</FormLabel>
-              <FormControl>
-                <Input placeholder="כותרת המאמר" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+        <ArticleDetailsFields form={form} />
+        
+        <ImageUploader onChange={setImageFile} />
+        
+        <ArticleContentFields form={form} />
+        
+        <UploadProgressBar 
+          progress={uploadProgress} 
+          isVisible={uploading || isSubmitting} 
         />
         
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="author"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>מחבר</FormLabel>
-                <FormControl>
-                  <Input placeholder="שם המחבר" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="published"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                <div className="space-y-0.5">
-                  <FormLabel>פרסום</FormLabel>
-                  <FormDescription>
-                    האם לפרסם את המאמר באתר
-                  </FormDescription>
-                </div>
-                <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <FormItem>
-          <FormLabel>תמונה</FormLabel>
-          <FormControl>
-            <Input 
-              type="file" 
-              accept="image/*"
-              onChange={handleImageChange}
-            />
-          </FormControl>
-          <FormDescription>
-            העלה תמונה ראשית למאמר (מומלץ בגודל 800x400). מוגבל ל-5MB.
-          </FormDescription>
-          <FormMessage />
-        </FormItem>
-        
-        <FormField
-          control={form.control}
-          name="summary"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>תקציר</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="תקציר קצר של המאמר (יוצג בתצוגת הרשימה)"
-                  className="min-h-[80px]"
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+        <FormActions 
+          onCancel={onCancel} 
+          isProcessing={isProcessing} 
         />
-        
-        <FormField
-          control={form.control}
-          name="content"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>תוכן</FormLabel>
-              <FormControl>
-                <Textarea 
-                  placeholder="תוכן המאמר המלא"
-                  className="min-h-[200px]"
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        {(uploading || isSubmitting) && (
-          <div className="w-full bg-gray-200 rounded-full h-2.5">
-            <div 
-              className="bg-blue-600 h-2.5 rounded-full" 
-              style={{ width: `${uploadProgress}%` }}
-            ></div>
-          </div>
-        )}
-        
-        <div className="flex justify-end mt-4">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={onCancel}
-            className="mr-2"
-            disabled={isProcessing}
-          >
-            ביטול
-          </Button>
-          <Button type="submit" disabled={isProcessing}>
-            {isProcessing ? 'מעלה...' : 'הוסף מאמר'}
-          </Button>
-        </div>
       </form>
     </Form>
   );
