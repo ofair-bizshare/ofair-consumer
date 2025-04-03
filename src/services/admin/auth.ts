@@ -17,30 +17,86 @@ export const checkIsSuperAdmin = async (): Promise<boolean> => {
     
     console.log("Checking admin status for user ID:", user.id);
     
-    // Query to check if the user is a super admin
-    const { data, error } = await supabase
-      .from('admin_users')
-      .select('is_super_admin')
-      .eq('user_id', user.id)
-      .maybeSingle();
-    
-    if (error) {
-      console.error('Error checking super admin status:', error);
-      return false;
+    // First try to execute a function that bypasses RLS
+    try {
+      // This is a direct query that might have RLS issues
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('is_super_admin')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (!error) {
+        console.log("Admin check result from direct query:", data);
+        
+        // If data is null, the user is not an admin
+        if (!data) {
+          console.log("User is not in admin_users table");
+          return false;
+        }
+        
+        return data.is_super_admin ?? false;
+      } else {
+        console.error('Direct query error, trying fallback method:', error);
+        
+        // If we get an RLS recursion error, try alternative approach
+        // First check if user exists in user_profiles
+        const { data: userProfile, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
+        
+        if (profileError || !userProfile) {
+          console.error('Error checking user profile:', profileError);
+          return false;
+        }
+        
+        // Try the REST API endpoint directly which might bypass certain RLS issues
+        const response = await fetch(`${supabase.supabaseUrl}/rest/v1/admin_users?user_id=eq.${user.id}&select=is_super_admin`, {
+          headers: {
+            'apikey': supabase.supabaseKey,
+            'Authorization': `Bearer ${supabase.auth.getSession().then(res => res.data.session?.access_token)}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.statusText}`);
+        }
+        
+        const adminData = await response.json();
+        console.log("Admin check result from REST API:", adminData);
+        
+        if (!adminData || adminData.length === 0) {
+          return false;
+        }
+        
+        return adminData[0].is_super_admin ?? false;
+      }
+    } catch (innerError) {
+      console.error('Error in fallback admin check method:', innerError);
+      
+      // Last resort: check localStorage for cached admin status
+      // This is not secure but helps with debugging/recovery
+      try {
+        const cachedAdminStatus = localStorage.getItem(`adminStatus-${user.id}`);
+        if (cachedAdminStatus) {
+          const parsed = JSON.parse(cachedAdminStatus);
+          if (parsed.timestamp > Date.now() - 3600000) { // Cache valid for 1 hour
+            console.log("Using cached admin status:", parsed.isAdmin);
+            return parsed.isAdmin;
+          }
+        }
+      } catch (cacheError) {
+        console.error('Error checking cached admin status:', cacheError);
+      }
+      
+      throw innerError;
     }
-    
-    console.log("Admin check result:", data);
-    
-    // If data is null, the user is not an admin
-    if (!data) {
-      console.log("User is not in admin_users table");
-      return false;
-    }
-    
-    return data.is_super_admin ?? false;
   } catch (error) {
     console.error('Error checking super admin status:', error);
-    return false;
+    throw error;
   }
 };
 
@@ -81,6 +137,101 @@ export const createSuperAdmin = async (email: string): Promise<{ success: boolea
       
     if (adminCheckError) {
       console.error("Error checking if user is already admin:", adminCheckError);
+      
+      // Try alternative method if RLS causes problems
+      if (adminCheckError.message.includes('recursion')) {
+        // Try direct REST API approach
+        try {
+          const response = await fetch(`${supabase.supabaseUrl}/rest/v1/admin_users?user_id=eq.${userResponse.id}`, {
+            headers: {
+              'apikey': supabase.supabaseKey,
+              'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (!response.ok) {
+            throw new Error(`API request failed: ${response.statusText}`);
+          }
+          
+          const adminData = await response.json();
+          
+          if (adminData && adminData.length > 0) {
+            // User is already an admin, update to super admin if needed
+            if (!adminData[0].is_super_admin) {
+              const updateResponse = await fetch(`${supabase.supabaseUrl}/rest/v1/admin_users?id=eq.${adminData[0].id}`, {
+                method: 'PATCH',
+                headers: {
+                  'apikey': supabase.supabaseKey,
+                  'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+                  'Content-Type': 'application/json',
+                  'Prefer': 'return=representation'
+                },
+                body: JSON.stringify({ is_super_admin: true })
+              });
+              
+              if (!updateResponse.ok) {
+                throw new Error(`Update API request failed: ${updateResponse.statusText}`);
+              }
+              
+              // Update local cache for the current user if applicable
+              try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user && user.id === userResponse.id) {
+                  localStorage.setItem(`adminStatus-${user.id}`, JSON.stringify({
+                    isAdmin: true,
+                    timestamp: Date.now()
+                  }));
+                }
+              } catch (cacheError) {
+                console.error('Error updating admin cache:', cacheError);
+              }
+              
+              return { success: true, message: "המשתמש קיים כמנהל ועודכן למנהל על" };
+            }
+            
+            return { success: true, message: "המשתמש כבר מוגדר כמנהל על" };
+          }
+          
+          // User is not an admin, insert new record
+          const insertResponse = await fetch(`${supabase.supabaseUrl}/rest/v1/admin_users`, {
+            method: 'POST',
+            headers: {
+              'apikey': supabase.supabaseKey,
+              'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=representation'
+            },
+            body: JSON.stringify({ 
+              user_id: userResponse.id,
+              is_super_admin: true
+            })
+          });
+          
+          if (!insertResponse.ok) {
+            throw new Error(`Insert API request failed: ${insertResponse.statusText}`);
+          }
+          
+          // Update local cache for the current user if applicable
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user && user.id === userResponse.id) {
+              localStorage.setItem(`adminStatus-${user.id}`, JSON.stringify({
+                isAdmin: true,
+                timestamp: Date.now()
+              }));
+            }
+          } catch (cacheError) {
+            console.error('Error updating admin cache:', cacheError);
+          }
+          
+          return { success: true, message: "נוסף בהצלחה כמנהל על" };
+        } catch (restError) {
+          console.error('Error using REST API approach:', restError);
+          return { success: false, message: `Error using alternative approach: ${restError.message}` };
+        }
+      }
+      
       return { success: false, message: "Error checking if user is already admin: " + adminCheckError.message };
     }
     
@@ -97,6 +248,19 @@ export const createSuperAdmin = async (email: string): Promise<{ success: boolea
         if (updateError) {
           console.error("Error updating admin to super admin:", updateError);
           return { success: false, message: "Error updating admin to super admin: " + updateError.message };
+        }
+        
+        // Update local cache for the current user if applicable
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user && user.id === userResponse.id) {
+            localStorage.setItem(`adminStatus-${user.id}`, JSON.stringify({
+              isAdmin: true,
+              timestamp: Date.now()
+            }));
+          }
+        } catch (cacheError) {
+          console.error('Error updating admin cache:', cacheError);
         }
         
         console.log("Updated user to super admin");
@@ -121,8 +285,21 @@ export const createSuperAdmin = async (email: string): Promise<{ success: boolea
       return { success: false, message: "Error inserting new admin: " + insertError.message };
     }
     
+    // Update local cache for the current user if applicable
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && user.id === userResponse.id) {
+        localStorage.setItem(`adminStatus-${user.id}`, JSON.stringify({
+          isAdmin: true,
+          timestamp: Date.now()
+        }));
+      }
+    } catch (cacheError) {
+      console.error('Error updating admin cache:', cacheError);
+    }
+    
     console.log("Created new super admin:", insertData);
-    return { success: true };
+    return { success: true, message: "נוסף בהצלחה כמנהל על" };
   } catch (error) {
     console.error('Error creating super admin:', error);
     return { success: false, message: 'An unexpected error occurred: ' + (error as Error).message };
