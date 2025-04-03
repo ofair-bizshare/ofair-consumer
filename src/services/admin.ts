@@ -136,7 +136,7 @@ export const createSuperAdmin = async (email: string): Promise<{ success: boolea
 export const fetchAllUsers = async (): Promise<any[]> => {
   try {
     const { data, error } = await supabase
-      .from('profiles')
+      .from('user_profiles')
       .select('*')
       .order('created_at', { ascending: false });
     

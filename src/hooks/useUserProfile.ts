@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/providers/AuthProvider';
 import { UserProfileInterface } from '@/types/dashboard';
@@ -12,149 +11,131 @@ export const useUserProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
+  const fetchProfile = useCallback(async () => {
     if (!user) {
       setProfile(null);
       setLoading(false);
       return;
     }
     
-    const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      
+      // First check localStorage for a cached profile
+      const cachedProfileStr = localStorage.getItem(`userProfile-${user.id}`);
+      let cachedProfile = null;
+      
+      if (cachedProfileStr) {
+        try {
+          cachedProfile = JSON.parse(cachedProfileStr);
+          console.log("Found cached profile in localStorage:", cachedProfile);
+          
+          // Immediately set the cached profile while we fetch a fresh one
+          setProfile(cachedProfile as UserProfileInterface);
+        } catch (e) {
+          console.error("Error parsing cached profile:", e);
+        }
+      }
+      
+      // Try fetching from database
       try {
-        setLoading(true);
-        
-        // First check localStorage for a cached profile
-        const cachedProfileStr = localStorage.getItem(`userProfile-${user.id}`);
-        let cachedProfile = null;
-        
-        if (cachedProfileStr) {
-          try {
-            cachedProfile = JSON.parse(cachedProfileStr);
-            console.log("Found cached profile in localStorage:", cachedProfile);
-            
-            // Immediately set the cached profile while we fetch a fresh one
-            setProfile(cachedProfile as UserProfileInterface);
-          } catch (e) {
-            console.error("Error parsing cached profile:", e);
-          }
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
+          
+        if (error) {
+          console.error('Error fetching user profile:', error);
+          throw error;
         }
         
-        // Try fetching from database
-        try {
-          const { data, error } = await supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('id', user.id)
-            .maybeSingle();
-            
-          if (error) {
-            console.error('Error fetching user profile:', error);
-            throw error;
-          }
+        if (data) {
+          console.log('Existing profile found:', data);
+          setProfile(data);
+          // Update cache
+          localStorage.setItem(`userProfile-${user.id}`, JSON.stringify(data));
+          setLoading(false);
+          return;
+        } else if (cachedProfile) {
+          // If no remote profile but we have a cached one, use it
+          console.log('Using cached profile:', cachedProfile);
+          setProfile(cachedProfile as UserProfileInterface);
+          setLoading(false);
           
-          if (data) {
-            console.log('Existing profile found:', data);
-            setProfile(data);
-            // Update cache
-            localStorage.setItem(`userProfile-${user.id}`, JSON.stringify(data));
-            setLoading(false);
-            return;
-          } else if (cachedProfile) {
-            // If no remote profile but we have a cached one, use it
-            console.log('Using cached profile:', cachedProfile);
-            setProfile(cachedProfile as UserProfileInterface);
-            setLoading(false);
-            
-            // Try to create the profile in database in the background
-            try {
-              const newProfile = {
-                id: user.id,
-                name: cachedProfile.name || user.user_metadata?.name || user.email,
-                email: cachedProfile.email || user.email,
-                phone: cachedProfile.phone || user.user_metadata?.phone,
-                updated_at: new Date().toISOString()
-              };
-              
-              console.log('Trying to create profile from cache:', newProfile);
-              
-              await supabase
-                .from('user_profiles')
-                .upsert(newProfile)
-                .select();
-                
-              console.log('Profile created from cache successfully');
-            } catch (createError) {
-              console.error('Error creating profile from cache:', createError);
-              // Continue with cached profile regardless
-            }
-            
-            return;
-          }
-          
-          // If profile doesn't exist and no cache, create it
-          console.log('Profile not found, attempting to create:', user.id);
-          
-          const newProfile = {
-            id: user.id,
-            name: user.user_metadata?.name || user.email,
-            email: user.email,
-            phone: user.user_metadata?.phone
-          };
-          
-          // Save to localStorage immediately
-          localStorage.setItem(`userProfile-${user.id}`, JSON.stringify(newProfile));
-          
-          // Set the profile in state 
-          setProfile(newProfile as UserProfileInterface);
-          
-          // Try to insert into database
+          // Try to create the profile in database in the background
           try {
-            const { data: createdProfile, error: insertError } = await supabase
+            const newProfile = {
+              id: user.id,
+              name: cachedProfile.name || user.user_metadata?.name || user.email,
+              email: cachedProfile.email || user.email,
+              phone: cachedProfile.phone || user.user_metadata?.phone,
+              updated_at: new Date().toISOString()
+            };
+            
+            console.log('Trying to create profile from cache:', newProfile);
+            
+            await supabase
               .from('user_profiles')
               .upsert(newProfile)
-              .select()
-              .single();
+              .select();
               
-            if (insertError) {
-              console.error('Error creating user profile:', insertError);
-              // Continue using the local profile object
-            } else {
-              console.log('Profile created successfully:', createdProfile);
-              setProfile(createdProfile);
-              // Update cache
-              localStorage.setItem(`userProfile-${user.id}`, JSON.stringify(createdProfile));
-            }
-          } catch (insertErr) {
-            console.error('Database error creating profile:', insertErr);
-            // Continue using the local profile object
+            console.log('Profile created from cache successfully');
+          } catch (createError) {
+            console.error('Error creating profile from cache:', createError);
+            // Continue with cached profile regardless
           }
-        } catch (dbErr) {
-          console.error('Database error in profile management:', dbErr);
           
-          // If we have a cached profile, use it
-          if (cachedProfile) {
-            console.log('Using cached profile after error:', cachedProfile);
-            setProfile(cachedProfile as UserProfileInterface);
-          } else {
-            // Otherwise create a fallback profile from user data
-            console.log('Creating fallback profile');
-            const fallbackProfile = {
-              id: user.id,
-              name: user.user_metadata?.name || user.email,
-              email: user.email,
-              phone: user.user_metadata?.phone
-            };
-            setProfile(fallbackProfile as UserProfileInterface);
-            // Cache the fallback profile
-            localStorage.setItem(`userProfile-${user.id}`, JSON.stringify(fallbackProfile));
-          }
+          return;
         }
-      } catch (err) {
-        console.error('Error in profile management:', err);
         
-        // Fallback: If we can't get the profile from the database,
-        // at least create a temporary one with the user's data
-        if (user) {
+        // If profile doesn't exist and no cache, create it
+        console.log('Profile not found, attempting to create:', user.id);
+        
+        const newProfile = {
+          id: user.id,
+          name: user.user_metadata?.name || user.email,
+          email: user.email,
+          phone: user.user_metadata?.phone
+        };
+        
+        // Save to localStorage immediately
+        localStorage.setItem(`userProfile-${user.id}`, JSON.stringify(newProfile));
+        
+        // Set the profile in state 
+        setProfile(newProfile as UserProfileInterface);
+        
+        // Try to insert into database
+        try {
+          const { data: createdProfile, error: insertError } = await supabase
+            .from('user_profiles')
+            .upsert(newProfile)
+            .select()
+            .single();
+            
+          if (insertError) {
+            console.error('Error creating user profile:', insertError);
+            // Continue using the local profile object
+          } else {
+            console.log('Profile created successfully:', createdProfile);
+            setProfile(createdProfile);
+            // Update cache
+            localStorage.setItem(`userProfile-${user.id}`, JSON.stringify(createdProfile));
+          }
+        } catch (insertErr) {
+          console.error('Database error creating profile:', insertErr);
+          // Continue using the local profile object
+        }
+      } catch (dbErr) {
+        console.error('Database error in profile management:', dbErr);
+        
+        // If we have a cached profile, use it
+        if (cachedProfile) {
+          console.log('Using cached profile after error:', cachedProfile);
+          setProfile(cachedProfile as UserProfileInterface);
+        } else {
+          // Otherwise create a fallback profile from user data
+          console.log('Creating fallback profile');
           const fallbackProfile = {
             id: user.id,
             name: user.user_metadata?.name || user.email,
@@ -162,25 +143,47 @@ export const useUserProfile = () => {
             phone: user.user_metadata?.phone
           };
           setProfile(fallbackProfile as UserProfileInterface);
-          
           // Cache the fallback profile
           localStorage.setItem(`userProfile-${user.id}`, JSON.stringify(fallbackProfile));
-          
-          toast({
-            title: "שים לב",
-            description: "ישנה בעיה בטעינת הפרופיל שלך. חלק מהפונקציות עשויות לא לעבוד.",
-            variant: "destructive",
-          });
         }
-        
-        setError(err as Error);
-      } finally {
-        setLoading(false);
       }
-    };
-    
-    fetchProfile();
+    } catch (err) {
+      console.error('Error in profile management:', err);
+      
+      // Fallback: If we can't get the profile from the database,
+      // at least create a temporary one with the user's data
+      if (user) {
+        const fallbackProfile = {
+          id: user.id,
+          name: user.user_metadata?.name || user.email,
+          email: user.email,
+          phone: user.user_metadata?.phone
+        };
+        setProfile(fallbackProfile as UserProfileInterface);
+        
+        // Cache the fallback profile
+        localStorage.setItem(`userProfile-${user.id}`, JSON.stringify(fallbackProfile));
+        
+        toast({
+          title: "שים לב",
+          description: "ישנה בעיה בטעינת הפרופיל שלך. חלק מהפונקציות עשויות לא לעבוד.",
+          variant: "destructive",
+        });
+      }
+      
+      setError(err as Error);
+    } finally {
+      setLoading(false);
+    }
   }, [user, toast]);
+
+  const refetchProfile = useCallback(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const updateProfile = async (updates: Partial<UserProfileInterface>) => {
     if (!user) return null;
@@ -252,6 +255,7 @@ export const useUserProfile = () => {
     profile,
     loading,
     error,
-    updateProfile
+    updateProfile,
+    refetchProfile
   };
 };

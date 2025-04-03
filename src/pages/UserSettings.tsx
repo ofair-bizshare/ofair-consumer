@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { supabase } from '@/integrations/supabase/client';
 import { 
   Card,
   CardContent,
@@ -13,14 +12,14 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Building, Phone, Mail, MapPin, Upload } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const UserSettings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { profile, loading: profileLoading, refetchProfile } = useUserProfile();
+  const { profile, loading: profileLoading, refetchProfile, updateProfile } = useUserProfile();
   
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -44,25 +43,18 @@ const UserSettings = () => {
     try {
       setSaving(true);
       
-      const { error } = await supabase
-        .from('user_profiles')
-        .update({
-          name,
-          phone,
-          address,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
-      
-      if (error) throw error;
+      await updateProfile({
+        name,
+        phone,
+        address,
+        updated_at: new Date().toISOString()
+      });
       
       toast({
         title: "פרופיל עודכן",
         description: "פרטי הפרופיל שלך עודכנו בהצלחה",
       });
       
-      // Refresh profile data
-      refetchProfile();
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
@@ -100,13 +92,8 @@ const UserSettings = () => {
         .getPublicUrl(filePath);
       
       if (data) {
-        // Update the user profile with the new avatar URL
-        const { error: updateError } = await supabase
-          .from('user_profiles')
-          .update({ profile_image: data.publicUrl })
-          .eq('id', user.id);
-        
-        if (updateError) throw updateError;
+        // Update the profile with the new avatar URL
+        await updateProfile({ profile_image: data.publicUrl });
         
         setAvatarUrl(data.publicUrl);
         
@@ -114,9 +101,6 @@ const UserSettings = () => {
           title: "תמונת פרופיל עודכנה",
           description: "תמונת הפרופיל שלך הועלתה בהצלחה",
         });
-        
-        // Refresh profile data
-        refetchProfile();
       }
     } catch (error) {
       console.error('Error uploading avatar:', error);
