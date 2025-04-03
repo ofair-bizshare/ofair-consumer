@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useToast } from '@/hooks/use-toast';
 import { createSuperAdmin } from '@/services/admin';
@@ -7,11 +7,63 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { User, Shield, Settings } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const AdminSettings = () => {
   const { toast } = useToast();
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentAdmins, setCurrentAdmins] = useState<{id: string, email: string, is_super_admin: boolean}[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCurrentAdmins();
+  }, []);
+
+  const fetchCurrentAdmins = async () => {
+    try {
+      setLoading(true);
+      // First get the admin users
+      const { data: adminUsers, error: adminError } = await supabase
+        .from('admin_users')
+        .select('*');
+        
+      if (adminError) {
+        console.error("Error fetching admin users:", adminError);
+        setLoading(false);
+        return;
+      }
+
+      if (!adminUsers || adminUsers.length === 0) {
+        setCurrentAdmins([]);
+        setLoading(false);
+        return;
+      }
+
+      // Get the emails for each admin user
+      const adminDetails = await Promise.all(
+        adminUsers.map(async (admin) => {
+          const { data: userProfile } = await supabase
+            .from('user_profiles')
+            .select('email')
+            .eq('id', admin.user_id)
+            .maybeSingle();
+          
+          return {
+            id: admin.user_id,
+            email: userProfile?.email || 'Unknown email',
+            is_super_admin: admin.is_super_admin
+          };
+        })
+      );
+      
+      setCurrentAdmins(adminDetails);
+    } catch (error) {
+      console.error("Error fetching current admins:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddSuperAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +88,7 @@ const AdminSettings = () => {
           description: result.message || `${newAdminEmail} נוסף כמנהל על במערכת`,
         });
         setNewAdminEmail('');
+        fetchCurrentAdmins(); // Refresh list after adding
       } else {
         toast({
           title: "שגיאה בהוספת מנהל על",
@@ -100,6 +153,26 @@ const AdminSettings = () => {
                 {isSubmitting ? 'מוסיף...' : 'הוסף מנהל על'}
               </Button>
             </form>
+
+            <div className="mt-6">
+              <h3 className="text-md font-semibold mb-2">מנהלי מערכת נוכחיים:</h3>
+              {loading ? (
+                <p>טוען...</p>
+              ) : currentAdmins.length > 0 ? (
+                <ul className="space-y-2">
+                  {currentAdmins.map(admin => (
+                    <li key={admin.id} className="p-2 bg-gray-50 rounded flex justify-between items-center">
+                      <span>{admin.email}</span>
+                      <span className={`text-xs px-2 py-1 rounded-full ${admin.is_super_admin ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
+                        {admin.is_super_admin ? 'מנהל על' : 'מנהל רגיל'}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-500">לא נמצאו מנהלים במערכת</p>
+              )}
+            </div>
           </CardContent>
         </Card>
         
