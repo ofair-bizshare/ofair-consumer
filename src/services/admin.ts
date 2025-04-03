@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { AdminUserInterface, UserMessageInterface } from '@/types/dashboard';
 
 /**
  * Checks if the current user is a super admin
@@ -50,5 +51,52 @@ export const createSuperAdmin = async (email: string): Promise<{ success: boolea
   } catch (error) {
     console.error('Error creating super admin:', error);
     return { success: false, message: 'An unexpected error occurred' };
+  }
+};
+
+/**
+ * Fetches all users from the system
+ * @returns Promise<any[]> List of all users
+ */
+export const fetchAllUsers = async (): Promise<any[]> => {
+  try {
+    // Query the profiles table instead of using auth.admin API
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching users:', error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    return [];
+  }
+};
+
+/**
+ * Fetches all user messages
+ * @returns Promise<UserMessageInterface[]> List of all user messages
+ */
+export const fetchUserMessages = async (): Promise<UserMessageInterface[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_messages')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching user messages:', error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching user messages:', error);
+    return [];
   }
 };

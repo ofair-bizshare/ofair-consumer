@@ -23,17 +23,29 @@ const AdminDashboard = () => {
         
         // Fetch data in parallel
         const [professionals, articles, messages, users] = await Promise.all([
-          fetchProfessionals(),
-          fetchArticles(),
-          fetchUserMessages(),
-          fetchAllUsers()
+          fetchProfessionals().catch(err => {
+            console.error('Error fetching professionals:', err);
+            return [];
+          }),
+          fetchArticles().catch(err => {
+            console.error('Error fetching articles:', err);
+            return [];
+          }),
+          fetchUserMessages().catch(err => {
+            console.error('Error fetching messages:', err);
+            return [];
+          }),
+          fetchAllUsers().catch(err => {
+            console.error('Error fetching users:', err);
+            return [];
+          })
         ]);
         
         setStats({
-          professionals: professionals.length,
-          articles: articles.length,
-          messages: messages.length,
-          users: users.length
+          professionals: professionals?.length || 0,
+          articles: articles?.length || 0,
+          messages: messages?.length || 0,
+          users: users?.length || 0
         });
       } catch (error) {
         console.error('Error fetching admin stats:', error);
