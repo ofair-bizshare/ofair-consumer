@@ -34,22 +34,27 @@ const articleFormSchema = z.object({
 export type ArticleFormValues = z.infer<typeof articleFormSchema>;
 
 interface ArticleFormProps {
-  onSuccess: () => void;
+  onSuccess?: () => void;
+  onSubmit?: (data: ArticleFormValues, imageFile: File | null) => Promise<void>;
   onCancel: () => void;
-  uploading: boolean;
-  setUploading: (uploading: boolean) => void;
+  uploading?: boolean;
+  isSubmitting?: boolean;
+  setUploading?: (uploading: boolean) => void;
 }
 
 const ArticleForm: React.FC<ArticleFormProps> = ({ 
   onSuccess, 
+  onSubmit,
   onCancel, 
-  uploading, 
-  setUploading 
+  uploading = false, 
+  isSubmitting = false,
+  setUploading = () => {} 
 }) => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const { toast } = useToast();
+  const isProcessing = uploading || isSubmitting;
   
   const form = useForm<ArticleFormValues>({
     resolver: zodResolver(articleFormSchema),
@@ -79,10 +84,17 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
     }
   };
 
-  const onSubmit = async (data: ArticleFormValues) => {
+  const handleSubmit = async (data: ArticleFormValues) => {
     try {
       setFormError(null);
       setUploadProgress(0);
+      
+      if (onSubmit) {
+        await onSubmit(data, imageFile);
+        return;
+      }
+      
+      // Legacy submission flow
       setUploading(true);
       
       // Upload image if selected
@@ -136,7 +148,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
           // Reset form and close dialog
           form.reset();
           setImageFile(null);
-          onSuccess();
+          if (onSuccess) onSuccess();
         } else {
           throw new Error("Failed to create article, no result returned");
         }
@@ -164,7 +176,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         {formError && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -275,7 +287,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
           )}
         />
         
-        {uploading && (
+        {(uploading || isSubmitting) && (
           <div className="w-full bg-gray-200 rounded-full h-2.5">
             <div 
               className="bg-blue-600 h-2.5 rounded-full" 
@@ -290,12 +302,12 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
             variant="outline" 
             onClick={onCancel}
             className="mr-2"
-            disabled={uploading}
+            disabled={isProcessing}
           >
             ביטול
           </Button>
-          <Button type="submit" disabled={uploading}>
-            {uploading ? 'מעלה...' : 'הוסף מאמר'}
+          <Button type="submit" disabled={isProcessing}>
+            {isProcessing ? 'מעלה...' : 'הוסף מאמר'}
           </Button>
         </div>
       </form>

@@ -14,14 +14,18 @@ import { FileText, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 
 interface ArticlesTableProps {
   articles: ArticleInterface[];
-  onEdit: (article: ArticleInterface) => void;
-  onDelete: (article: ArticleInterface) => void;
+  onEdit?: (article: ArticleInterface) => void;
+  onDelete?: (article: ArticleInterface) => void;
+  onDeleteArticle?: (id: string) => Promise<void>;
+  onRefetch?: () => Promise<void>;
 }
 
 const ArticlesTable: React.FC<ArticlesTableProps> = ({ 
   articles,
   onEdit,
-  onDelete
+  onDelete,
+  onDeleteArticle,
+  onRefetch
 }) => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -30,6 +34,14 @@ const ArticlesTable: React.FC<ArticlesTableProps> = ({
       month: '2-digit',
       year: 'numeric'
     }).format(date);
+  };
+
+  const handleDelete = (article: ArticleInterface) => {
+    if (onDelete) {
+      onDelete(article);
+    } else if (onDeleteArticle) {
+      onDeleteArticle(article.id);
+    }
   };
 
   return (
@@ -69,17 +81,19 @@ const ArticlesTable: React.FC<ArticlesTableProps> = ({
             </TableCell>
             <TableCell>
               <div className="flex space-x-2">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => onEdit(article)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
+                {onEdit && (
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => onEdit(article)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                )}
                 <Button 
                   size="sm" 
                   variant="destructive" 
-                  onClick={() => onDelete(article)}
+                  onClick={() => handleDelete(article)}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
