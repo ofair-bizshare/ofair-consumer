@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Eye } from 'lucide-react';
 import { ProfessionalInterface } from '@/types/dashboard';
@@ -10,7 +10,6 @@ import {
   DialogTitle,
   DialogDescription,
   DialogClose,
-  DialogFooter,
   DialogTrigger
 } from '@/components/ui/dialog';
 import { useNavigate } from 'react-router-dom';
