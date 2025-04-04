@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { ArticleInterface as DashboardArticleInterface } from '@/types/dashboard';
 
 export interface ArticleInterface {
   id: string;
@@ -47,16 +48,10 @@ export const fetchArticles = async (): Promise<ArticleInterface[]> => {
         throw secondError;
       }
       
-      return initializedData || [];
+      return initializedData ? initializedData.map(article => getArticleFromData(article)) : [];
     }
     
-    return data.map(article => ({
-      ...article,
-      categoryLabel: article.category || 'כללי',
-      excerpt: article.summary || article.content.substring(0, 150) + '...',
-      readTime: estimateReadTime(article.content) + ' דקות',
-      date: formatDate(article.created_at)
-    }));
+    return data.map(article => getArticleFromData(article));
   } catch (error) {
     console.error('Error in fetchArticles:', error);
     throw error;
@@ -140,10 +135,10 @@ export const getArticleById = async (id: string): Promise<ArticleInterface | nul
 };
 
 export const getArticleFromData = (data: any): ArticleInterface => {
-  if (!data) return null;
+  if (!data) return null as any;
   
   const excerpt = data.summary?.length > 120 ? data.summary.substring(0, 120) + '...' : data.summary;
-  const readTime = `${Math.max(Math.ceil(data.content?.length / 1000), 1)} דקות קריא��`;
+  const readTime = `${Math.max(Math.ceil(data.content?.length / 1000), 1)} דקות קריאה`;
   const date = new Date(data.created_at).toLocaleDateString('he-IL', {
     year: 'numeric',
     month: 'long',

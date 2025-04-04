@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { ProfessionalInterface as DashboardProfessionalInterface } from '@/types/dashboard';
 
 /**
  * Professionals Service
@@ -86,7 +87,7 @@ export const getProfessionalById = getProfessional;
  * @param data Professional data
  */
 export const getProfessionalFromData = (data: any): ProfessionalInterface => {
-  if (!data) return null;
+  if (!data) return null as any;
   
   return {
     id: data.id,
@@ -135,77 +136,92 @@ export const seedProfessionals = async (): Promise<void> => {
       return;
     }
 
-    // Convert our sample data to match database fields
+    // Convert sample data to match the database schema
     const professionals = [
       {
         name: 'אבי חשמלאי',
         profession: 'חשמלאי',
-        phone_number: '050-1234567',
+        phone: '050-1234567',
         email: 'avi@example.com',
-        about: 'חשמלאי מוסמך עם 10 שנות ניסיון',
+        bio: 'חשמלאי מוסמך עם 10 שנות ניסיון',
         rating: 4.5,
-        review_count: 20,
-        image: 'https://via.placeholder.com/150',
+        reviews_count: 20,
+        image_url: 'https://via.placeholder.com/150',
+        city: 'תל אביב',
         location: 'תל אביב',
+        specialty: 'חשמלאי',
         specialties: ['חשמלאי', 'התקנת מזגנים'],
         area: 'tel_aviv',
-        category: 'electricity'
+        category: 'electricity',
+        verified: true
       },
       {
         name: 'משה אינסטלטור',
         profession: 'אינסטלטור',
-        phone_number: '052-7654321',
+        phone: '052-7654321',
         email: 'moshe@example.com',
-        about: 'אינסטלטור מומחה עם 15 שנות ניסיון',
+        bio: 'אינסטלטור מומחה עם 15 שנות ניסיון',
         rating: 4.8,
-        review_count: 35,
-        image: 'https://via.placeholder.com/150',
+        reviews_count: 35,
+        image_url: 'https://via.placeholder.com/150',
+        city: 'ירושלים',
         location: 'ירושלים',
+        specialty: 'אינסטלטור',
         specialties: ['אינסטלטור', 'תיקון נזילות'],
         area: 'jerusalem',
-        category: 'plumbing'
+        category: 'plumbing',
+        verified: true
       },
       {
         name: 'שרה שיפוצים',
         profession: 'שיפוצים',
-        phone_number: '054-2345678',
+        phone: '054-2345678',
         email: 'sara@example.com',
-        about: 'קבלנית שיפוצים עם 20 שנות ניסיון',
+        bio: 'קבלנית שיפוצים עם 20 שנות ניסיון',
         rating: 4.2,
-        review_count: 15,
-        image: 'https://via.placeholder.com/150',
+        reviews_count: 15,
+        image_url: 'https://via.placeholder.com/150',
+        city: 'חיפה',
         location: 'חיפה',
+        specialty: 'שיפוצים',
         specialties: ['שיפוצים', 'צביעה'],
         area: 'haifa',
-        category: 'renovations'
+        category: 'renovations',
+        verified: false
       },
       {
         name: 'דוד נגר',
         profession: 'נגר',
-        phone_number: '055-8765432',
+        phone: '055-8765432',
         email: 'david@example.com',
-        about: 'נגר אומן עם 25 שנות ניסיון',
+        bio: 'נגר אומן עם 25 שנות ניסיון',
         rating: 4.9,
-        review_count: 40,
-        image: 'https://via.placeholder.com/150',
+        reviews_count: 40,
+        image_url: 'https://via.placeholder.com/150',
+        city: 'באר שבע',
         location: 'באר שבע',
+        specialty: 'נגרות',
         specialties: ['נגרות', 'רהיטים'],
         area: 'beer_sheva',
-        category: 'carpentry'
+        category: 'carpentry',
+        verified: true
       },
       {
         name: 'רחל גננת',
         profession: 'גננית',
-        phone_number: '053-3456789',
+        phone: '053-3456789',
         email: 'rachel@example.com',
-        about: 'גננת מומחית עם 30 שנות ניסיון',
+        bio: 'גננת מומחית עם 30 שנות ניסיון',
         rating: 4.6,
-        review_count: 25,
-        image: 'https://via.placeholder.com/150',
+        reviews_count: 25,
+        image_url: 'https://via.placeholder.com/150',
+        city: 'תל אביב',
         location: 'תל אביב',
+        specialty: 'גינון',
         specialties: ['גינון', 'עיצוב גינות'],
         area: 'tel_aviv',
-        category: 'gardening'
+        category: 'gardening',
+        verified: false
       }
     ];
 

@@ -7,10 +7,21 @@ export interface ProfessionalInterface {
   reviewCount: number;
   location: string;
   image: string;
-  verified?: boolean; // Keeping for backward compatibility
+  verified?: boolean;
   specialties: string[];
   phoneNumber?: string;
-  about?: string; // Adding about property as optional
+  about?: string;
+  // Add compatibility with services/professionals.ts
+  phone?: string;
+  email?: string;
+  bio?: string;
+  reviews_count?: number;
+  image_url?: string;
+  created_at?: string;
+  city?: string;
+  specialty?: string;
+  area?: string;
+  category?: string;
 }
 
 export interface RequestInterface {
@@ -19,9 +30,9 @@ export interface RequestInterface {
   description: string;
   date: string;
   location: string;
-  status: string; // Changed from union type to string to allow more status values
+  status: string;
   quotesCount: number;
-  timing?: string; // Added timing property as optional
+  timing?: string;
 }
 
 export interface QuoteInterface {
@@ -31,7 +42,7 @@ export interface QuoteInterface {
   price: string;
   estimatedTime: string;
   description: string;
-  status: string; // Changed from union type to string
+  status: string;
 }
 
 export interface ReferralInterface {
@@ -63,7 +74,13 @@ export interface ArticleInterface {
   image?: string;
   author?: string;
   created_at: string;
+  updated_at?: string;
   published: boolean;
+  category?: string;
+  excerpt?: string;
+  date?: string;
+  readTime?: string;
+  categoryLabel?: string;
 }
 
 export interface AdminUserInterface {
