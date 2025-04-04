@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ProfessionalInterface } from '@/types/dashboard';
 
@@ -15,7 +16,7 @@ export const createProfessional = async (professional: Omit<ProfessionalInterfac
       profession: professional.profession,
       location: professional.location,
       specialties: professional.specialties,
-      phone_number: professional.phoneNumber,
+      phone_number: professional.phoneNumber || professional.phone_number,
       about: professional.about,
       rating: professional.rating,
       image: professional.image || 'https://via.placeholder.com/150',

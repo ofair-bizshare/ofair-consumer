@@ -1,4 +1,3 @@
-
 export interface ProfessionalInterface {
   id: string;
   name: string;
@@ -27,6 +26,8 @@ export interface ProfessionalInterface {
   work_hours?: string;
   certifications?: string[];
   experience_years?: number;
+  // Add phone_number as an alias for phoneNumber for backward compatibility
+  phone_number?: string;
 }
 
 export interface RequestInterface {

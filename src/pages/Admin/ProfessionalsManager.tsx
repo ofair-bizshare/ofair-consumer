@@ -18,7 +18,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Edit, Trash2, Star, AlertCircle, Upload, Excel } from 'lucide-react';
+import { Plus, Edit, Trash2, Star, AlertCircle, Upload, FileSpreadsheet } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -82,7 +82,7 @@ const ProfessionalsManager = () => {
       setError('אירעה שגיאה בטעינת בעלי המקצוע. אנא נסה שוב מאוחר יותר.');
       toast({
         title: "שגיאה בטעינת נתונים",
-        description: "אירעה שגיאה בטעינת בעלי ה��קצוע",
+        description: "אירעה שגיאה בטעינת בעלי המקצוע",
         variant: "destructive"
       });
     } finally {
@@ -509,7 +509,7 @@ const ProfessionalsManager = () => {
             רשימת בעלי מקצוע
           </TabsTrigger>
           <TabsTrigger value="upload" className="flex items-center">
-            <Excel className="ml-2 h-4 w-4" />
+            <FileSpreadsheet className="ml-2 h-4 w-4" />
             העלאה מ-Excel
           </TabsTrigger>
         </TabsList>
