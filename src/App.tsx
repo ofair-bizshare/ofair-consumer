@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/components/theme-provider';
-import AuthProvider from '@/providers/AuthProvider';
+import { AuthProvider } from '@/providers/AuthProvider';
 import About from '@/pages/About';
 import Index from '@/pages/Index';
 import Login from '@/pages/Login';

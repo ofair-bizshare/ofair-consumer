@@ -1,9 +1,25 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ArticleInterface } from '@/types/dashboard';
 
+export interface ArticleInterface {
+  id: string;
+  title: string;
+  summary: string;
+  content: string;
+  author: string;
+  image: string;
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+  category?: string;
+  excerpt?: string;
+  date?: string;
+  readTime?: string;
+  categoryLabel?: string;
+}
+
 export const fetchArticles = async (): Promise<ArticleInterface[]> => {
   try {
-    // Add detailed logging to debug the issue
     console.log('Fetching articles from Supabase...');
     
     const { data, error } = await supabase
@@ -22,7 +38,6 @@ export const fetchArticles = async (): Promise<ArticleInterface[]> => {
       console.log('No articles found, initializing with sample data');
       await initializeArticlesIfEmpty();
       
-      // Fetch again after initialization
       const { data: initializedData, error: secondError } = await supabase
         .from('articles')
         .select('*')
@@ -36,7 +51,6 @@ export const fetchArticles = async (): Promise<ArticleInterface[]> => {
       return initializedData || [];
     }
     
-    // Transform database articles to match the expected format
     return data.map(article => ({
       ...article,
       categoryLabel: article.category || 'כללי',
@@ -50,10 +64,8 @@ export const fetchArticles = async (): Promise<ArticleInterface[]> => {
   }
 };
 
-// Function to initialize articles if the table is empty
 const initializeArticlesIfEmpty = async (): Promise<void> => {
   try {
-    // Sample article data
     const sampleArticles = [
       {
         title: '10 טיפים לחיסכון בחשמל בבית',
@@ -84,7 +96,6 @@ const initializeArticlesIfEmpty = async (): Promise<void> => {
       }
     ];
     
-    // Insert sample articles
     const { error } = await supabase
       .from('articles')
       .insert(sampleArticles);
@@ -101,7 +112,6 @@ const initializeArticlesIfEmpty = async (): Promise<void> => {
   }
 };
 
-// Get article by ID
 export const getArticleById = async (id: string): Promise<ArticleInterface | null> => {
   try {
     console.log('Fetching article by ID:', id);
@@ -123,28 +133,62 @@ export const getArticleById = async (id: string): Promise<ArticleInterface | nul
       return null;
     }
     
-    return {
-      ...data,
-      categoryLabel: data.category || 'כללי',
-      excerpt: data.summary || data.content.substring(0, 150) + '...',
-      readTime: estimateReadTime(data.content) + ' דקות',
-      date: formatDate(data.created_at)
-    };
+    return getArticleFromData(data);
   } catch (error) {
     console.error('Error fetching article by ID:', error);
     throw error;
   }
 };
 
-// Helper function to estimate read time based on content length
+export const getArticleFromData = (data: any): ArticleInterface => {
+  if (!data) return null;
+  
+  const excerpt = data.summary?.length > 120 ? data.summary.substring(0, 120) + '...' : data.summary;
+  const readTime = `${Math.max(Math.ceil(data.content?.length / 1000), 1)} דקות קריאה`;
+  const date = new Date(data.created_at).toLocaleDateString('he-IL', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+  
+  let categoryLabel = 'כללי';
+  if (data.category) {
+    const categoryMap: {[key: string]: string} = {
+      'general': 'כללי',
+      'maintenance': 'תחזוקה',
+      'renovation': 'שיפוצים',
+      'decoration': 'עיצוב',
+      'garden': 'גינון',
+      'electricity': 'חשמל',
+      'plumbing': 'אינסטלציה'
+    };
+    categoryLabel = categoryMap[data.category] || data.category;
+  }
+  
+  return {
+    id: data.id,
+    title: data.title,
+    summary: data.summary,
+    content: data.content,
+    author: data.author,
+    image: data.image,
+    published: data.published,
+    created_at: data.created_at,
+    updated_at: data.updated_at,
+    category: data.category,
+    excerpt,
+    date,
+    readTime,
+    categoryLabel
+  };
+};
+
 const estimateReadTime = (content: string): string => {
-  // Average reading speed is about 200 words per minute
   const wordCount = content.split(/\s+/).length;
   const readTimeMinutes = Math.max(1, Math.round(wordCount / 200));
   return readTimeMinutes.toString();
 };
 
-// Helper function to format date
 const formatDate = (dateStr: string | null): string => {
   if (!dateStr) return 'ללא תאריך';
   
@@ -160,7 +204,6 @@ export const uploadArticleImage = async (file: File): Promise<string> => {
     const fileName = `article-${Date.now()}.${fileExt}`;
     const filePath = `article-images/${fileName}`;
     
-    // Create bucket if it doesn't exist
     try {
       const { data: buckets } = await supabase.storage.listBuckets();
       const imagesBucket = buckets?.find(b => b.name === 'images');
@@ -172,7 +215,6 @@ export const uploadArticleImage = async (file: File): Promise<string> => {
       console.error('Error checking buckets:', bucketError);
     }
     
-    // Try to upload to the images bucket first
     try {
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('images')
@@ -195,7 +237,6 @@ export const uploadArticleImage = async (file: File): Promise<string> => {
     } catch (imagesError) {
       console.error('Failed to upload to images bucket, trying public bucket:', imagesError);
       
-      // Fallback to public bucket
       const { data: fallbackData, error: fallbackError } = await supabase.storage
         .from('public')
         .upload(filePath, file, {
@@ -217,7 +258,6 @@ export const uploadArticleImage = async (file: File): Promise<string> => {
     }
   } catch (error) {
     console.error('Error uploading article image:', error);
-    // Return a placeholder image URL as fallback
     return 'https://via.placeholder.com/800x400?text=Article+Image+Not+Available';
   }
 };

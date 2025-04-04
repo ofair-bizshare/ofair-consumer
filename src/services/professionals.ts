@@ -1,208 +1,208 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { ProfessionalInterface } from '@/types/dashboard';
-import { getProfessionalCategoryLabel, getLocationLabel } from './admin/utils/adminCache';
 
-// Fetch all professionals from the database
-export const fetchProfessionals = async (): Promise<ProfessionalInterface[]> => {
+/**
+ * Professionals Service
+ */
+
+export interface ProfessionalInterface {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  bio: string;
+  rating: number;
+  reviews_count: number;
+  image_url: string;
+  created_at: string;
+  city: string;
+  specialty: string;
+  verified: boolean;
+  area?: string;
+  category?: string;
+}
+
+/**
+ * Gets all professionals
+ */
+export const getProfessionals = async (): Promise<ProfessionalInterface[]> => {
   try {
-    console.log('Fetching professionals...');
-    
-    // First try with normal select
-    try {
-      const { data, error } = await supabase
-        .from('professionals')
-        .select('*')
-        .order('rating', { ascending: false });
-        
-      if (error) {
-        console.error('Error fetching professionals with standard query:', error);
-        throw error;
-      }
-      
-      if (!data || data.length === 0) {
-        console.log('No professionals found in the database');
-        return [];
-      }
-      
-      // Map the database columns to our interface and add formatted fields
-      return data.map(item => ({
-        id: item.id,
-        name: item.name,
-        profession: item.profession,
-        rating: item.rating || 0,
-        reviewCount: item.review_count || 0,
-        location: getLocationLabel(item.location),
-        image: item.image,
-        specialties: item.specialties || [],
-        phoneNumber: item.phone_number,
-        about: item.about || '',
-        verified: Math.random() > 0.3, // Random for now, should be a proper field in the future
-        // Add these fields to match the expected format in the Search component
-        category: item.profession.toLowerCase().replace(/\s+/g, '_'),
-        categoryLabel: getProfessionalCategoryLabel(item.profession.toLowerCase().replace(/\s+/g, '_')),
-        area: item.location
-      }));
-    } catch (queryError) {
-      // If we get an infinite recursion error, try using a stored procedure or manual workaround
-      console.warn('Attempting alternative fetch method due to:', queryError);
-      
-      // In a real environment we'd use RPC (stored procedure) to bypass RLS
-      // For now, use a simplified version without order to see if that works
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from('professionals')
-        .select('*');
-      
-      if (fallbackError) {
-        console.error('Error with fallback professional query:', fallbackError);
-        return [];
-      }
-      
-      if (!fallbackData || fallbackData.length === 0) {
-        console.log('No professionals found with fallback query');
-        return [];
-      }
-      
-      // Sort in JS instead of SQL
-      const sortedData = fallbackData.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-      
-      // Map the database columns to our interface with formatted fields
-      return sortedData.map(item => ({
-        id: item.id,
-        name: item.name,
-        profession: item.profession,
-        rating: item.rating || 0,
-        reviewCount: item.review_count || 0,
-        location: getLocationLabel(item.location),
-        image: item.image,
-        specialties: item.specialties || [],
-        phoneNumber: item.phone_number,
-        about: item.about || '',
-        verified: Math.random() > 0.3, // Random for now, should be a proper field in the future
-        // Add these fields to match the expected format in the Search component
-        category: item.profession.toLowerCase().replace(/\s+/g, '_'),
-        categoryLabel: getProfessionalCategoryLabel(item.profession.toLowerCase().replace(/\s+/g, '_')),
-        area: item.location
-      }));
+    const { data, error } = await supabase
+      .from('professionals')
+      .select('*');
+
+    if (error) {
+      console.error('Error fetching professionals:', error);
+      return [];
     }
+
+    return data.map(professional => getProfessionalFromData(professional));
   } catch (error) {
-    console.error('Error fetching professionals:', error);
+    console.error('Error getting professionals:', error);
     return [];
   }
 };
 
-// Get a professional by ID
-export const getProfessionalById = async (id: string): Promise<ProfessionalInterface | null> => {
+/**
+ * Gets a professional by ID
+ * @param id Professional ID
+ */
+export const getProfessional = async (id: string): Promise<ProfessionalInterface | null> => {
   try {
-    if (!id) {
-      console.error('No professional ID provided');
-      return null;
-    }
-    
-    console.log(`Fetching professional with ID: ${id}`);
-    
     const { data, error } = await supabase
       .from('professionals')
       .select('*')
       .eq('id', id)
-      .maybeSingle();
-      
+      .single();
+
     if (error) {
-      console.error('Error fetching professional by ID:', error);
+      console.error('Error fetching professional:', error);
       return null;
     }
-    
-    if (!data) {
-      console.log(`Professional with ID ${id} not found in database`);
-      return null;
-    }
-    
-    return {
-      id: data.id,
-      name: data.name,
-      profession: data.profession,
-      rating: data.rating || 0,
-      reviewCount: data.review_count || 0,
-      location: getLocationLabel(data.location),
-      image: data.image,
-      specialties: data.specialties || [],
-      phoneNumber: data.phone_number,
-      about: data.about || '',
-      verified: Math.random() > 0.3, // Random for now, should be a proper field in the future
-      // Add these fields to match the expected format
-      category: data.profession.toLowerCase().replace(/\s+/g, '_'),
-      categoryLabel: getProfessionalCategoryLabel(data.profession.toLowerCase().replace(/\s+/g, '_')),
-      area: data.location
-    };
+
+    return getProfessionalFromData(data);
   } catch (error) {
-    console.error('Error fetching professional by ID:', error);
+    console.error('Error getting professional:', error);
     return null;
   }
 };
 
-// Update the seed function to insert sample professionals if the database is empty
-export const seedProfessionals = async () => {
+/**
+ * Gets a professional from data
+ * @param data Professional data
+ */
+export const getProfessionalFromData = (data: any): ProfessionalInterface => {
+  if (!data) return null;
+  
+  return {
+    id: data.id,
+    name: data.name,
+    phone: data.phone,
+    email: data.email,
+    bio: data.bio,
+    rating: data.rating || 0,
+    reviews_count: data.reviews_count || 0,
+    image_url: data.image_url || 'https://via.placeholder.com/150',
+    created_at: data.created_at,
+    city: data.city || 'לא צוין',
+    specialty: data.specialty || 'לא צוין',
+    verified: data.verified || false,
+    area: data.area,
+    category: data.category
+  };
+};
+
+/**
+ * Seeds professionals
+ */
+export const seedProfessionals = async (): Promise<void> => {
   try {
-    const { data: existingProfessionals } = await supabase
+    // Check if professionals already exist
+    const { data, error } = await supabase
       .from('professionals')
       .select('id')
       .limit(1);
-      
-    if (existingProfessionals && existingProfessionals.length > 0) {
-      console.log('Professionals already exist in the database, skipping seed');
+
+    if (error) {
+      console.error('Error checking professionals:', error);
       return;
     }
-    
-    console.log('No professionals found, seeding sample data...');
-    
-    const sampleProfessionals = [
+
+    if (data && data.length > 0) {
+      console.log('Professionals already exist, skipping seed');
+      return;
+    }
+
+    // Seed professionals
+    const professionals = [
       {
-        name: 'אבי כהן',
-        profession: 'חשמלאי מוסמך',
+        name: 'אבי חשמלאי',
+        phone: '050-1234567',
+        email: 'avi@example.com',
+        bio: 'חשמלאי מוסמך עם 10 שנות ניסיון',
+        rating: 4.5,
+        reviews_count: 20,
+        image_url: 'https://via.placeholder.com/150',
+        created_at: new Date().toISOString(),
+        city: 'תל אביב',
+        specialty: 'חשמלאי',
+        verified: true,
+        area: 'tel_aviv',
+        category: 'electricity'
+      },
+      {
+        name: 'משה אינסטלטור',
+        phone: '052-7654321',
+        email: 'moshe@example.com',
+        bio: 'אינסטלטור מומחה עם 15 שנות ניסיון',
         rating: 4.8,
-        review_count: 124,
-        location: 'tel_aviv',
-        image: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1180&q=80',
-        specialties: ['תיקוני חשמל', 'התקנות', 'תאורה'],
-        phone_number: '05012345678',
-        about: 'חשמלאי מוסמך עם ניסיון של 15 שנים בתחום החשמל והתאורה. מתמחה בתיקוני חשמל, התקנות ותאורה. עובד באזור תל אביב והמרכז.'
+        reviews_count: 35,
+        image_url: 'https://via.placeholder.com/150',
+        created_at: new Date().toISOString(),
+        city: 'ירושלים',
+        specialty: 'אינסטלטור',
+        verified: true,
+        area: 'jerusalem',
+        category: 'plumbing'
       },
       {
-        name: 'מיכל לוי',
-        profession: 'מעצבת פנים',
+        name: 'שרה שיפוצים',
+        phone: '054-2345678',
+        email: 'sara@example.com',
+        bio: 'קבלנית שיפוצים עם 20 שנות ניסיון',
+        rating: 4.2,
+        reviews_count: 15,
+        image_url: 'https://via.placeholder.com/150',
+        created_at: new Date().toISOString(),
+        city: 'חיפה',
+        specialty: 'שיפוצים',
+        verified: true,
+        area: 'haifa',
+        category: 'renovations'
+      },
+      {
+        name: 'דוד נגר',
+        phone: '055-8765432',
+        email: 'david@example.com',
+        bio: 'נגר אומן עם 25 שנות ניסיון',
         rating: 4.9,
-        review_count: 89,
-        location: 'sharon',
-        image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1161&q=80',
-        specialties: ['עיצוב דירות', 'תכנון חללים', 'צביעה'],
-        phone_number: '05023456789',
-        about: 'מעצבת פנים מנוסה עם ניסיון של 10 שנים בתחום. מתמחה בעיצוב דירות, תכנון חללים וצביעה. עובדת באזור השרון.'
+        reviews_count: 40,
+        image_url: 'https://via.placeholder.com/150',
+        created_at: new Date().toISOString(),
+        city: 'באר שבע',
+        specialty: 'נגר',
+        verified: true,
+        area: 'beer_sheva',
+        category: 'carpentry'
       },
       {
-        name: 'יוסי אברהם',
-        profession: 'שיפוצניק כללי',
-        rating: 4.7,
-        review_count: 156,
-        location: 'jerusalem',
-        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80',
-        specialties: ['שיפוצים כלליים', 'ריצוף', 'גבס'],
-        phone_number: '05034567890',
-        about: 'שיפוצניק כללי עם ניסיון של 20 שנים בתחום. מתמחה בשיפוצים כלליים, ריצוף וגבס. עובד באזור ירושלים והסביבה.'
+        name: 'רחל גננת',
+        phone: '053-3456789',
+        email: 'rachel@example.com',
+        bio: 'גננת מומחית עם 30 שנות ניסיון',
+        rating: 4.6,
+        reviews_count: 25,
+        image_url: 'https://via.placeholder.com/150',
+        created_at: new Date().toISOString(),
+        city: 'תל אביב',
+        specialty: 'גננת',
+        verified: true,
+        area: 'tel_aviv',
+        category: 'gardening'
       }
     ];
-    
-    const { error } = await supabase
+
+    // Insert professionals
+    const { error: insertError } = await supabase
       .from('professionals')
-      .insert(sampleProfessionals);
-      
-    if (error) {
-      console.error('Error seeding professionals:', error);
-      throw error;
+      .insert(professionals);
+
+    if (insertError) {
+      console.error('Error seeding professionals:', insertError);
+      return;
     }
-    
-    console.log('Sample professionals seeded successfully');
+
+    console.log('Professionals seeded successfully');
   } catch (error) {
     console.error('Error seeding professionals:', error);
-    throw error;
   }
 };
