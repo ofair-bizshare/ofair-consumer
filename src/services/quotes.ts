@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { QuoteInterface } from '@/types/dashboard';
+import { QuoteInterface, ProfessionalInterface } from '@/types/dashboard';
 import { getProfessional } from './professionals';
 
 // Fetch quotes for a specific request

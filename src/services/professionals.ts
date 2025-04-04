@@ -34,7 +34,7 @@ export interface ProfessionalInterface {
 /**
  * Gets all professionals
  */
-export const getProfessionals = async (): Promise<ProfessionalInterface[]> => {
+export const getProfessionals = async (): Promise<DashboardProfessionalInterface[]> => {
   try {
     const { data, error } = await supabase
       .from('professionals')
@@ -59,7 +59,7 @@ export const fetchProfessionals = getProfessionals;
  * Gets a professional by ID
  * @param id Professional ID
  */
-export const getProfessional = async (id: string): Promise<ProfessionalInterface | null> => {
+export const getProfessional = async (id: string): Promise<DashboardProfessionalInterface | null> => {
   try {
     const { data, error } = await supabase
       .from('professionals')
@@ -86,32 +86,32 @@ export const getProfessionalById = getProfessional;
  * Gets a professional from data
  * @param data Professional data
  */
-export const getProfessionalFromData = (data: any): ProfessionalInterface => {
+export const getProfessionalFromData = (data: any): DashboardProfessionalInterface => {
   if (!data) return null as any;
   
   return {
     id: data.id,
     name: data.name,
-    phone: data.phone,
-    email: data.email,
-    bio: data.bio,
-    rating: data.rating || 0,
-    reviews_count: data.reviews_count || 0,
-    image_url: data.image_url || 'https://via.placeholder.com/150',
-    created_at: data.created_at,
-    city: data.city || 'לא צוין',
-    specialty: data.specialty || 'לא צוין',
-    verified: data.verified || false,
-    area: data.area,
-    category: data.category,
-    // Add compatibility fields
     profession: data.specialty || data.profession || 'לא צוין',
+    rating: data.rating || 0,
+    reviewCount: data.reviews_count || data.review_count || 0,
     location: data.city || data.location || 'לא צוין',
     image: data.image_url || data.image || 'https://via.placeholder.com/150',
+    verified: data.verified || false,
     specialties: data.specialties || [data.specialty] || [],
+    // Add all compatibility fields
+    phone: data.phone || data.phoneNumber,
     phoneNumber: data.phone || data.phone_number,
+    email: data.email,
+    bio: data.bio,
     about: data.bio || data.about,
-    reviewCount: data.reviews_count || data.review_count || 0
+    reviews_count: data.reviews_count || data.reviewCount || 0,
+    image_url: data.image_url || data.image || 'https://via.placeholder.com/150',
+    created_at: data.created_at,
+    city: data.city || data.location || 'לא צוין',
+    specialty: data.specialty || data.profession || 'לא צוין',
+    area: data.area,
+    category: data.category,
   };
 };
 
@@ -148,12 +148,12 @@ export const seedProfessionals = async (): Promise<void> => {
         reviews_count: 20,
         image_url: 'https://via.placeholder.com/150',
         city: 'תל אביב',
-        location: 'תל אביב',
         specialty: 'חשמלאי',
         specialties: ['חשמלאי', 'התקנת מזגנים'],
         area: 'tel_aviv',
         category: 'electricity',
-        verified: true
+        verified: true,
+        location: 'תל אביב'
       },
       {
         name: 'משה אינסטלטור',
@@ -165,12 +165,12 @@ export const seedProfessionals = async (): Promise<void> => {
         reviews_count: 35,
         image_url: 'https://via.placeholder.com/150',
         city: 'ירושלים',
-        location: 'ירושלים',
         specialty: 'אינסטלטור',
         specialties: ['אינסטלטור', 'תיקון נזילות'],
         area: 'jerusalem',
         category: 'plumbing',
-        verified: true
+        verified: true,
+        location: 'ירושלים'
       },
       {
         name: 'שרה שיפוצים',
@@ -182,12 +182,12 @@ export const seedProfessionals = async (): Promise<void> => {
         reviews_count: 15,
         image_url: 'https://via.placeholder.com/150',
         city: 'חיפה',
-        location: 'חיפה',
         specialty: 'שיפוצים',
         specialties: ['שיפוצים', 'צביעה'],
         area: 'haifa',
         category: 'renovations',
-        verified: false
+        verified: false,
+        location: 'חיפה'
       },
       {
         name: 'דוד נגר',
@@ -199,12 +199,12 @@ export const seedProfessionals = async (): Promise<void> => {
         reviews_count: 40,
         image_url: 'https://via.placeholder.com/150',
         city: 'באר שבע',
-        location: 'באר שבע',
         specialty: 'נגרות',
         specialties: ['נגרות', 'רהיטים'],
         area: 'beer_sheva',
         category: 'carpentry',
-        verified: true
+        verified: true,
+        location: 'באר שבע'
       },
       {
         name: 'רחל גננת',
@@ -216,19 +216,37 @@ export const seedProfessionals = async (): Promise<void> => {
         reviews_count: 25,
         image_url: 'https://via.placeholder.com/150',
         city: 'תל אביב',
-        location: 'תל אביב',
         specialty: 'גינון',
         specialties: ['גינון', 'עיצוב גינות'],
         area: 'tel_aviv',
         category: 'gardening',
-        verified: false
+        verified: false,
+        location: 'תל אביב'
       }
     ];
+
+    // These are database professionals - map them to the DB fields
+    const dbProfessionals = professionals.map(p => ({
+      name: p.name,
+      profession: p.profession,
+      location: p.location,
+      image: p.image_url,
+      specialties: p.specialties,
+      phone_number: p.phone,
+      about: p.bio,
+      rating: p.rating,
+      review_count: p.reviews_count,
+      city: p.city,
+      specialty: p.specialty,
+      verified: p.verified,
+      area: p.area,
+      category: p.category
+    }));
 
     // Insert professionals
     const { error: insertError } = await supabase
       .from('professionals')
-      .insert(professionals);
+      .insert(dbProfessionals);
 
     if (insertError) {
       console.error('Error seeding professionals:', insertError);

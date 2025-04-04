@@ -1,8 +1,7 @@
-
 import React from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useToast } from '@/hooks/use-toast';
-import { fetchProfessionals } from '@/services/professionals';
+import { getProfessionals } from '@/services/professionals';
 import { createProfessional, uploadProfessionalImage } from '@/services/admin';
 import { ProfessionalInterface } from '@/types/dashboard';
 import { 
@@ -63,7 +62,7 @@ const ProfessionalsManager = () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await fetchProfessionals();
+      const data = await getProfessionals();
       setProfessionals(data);
     } catch (error) {
       console.error('Error fetching professionals:', error);
@@ -87,7 +86,6 @@ const ProfessionalsManager = () => {
       setUploading(true);
       setError(null);
       
-      // Upload image if selected
       let imageUrl = 'https://via.placeholder.com/150';
       if (imageFile) {
         const uploadedUrl = await uploadProfessionalImage(imageFile);
@@ -96,7 +94,6 @@ const ProfessionalsManager = () => {
         }
       }
       
-      // Create professional
       const professional = {
         name: data.name,
         profession: data.profession,
@@ -116,23 +113,21 @@ const ProfessionalsManager = () => {
           description: `${data.name} נוסף למערכת`
         });
         
-        // Reset form and close dialog
         form.reset();
         setImageFile(null);
         setDialogOpen(false);
         
-        // Refresh the list
         fetchData();
       } else {
         toast({
           title: "שגיאה ביצירת בעל מקצוע",
-          description: "אירעה שגיאה ביצירת בעל המקצוע. אנא נסה שוב.",
+          description: "אירעה שגיאה ביצירת בעל מקצוע. אנא נסה שוב.",
           variant: "destructive"
         });
       }
     } catch (error) {
       console.error('Error creating professional:', error);
-      setError('אירעה שגיאה ביצירת בעל המקצוע. אנא נסה שוב מאוחר יותר.');
+      setError('אירעה שגיאה ביצירת בעל מקצוע. אנא נסה שוב מאוחר יותר.');
       toast({
         title: "שגיאה ביצירת בעל מקצוע",
         description: "אירעה שגיאה בלתי צפויה",

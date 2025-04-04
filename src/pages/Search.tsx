@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Filter, Check, Star, Award } from 'lucide-react';
-import { fetchProfessionals } from '@/services/professionals';
+import { getProfessionals } from '@/services/professionals';
 import { ProfessionalInterface } from '@/types/dashboard';
 import { getProfessionalCategoryLabel } from '@/services/admin/utils/adminCache';
 
@@ -42,10 +42,10 @@ const Search = () => {
 
   // Fetch professionals from database
   useEffect(() => {
-    const getProfessionals = async () => {
+    const fetchProfessionalsData = async () => {
       try {
         setLoading(true);
-        const data = await fetchProfessionals();
+        const data = await getProfessionals();
         setAllProfessionals(data);
         setProfessionals(data);
         setLoading(false);
@@ -56,7 +56,7 @@ const Search = () => {
       }
     };
 
-    getProfessionals();
+    fetchProfessionalsData();
   }, []);
 
   // Update available specialties when category changes
