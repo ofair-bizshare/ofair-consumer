@@ -6,104 +6,58 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { he } from 'date-fns/locale';
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: 'quote' | 'message' | 'system' | 'reminder' | 'professional';
-  timestamp: number; // Unix timestamp
-  isRead: boolean;
-  actionUrl?: string;
-  actionLabel?: string;
-}
+import { 
+  Notification,
+  fetchUserNotifications, 
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  deleteNotification
+} from '@/services/notifications';
 
 const NotificationsTab: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showAll, setShowAll] = useState(true);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    // Get notifications from localStorage or initialize with samples
-    const storedNotifications = localStorage.getItem('myNotifications');
-    if (storedNotifications) {
-      setNotifications(JSON.parse(storedNotifications));
-    } else {
-      // Sample notifications
-      const sampleNotifications: Notification[] = [
-        {
-          id: '1',
-          title: 'הצעת מחיר חדשה',
-          message: 'התקבלה הצעת מחיר חדשה לבקשתך "שיפוץ אמבטיה"',
-          type: 'quote',
-          timestamp: Date.now() - 3600000, // 1 hour ago
-          isRead: false,
-          actionUrl: '/dashboard#requests-section',
-          actionLabel: 'צפה בהצעה'
-        },
-        {
-          id: '2',
-          title: 'הודעה חדשה',
-          message: 'קיבלת הודעה חדשה מבעל המקצוע משה לוי',
-          type: 'message',
-          timestamp: Date.now() - 86400000, // 1 day ago
-          isRead: true,
-          actionUrl: '/dashboard/messages',
-          actionLabel: 'צפה בהודעה'
-        },
-        {
-          id: '3',
-          title: 'תזכורת: פגישה עם בעל מקצוע',
-          message: 'יש לך פגישה מתוכננת בעוד שעתיים עם האינסטלטור',
-          type: 'reminder',
-          timestamp: Date.now() - 259200000, // 3 days ago
-          isRead: false,
-          actionUrl: '/dashboard/calendar',
-          actionLabel: 'צפה בפגישות'
-        },
-        {
-          id: '4',
-          title: 'בעל מקצוע חדש באזור שלך',
-          message: 'בעל מקצוע חדש בתחום האינסטלציה נרשם באזור תל אביב',
-          type: 'professional',
-          timestamp: Date.now() - 604800000, // 7 days ago
-          isRead: true,
-          actionUrl: '/search?category=plumbing',
-          actionLabel: 'חפש אינסטלטורים'
-        },
-        {
-          id: '5',
-          title: 'עדכון מערכת',
-          message: 'בוצעו שיפורים במערכת שיעזרו לך למצוא בעלי מקצוע בקלות רבה יותר',
-          type: 'system',
-          timestamp: Date.now() - 1209600000, // 14 days ago
-          isRead: true
-        }
-      ];
-      
-      setNotifications(sampleNotifications);
-      localStorage.setItem('myNotifications', JSON.stringify(sampleNotifications));
-    }
+    const loadNotifications = async () => {
+      try {
+        const userNotifications = await fetchUserNotifications();
+        setNotifications(userNotifications);
+      } catch (error) {
+        console.error('Error loading notifications:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadNotifications();
   }, []);
   
-  const markAsRead = (id: string) => {
-    const updatedNotifications = notifications.map(notification => 
-      notification.id === id ? { ...notification, isRead: true } : notification
-    );
+  const handleMarkAsRead = async (id: string) => {
+    const success = await markNotificationAsRead(id);
     
-    setNotifications(updatedNotifications);
-    localStorage.setItem('myNotifications', JSON.stringify(updatedNotifications));
+    if (success) {
+      setNotifications(prev => prev.map(notification => 
+        notification.id === id ? { ...notification, isRead: true } : notification
+      ));
+    }
   };
   
-  const markAllAsRead = () => {
-    const updatedNotifications = notifications.map(notification => ({ ...notification, isRead: true }));
-    setNotifications(updatedNotifications);
-    localStorage.setItem('myNotifications', JSON.stringify(updatedNotifications));
+  const handleMarkAllAsRead = async () => {
+    const success = await markAllNotificationsAsRead();
+    
+    if (success) {
+      setNotifications(prev => prev.map(notification => ({ ...notification, isRead: true })));
+    }
   };
   
-  const deleteNotification = (id: string) => {
-    const updatedNotifications = notifications.filter(notification => notification.id !== id);
-    setNotifications(updatedNotifications);
-    localStorage.setItem('myNotifications', JSON.stringify(updatedNotifications));
+  const handleDeleteNotification = async (id: string) => {
+    const success = await deleteNotification(id);
+    
+    if (success) {
+      setNotifications(prev => prev.filter(notification => notification.id !== id));
+    }
   };
   
   const getNotificationIcon = (type: string) => {
@@ -129,6 +83,14 @@ const NotificationsTab: React.FC = () => {
   
   const unreadCount = notifications.filter(n => !n.isRead).length;
   const displayNotifications = showAll ? notifications : notifications.filter(n => !n.isRead);
+  
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00d09e]"></div>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-6" dir="rtl">
@@ -163,7 +125,7 @@ const NotificationsTab: React.FC = () => {
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={markAllAsRead}
+                onClick={handleMarkAllAsRead}
               >
                 סמן הכל כנקרא
               </Button>
@@ -177,7 +139,7 @@ const NotificationsTab: React.FC = () => {
               <Card 
                 key={notification.id} 
                 className={`border-r-4 ${notification.isRead ? 'border-gray-200' : 'border-blue-500'} hover:shadow-md transition-shadow cursor-pointer`}
-                onClick={() => markAsRead(notification.id)}
+                onClick={() => handleMarkAsRead(notification.id)}
               >
                 <CardContent className="p-4">
                   <div className="flex">
@@ -198,7 +160,7 @@ const NotificationsTab: React.FC = () => {
                           className="text-gray-400 hover:text-gray-700"
                           onClick={(e) => {
                             e.stopPropagation();
-                            deleteNotification(notification.id);
+                            handleDeleteNotification(notification.id);
                           }}
                         >
                           <X size={16} />
@@ -230,7 +192,7 @@ const NotificationsTab: React.FC = () => {
                             className="text-green-600 hover:text-green-700 hover:bg-green-50"
                             onClick={(e) => {
                               e.stopPropagation();
-                              markAsRead(notification.id);
+                              handleMarkAsRead(notification.id);
                             }}
                           >
                             <CheckCircle size={16} className="ml-1" />

@@ -23,6 +23,9 @@ import ArticleDetail from '@/pages/ArticleDetail';
 import Articles from '@/pages/Articles';
 import ReferralsPage from '@/pages/ReferralsPage';
 import { seedProfessionals } from '@/services/professionals';
+import Terms from '@/pages/Terms';
+import Privacy from '@/pages/Privacy';
+import Settings from '@/pages/Settings';
 
 const AdminDashboard = lazy(() => import('@/pages/Admin/AdminDashboard'));
 const ArticlesManager = lazy(() => import('@/pages/Admin/ArticlesManager'));
@@ -64,10 +67,14 @@ function App() {
                 <Route path="/my-referrals" element={<MyReferrals />} />
                 <Route path="/search" element={<Search />} />
                 <Route path="/faq" element={<FAQ />} />
+                <Route path="/professional/:id" element={<ProfessionalProfile />} />
                 <Route path="/professionals/:id" element={<ProfessionalProfile />} />
                 <Route path="/articles" element={<Articles />} />
                 <Route path="/articles/:id" element={<ArticleDetail />} />
                 <Route path="/referrals" element={<ReferralsPage />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
                 
                 {/* Admin routes */}
                 <Route path="/admin-login" element={<AdminLogin />} />

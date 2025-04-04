@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -14,10 +15,19 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { useAuth } from '@/providers/AuthProvider';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { createRequest } from '@/services/requests';
 
 interface RequestFormProps {
   onSuccess?: (value: boolean) => void;
-  saveToRequests?: boolean;
 }
 
 const professions = [
@@ -89,8 +99,7 @@ const cities = [
 ];
 
 const RequestForm: React.FC<RequestFormProps> = ({
-  onSuccess,
-  saveToRequests = false
+  onSuccess
 }) => {
   const [step, setStep] = useState(1);
   const [images, setImages] = useState<File[]>([]);
@@ -241,13 +250,12 @@ const RequestForm: React.FC<RequestFormProps> = ({
     }
     
     try {
-      const { createRequest } = await import('@/services/requests');
-      
       const requestId = await createRequest({
         title: formData.profession,
         description: formData.description,
         location: formData.location,
-        timing: formData.timing
+        timing: formData.timing,
+        user_id: user.id
       });
       
       if (!requestId) {
@@ -255,7 +263,6 @@ const RequestForm: React.FC<RequestFormProps> = ({
       }
       
       setNewRequestId(requestId);
-      
       setShowSuccessDialog(true);
       
       if (onSuccess) {
@@ -291,7 +298,7 @@ const RequestForm: React.FC<RequestFormProps> = ({
     e.preventDefault();
     if (!registerData.name || !registerData.email || !registerData.password || !registerData.passwordConfirm) {
       toast({
-        title: "שדו�� חסרים",
+        title: "שדות חסרים",
         description: "אנא מלא את כל השדות הנדרשים",
         variant: "destructive"
       });
@@ -347,86 +354,46 @@ const RequestForm: React.FC<RequestFormProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="profession" className="text-gray-700">סוג עבודה</Label>
-              <Popover open={openProfessionPopover} onOpenChange={setOpenProfessionPopover}>
-                <PopoverTrigger asChild>
-                  <div className="relative">
-                    <Briefcase className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                    <Input
-                      id="profession"
-                      name="profession"
-                      value={formData.profession}
-                      onChange={handleInputChange}
-                      placeholder="בחר סוג עבודה"
-                      className="pr-10"
-                      onClick={() => setOpenProfessionPopover(true)}
-                    />
-                  </div>
-                </PopoverTrigger>
-                <PopoverContent className="p-0" align="start" dir="rtl">
-                  <Command>
-                    <CommandInput placeholder="חפש סוג עבודה..." dir="rtl" className="h-9" />
-                    <CommandList>
-                      <CommandEmpty>לא נמצאו תוצאות</CommandEmpty>
-                      <CommandGroup className="max-h-64 overflow-auto">
-                        {professions.map((profession) => (
-                          <CommandItem
-                            key={profession}
-                            onSelect={() => {
-                              setFormData(prev => ({ ...prev, profession }));
-                              setOpenProfessionPopover(false);
-                            }}
-                            className="cursor-pointer"
-                          >
-                            {profession}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+              <Select 
+                onValueChange={(value) => handleSelectChange('profession', value)} 
+                value={formData.profession}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="בחר סוג עבודה" />
+                </SelectTrigger>
+                <SelectContent dir="rtl">
+                  <SelectGroup>
+                    <SelectLabel>סוגי עבודות</SelectLabel>
+                    {professions.map((profession) => (
+                      <SelectItem key={profession} value={profession}>
+                        {profession}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="location" className="text-gray-700">עיר</Label>
-              <Popover open={openCityPopover} onOpenChange={setOpenCityPopover}>
-                <PopoverTrigger asChild>
-                  <div className="relative">
-                    <MapPin className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                    <Input
-                      id="location"
-                      name="location"
-                      value={formData.location}
-                      onChange={handleInputChange}
-                      placeholder="בחר עיר"
-                      className="pr-10"
-                      onClick={() => setOpenCityPopover(true)}
-                    />
-                  </div>
-                </PopoverTrigger>
-                <PopoverContent className="p-0" align="start" dir="rtl">
-                  <Command>
-                    <CommandInput placeholder="חפש עיר..." dir="rtl" className="h-9" />
-                    <CommandList>
-                      <CommandEmpty>לא נמצאו תוצאות</CommandEmpty>
-                      <CommandGroup className="max-h-64 overflow-auto">
-                        {cities.map((city) => (
-                          <CommandItem
-                            key={city}
-                            onSelect={() => {
-                              setFormData(prev => ({ ...prev, location: city }));
-                              setOpenCityPopover(false);
-                            }}
-                            className="cursor-pointer"
-                          >
-                            {city}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+              <Select
+                onValueChange={(value) => handleSelectChange('location', value)}
+                value={formData.location}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="בחר עיר" />
+                </SelectTrigger>
+                <SelectContent dir="rtl">
+                  <SelectGroup>
+                    <SelectLabel>ערים</SelectLabel>
+                    {cities.map((city) => (
+                      <SelectItem key={city} value={city}>
+                        {city}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -642,14 +609,10 @@ const RequestForm: React.FC<RequestFormProps> = ({
           <div className="flex flex-col items-center justify-center py-4">
             <div className="mb-5 text-center">
               <p className="text-gray-700 mb-2">
-                {saveToRequests 
-                  ? "הבקשה שלך נוספה לאזור האישי שלך" 
-                  : "הבקשה שלך נשלחה בהצלחה"}
+                הבקשה שלך נוספה לאזור האישי שלך
               </p>
               <p className="text-gray-500 text-sm">
-                {saveToRequests 
-                  ? "תוכל לעקוב אחרי הסטטוס שלה ולראות את הצעות המחיר שיתקבלו" 
-                  : "בעלי מקצוע יצרו איתך קשר בהקדם"}
+                תוכל לעקוב אחרי הסטטוס שלה ולראות את הצעות המחיר שיתקבלו
               </p>
             </div>
           </div>
@@ -657,9 +620,9 @@ const RequestForm: React.FC<RequestFormProps> = ({
             <Button 
               type="button" 
               className="bg-[#00D09E] hover:bg-[#00C090] text-white w-full" 
-              onClick={saveToRequests ? handleGoToDashboard : () => setShowSuccessDialog(false)}
+              onClick={handleGoToDashboard}
             >
-              {saveToRequests ? "עבור לאזור האישי" : "סגור"}
+              עבור לאזור האישי
             </Button>
           </DialogFooter>
         </DialogContent>
