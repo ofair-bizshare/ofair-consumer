@@ -8,6 +8,7 @@ export interface Article {
   summary?: string;
   image?: string;
   author?: string;
+  category?: string;
   published: boolean;
   created_at: string;
   updated_at: string;
@@ -129,6 +130,7 @@ export const createArticle = async (article: Partial<Article>): Promise<Article 
         summary: article.summary,
         image: article.image,
         author: article.author,
+        category: article.category,
         published: article.published !== undefined ? article.published : true
       })
       .select()

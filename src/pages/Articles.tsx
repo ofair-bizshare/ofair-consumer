@@ -67,6 +67,7 @@ const Articles = () => {
     if (value === 'all') {
       setFilteredArticles(articles);
     } else {
+      // Now category will be recognized as a valid property of Article
       const filtered = articles.filter(article => article.category === value);
       setFilteredArticles(filtered);
     }
