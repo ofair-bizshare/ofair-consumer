@@ -49,23 +49,48 @@ const QuoteDetailDialog: React.FC<QuoteDetailDialogProps> = ({
             מידע מפורט על בעל המקצוע
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4">
-          <iframe 
-            src={`/professional/${professional.id}`} 
-            className="w-full h-[70vh] border-none rounded-md shadow-md"
-            title={`פרופיל של ${professional.name}`}
-          />
+        <div className="py-4 px-2">
+          <div className="bg-white rounded-lg shadow-md p-4">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="h-16 w-16 rounded-full overflow-hidden bg-blue-100">
+                <img src={professional.image} alt={professional.name} className="w-full h-full object-cover" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold">{professional.name}</h3>
+                <p className="text-gray-600">{professional.profession}</p>
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <h4 className="font-semibold mb-1">מיקום:</h4>
+              <p>{professional.location}</p>
+            </div>
+            
+            <div className="mb-4">
+              <h4 className="font-semibold mb-1">התמחויות:</h4>
+              <div className="flex flex-wrap gap-2">
+                {professional.specialties.map((specialty, index) => (
+                  <span key={index} className="bg-blue-50 text-blue-800 text-xs px-2 py-1 rounded">
+                    {specialty}
+                  </span>
+                ))}
+              </div>
+            </div>
+            
+            <div className="text-center mt-4">
+              <Button 
+                className="bg-blue-600 hover:bg-blue-700 w-full"
+                onClick={handleViewProfile}
+              >
+                צפה בפרופיל המלא
+              </Button>
+            </div>
+          </div>
         </div>
         <div className="flex justify-between">
           <DialogClose asChild>
             <Button variant="outline">סגור</Button>
           </DialogClose>
-          <Button 
-            className="bg-blue-600 hover:bg-blue-700"
-            onClick={handleViewProfile}
-          >
-            פתח בעמוד מלא
-          </Button>
         </div>
       </DialogContent>
     </Dialog>

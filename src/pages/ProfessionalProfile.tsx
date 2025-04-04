@@ -153,8 +153,8 @@ const ProfessionalProfile = () => {
     window.scrollTo(0, 0);
   }, [id, toast]);
 
-  const isInIframe = window !== window.parent && window.parent;
-
+  // remove isInIframe check to always show header and footer
+  
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -174,12 +174,7 @@ const ProfessionalProfile = () => {
     );
   }
 
-  // If we're in an iframe, render only the profile content
-  if (isInIframe) {
-    return <ProfessionalProfileContent professional={professional} />;
-  }
-
-  // If we're not in an iframe, render with header and footer
+  // Always render with header and footer
   return (
     <>
       <Helmet>
