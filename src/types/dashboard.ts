@@ -22,6 +22,11 @@ export interface ProfessionalInterface {
   specialty?: string;
   area?: string;
   category?: string;
+  // Add the new properties that were missing
+  company_name?: string;
+  work_hours?: string;
+  certifications?: string[];
+  experience_years?: number;
 }
 
 export interface RequestInterface {
