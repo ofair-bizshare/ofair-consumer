@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Header from '@/components/Header';
@@ -120,7 +121,6 @@ const Articles = () => {
                   title={article.title}
                   summary={article.summary || article.content.substring(0, 150) + '...'}
                   image={article.image || 'https://via.placeholder.com/400x250?text=Article+Image'}
-                  author={article.author || 'צוות oFair'}
                   date={new Date(article.created_at).toLocaleDateString('he-IL')}
                 />
               ))}

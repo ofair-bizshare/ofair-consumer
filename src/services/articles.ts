@@ -115,9 +115,22 @@ export const fetchArticleById = async (id: string): Promise<Article | null> => {
  */
 export const createArticle = async (article: Partial<Article>): Promise<Article | null> => {
   try {
+    // Ensure that required fields are present
+    if (!article.title || !article.content) {
+      console.error('Error creating article: Missing required fields');
+      return null;
+    }
+
     const { data, error } = await supabase
       .from('articles')
-      .insert(article)
+      .insert({
+        title: article.title,
+        content: article.content,
+        summary: article.summary,
+        image: article.image,
+        author: article.author,
+        published: article.published !== undefined ? article.published : true
+      })
       .select()
       .single();
 

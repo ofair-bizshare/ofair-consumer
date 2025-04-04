@@ -6,19 +6,21 @@ import { Link } from 'react-router-dom';
 interface ArticleCardProps {
   id: string;
   title: string;
-  summary: string; // Changed from excerpt to summary
+  summary: string;
   image: string;
   date: string;
-  category?: string; // Made optional
+  category?: string;
+  author?: string; // Added author as optional prop
 }
 
 const ArticleCard: React.FC<ArticleCardProps> = ({
   id,
   title,
-  summary, // Changed from excerpt to summary
+  summary,
   image,
   date,
-  category = "מאמר" // Default value
+  category = "מאמר",
+  author
 }) => {
   return (
     <div className="glass-card overflow-hidden group">
