@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ProfessionalInterface } from '@/types/dashboard';
 
@@ -142,5 +141,66 @@ export const deleteProfessional = async (id: string): Promise<boolean> => {
   } catch (error) {
     console.error('Error deleting professional:', error);
     return false;
+  }
+};
+
+/**
+ * Uploads professionals from Excel file
+ * @param professionals Array of professional data from Excel
+ * @returns Promise<{success: boolean, error?: string}> Result of the upload operation
+ */
+export const uploadProfessionalsFromExcel = async (
+  professionals: Array<{
+    name: string;
+    profession: string;
+    location: string;
+    specialties: string;
+    phoneNumber: string;
+    about: string;
+    rating?: number;
+    company_name?: string;
+    work_hours?: string;
+    certifications?: string;
+    experience_years?: number;
+  }>
+): Promise<{success: boolean, error?: string}> => {
+  try {
+    console.log('Uploading professionals from Excel:', professionals.length);
+    
+    if (!professionals || professionals.length === 0) {
+      return { success: false, error: 'אין נתונים להעלאה' };
+    }
+    
+    // Transform data for the database
+    const professionalsToInsert = professionals.map(p => ({
+      name: p.name,
+      profession: p.profession,
+      location: p.location,
+      specialties: p.specialties ? p.specialties.split(',').map(s => s.trim()) : [],
+      phone_number: p.phoneNumber,
+      about: p.about || `בעל מקצוע בתחום ${p.profession}`,
+      rating: p.rating || 5.0,
+      image: 'https://via.placeholder.com/150',
+      company_name: p.company_name || '',
+      work_hours: p.work_hours || 'ימים א-ה: 8:00-18:00, יום ו: 8:00-13:00',
+      certifications: p.certifications ? p.certifications.split(',').map(c => c.trim()) : ['מוסמך מקצועי'],
+      experience_years: p.experience_years || 5
+    }));
+    
+    // Insert all professionals in one batch
+    const { error } = await supabase
+      .from('professionals')
+      .insert(professionalsToInsert);
+    
+    if (error) {
+      console.error('Error uploading professionals:', error);
+      return { success: false, error: `שגיאה בהעלאה: ${error.message}` };
+    }
+    
+    console.log('Professionals uploaded successfully:', professionalsToInsert.length);
+    return { success: true };
+  } catch (error) {
+    console.error('Error uploading professionals from Excel:', error);
+    return { success: false, error: 'שגיאה כללית בהעלאה' };
   }
 };

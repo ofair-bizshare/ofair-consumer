@@ -11,3 +11,20 @@ export const articleFormSchema = z.object({
 });
 
 export type ArticleFormValues = z.infer<typeof articleFormSchema>;
+
+export const articleCategoryOptions = [
+  { value: 'general', label: 'כללי' },
+  { value: 'professionals', label: 'בעלי מקצוע' },
+  { value: 'home-improvement', label: 'שיפוץ הבית' },
+  { value: 'diy', label: 'עשה זאת בעצמך' },
+  { value: 'tips', label: 'טיפים' },
+  { value: 'guides', label: 'מדריכים' },
+  { value: 'electrician', label: 'חשמלאי' },
+  { value: 'plumber', label: 'אינסטלטור' },
+  { value: 'carpenter', label: 'נגר' },
+  { value: 'painter', label: 'צבע' },
+  { value: 'gardener', label: 'גנן' },
+  { value: 'renovation', label: 'שיפוצניק' },
+  { value: 'locksmith', label: 'מנעולן' },
+  { value: 'air-conditioning', label: 'מיזוג אוויר' }
+];
