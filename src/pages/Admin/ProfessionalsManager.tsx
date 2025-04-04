@@ -1,8 +1,9 @@
-import React from 'react';
+
+import React, { useState, useCallback } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useToast } from '@/hooks/use-toast';
 import { getProfessionals } from '@/services/professionals';
-import { createProfessional, uploadProfessionalImage } from '@/services/admin';
+import { createProfessional, updateProfessional, deleteProfessional, uploadProfessionalImage } from '@/services/admin/professionals';
 import { ProfessionalInterface } from '@/types/dashboard';
 import { 
   Table, 
@@ -23,6 +24,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const professionalFormSchema = z.object({
   name: z.string().min(2, { message: 'שם חייב להכיל לפחות 2 תווים' }),
@@ -31,18 +33,23 @@ const professionalFormSchema = z.object({
   specialties: z.string().min(2, { message: 'התמחויות חייבות להכיל לפחות 2 תווים' }),
   phoneNumber: z.string().min(9, { message: 'מספר טלפון חייב להכיל לפחות 9 תווים' }),
   about: z.string().min(20, { message: 'תיאור חייב להכיל לפחות 20 תווים' }),
-  rating: z.number().min(0).max(5)
+  rating: z.number().min(0).max(5),
+  company_name: z.string().optional(),
+  work_hours: z.string().optional(),
+  certifications: z.string().optional(), 
+  experience_years: z.number().min(0).optional()
 });
 
 type ProfessionalFormValues = z.infer<typeof professionalFormSchema>;
 
 const ProfessionalsManager = () => {
-  const [professionals, setProfessionals] = React.useState<ProfessionalInterface[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [imageFile, setImageFile] = React.useState<File | null>(null);
-  const [uploading, setUploading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  const [professionals, setProfessionals] = useState<ProfessionalInterface[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [editingProfessional, setEditingProfessional] = useState<ProfessionalInterface | null>(null);
   const { toast } = useToast();
   
   const form = useForm<ProfessionalFormValues>({
@@ -54,11 +61,15 @@ const ProfessionalsManager = () => {
       specialties: '',
       phoneNumber: '',
       about: '',
-      rating: 5
+      rating: 5,
+      company_name: '',
+      work_hours: 'ימים א-ה: 8:00-18:00, יום ו: 8:00-13:00',
+      certifications: 'מוסמך מקצועי, בעל רישיון',
+      experience_years: 5
     }
   });
 
-  const fetchData = React.useCallback(async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -80,13 +91,45 @@ const ProfessionalsManager = () => {
   React.useEffect(() => {
     fetchData();
   }, [fetchData]);
+  
+  React.useEffect(() => {
+    if (editingProfessional) {
+      form.reset({
+        name: editingProfessional.name,
+        profession: editingProfessional.profession,
+        location: editingProfessional.location,
+        specialties: editingProfessional.specialties?.join(', ') || '',
+        phoneNumber: editingProfessional.phoneNumber || '',
+        about: editingProfessional.about || '',
+        rating: editingProfessional.rating || 5,
+        company_name: editingProfessional.company_name || '',
+        work_hours: editingProfessional.work_hours || 'ימים א-ה: 8:00-18:00, יום ו: 8:00-13:00',
+        certifications: editingProfessional.certifications?.join(', ') || 'מוסמך מקצועי, בעל רישיון',
+        experience_years: editingProfessional.experience_years || 5
+      });
+    } else {
+      form.reset({
+        name: '',
+        profession: '',
+        location: '',
+        specialties: '',
+        phoneNumber: '',
+        about: '',
+        rating: 5,
+        company_name: '',
+        work_hours: 'ימים א-ה: 8:00-18:00, יום ו: 8:00-13:00',
+        certifications: 'מוסמך מקצועי, בעל רישיון',
+        experience_years: 5
+      });
+    }
+  }, [editingProfessional, form]);
 
   const onSubmit = async (data: ProfessionalFormValues) => {
     try {
       setUploading(true);
       setError(null);
       
-      let imageUrl = 'https://via.placeholder.com/150';
+      let imageUrl = editingProfessional?.image || 'https://via.placeholder.com/150';
       if (imageFile) {
         const uploadedUrl = await uploadProfessionalImage(imageFile);
         if (uploadedUrl) {
@@ -102,34 +145,51 @@ const ProfessionalsManager = () => {
         phoneNumber: data.phoneNumber,
         about: data.about,
         rating: data.rating,
-        image: imageUrl
+        image: imageUrl,
+        company_name: data.company_name,
+        work_hours: data.work_hours,
+        certifications: data.certifications?.split(',').map(s => s.trim()) || [],
+        experience_years: data.experience_years
       };
       
-      const result = await createProfessional(professional);
+      let result = false;
+      
+      if (editingProfessional) {
+        result = await updateProfessional(editingProfessional.id, professional);
+        if (result) {
+          toast({
+            title: "בעל מקצוע עודכן בהצלחה",
+            description: `${data.name} עודכן במערכת`
+          });
+        }
+      } else {
+        result = await createProfessional(professional);
+        if (result) {
+          toast({
+            title: "בעל מקצוע נוצר בהצלחה",
+            description: `${data.name} נוסף למערכת`
+          });
+        }
+      }
       
       if (result) {
-        toast({
-          title: "בעל מקצוע נוצר בהצלחה",
-          description: `${data.name} נוסף למערכת`
-        });
-        
         form.reset();
         setImageFile(null);
         setDialogOpen(false);
-        
+        setEditingProfessional(null);
         fetchData();
       } else {
         toast({
-          title: "שגיאה ביצירת בעל מקצוע",
-          description: "אירעה שגיאה ביצירת בעל מקצוע. אנא נסה שוב.",
+          title: editingProfessional ? "שגיאה בעדכון בעל מקצוע" : "שגיאה ביצירת בעל מקצוע",
+          description: "אירעה שגיאה. אנא נסה שוב.",
           variant: "destructive"
         });
       }
     } catch (error) {
-      console.error('Error creating professional:', error);
-      setError('אירעה שגיאה ביצירת בעל מקצוע. אנא נסה שוב מאוחר יותר.');
+      console.error('Error creating/updating professional:', error);
+      setError('אירעה שגיאה. אנא נסה שוב מאוחר יותר.');
       toast({
-        title: "שגיאה ביצירת בעל מקצוע",
+        title: editingProfessional ? "שגיאה בעדכון בעל מקצוע" : "שגיאה ביצירת בעל מקצוע",
         description: "אירעה שגיאה בלתי צפויה",
         variant: "destructive"
       });
@@ -144,6 +204,46 @@ const ProfessionalsManager = () => {
       setImageFile(file);
     }
   };
+  
+  const handleEditProfessional = (professional: ProfessionalInterface) => {
+    setEditingProfessional(professional);
+    setDialogOpen(true);
+  };
+  
+  const handleDeleteProfessional = async (id: string) => {
+    if (window.confirm('האם אתה בטוח שברצונך למחוק את בעל המקצוע?')) {
+      try {
+        const result = await deleteProfessional(id);
+        if (result) {
+          toast({
+            title: "בעל מקצוע נמחק בהצלחה",
+            description: "בעל המקצוע הוסר מהמערכת"
+          });
+          fetchData();
+        } else {
+          toast({
+            title: "שגיאה במחיקת בעל מקצוע",
+            description: "אירעה שגיאה במחיקת בעל המקצוע",
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        console.error('Error deleting professional:', error);
+        toast({
+          title: "שגיאה במחיקת בעל מקצוע",
+          description: "אירעה שגיאה בלתי צפויה",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setEditingProfessional(null);
+    form.reset();
+    setImageFile(null);
+  };
 
   return (
     <AdminLayout>
@@ -157,160 +257,235 @@ const ProfessionalsManager = () => {
               הוסף בעל מקצוע
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]">
+          <DialogContent className="max-w-[800px] max-h-[90vh]">
             <DialogHeader>
-              <DialogTitle>הוספת בעל מקצוע חדש</DialogTitle>
+              <DialogTitle>{editingProfessional ? 'עריכת בעל מקצוע' : 'הוספת בעל מקצוע חדש'}</DialogTitle>
               <DialogDescription>
-                מלא את הפרטים הבאים כדי להוסיף בעל מקצוע חדש למערכת
+                {editingProfessional 
+                  ? 'ערוך את פרטי בעל המקצוע'
+                  : 'מלא את הפרטים הבאים כדי להוסיף בעל מקצוע חדש למערכת'}
               </DialogDescription>
             </DialogHeader>
             
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>שם מלא</FormLabel>
-                        <FormControl>
-                          <Input placeholder="ישראל ישראלי" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="profession"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>מקצוע</FormLabel>
-                        <FormControl>
-                          <Input placeholder="חשמלאי / שרברב / נגר" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="location"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>מיקום</FormLabel>
-                        <FormControl>
-                          <Input placeholder="תל אביב והמרכז" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="phoneNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>טלפון</FormLabel>
-                        <FormControl>
-                          <Input placeholder="05X-XXXXXXX" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <FormField
-                  control={form.control}
-                  name="specialties"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>התמחויות</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="יש להפריד בפסיקים: תיקוני חשמל, התקנת מזגנים, ייעוץ" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="rating"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>דירוג (0-5)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          min="0" 
-                          max="5" 
-                          step="0.1"
-                          {...field}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormItem>
-                  <FormLabel>תמונה</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="file" 
-                      accept="image/*"
-                      onChange={handleImageChange}
+            <ScrollArea className="max-h-[calc(90vh-120px)]">
+              <div className="p-4">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>שם מלא</FormLabel>
+                            <FormControl>
+                              <Input placeholder="ישראל ישראלי" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="company_name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>שם חברה (אם קיים)</FormLabel>
+                            <FormControl>
+                              <Input placeholder="שם החברה" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="profession"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>מקצוע</FormLabel>
+                            <FormControl>
+                              <Input placeholder="חשמלאי / שרברב / נגר" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="experience_years"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>שנות ניסיון</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                min="0" 
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="location"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>מיקום</FormLabel>
+                            <FormControl>
+                              <Input placeholder="תל אביב והמרכז" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="phoneNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>טלפון</FormLabel>
+                            <FormControl>
+                              <Input placeholder="05X-XXXXXXX" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <FormField
+                      control={form.control}
+                      name="specialties"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>התמחויות</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="יש להפריד בפסיקים: תיקוני חשמל, התקנת מזגנים, ייעוץ" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-                
-                <FormField
-                  control={form.control}
-                  name="about"
-                  render={({ field }) => (
+                    
+                    <FormField
+                      control={form.control}
+                      name="certifications"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>תעודות והסמכות</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="יש להפריד בפסיקים: מוסמך מקצועי, בעל רישיון" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="work_hours"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>שעות פעילות</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="לדוגמה: ימים א-ה: 8:00-18:00, יום ו: 8:00-13:00" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="rating"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>דירוג (0-5)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              min="0" 
+                              max="5" 
+                              step="0.1"
+                              {...field}
+                              onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
                     <FormItem>
-                      <FormLabel>אודות</FormLabel>
+                      <FormLabel>תמונה</FormLabel>
                       <FormControl>
-                        <Textarea 
-                          placeholder="תיאור מפורט של בעל המקצוע ושירותיו"
-                          className="min-h-[120px]"
-                          {...field} 
+                        <Input 
+                          type="file" 
+                          accept="image/*"
+                          onChange={handleImageChange}
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
-                  )}
-                />
-                
-                <div className="flex justify-end mt-4">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setDialogOpen(false)}
-                    className="mr-2"
-                    disabled={uploading}
-                  >
-                    ביטול
-                  </Button>
-                  <Button type="submit" disabled={uploading}>
-                    {uploading ? 'מעלה...' : 'הוסף בעל מקצוע'}
-                  </Button>
-                </div>
-              </form>
-            </Form>
+                    
+                    <FormField
+                      control={form.control}
+                      name="about"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>אודות</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="תיאור מפורט של בעל המקצוע ושירותיו"
+                              className="min-h-[120px]"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className="flex justify-end mt-4">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={handleCloseDialog}
+                        className="mr-2"
+                        disabled={uploading}
+                      >
+                        ביטול
+                      </Button>
+                      <Button type="submit" disabled={uploading}>
+                        {uploading ? 'מעלה...' : editingProfessional ? 'עדכן בעל מקצוע' : 'הוסף בעל מקצוע'}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </div>
+            </ScrollArea>
           </DialogContent>
         </Dialog>
       </div>
@@ -371,10 +546,18 @@ const ProfessionalsManager = () => {
                     <TableCell>{professional.phoneNumber || 'אין מספר'}</TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleEditProfessional(professional)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="destructive">
+                        <Button 
+                          size="sm" 
+                          variant="destructive"
+                          onClick={() => handleDeleteProfessional(professional.id)}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

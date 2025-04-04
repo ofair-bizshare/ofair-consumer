@@ -14,6 +14,7 @@ import { ArticleInterface } from '@/types/dashboard';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const ArticlesManager = () => {
   const [articles, setArticles] = useState<ArticleInterface[]>([]);
@@ -199,8 +200,8 @@ const ArticlesManager = () => {
       )}
       
       <Dialog open={dialogOpen} onOpenChange={handleCloseDialog}>
-        <DialogContent className="sm:max-w-[800px]">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-[800px] max-h-[90vh] p-0">
+          <DialogHeader className="p-6 pb-2">
             <DialogTitle>
               {editingArticle ? 'עריכת מאמר' : 'הוספת מאמר חדש'}
             </DialogTitle>
@@ -211,12 +212,16 @@ const ArticlesManager = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <ArticleForm 
-            defaultValues={editingArticle || undefined}
-            onSubmit={editingArticle ? handleUpdateArticle : handleCreateArticle} 
-            isSubmitting={submitting}
-            onCancel={handleCloseDialog}
-          />
+          <ScrollArea className="max-h-[calc(90vh-120px)]">
+            <div className="p-6 pt-2">
+              <ArticleForm 
+                defaultValues={editingArticle || undefined}
+                onSubmit={editingArticle ? handleUpdateArticle : handleCreateArticle} 
+                isSubmitting={submitting}
+                onCancel={handleCloseDialog}
+              />
+            </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </AdminLayout>

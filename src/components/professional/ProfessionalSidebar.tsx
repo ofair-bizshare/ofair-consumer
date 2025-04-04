@@ -80,6 +80,7 @@ const ProfessionalSidebar: React.FC<ProfessionalSidebarProps> = ({ professional 
                 professionalName={professional.name} 
                 professionalId={professional.id} 
                 profession={professional.profession} 
+                autoReveal={true}
               />
             </div>
             <div className="flex items-center p-1 hover:bg-white/70 rounded-md transition-colors">

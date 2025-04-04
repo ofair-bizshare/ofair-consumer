@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { UseFormReturn } from 'react-hook-form';
@@ -9,6 +9,15 @@ import { ArticleFormValues } from './articleSchema';
 interface ArticleDetailsFieldsProps {
   form: UseFormReturn<ArticleFormValues>;
 }
+
+const categories = [
+  { value: 'general', label: 'כללי' },
+  { value: 'professionals', label: 'בעלי מקצוע' },
+  { value: 'home-improvement', label: 'שיפוץ הבית' },
+  { value: 'diy', label: 'עשה זאת בעצמך' },
+  { value: 'tips', label: 'טיפים' },
+  { value: 'guides', label: 'מדריכים' }
+];
 
 const ArticleDetailsFields: React.FC<ArticleDetailsFieldsProps> = ({ form }) => {
   return (
@@ -27,7 +36,7 @@ const ArticleDetailsFields: React.FC<ArticleDetailsFieldsProps> = ({ form }) => 
         )}
       />
       
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
           name="author"
@@ -35,7 +44,7 @@ const ArticleDetailsFields: React.FC<ArticleDetailsFieldsProps> = ({ form }) => 
             <FormItem>
               <FormLabel>מחבר</FormLabel>
               <FormControl>
-                <Input placeholder="שם המחבר" {...field} />
+                <Input placeholder="שם מחבר המאמר" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -44,25 +53,47 @@ const ArticleDetailsFields: React.FC<ArticleDetailsFieldsProps> = ({ form }) => 
         
         <FormField
           control={form.control}
-          name="published"
+          name="category"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-              <div className="space-y-0.5">
-                <FormLabel>פרסום</FormLabel>
-                <FormDescription>
-                  האם לפרסם את המאמר באתר
-                </FormDescription>
-              </div>
+            <FormItem>
+              <FormLabel>קטגוריה</FormLabel>
               <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
+                <select 
+                  className="w-full h-10 px-3 py-2 text-base rounded-md border border-input bg-background"
+                  {...field}
+                >
+                  <option value="">בחר קטגוריה</option>
+                  {categories.map((category) => (
+                    <option key={category.value} value={category.value}>{category.label}</option>
+                  ))}
+                </select>
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
       </div>
+      
+      <FormField
+        control={form.control}
+        name="published"
+        render={({ field }) => (
+          <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+            <div className="space-y-0.5">
+              <FormLabel>פרסם מאמר</FormLabel>
+              <div className="text-sm text-muted-foreground">
+                האם לפרסם את המאמר באתר כרגע?
+              </div>
+            </div>
+            <FormControl>
+              <Switch
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+            </FormControl>
+          </FormItem>
+        )}
+      />
     </>
   );
 };

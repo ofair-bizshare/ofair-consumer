@@ -48,13 +48,15 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
       summary: defaultValues.summary || '',
       content: defaultValues.content,
       author: defaultValues.author || '',
-      published: defaultValues.published
+      published: defaultValues.published,
+      category: defaultValues.category || ''
     } : {
       title: '',
       summary: '',
       content: '',
       author: '',
-      published: true
+      published: true,
+      category: 'general'
     }
   });
 
@@ -65,7 +67,8 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
         summary: defaultValues.summary || '',
         content: defaultValues.content,
         author: defaultValues.author || '',
-        published: defaultValues.published
+        published: defaultValues.published,
+        category: defaultValues.category || ''
       });
       setImagePreview(defaultValues.image || null);
     }
@@ -116,6 +119,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
         content: data.content,
         author: data.author,
         published: data.published,
+        category: data.category,
         image: imageUrl
       };
       
