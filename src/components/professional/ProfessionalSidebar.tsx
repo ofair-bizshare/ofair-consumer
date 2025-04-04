@@ -18,6 +18,7 @@ interface ProfessionalSidebarProps {
       email: string;
       address: string;
     };
+    experience_years?: number;
   };
 }
 
@@ -38,6 +39,18 @@ const ProfessionalSidebar: React.FC<ProfessionalSidebarProps> = ({ professional 
             {professional.workHours}
           </div>
         </div>
+        
+        {professional.experience_years && (
+          <div className="p-2 border-b border-gray-100">
+            <h3 className="text-lg font-medium mb-3 text-gray-800 flex items-center">
+              <Briefcase className="h-5 w-5 text-blue-500 ml-2" />
+              ניסיון
+            </h3>
+            <div className="text-sm text-gray-600 p-2 bg-blue-50 rounded-md">
+              {professional.experience_years} שנות ניסיון
+            </div>
+          </div>
+        )}
         
         <div className="p-2 border-b border-gray-100">
           <h3 className="text-lg font-medium mb-3 text-gray-800 flex items-center">

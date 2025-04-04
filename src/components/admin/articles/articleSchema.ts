@@ -7,7 +7,7 @@ export const articleFormSchema = z.object({
   content: z.string().min(50, { message: 'תוכן חייב להכיל לפחות 50 תווים' }),
   author: z.string().min(2, { message: 'שם המחבר חייב להכיל לפחות 2 תווים' }),
   published: z.boolean().default(true),
-  category: z.string().optional()
+  category: z.string().min(1, { message: 'יש לבחור קטגוריה' })
 });
 
 export type ArticleFormValues = z.infer<typeof articleFormSchema>;

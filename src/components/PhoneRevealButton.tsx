@@ -20,7 +20,7 @@ interface PhoneRevealButtonProps {
   professionalId: string;
   profession?: string;
   onBeforeReveal?: () => boolean;
-  autoReveal?: boolean; // Added autoReveal prop
+  autoReveal?: boolean;
 }
 
 const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
@@ -29,7 +29,7 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
   professionalId,
   profession = "",
   onBeforeReveal,
-  autoReveal = false // Default to false
+  autoReveal = false
 }) => {
   const [isRevealed, setIsRevealed] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -38,13 +38,13 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
   
   // Auto-reveal the phone number if autoReveal is true and user is logged in
   useEffect(() => {
-    if (autoReveal && user && !isRevealed) {
+    if (autoReveal && user) {
       setIsRevealed(true);
       saveReferral().catch(error => {
         console.error("Error auto-saving referral:", error);
       });
     }
-  }, [autoReveal, user, isRevealed]);
+  }, [autoReveal, user]);
   
   const handleReveal = async () => {
     if (onBeforeReveal && !onBeforeReveal()) {

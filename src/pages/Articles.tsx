@@ -6,8 +6,9 @@ import Footer from '@/components/Footer';
 import ArticleCard from '@/components/ArticleCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search as SearchIcon } from 'lucide-react';
+import { Search as SearchIcon, Folder, Book, Grid2X2 } from 'lucide-react';
 import { fetchArticles, searchArticles, Article } from '@/services/articles';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 const Articles = () => {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -15,6 +16,7 @@ const Articles = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [searching, setSearching] = useState(false);
+  const [activeTab, setActiveTab] = useState('all');
 
   useEffect(() => {
     const loadArticles = async () => {
@@ -58,6 +60,27 @@ const Articles = () => {
     setSearchQuery('');
     setFilteredArticles(articles);
   };
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    
+    if (value === 'all') {
+      setFilteredArticles(articles);
+    } else {
+      const filtered = articles.filter(article => article.category === value);
+      setFilteredArticles(filtered);
+    }
+  };
+
+  const categories = [
+    { value: 'all', label: 'הכל', icon: <Grid2X2 size={16} /> },
+    { value: 'general', label: 'כללי', icon: <Folder size={16} /> },
+    { value: 'professionals', label: 'בעלי מקצוע', icon: <Book size={16} /> },
+    { value: 'home-improvement', label: 'שיפוץ הבית', icon: <Book size={16} /> },
+    { value: 'diy', label: 'עשה זאת בעצמך', icon: <Book size={16} /> },
+    { value: 'tips', label: 'טיפים', icon: <Book size={16} /> },
+    { value: 'guides', label: 'מדריכים', icon: <Book size={16} /> }
+  ];
 
   return (
     <div className="flex flex-col min-h-screen" dir="rtl">
@@ -108,6 +131,23 @@ const Articles = () => {
             )}
           </form>
           
+          <Tabs defaultValue="all" value={activeTab} onValueChange={handleTabChange} className="mb-8">
+            <TabsList className="flex w-full justify-start mb-6 bg-transparent overflow-x-auto">
+              {categories.map((category) => (
+                <TabsTrigger 
+                  key={category.value} 
+                  value={category.value}
+                  className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-700 border-b-2 border-transparent rounded-none"
+                >
+                  <span className="flex items-center">
+                    {category.icon}
+                    <span className="mr-2">{category.label}</span>
+                  </span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+          
           {isLoading ? (
             <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00d09e]"></div>
@@ -122,6 +162,8 @@ const Articles = () => {
                   summary={article.summary || article.content.substring(0, 150) + '...'}
                   image={article.image || 'https://via.placeholder.com/400x250?text=Article+Image'}
                   date={new Date(article.created_at).toLocaleDateString('he-IL')}
+                  category={article.category}
+                  author={article.author}
                 />
               ))}
             </div>
