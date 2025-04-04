@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +13,7 @@ import ArticleDetailsFields from './ArticleDetailsFields';
 import ArticleContentFields from './ArticleContentFields';
 import UploadProgressBar from './UploadProgressBar';
 import FormActions from './FormActions';
+import { ArticleInterface } from '@/types/dashboard';
 
 interface ArticleFormProps {
   onSuccess?: () => void;
@@ -21,6 +22,7 @@ interface ArticleFormProps {
   uploading?: boolean;
   isSubmitting?: boolean;
   setUploading?: (uploading: boolean) => void;
+  defaultValues?: ArticleInterface;
 }
 
 const ArticleForm: React.FC<ArticleFormProps> = ({ 
@@ -29,9 +31,11 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
   onCancel, 
   uploading = false, 
   isSubmitting = false,
-  setUploading = () => {} 
+  setUploading = () => {},
+  defaultValues
 }) => {
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(defaultValues?.image || null);
   const [formError, setFormError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const { toast } = useToast();
@@ -39,7 +43,13 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
   
   const form = useForm<ArticleFormValues>({
     resolver: zodResolver(articleFormSchema),
-    defaultValues: {
+    defaultValues: defaultValues ? {
+      title: defaultValues.title,
+      summary: defaultValues.summary || '',
+      content: defaultValues.content,
+      author: defaultValues.author || '',
+      published: defaultValues.published
+    } : {
       title: '',
       summary: '',
       content: '',
@@ -47,6 +57,19 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
       published: true
     }
   });
+
+  useEffect(() => {
+    if (defaultValues) {
+      form.reset({
+        title: defaultValues.title,
+        summary: defaultValues.summary || '',
+        content: defaultValues.content,
+        author: defaultValues.author || '',
+        published: defaultValues.published
+      });
+      setImagePreview(defaultValues.image || null);
+    }
+  }, [defaultValues, form]);
 
   const handleSubmit = async (data: ArticleFormValues) => {
     try {
@@ -112,6 +135,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
           // Reset form and close dialog
           form.reset();
           setImageFile(null);
+          setImagePreview(null);
           if (onSuccess) onSuccess();
         } else {
           throw new Error("Failed to create article, no result returned");
@@ -138,6 +162,19 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
     }
   };
 
+  const handleImageChange = (file: File | null) => {
+    setImageFile(file);
+    
+    // Create preview for the selected image
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -145,7 +182,10 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
         
         <ArticleDetailsFields form={form} />
         
-        <ImageUploader onChange={setImageFile} />
+        <ImageUploader 
+          onChange={handleImageChange} 
+          initialImage={imagePreview}
+        />
         
         <ArticleContentFields form={form} />
         
@@ -155,8 +195,9 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
         />
         
         <FormActions 
-          onCancel={onCancel} 
-          isProcessing={isProcessing} 
+          onCancel={onCancel}
+          isProcessing={isProcessing}
+          submitText={defaultValues ? 'עדכן מאמר' : 'צור מאמר'}
         />
       </form>
     </Form>

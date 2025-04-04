@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ArticleInterface } from '@/types/dashboard';
 
@@ -45,9 +46,9 @@ export const createArticle = async (article: Omit<ArticleInterface, 'id' | 'crea
  * Updates an existing article
  * @param id Article ID to update
  * @param article Article data to update
- * @returns Promise<boolean> True if successful, false otherwise
+ * @returns Promise<ArticleInterface | null> The updated article data or null on error
  */
-export const updateArticle = async (id: string, article: Partial<Omit<ArticleInterface, 'id' | 'created_at' | 'updated_at'>>): Promise<boolean> => {
+export const updateArticle = async (id: string, article: Partial<Omit<ArticleInterface, 'id' | 'created_at' | 'updated_at'>>): Promise<ArticleInterface | null> => {
   try {
     console.log(`Updating article ${id}:`, article);
     
@@ -57,18 +58,25 @@ export const updateArticle = async (id: string, article: Partial<Omit<ArticleInt
         ...article,
         updated_at: new Date().toISOString()
       })
-      .eq('id', id);
+      .eq('id', id)
+      .select()
+      .single();
       
     if (error) {
       console.error('Error updating article:', error);
-      return false;
+      throw error;
     }
     
-    console.log('Article updated successfully');
-    return true;
+    if (!data) {
+      console.error('No data returned from article update');
+      throw new Error('No data returned from article update');
+    }
+    
+    console.log('Article updated successfully:', data);
+    return data;
   } catch (error) {
-    console.error('Error updating article:', error);
-    return false;
+    console.error('Error in updateArticle admin service:', error);
+    throw error;
   }
 };
 

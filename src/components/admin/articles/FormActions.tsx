@@ -1,26 +1,35 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 interface FormActionsProps {
   onCancel: () => void;
-  isProcessing: boolean;
+  isProcessing?: boolean;
+  submitText?: string;
 }
 
-const FormActions: React.FC<FormActionsProps> = ({ onCancel, isProcessing }) => {
+const FormActions: React.FC<FormActionsProps> = ({
+  onCancel,
+  isProcessing = false,
+  submitText = 'צור מאמר'
+}) => {
   return (
-    <div className="flex justify-end mt-4">
+    <div className="flex justify-end gap-2 pt-2">
       <Button 
         type="button" 
         variant="outline" 
         onClick={onCancel}
-        className="mr-2"
         disabled={isProcessing}
       >
         ביטול
       </Button>
-      <Button type="submit" disabled={isProcessing}>
-        {isProcessing ? 'מעלה...' : 'הוסף מאמר'}
+      <Button 
+        type="submit"
+        disabled={isProcessing}
+      >
+        {isProcessing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+        {submitText}
       </Button>
     </div>
   );

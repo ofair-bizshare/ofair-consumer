@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useToast } from '@/hooks/use-toast';
-import { createArticle, uploadArticleImage } from '@/services/admin';
+import { createArticle, updateArticle, uploadArticleImage } from '@/services/admin';
 import ArticlesTable from '@/components/admin/articles/ArticlesTable';
 import ArticlesEmptyState from '@/components/admin/articles/ArticlesEmptyState';
 import ArticlesLoading from '@/components/admin/articles/ArticlesLoading';
@@ -20,6 +21,7 @@ const ArticlesManager = () => {
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [editingArticle, setEditingArticle] = useState<ArticleInterface | null>(null);
   const { toast } = useToast();
 
   const fetchArticles = async () => {
@@ -89,6 +91,52 @@ const ArticlesManager = () => {
     }
   };
 
+  const handleUpdateArticle = async (articleData: any, imageFile: File | null) => {
+    if (!editingArticle) return;
+    
+    try {
+      setSubmitting(true);
+      
+      let imageUrl = editingArticle.image;
+      if (imageFile) {
+        const uploadedUrl = await uploadArticleImage(imageFile);
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl;
+        }
+      }
+      
+      const updatedArticle = await updateArticle(editingArticle.id, {
+        ...articleData,
+        image: imageUrl
+      });
+      
+      if (updatedArticle) {
+        toast({
+          title: 'מאמר עודכן בהצלחה',
+          description: 'המאמר עודכן במערכת בהצלחה',
+        });
+        
+        setDialogOpen(false);
+        setEditingArticle(null);
+        fetchArticles();
+      }
+    } catch (error) {
+      console.error('Error updating article:', error);
+      toast({
+        title: 'שגיאה בעדכון מאמר',
+        description: 'אירעה שגיאה בעת עדכון המאמר',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleEditArticle = (article: ArticleInterface) => {
+    setEditingArticle(article);
+    setDialogOpen(true);
+  };
+
   const handleDeleteArticle = async (id: string) => {
     try {
       const { error } = await supabase
@@ -112,6 +160,11 @@ const ArticlesManager = () => {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setEditingArticle(null);
   };
 
   return (
@@ -139,24 +192,30 @@ const ArticlesManager = () => {
       ) : (
         <ArticlesTable 
           articles={articles} 
+          onEditArticle={handleEditArticle}
           onDeleteArticle={handleDeleteArticle} 
           onRefetch={fetchArticles}
         />
       )}
       
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={handleCloseDialog}>
         <DialogContent className="sm:max-w-[800px]">
           <DialogHeader>
-            <DialogTitle>הוספת מאמר חדש</DialogTitle>
+            <DialogTitle>
+              {editingArticle ? 'עריכת מאמר' : 'הוספת מאמר חדש'}
+            </DialogTitle>
             <DialogDescription>
-              מלא את הפרטים הבאים כדי ליצור מאמר חדש.
+              {editingArticle 
+                ? 'ערוך את הפרטים כדי לעדכן את המאמר.'
+                : 'מלא את הפרטים הבאים כדי ליצור מאמר חדש.'}
             </DialogDescription>
           </DialogHeader>
           
           <ArticleForm 
-            onSubmit={handleCreateArticle} 
+            defaultValues={editingArticle || undefined}
+            onSubmit={editingArticle ? handleUpdateArticle : handleCreateArticle} 
             isSubmitting={submitting}
-            onCancel={() => setDialogOpen(false)}
+            onCancel={handleCloseDialog}
           />
         </DialogContent>
       </Dialog>

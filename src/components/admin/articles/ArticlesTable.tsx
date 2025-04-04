@@ -14,16 +14,14 @@ import { FileText, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 
 interface ArticlesTableProps {
   articles: ArticleInterface[];
-  onEdit?: (article: ArticleInterface) => void;
-  onDelete?: (article: ArticleInterface) => void;
+  onEditArticle?: (article: ArticleInterface) => void;
   onDeleteArticle?: (id: string) => Promise<void>;
   onRefetch?: () => Promise<void>;
 }
 
 const ArticlesTable: React.FC<ArticlesTableProps> = ({ 
   articles,
-  onEdit,
-  onDelete,
+  onEditArticle,
   onDeleteArticle,
   onRefetch
 }) => {
@@ -36,11 +34,9 @@ const ArticlesTable: React.FC<ArticlesTableProps> = ({
     }).format(date);
   };
 
-  const handleDelete = (article: ArticleInterface) => {
-    if (onDelete) {
-      onDelete(article);
-    } else if (onDeleteArticle) {
-      onDeleteArticle(article.id);
+  const handleDelete = async (id: string) => {
+    if (onDeleteArticle) {
+      await onDeleteArticle(id);
     }
   };
 
@@ -81,11 +77,12 @@ const ArticlesTable: React.FC<ArticlesTableProps> = ({
             </TableCell>
             <TableCell>
               <div className="flex space-x-2">
-                {onEdit && (
+                {onEditArticle && (
                   <Button 
                     size="sm" 
                     variant="outline" 
-                    onClick={() => onEdit(article)}
+                    onClick={() => onEditArticle(article)}
+                    className="ml-2"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -93,7 +90,7 @@ const ArticlesTable: React.FC<ArticlesTableProps> = ({
                 <Button 
                   size="sm" 
                   variant="destructive" 
-                  onClick={() => handleDelete(article)}
+                  onClick={() => handleDelete(article.id)}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
