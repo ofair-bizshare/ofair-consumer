@@ -167,7 +167,7 @@ const MyReferrals = () => {
                             variant="outline" 
                             size="sm"
                             className="text-blue-700 border-blue-200 hover:bg-blue-50"
-                            onClick={() => window.open(`/professional/${referral.professionalId}`, '_blank')}
+                            onClick={() => window.open(`/professionals/${referral.professionalId}`, '_blank')}
                           >
                             <Eye size={16} className="ml-1" />
                             צפה בפרופיל
