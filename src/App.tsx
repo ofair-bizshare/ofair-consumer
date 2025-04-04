@@ -1,79 +1,128 @@
-import React from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { HelmetProvider } from "react-helmet-async";
-import { AuthProvider } from "@/providers/AuthProvider";
-import Index from "./pages/Index";
-import Search from "./pages/Search";
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import NotFound from "./pages/NotFound";
-import ProfessionalProfile from "./pages/ProfessionalProfile";
-import Articles from "./pages/Articles";
-import ArticleDetail from "./pages/ArticleDetail";
-import About from "./pages/About";
-import MyReferrals from "./pages/MyReferrals";
-import ReferralsPage from "./pages/ReferralsPage";
-import MyRequests from "./pages/MyRequests";
-import UserSettings from "./pages/UserSettings";
-import FAQ from "./pages/FAQ";
-import ScrollToTop from "./components/ScrollToTop";
 
-// Admin Routes
-import AdminLogin from "./pages/AdminLogin"; // New Admin Login page
-import AdminDashboard from "./pages/Admin/AdminDashboard";
-import ProfessionalsManager from "./pages/Admin/ProfessionalsManager";
-import ArticlesManager from "./pages/Admin/ArticlesManager";
-import MessagesManager from "./pages/Admin/MessagesManager";
-import AdminSettings from "./pages/Admin/AdminSettings";
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { HelmetProvider } from 'react-helmet-async';
+import { Toaster } from '@/components/ui/sonner';
+import { ThemeProvider } from '@/components/theme-provider';
+import AuthProvider from '@/providers/AuthProvider';
+import About from '@/pages/About';
+import Index from '@/pages/Index';
+import Login from '@/pages/Login';
+import Register from '@/pages/Login';
+import FAQ from '@/pages/FAQ';
+import NotFound from '@/pages/NotFound';
+import Dashboard from '@/pages/Dashboard';
+import MyRequests from '@/pages/MyRequests';
+import MyReferrals from '@/pages/MyReferrals';
+import AdminLogin from '@/pages/AdminLogin';
+import Search from '@/pages/Search';
+import ProfessionalProfile from '@/pages/ProfessionalProfile';
+import ScrollToTop from '@/components/ScrollToTop';
+import { lazy, Suspense, useEffect } from 'react';
+import ArticleDetail from '@/pages/ArticleDetail';
+import Articles from '@/pages/Articles';
+import ReferralsPage from '@/pages/ReferralsPage';
+import { seedProfessionals } from '@/services/professionals';
+
+const AdminDashboard = lazy(() => import('@/pages/Admin/AdminDashboard'));
+const ArticlesManager = lazy(() => import('@/pages/Admin/ArticlesManager'));
+const MessagesManager = lazy(() => import('@/pages/Admin/MessagesManager'));
+const ProfessionalsManager = lazy(() => import('@/pages/Admin/ProfessionalsManager'));
+const AdminSettings = lazy(() => import('@/pages/Admin/AdminSettings'));
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <React.StrictMode>
-    <HelmetProvider>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
+function App() {
+  // Run seed function when app starts to ensure we have sample data
+  useEffect(() => {
+    const initSampleData = async () => {
+      try {
+        // Seed professionals if needed
+        await seedProfessionals();
+      } catch (error) {
+        console.error('Error initializing sample data:', error);
+      }
+    };
+
+    initSampleData();
+  }, []);
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="light">
+        <HelmetProvider>
           <AuthProvider>
-            <TooltipProvider>
+            <Router>
               <ScrollToTop />
-              <div className="font-assistant">
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/search" element={<Search />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/dashboard/requests" element={<MyRequests />} />
-                  <Route path="/dashboard/settings" element={<UserSettings />} />
-                  <Route path="/professional/:id" element={<ProfessionalProfile />} />
-                  <Route path="/articles" element={<Articles />} />
-                  <Route path="/article/:id" element={<ArticleDetail />} />
-                  <Route path="/articles/:id" element={<ArticleDetail />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/referrals" element={<ReferralsPage />} />
-                  <Route path="/faq" element={<FAQ />} />
-                  
-                  {/* Admin Routes */}
-                  <Route path="/admin-login" element={<AdminLogin />} /> {/* New Admin Login Route */}
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/admin/professionals" element={<ProfessionalsManager />} />
-                  <Route path="/admin/articles" element={<ArticlesManager />} />
-                  <Route path="/admin/messages" element={<MessagesManager />} />
-                  <Route path="/admin/settings" element={<AdminSettings />} />
-                  
-                  {/* Catch-all route for 404 */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </div>
-              <Toaster />
-            </TooltipProvider>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/my-requests" element={<MyRequests />} />
+                <Route path="/my-referrals" element={<MyReferrals />} />
+                <Route path="/search" element={<Search />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/professionals/:id" element={<ProfessionalProfile />} />
+                <Route path="/articles" element={<Articles />} />
+                <Route path="/articles/:id" element={<ArticleDetail />} />
+                <Route path="/referrals" element={<ReferralsPage />} />
+                
+                {/* Admin routes */}
+                <Route path="/admin-login" element={<AdminLogin />} />
+                <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+                <Route
+                  path="/admin/dashboard"
+                  element={
+                    <Suspense fallback={<div>טוען...</div>}>
+                      <AdminDashboard />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="/admin/articles"
+                  element={
+                    <Suspense fallback={<div>טוען...</div>}>
+                      <ArticlesManager />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="/admin/messages"
+                  element={
+                    <Suspense fallback={<div>טוען...</div>}>
+                      <MessagesManager />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="/admin/professionals"
+                  element={
+                    <Suspense fallback={<div>טוען...</div>}>
+                      <ProfessionalsManager />
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="/admin/settings"
+                  element={
+                    <Suspense fallback={<div>טוען...</div>}>
+                      <AdminSettings />
+                    </Suspense>
+                  }
+                />
+                
+                {/* 404 route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Router>
           </AuthProvider>
-        </BrowserRouter>
-      </QueryClientProvider>
-    </HelmetProvider>
-  </React.StrictMode>
-);
+          <Toaster />
+        </HelmetProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;

@@ -53,3 +53,41 @@ export const clearAdminCache = (userId: string): void => {
     console.error('Error clearing admin cache:', error);
   }
 };
+
+/**
+ * Adds category mapping for professionals
+ */
+export const getProfessionalCategoryLabel = (category: string): string => {
+  const categoryMap: {[key: string]: string} = {
+    'electricity': 'חשמל',
+    'plumbing': 'אינסטלציה',
+    'renovations': 'שיפוצים',
+    'carpentry': 'נגרות',
+    'architecture': 'אדריכלות',
+    'interior_design': 'עיצוב פנים',
+    'gardening': 'גינון',
+    'maintenance': 'תחזוקת בית',
+    'painting': 'צביעה',
+    'locksmith': 'מנעולנות'
+  };
+  
+  return categoryMap[category] || category;
+};
+
+/**
+ * Adds area/location mapping
+ */
+export const getLocationLabel = (area: string): string => {
+  const areaMap: {[key: string]: string} = {
+    'tel_aviv': 'תל אביב והמרכז',
+    'jerusalem': 'ירושלים והסביבה',
+    'haifa': 'חיפה והצפון',
+    'beer_sheva': 'באר שבע והדרום',
+    'sharon': 'השרון',
+    'shfela': 'השפלה',
+    'eilat': 'אילת והערבה',
+    'galilee': 'הגליל'
+  };
+  
+  return areaMap[area] || area;
+};

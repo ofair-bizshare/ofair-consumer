@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search, Calendar, ArrowLeft, Clock, Tag, User } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
+import { fetchArticles } from '@/services/articles';
+import { ArticleInterface } from '@/types/dashboard';
 
-// Sample article categories
+// Sample article categories (these should come from the database in future iterations)
 const categories = [
   { id: 'all', label: 'הכל' },
   { id: 'renovations', label: 'שיפוצים' },
@@ -20,97 +22,76 @@ const categories = [
   { id: 'maintenance', label: 'תחזוקת בית' },
 ];
 
-// Sample articles data
-const articles = [
-  {
-    id: '1',
-    title: '10 טיפים לחיסכון בחשמל בבית',
-    excerpt: 'למדו כיצד לחסוך בהוצאות החשמל באמצעות שינויים קטנים בהרגלי השימוש היומיומיים שלכם.',
-    content: 'תוכן מפורט של המאמר יופיע כאן...',
-    image: 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
-    date: '10 במאי, 2023',
-    readTime: '5 דקות',
-    category: 'electricity',
-    categoryLabel: 'חשמל וחיסכון',
-    author: 'ישראל ישראלי',
-  },
-  {
-    id: '2',
-    title: 'מדריך לבחירת קבלן שיפוצים אמין',
-    excerpt: 'כיצד לבחור את הקבלן הנכון לפרויקט השיפוץ שלכם וכיצד להימנע מטעויות נפוצות בתהליך.',
-    content: 'תוכן מפורט של המאמר יופיע כאן...',
-    image: 'https://images.unsplash.com/photo-1581165825571-4d25acd0e396?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
-    date: '18 באפריל, 2023',
-    readTime: '7 דקות',
-    category: 'renovations',
-    categoryLabel: 'שיפוצים',
-    author: 'דוד לוי',
-  },
-  {
-    id: '3',
-    title: 'איך לתחזק מערכת אינסטלציה ביתית',
-    excerpt: 'מדריך מקיף לתחזוקה בסיסית של מערכת האינסטלציה בבית שלכם למניעת נזילות ובעיות עתידיות.',
-    content: 'תוכן מפורט של המאמר יופיע כאן...',
-    image: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
-    date: '5 במרץ, 2023',
-    readTime: '6 דקות',
-    category: 'plumbing',
-    categoryLabel: 'אינסטלציה',
-    author: 'רונית כהן',
-  },
-  {
-    id: '4',
-    title: 'עיצוב גינה קטנה: מקסימום יופי במינימום שטח',
-    excerpt: 'רעיונות ודרכים יצירתיות לנצל שטח גינה קטן ולהפוך אותו לפינת חמד ירוקה ומזמינה.',
-    content: 'תוכן מפורט של המאמר יופיע כאן...',
-    image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1476&q=80',
-    date: '22 בפברואר, 2023',
-    readTime: '4 דקות',
-    category: 'gardening',
-    categoryLabel: 'גינון',
-    author: 'מיכל גרין',
-  },
-  {
-    id: '5',
-    title: 'כיצד לבחור צבעים מתאימים לחדרי הבית',
-    excerpt: 'מדריך צבעים מקיף שיעזור לכם לבחור את הצבעים המתאימים ביותר לכל חדר בבית שלכם.',
-    content: 'תוכן מפורט של המאמר יופיע כאן...',
-    image: 'https://images.unsplash.com/photo-1562314442-3e8cde761b20?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
-    date: '15 בינואר, 2023',
-    readTime: '8 דקות',
-    category: 'decoration',
-    categoryLabel: 'עיצוב וקישוט',
-    author: 'עדי אלון',
-  },
-  {
-    id: '6',
-    title: 'בדיקות תקופתיות חשובות לתחזוקת הבית',
-    excerpt: 'רשימת בדיקות תקופתיות שכדאי לבצע בביתכם כדי למנוע בעיות גדולות ויקרות יותר בעתיד.',
-    content: 'תוכן מפורט של המאמר יופיע כאן...',
-    image: 'https://images.unsplash.com/photo-1531183456605-6aaf78787e08?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
-    date: '5 בדצמבר, 2022',
-    readTime: '5 דקות',
-    category: 'maintenance',
-    categoryLabel: 'תחזוקת בית',
-    author: 'יובל נחמיאס',
-  },
-];
-
-// Featured articles
-const featuredArticles = articles.slice(0, 3);
-
 const Articles = () => {
+  const [articles, setArticles] = useState<ArticleInterface[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Fetch articles from database
+  useEffect(() => {
+    const getArticles = async () => {
+      try {
+        setLoading(true);
+        const articlesData = await fetchArticles();
+        setArticles(articlesData);
+      } catch (err) {
+        console.error('Error fetching articles:', err);
+        setError('שגיאה בטעינת המאמרים. אנא נסה שוב מאוחר יותר.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getArticles();
+  }, []);
+
+  // Featured articles - take the first 3
+  const featuredArticles = articles.slice(0, 3);
 
   // Filter articles based on selected category and search query
   const filteredArticles = articles.filter(article => {
     const matchesCategory = activeTab === 'all' || article.category === activeTab;
-    const matchesSearch = article.title.includes(searchQuery) || 
-                          article.excerpt.includes(searchQuery) ||
-                          article.categoryLabel.includes(searchQuery);
+    const matchesSearch = article.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          article.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (article.categoryLabel && article.categoryLabel.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesCategory && (searchQuery === '' || matchesSearch);
   });
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen" dir="rtl">
+        <Header />
+        <div className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto mb-4"></div>
+            <p className="text-gray-600">טוען מאמרים...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex flex-col min-h-screen" dir="rtl">
+        <Header />
+        <div className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-red-500 text-5xl mb-4">⚠️</div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">שגיאה בטעינת המאמרים</h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <Button onClick={() => window.location.reload()}>נסה שוב</Button>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen" dir="rtl">
@@ -147,67 +128,69 @@ const Articles = () => {
       </section>
       
       {/* Featured Articles */}
-      <section className="py-12 bg-white">
-        <div className="container mx-auto px-6">
-          <h2 className="text-2xl font-bold text-blue-800 mb-8">
-            <span className="text-teal-500">מאמרים</span> מובילים
-          </h2>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {featuredArticles.map((article, index) => (
-              <div key={article.id} className={`rounded-xl overflow-hidden shadow-lg bg-white transition-transform duration-300 hover:-translate-y-2 ${index === 0 ? 'lg:col-span-3' : ''}`}>
-                <div className={`${index === 0 ? 'lg:flex' : ''}`}>
-                  <div className={`${index === 0 ? 'lg:w-1/2' : ''}`}>
-                    <img 
-                      src={article.image} 
-                      alt={article.title} 
-                      className={`w-full h-60 object-cover ${index === 0 ? 'lg:h-96' : ''}`}
-                    />
-                  </div>
-                  
-                  <div className={`p-6 ${index === 0 ? 'lg:w-1/2 lg:flex lg:flex-col lg:justify-center' : ''}`}>
-                    <div className="flex items-center text-sm text-gray-500 mb-3">
-                      <span className="bg-teal-50 text-teal-600 rounded-full px-3 py-1 font-medium">
-                        {article.categoryLabel}
-                      </span>
-                      <span className="mx-3 flex items-center">
-                        <Calendar size={16} className="ml-1" />
-                        {article.date}
-                      </span>
-                      <span className="flex items-center">
-                        <Clock size={16} className="ml-1" />
-                        {article.readTime}
-                      </span>
+      {featuredArticles.length > 0 && (
+        <section className="py-12 bg-white">
+          <div className="container mx-auto px-6">
+            <h2 className="text-2xl font-bold text-blue-800 mb-8">
+              <span className="text-teal-500">מאמרים</span> מובילים
+            </h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {featuredArticles.map((article, index) => (
+                <div key={article.id} className={`rounded-xl overflow-hidden shadow-lg bg-white transition-transform duration-300 hover:-translate-y-2 ${index === 0 ? 'lg:col-span-3' : ''}`}>
+                  <div className={`${index === 0 ? 'lg:flex' : ''}`}>
+                    <div className={`${index === 0 ? 'lg:w-1/2' : ''}`}>
+                      <img 
+                        src={article.image} 
+                        alt={article.title} 
+                        className={`w-full h-60 object-cover ${index === 0 ? 'lg:h-96' : ''}`}
+                      />
                     </div>
                     
-                    <h3 className={`font-bold text-gray-800 mb-3 ${index === 0 ? 'text-2xl' : 'text-xl'}`}>
-                      {article.title}
-                    </h3>
-                    
-                    <p className="text-gray-600 mb-4">
-                      {article.excerpt}
-                    </p>
-                    
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center text-sm text-gray-500">
-                        <User size={16} className="ml-1" />
-                        {article.author}
+                    <div className={`p-6 ${index === 0 ? 'lg:w-1/2 lg:flex lg:flex-col lg:justify-center' : ''}`}>
+                      <div className="flex items-center text-sm text-gray-500 mb-3">
+                        <span className="bg-teal-50 text-teal-600 rounded-full px-3 py-1 font-medium">
+                          {article.categoryLabel}
+                        </span>
+                        <span className="mx-3 flex items-center">
+                          <Calendar size={16} className="ml-1" />
+                          {article.date}
+                        </span>
+                        <span className="flex items-center">
+                          <Clock size={16} className="ml-1" />
+                          {article.readTime}
+                        </span>
                       </div>
                       
-                      <Link to={`/articles/${article.id}`}>
-                        <Button variant="ghost" className="text-teal-600 hover:text-teal-700 p-0 flex items-center">
-                          קרא עוד
-                          <ArrowLeft size={16} className="mr-1" />
-                        </Button>
-                      </Link>
+                      <h3 className={`font-bold text-gray-800 mb-3 ${index === 0 ? 'text-2xl' : 'text-xl'}`}>
+                        {article.title}
+                      </h3>
+                      
+                      <p className="text-gray-600 mb-4">
+                        {article.excerpt}
+                      </p>
+                      
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center text-sm text-gray-500">
+                          <User size={16} className="ml-1" />
+                          {article.author}
+                        </div>
+                        
+                        <Link to={`/articles/${article.id}`}>
+                          <Button variant="ghost" className="text-teal-600 hover:text-teal-700 p-0 flex items-center">
+                            קרא עוד
+                            <ArrowLeft size={16} className="mr-1" />
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
       
       {/* All Articles with Tabs */}
       <section className="py-12 bg-gray-50">

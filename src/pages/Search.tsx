@@ -9,90 +9,11 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Filter, Check, Star, Award } from 'lucide-react';
+import { fetchProfessionals } from '@/services/professionals';
+import { ProfessionalInterface } from '@/types/dashboard';
+import { getProfessionalCategoryLabel } from '@/services/admin/utils/adminCache';
 
-// Sample data for professionals
-const allProfessionals = [
-  {
-    id: '1',
-    name: 'אבי כהן',
-    profession: 'חשמלאי מוסמך',
-    rating: 4.8,
-    reviewCount: 124,
-    location: 'תל אביב והמרכז',
-    image: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1180&q=80',
-    verified: true,
-    specialties: ['תיקוני חשמל', 'התקנות', 'תאורה'],
-    category: 'electricity',
-    area: 'tel_aviv',
-  },
-  {
-    id: '2',
-    name: 'מיכל לוי',
-    profession: 'מעצבת פנים',
-    rating: 4.9,
-    reviewCount: 89,
-    location: 'השרון',
-    image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1161&q=80',
-    verified: true,
-    specialties: ['עיצוב דירות', 'תכנון חללים', 'צביעה'],
-    category: 'interior_design',
-    area: 'sharon',
-  },
-  {
-    id: '3',
-    name: 'יוסי אברהם',
-    profession: 'שיפוצניק כללי',
-    rating: 4.7,
-    reviewCount: 156,
-    location: 'ירושלים והסביבה',
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80',
-    verified: false,
-    specialties: ['שיפוצים כלליים', 'ריצוף', 'גבס'],
-    category: 'renovations',
-    area: 'jerusalem',
-  },
-  {
-    id: '4',
-    name: 'רונית שטרן',
-    profession: 'אדריכלית',
-    rating: 5.0,
-    reviewCount: 47,
-    location: 'חיפה והצפון',
-    image: 'https://images.unsplash.com/photo-1534751516642-a1af1ef26a56?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=778&q=80',
-    verified: true,
-    specialties: ['תכנון אדריכלי', 'תכנון דירות', 'בנייה ירוקה'],
-    category: 'architecture',
-    area: 'haifa',
-  },
-  {
-    id: '5',
-    name: 'דוד לוינסון',
-    profession: 'אינסטלטור',
-    rating: 4.6,
-    reviewCount: 112,
-    location: 'באר שבע והדרום',
-    image: 'https://images.unsplash.com/photo-1566753323558-f4e0952af115?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2122&q=80',
-    verified: true,
-    specialties: ['אינסטלציה כללית', 'פתיחת סתימות', 'ברזים וברזיות'],
-    category: 'plumbing',
-    area: 'beer_sheva',
-  },
-  {
-    id: '6',
-    name: 'שחר גולן',
-    profession: 'נגר',
-    rating: 4.8,
-    reviewCount: 67,
-    location: 'השפלה',
-    image: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=774&q=80',
-    verified: false,
-    specialties: ['ארונות', 'מטבחים', 'רהיטים'],
-    category: 'carpentry',
-    area: 'shfela',
-  },
-];
-
-// Dynamic specialties mapping by category
+// Dynamic specialties mapping by category - we'll later populate this from the database
 const specialtiesByCategory = {
   'electricity': ['תיקוני חשמל', 'התקנות', 'תאורה', 'חשמל חכם', 'לוחות חשמל'],
   'plumbing': ['אינסטלציה כללית', 'פתיחת סתימות', 'ברזים וברזיות', 'דודי שמש', 'ביוב'],
@@ -104,7 +25,10 @@ const specialtiesByCategory = {
 };
 
 const Search = () => {
-  const [professionals, setProfessionals] = useState(allProfessionals);
+  const [allProfessionals, setAllProfessionals] = useState<ProfessionalInterface[]>([]);
+  const [professionals, setProfessionals] = useState<ProfessionalInterface[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLocation, setSelectedLocation] = useState('all');
@@ -115,6 +39,25 @@ const Search = () => {
     minRating: [4],
     categories: [] as string[],
   });
+
+  // Fetch professionals from database
+  useEffect(() => {
+    const getProfessionals = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchProfessionals();
+        setAllProfessionals(data);
+        setProfessionals(data);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching professionals:', err);
+        setError('שגיאה בטעינת בעלי המקצוע. אנא נסה שוב מאוחר יותר.');
+        setLoading(false);
+      }
+    };
+
+    getProfessionals();
+  }, []);
 
   // Update available specialties when category changes
   useEffect(() => {
@@ -179,7 +122,7 @@ const Search = () => {
     // Apply specialties filter
     if (filters.categories.length > 0) {
       filtered = filtered.filter(p => 
-        filters.categories.some(cat => p.specialties.includes(cat))
+        filters.categories.some(cat => p.specialties && p.specialties.includes(cat))
       );
     }
     
@@ -243,8 +186,10 @@ const Search = () => {
   
   // Apply initial filters and sorting
   useEffect(() => {
-    applyFilters();
-  }, [filters, sortOption]);
+    if (allProfessionals.length > 0) {
+      applyFilters();
+    }
+  }, [filters, sortOption, allProfessionals]);
   
   // This simulates a user revealing a phone number
   const handlePhoneReveal = (professionalName: string) => {
@@ -252,6 +197,41 @@ const Search = () => {
     return true;
   };
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen" dir="rtl">
+        <Header />
+        <main className="flex-grow flex items-center justify-center pt-28">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto mb-4"></div>
+            <p className="text-gray-600">טוען בעלי מקצוע...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex flex-col min-h-screen" dir="rtl">
+        <Header />
+        <main className="flex-grow flex items-center justify-center pt-28">
+          <div className="text-center">
+            <div className="text-red-500 text-5xl mb-4">⚠️</div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">שגיאה בטעינת בעלי המקצוע</h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <Button onClick={() => window.location.reload()}>נסה שוב</Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Rest of component
   return (
     <div className="flex flex-col min-h-screen" dir="rtl">
       <Header />
@@ -502,10 +482,10 @@ const Search = () => {
                       rating={professional.rating}
                       reviewCount={professional.reviewCount}
                       location={professional.location}
-                      image={professional.image}
-                      specialties={professional.specialties}
+                      image={professional.image || 'https://via.placeholder.com/200?text=No+Image'}
+                      specialties={professional.specialties || []}
                       verified={professional.verified}
-                      onPhoneReveal={handlePhoneReveal}
+                      onPhoneReveal={() => handlePhoneReveal(professional.name)}
                     />
                   ))}
                 </div>

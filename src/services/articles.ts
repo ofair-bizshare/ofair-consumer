@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ArticleInterface } from '@/types/dashboard';
 
@@ -37,7 +36,14 @@ export const fetchArticles = async (): Promise<ArticleInterface[]> => {
       return initializedData || [];
     }
     
-    return data;
+    // Transform database articles to match the expected format
+    return data.map(article => ({
+      ...article,
+      categoryLabel: article.category || 'כללי',
+      excerpt: article.summary || article.content.substring(0, 150) + '...',
+      readTime: estimateReadTime(article.content) + ' דקות',
+      date: formatDate(article.created_at)
+    }));
   } catch (error) {
     console.error('Error in fetchArticles:', error);
     throw error;
@@ -55,7 +61,8 @@ const initializeArticlesIfEmpty = async (): Promise<void> => {
         summary: 'למדו כיצד לחסוך בהוצאות החשמל באמצעות שינויים קטנים בהרגלי השימוש היומיומיים שלכם.',
         image: 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
         author: 'ישראל ישראלי',
-        published: true
+        published: true,
+        category: 'electricity'
       },
       {
         title: 'מדריך לבחירת קבלן שיפוצים אמין',
@@ -63,7 +70,8 @@ const initializeArticlesIfEmpty = async (): Promise<void> => {
         summary: 'כיצד לבחור את הקבלן הנכון לפרויקט השיפוץ שלכם וכיצד להימנע מטעויות נפוצות בתהליך.',
         image: 'https://images.unsplash.com/photo-1581165825571-4d25acd0e396?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
         author: 'דוד לוי',
-        published: true
+        published: true,
+        category: 'renovations'
       },
       {
         title: 'איך לתחזק מערכת אינסטלציה ביתית',
@@ -71,7 +79,8 @@ const initializeArticlesIfEmpty = async (): Promise<void> => {
         summary: 'מדריך מקיף לתחזוקה בסיסית של מערכת האינסטלציה בבית שלכם למניעת נזילות ובעיות עתידיות.',
         image: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
         author: 'רונית כהן',
-        published: true
+        published: true,
+        category: 'plumbing'
       }
     ];
     
@@ -92,6 +101,7 @@ const initializeArticlesIfEmpty = async (): Promise<void> => {
   }
 };
 
+// Get article by ID
 export const getArticleById = async (id: string): Promise<ArticleInterface | null> => {
   try {
     console.log('Fetching article by ID:', id);
@@ -113,11 +123,34 @@ export const getArticleById = async (id: string): Promise<ArticleInterface | nul
       return null;
     }
     
-    return data;
+    return {
+      ...data,
+      categoryLabel: data.category || 'כללי',
+      excerpt: data.summary || data.content.substring(0, 150) + '...',
+      readTime: estimateReadTime(data.content) + ' דקות',
+      date: formatDate(data.created_at)
+    };
   } catch (error) {
     console.error('Error fetching article by ID:', error);
     throw error;
   }
+};
+
+// Helper function to estimate read time based on content length
+const estimateReadTime = (content: string): string => {
+  // Average reading speed is about 200 words per minute
+  const wordCount = content.split(/\s+/).length;
+  const readTimeMinutes = Math.max(1, Math.round(wordCount / 200));
+  return readTimeMinutes.toString();
+};
+
+// Helper function to format date
+const formatDate = (dateStr: string | null): string => {
+  if (!dateStr) return 'ללא תאריך';
+  
+  const date = new Date(dateStr);
+  const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+  return date.toLocaleDateString('he-IL', options);
 };
 
 export const uploadArticleImage = async (file: File): Promise<string> => {
