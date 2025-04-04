@@ -44,18 +44,13 @@ export const createRequest = async (requestData: {
   description: string;
   location: string;
   timing?: string;
-  user_id?: string;
 }): Promise<string | null> => {
   try {
-    // Get current user ID if not provided
-    let userId = requestData.user_id;
-    if (!userId) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        console.error('User not authenticated');
-        return null;
-      }
-      userId = user.id;
+    // Get current user ID
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.error('User not authenticated');
+      return null;
     }
 
     // We need to use "as any" to bypass TypeScript's type checking
@@ -67,7 +62,7 @@ export const createRequest = async (requestData: {
         location: requestData.location,
         timing: requestData.timing || null,
         status: 'active',
-        user_id: userId
+        user_id: user.id
       })
       .select('id')
       .single();
