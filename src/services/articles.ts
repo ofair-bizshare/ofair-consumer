@@ -1,5 +1,4 @@
 import { supabase } from '@/integrations/supabase/client';
-import { ArticleInterface } from '@/types/dashboard';
 
 export interface ArticleInterface {
   id: string;
@@ -144,7 +143,7 @@ export const getArticleFromData = (data: any): ArticleInterface => {
   if (!data) return null;
   
   const excerpt = data.summary?.length > 120 ? data.summary.substring(0, 120) + '...' : data.summary;
-  const readTime = `${Math.max(Math.ceil(data.content?.length / 1000), 1)} דקות קריאה`;
+  const readTime = `${Math.max(Math.ceil(data.content?.length / 1000), 1)} דקות קריא��`;
   const date = new Date(data.created_at).toLocaleDateString('he-IL', {
     year: 'numeric',
     month: 'long',
@@ -274,7 +273,8 @@ export const createArticle = async (article: Omit<ArticleInterface, 'id' | 'crea
         summary: article.summary || article.content.substring(0, 150) + '...',
         image: article.image || 'https://via.placeholder.com/800x400?text=No+Image',
         author: article.author,
-        published: article.published !== undefined ? article.published : true
+        published: article.published !== undefined ? article.published : true,
+        category: article.category
       })
       .select()
       .single();
@@ -290,7 +290,7 @@ export const createArticle = async (article: Omit<ArticleInterface, 'id' | 'crea
     }
     
     console.log('Article created successfully:', data);
-    return data;
+    return getArticleFromData(data);
   } catch (error) {
     console.error('Error creating article:', error);
     throw error;

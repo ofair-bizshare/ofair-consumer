@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 /**
@@ -19,6 +20,14 @@ export interface ProfessionalInterface {
   verified: boolean;
   area?: string;
   category?: string;
+  // Adding compatibility with Search and Components
+  profession?: string;
+  location?: string;
+  image?: string;
+  specialties?: string[];
+  phoneNumber?: string;
+  about?: string;
+  reviewCount?: number;
 }
 
 /**
@@ -41,6 +50,9 @@ export const getProfessionals = async (): Promise<ProfessionalInterface[]> => {
     return [];
   }
 };
+
+// Add alias for compatibility with existing code
+export const fetchProfessionals = getProfessionals;
 
 /**
  * Gets a professional by ID
@@ -66,6 +78,9 @@ export const getProfessional = async (id: string): Promise<ProfessionalInterface
   }
 };
 
+// Add alias for compatibility with existing code
+export const getProfessionalById = getProfessional;
+
 /**
  * Gets a professional from data
  * @param data Professional data
@@ -87,7 +102,15 @@ export const getProfessionalFromData = (data: any): ProfessionalInterface => {
     specialty: data.specialty || 'לא צוין',
     verified: data.verified || false,
     area: data.area,
-    category: data.category
+    category: data.category,
+    // Add compatibility fields
+    profession: data.specialty || data.profession || 'לא צוין',
+    location: data.city || data.location || 'לא צוין',
+    image: data.image_url || data.image || 'https://via.placeholder.com/150',
+    specialties: data.specialties || [data.specialty] || [],
+    phoneNumber: data.phone || data.phone_number,
+    about: data.bio || data.about,
+    reviewCount: data.reviews_count || data.review_count || 0
   };
 };
 
@@ -112,80 +135,75 @@ export const seedProfessionals = async (): Promise<void> => {
       return;
     }
 
-    // Seed professionals
+    // Convert our sample data to match database fields
     const professionals = [
       {
         name: 'אבי חשמלאי',
-        phone: '050-1234567',
+        profession: 'חשמלאי',
+        phone_number: '050-1234567',
         email: 'avi@example.com',
-        bio: 'חשמלאי מוסמך עם 10 שנות ניסיון',
+        about: 'חשמלאי מוסמך עם 10 שנות ניסיון',
         rating: 4.5,
-        reviews_count: 20,
-        image_url: 'https://via.placeholder.com/150',
-        created_at: new Date().toISOString(),
-        city: 'תל אביב',
-        specialty: 'חשמלאי',
-        verified: true,
+        review_count: 20,
+        image: 'https://via.placeholder.com/150',
+        location: 'תל אביב',
+        specialties: ['חשמלאי', 'התקנת מזגנים'],
         area: 'tel_aviv',
         category: 'electricity'
       },
       {
         name: 'משה אינסטלטור',
-        phone: '052-7654321',
+        profession: 'אינסטלטור',
+        phone_number: '052-7654321',
         email: 'moshe@example.com',
-        bio: 'אינסטלטור מומחה עם 15 שנות ניסיון',
+        about: 'אינסטלטור מומחה עם 15 שנות ניסיון',
         rating: 4.8,
-        reviews_count: 35,
-        image_url: 'https://via.placeholder.com/150',
-        created_at: new Date().toISOString(),
-        city: 'ירושלים',
-        specialty: 'אינסטלטור',
-        verified: true,
+        review_count: 35,
+        image: 'https://via.placeholder.com/150',
+        location: 'ירושלים',
+        specialties: ['אינסטלטור', 'תיקון נזילות'],
         area: 'jerusalem',
         category: 'plumbing'
       },
       {
         name: 'שרה שיפוצים',
-        phone: '054-2345678',
+        profession: 'שיפוצים',
+        phone_number: '054-2345678',
         email: 'sara@example.com',
-        bio: 'קבלנית שיפוצים עם 20 שנות ניסיון',
+        about: 'קבלנית שיפוצים עם 20 שנות ניסיון',
         rating: 4.2,
-        reviews_count: 15,
-        image_url: 'https://via.placeholder.com/150',
-        created_at: new Date().toISOString(),
-        city: 'חיפה',
-        specialty: 'שיפוצים',
-        verified: true,
+        review_count: 15,
+        image: 'https://via.placeholder.com/150',
+        location: 'חיפה',
+        specialties: ['שיפוצים', 'צביעה'],
         area: 'haifa',
         category: 'renovations'
       },
       {
         name: 'דוד נגר',
-        phone: '055-8765432',
+        profession: 'נגר',
+        phone_number: '055-8765432',
         email: 'david@example.com',
-        bio: 'נגר אומן עם 25 שנות ניסיון',
+        about: 'נגר אומן עם 25 שנות ניסיון',
         rating: 4.9,
-        reviews_count: 40,
-        image_url: 'https://via.placeholder.com/150',
-        created_at: new Date().toISOString(),
-        city: 'באר שבע',
-        specialty: 'נגר',
-        verified: true,
+        review_count: 40,
+        image: 'https://via.placeholder.com/150',
+        location: 'באר שבע',
+        specialties: ['נגרות', 'רהיטים'],
         area: 'beer_sheva',
         category: 'carpentry'
       },
       {
         name: 'רחל גננת',
-        phone: '053-3456789',
+        profession: 'גננית',
+        phone_number: '053-3456789',
         email: 'rachel@example.com',
-        bio: 'גננת מומחית עם 30 שנות ניסיון',
+        about: 'גננת מומחית עם 30 שנות ניסיון',
         rating: 4.6,
-        reviews_count: 25,
-        image_url: 'https://via.placeholder.com/150',
-        created_at: new Date().toISOString(),
-        city: 'תל אביב',
-        specialty: 'גננת',
-        verified: true,
+        review_count: 25,
+        image: 'https://via.placeholder.com/150',
+        location: 'תל אביב',
+        specialties: ['גינון', 'עיצוב גינות'],
         area: 'tel_aviv',
         category: 'gardening'
       }

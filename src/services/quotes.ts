@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { QuoteInterface } from '@/types/dashboard';
-import { getProfessionalById } from './professionals';
+import { getProfessional } from './professionals';
 
 // Fetch quotes for a specific request
 export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInterface[]> => {
@@ -27,7 +27,7 @@ export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInt
     const quotes = await Promise.all(
       data.map(async (quote: any) => {
         try {
-          const professional = await getProfessionalById(quote.professional_id);
+          const professional = await getProfessional(quote.professional_id);
           if (!professional) {
             console.error(`Professional not found for ID: ${quote.professional_id}`);
             return null;
