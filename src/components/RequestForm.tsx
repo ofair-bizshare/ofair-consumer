@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -101,11 +101,11 @@ const RequestForm: React.FC<RequestFormProps> = ({ onSuccess, onClose }) => {
       setIsSubmitting(true);
       
       const result = await createRequest({
-        user_id: user.id,
         title: values.title,
         description: values.description,
         location: values.location,
         timing: values.timing,
+        user_id: user.id,
       });
       
       if (result) {

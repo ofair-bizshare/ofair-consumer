@@ -39,7 +39,7 @@ const RequestDialog: React.FC<RequestDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
-          <RequestForm onSuccess={() => onOpenChange(false)} saveToRequests={true} />
+          <RequestForm onSuccess={() => onOpenChange(false)} />
         </div>
       </DialogContent>
     </Dialog>
