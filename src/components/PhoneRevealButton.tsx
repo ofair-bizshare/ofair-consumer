@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Phone } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
@@ -20,6 +20,7 @@ interface PhoneRevealButtonProps {
   professionalId: string;
   profession?: string;
   onBeforeReveal?: () => boolean;
+  autoReveal?: boolean; // Added autoReveal prop
 }
 
 const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
@@ -27,12 +28,23 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
   professionalName,
   professionalId,
   profession = "",
-  onBeforeReveal
+  onBeforeReveal,
+  autoReveal = false // Default to false
 }) => {
   const [isRevealed, setIsRevealed] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  
+  // Auto-reveal the phone number if autoReveal is true and user is logged in
+  useEffect(() => {
+    if (autoReveal && user && !isRevealed) {
+      setIsRevealed(true);
+      saveReferral().catch(error => {
+        console.error("Error auto-saving referral:", error);
+      });
+    }
+  }, [autoReveal, user, isRevealed]);
   
   const handleReveal = async () => {
     if (onBeforeReveal && !onBeforeReveal()) {

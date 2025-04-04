@@ -1,28 +1,34 @@
+
 import React from 'react';
 import { Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
 interface ArticleCardProps {
   id: string;
   title: string;
-  excerpt: string;
+  summary: string; // Changed from excerpt to summary
   image: string;
   date: string;
-  category: string;
+  category?: string; // Made optional
 }
+
 const ArticleCard: React.FC<ArticleCardProps> = ({
   id,
   title,
-  excerpt,
+  summary, // Changed from excerpt to summary
   image,
   date,
-  category
+  category = "מאמר" // Default value
 }) => {
-  return <div className="glass-card overflow-hidden group">
+  return (
+    <div className="glass-card overflow-hidden group">
       <div className="relative overflow-hidden h-48">
         <img src={image} alt={title} className="w-full h-full transition-transform duration-500 group-hover:scale-105 object-fill" />
-        <div className="absolute top-3 right-3 bg-teal-500 text-white text-xs px-2 py-1 rounded-full">
-          {category}
-        </div>
+        {category && (
+          <div className="absolute top-3 right-3 bg-teal-500 text-white text-xs px-2 py-1 rounded-full">
+            {category}
+          </div>
+        )}
       </div>
       
       <div className="p-5">
@@ -36,7 +42,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
         </h3>
         
         <p className="text-gray-600 text-sm line-clamp-3 mb-4">
-          {excerpt}
+          {summary}
         </p>
         
         <Link to={`/article/${id}`} className="text-teal-500 font-medium text-sm hover:text-teal-600 inline-flex items-center">
@@ -44,6 +50,8 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
           <span className="mr-1 transform group-hover:translate-x-1 transition-transform">←</span>
         </Link>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default ArticleCard;

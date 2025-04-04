@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/hooks/use-toast';
-import { uploadArticleImage } from '@/services/articles';
+import { uploadArticleImage } from '@/services/articles'; // Now correctly imported from services/articles
 import { createArticle } from '@/services/admin';
 import { Form } from '@/components/ui/form';
 import { articleFormSchema, ArticleFormValues } from './articleSchema';

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
-import { getArticleById } from '@/services/articles';
+import { fetchArticleById } from '@/services/articles';
 import { ArticleInterface } from '@/types/dashboard';
 
 const ArticleDetail = () => {
@@ -33,7 +32,7 @@ const ArticleDetail = () => {
           return;
         }
         
-        const articleData = await getArticleById(id);
+        const articleData = await fetchArticleById(id);
         if (!articleData) {
           setError('המאמר המבוקש לא נמצא');
           return;
@@ -69,7 +68,6 @@ const ArticleDetail = () => {
       });
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="flex flex-col min-h-screen" dir="rtl">
@@ -85,7 +83,6 @@ const ArticleDetail = () => {
     );
   }
 
-  // Error state
   if (error || !article) {
     return (
       <div className="flex flex-col min-h-screen" dir="rtl">
@@ -124,7 +121,6 @@ const ArticleDetail = () => {
         </Helmet>
 
         <div className="container mx-auto px-4 max-w-4xl">
-          {/* Breadcrumbs */}
           <div className="flex items-center text-sm text-gray-500 mb-6">
             <Link to="/" className="hover:text-blue-600 transition-colors">ראשי</Link>
             <ChevronRight className="mx-2 h-4 w-4" />
@@ -133,7 +129,6 @@ const ArticleDetail = () => {
             <span className="text-gray-700">{article.title}</span>
           </div>
 
-          {/* Article Header */}
           <div className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-blue-800 mb-4">{article.title}</h1>
             
@@ -161,7 +156,6 @@ const ArticleDetail = () => {
             </div>
           </div>
 
-          {/* Featured Image */}
           {article.image && (
             <div className="rounded-xl overflow-hidden mb-8 shadow-lg">
               <img 
@@ -172,12 +166,10 @@ const ArticleDetail = () => {
             </div>
           )}
 
-          {/* Article Content */}
           <div className="prose prose-lg max-w-none mb-10">
             <div dangerouslySetInnerHTML={{ __html: article.content }} />
           </div>
 
-          {/* Social Share */}
           <div className="border-t border-b border-gray-200 py-6 my-8">
             <div className="flex items-center justify-between">
               <span className="font-medium text-gray-700">שתף מאמר זה:</span>
@@ -210,7 +202,6 @@ const ArticleDetail = () => {
             </div>
           </div>
 
-          {/* Back Button */}
           <div className="mt-10 text-center">
             <Link to="/articles">
               <Button variant="outline" className="border-blue-500 text-blue-700 hover:bg-blue-50">

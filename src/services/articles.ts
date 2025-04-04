@@ -117,7 +117,7 @@ export const createArticle = async (article: Partial<Article>): Promise<Article 
   try {
     const { data, error } = await supabase
       .from('articles')
-      .insert([article])
+      .insert(article)
       .select()
       .single();
 
@@ -201,5 +201,57 @@ export const fetchRelatedArticles = async (currentArticleId: string): Promise<Ar
   } catch (error) {
     console.error('Error fetching related articles:', error);
     return [];
+  }
+};
+
+/**
+ * Uploads an article image
+ */
+export const uploadArticleImage = async (file: File): Promise<string | null> => {
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `article-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+    
+    // Try uploading to the articles bucket
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('articles')
+      .upload(`images/${fileName}`, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+      
+    if (uploadError) {
+      console.error(`Error uploading to articles bucket:`, uploadError);
+      
+      // Try uploading to the images bucket as fallback
+      const { data: fallbackData, error: fallbackError } = await supabase.storage
+        .from('images')
+        .upload(`articles/${fileName}`, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+        
+      if (fallbackError) {
+        console.error(`Error uploading to images bucket:`, fallbackError);
+        return 'https://via.placeholder.com/800x400?text=Upload+Failed';
+      }
+      
+      const { data: fallbackUrl } = supabase.storage
+        .from('images')
+        .getPublicUrl(`articles/${fileName}`);
+      
+      return fallbackUrl.publicUrl;
+    }
+    
+    // Get public URL from articles bucket
+    const { data: publicURL } = supabase.storage
+      .from('articles')
+      .getPublicUrl(`images/${fileName}`);
+    
+    return publicURL.publicUrl;
+  } catch (error) {
+    console.error('Error uploading article image:', error);
+    // Return a placeholder image URL as fallback
+    return 'https://via.placeholder.com/800x400?text=Upload+Failed';
   }
 };
