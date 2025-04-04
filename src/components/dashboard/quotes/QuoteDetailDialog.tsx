@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Eye } from 'lucide-react';
 import { ProfessionalInterface } from '@/types/dashboard';
@@ -13,6 +13,7 @@ import {
   DialogFooter,
   DialogTrigger
 } from '@/components/ui/dialog';
+import { useNavigate } from 'react-router-dom';
 
 interface QuoteDetailDialogProps {
   professional: ProfessionalInterface;
@@ -23,10 +24,11 @@ const QuoteDetailDialog: React.FC<QuoteDetailDialogProps> = ({
   professional,
   onViewProfile
 }) => {
+  const navigate = useNavigate();
+  
   // Handle direct navigation to professional profile
   const handleViewProfile = () => {
-    // Using window.open to ensure proper navigation
-    window.open(`/professional/${professional.id}`, '_blank');
+    navigate(`/professional/${professional.id}`);
   };
 
   return (

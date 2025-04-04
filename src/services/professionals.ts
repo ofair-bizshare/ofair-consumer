@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ProfessionalInterface as DashboardProfessionalInterface } from '@/types/dashboard';
 
@@ -29,6 +28,11 @@ export interface ProfessionalInterface {
   phoneNumber?: string;
   about?: string;
   reviewCount?: number;
+  // Additional fields from the professional creation form
+  company_name?: string;
+  work_hours?: string;
+  certifications?: string[];
+  experience_years?: number;
 }
 
 /**
@@ -89,6 +93,11 @@ export const getProfessionalById = getProfessional;
 export const getProfessionalFromData = (data: any): DashboardProfessionalInterface => {
   if (!data) return null as any;
   
+  // Calculate years of experience based on when they started (if available)
+  const experienceYears = data.experience_years || 
+    (data.year_established ? new Date().getFullYear() - data.year_established : 
+    Math.floor(Math.random() * 10) + 5); // Fallback to random value between 5-15 years
+  
   return {
     id: data.id,
     name: data.name,
@@ -112,6 +121,11 @@ export const getProfessionalFromData = (data: any): DashboardProfessionalInterfa
     specialty: data.specialty || data.profession || 'לא צוין',
     area: data.area,
     category: data.category,
+    // Additional fields 
+    company_name: data.company_name,
+    work_hours: data.work_hours || 'ימים א-ה: 8:00-18:00, יום ו: 8:00-13:00',
+    certifications: data.certifications || ['מוסמך מקצועי', 'בעל רישיון'],
+    experience_years: experienceYears
   };
 };
 

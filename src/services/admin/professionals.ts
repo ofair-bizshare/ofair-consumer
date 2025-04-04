@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ProfessionalInterface } from '@/types/dashboard';
 
@@ -18,7 +19,11 @@ export const createProfessional = async (professional: Omit<ProfessionalInterfac
       phone_number: professional.phoneNumber,
       about: professional.about,
       rating: professional.rating,
-      image: professional.image || 'https://via.placeholder.com/150'
+      image: professional.image || 'https://via.placeholder.com/150',
+      company_name: professional.company_name,
+      work_hours: professional.work_hours,
+      certifications: professional.certifications,
+      experience_years: professional.experience_years
     });
     
     if (error) {
