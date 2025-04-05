@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, User } from 'lucide-react';
+import { Menu, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import UserDropdown from './header/UserDropdown';
 import { MobileMenu } from './header/MobileMenu';
 import { DesktopNav } from './header/DesktopNav';
 import { useAuth } from '@/providers/AuthProvider';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -14,6 +15,7 @@ const Header = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -87,8 +89,12 @@ const Header = () => {
             </Button>
           )}
 
-          <button className="md:hidden text-gray-800" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          <button 
+            className="md:hidden text-gray-800" 
+            onClick={() => setIsMenuOpen(true)} 
+            aria-label="Toggle menu"
+          >
+            <Menu size={24} />
           </button>
         </div>
       </div>

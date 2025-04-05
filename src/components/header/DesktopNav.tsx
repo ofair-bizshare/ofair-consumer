@@ -39,13 +39,13 @@ export const DesktopNav = ({ pathname }: DesktopNavProps) => {
     <div className="hidden lg:flex items-center gap-2">
       <nav className="flex-1">
         <ul className="flex space-x-1 space-x-reverse">
-          <NavLink href="/" label="ראשי" active={isActive('/')} />
-          <NavLink href="/search" label="בעלי מקצוע" active={isActive('/search')} />
-          <NavLink href="/articles" label="מאמרים" active={isActive('/articles')} />
-          <NavLink href="/referrals" label="הפניות" active={isActive('/referrals')} />
           <NavLink href="/contact" label="צור קשר" active={isActive('/contact')} />
-          <NavLink href="/about" label="אודות" active={isActive('/about')} />
           <NavLink href="/faq" label="שאלות נפוצות" active={isActive('/faq')} />
+          <NavLink href="/about" label="אודות" active={isActive('/about')} />
+          <NavLink href="/referrals" label="הפניות" active={isActive('/referrals')} />
+          <NavLink href="/articles" label="מאמרים" active={isActive('/articles')} />
+          <NavLink href="/search" label="בעלי מקצוע" active={isActive('/search')} />
+          <NavLink href="/" label="ראשי" active={isActive('/')} />
         </ul>
       </nav>
       
