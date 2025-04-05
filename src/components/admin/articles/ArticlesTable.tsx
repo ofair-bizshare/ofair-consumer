@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { FileText, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
-import { articleCategoryOptions } from './articleSchema';
 
 interface ArticlesTableProps {
   articles: ArticleInterface[];
@@ -35,12 +34,6 @@ const ArticlesTable: React.FC<ArticlesTableProps> = ({
     }).format(date);
   };
 
-  const getCategoryLabel = (categoryValue: string | undefined) => {
-    if (!categoryValue) return 'כללי';
-    const category = articleCategoryOptions.find(c => c.value === categoryValue);
-    return category ? category.label : categoryValue;
-  };
-
   const handleDelete = async (id: string) => {
     if (onDeleteArticle) {
       await onDeleteArticle(id);
@@ -53,7 +46,6 @@ const ArticlesTable: React.FC<ArticlesTableProps> = ({
         <TableRow>
           <TableHead>כותרת</TableHead>
           <TableHead>מחבר</TableHead>
-          <TableHead>קטגוריה</TableHead>
           <TableHead>תאריך</TableHead>
           <TableHead>סטטוס</TableHead>
           <TableHead>פעולות</TableHead>
@@ -69,7 +61,6 @@ const ArticlesTable: React.FC<ArticlesTableProps> = ({
               </div>
             </TableCell>
             <TableCell>{article.author || 'ללא'}</TableCell>
-            <TableCell>{getCategoryLabel(article.category)}</TableCell>
             <TableCell>{formatDate(article.created_at)}</TableCell>
             <TableCell>
               {article.published ? (

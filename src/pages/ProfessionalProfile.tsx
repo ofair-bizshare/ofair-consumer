@@ -62,9 +62,6 @@ const fetchProfessionalData = async (id: string): Promise<ProfessionalData | nul
       
       const email = professional.email || `${professional.name.replace(/\s+/g, '').toLowerCase()}@example.com`;
       const address = `רחוב הרצל 1, ${professional.location}`;
-      
-      // Use the actual phone number from the database (phone_number or phoneNumber)
-      const phoneNumber = professional.phone_number || professional.phoneNumber || professional.phone || '050-5555555';
 
       // Create some sample projects based on the professional's data
       const projects: Project[] = [{
@@ -108,7 +105,7 @@ const fetchProfessionalData = async (id: string): Promise<ProfessionalData | nul
         yearEstablished,
         about: professional.about || 'בעל ניסיון רב בתחום, מבצע את העבודה באיכות גבוהה, במחירים הוגנים ובזמנים מוסכמים.',
         contactInfo: {
-          phone: phoneNumber,
+          phone: professional.phoneNumber || '050-5555555',
           email,
           address
         },
@@ -155,6 +152,8 @@ const ProfessionalProfile = () => {
     loadProfessional();
     window.scrollTo(0, 0);
   }, [id, toast]);
+
+  // remove isInIframe check to always show header and footer
   
   if (loading) {
     return (

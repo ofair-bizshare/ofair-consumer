@@ -1,4 +1,3 @@
-
 export interface ProfessionalInterface {
   id: string;
   name: string;

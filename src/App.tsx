@@ -26,7 +26,6 @@ import { seedProfessionals } from '@/services/professionals';
 import Terms from '@/pages/Terms';
 import Privacy from '@/pages/Privacy';
 import Settings from '@/pages/Settings';
-import Contact from '@/pages/Contact';
 
 const AdminDashboard = lazy(() => import('@/pages/Admin/AdminDashboard'));
 const ArticlesManager = lazy(() => import('@/pages/Admin/ArticlesManager'));
@@ -51,21 +50,6 @@ function App() {
     initSampleData();
   }, []);
   
-  // Generate sample articles when the app loads
-  useEffect(() => {
-    const generateArticles = async () => {
-      try {
-        // Import dynamically to avoid loading in production
-        const { generateSampleArticles } = await import('@/utils/generateSampleArticles');
-        await generateSampleArticles();
-      } catch (error) {
-        console.error('Error generating sample articles:', error);
-      }
-    };
-
-    generateArticles();
-  }, []);
-  
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light">
@@ -83,7 +67,6 @@ function App() {
                 <Route path="/my-referrals" element={<MyReferrals />} />
                 <Route path="/search" element={<Search />} />
                 <Route path="/faq" element={<FAQ />} />
-                <Route path="/contact" element={<Contact />} />
                 <Route path="/professional/:id" element={<ProfessionalProfile />} />
                 <Route path="/professionals/:id" element={<ProfessionalProfile />} />
                 <Route path="/articles" element={<Articles />} />

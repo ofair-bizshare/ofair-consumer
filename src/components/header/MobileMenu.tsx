@@ -1,106 +1,75 @@
 
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { X } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import UserDropdown from './UserDropdown';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetClose
-} from '@/components/ui/sheet';
 
 interface MobileMenuProps {
-  isOpen: boolean;
   isLoggedIn: boolean;
+  isOpen: boolean;
   onSendRequest: () => void;
   onLogout: () => void;
   onClose: () => void;
 }
 
-export const MobileMenu: React.FC<MobileMenuProps> = ({
-  isOpen,
-  isLoggedIn,
-  onSendRequest,
+const MobileMenu: React.FC<MobileMenuProps> = ({ 
+  isLoggedIn, 
+  isOpen, 
+  onSendRequest, 
   onLogout,
-  onClose,
+  onClose 
 }) => {
   const navigate = useNavigate();
-  
-  const handleLogin = () => {
-    onClose();
-    navigate('/login');
-  };
-  
+
+  if (!isOpen) return null;
+
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="right" className="w-[85%] max-w-sm p-0 bg-white border-l shadow-lg">
-        <SheetHeader className="p-4 border-b">
-          <SheetTitle className="text-right">תפריט</SheetTitle>
-          <SheetClose className="absolute right-4 top-4">
-            <X size={24} />
-            <span className="sr-only">סגירה</span>
-          </SheetClose>
-        </SheetHeader>
-        
-        <div className="px-4 py-6">
-          <nav>
-            <ul className="space-y-4">
-              <li>
-                <Link to="/" className="block py-2 text-lg font-medium" onClick={onClose}>ראשי</Link>
-              </li>
-              <li>
-                <Link to="/search" className="block py-2 text-lg font-medium" onClick={onClose}>בעלי מקצוע</Link>
-              </li>
-              <li>
-                <Link to="/articles" className="block py-2 text-lg font-medium" onClick={onClose}>מאמרים</Link>
-              </li>
-              <li>
-                <Link to="/referrals" className="block py-2 text-lg font-medium" onClick={onClose}>הפניות</Link>
-              </li>
-              <li>
-                <Link to="/about" className="block py-2 text-lg font-medium" onClick={onClose}>אודות</Link>
-              </li>
-              <li>
-                <Link to="/faq" className="block py-2 text-lg font-medium" onClick={onClose}>שאלות נפוצות</Link>
-              </li>
-              <li>
-                <Link to="/contact" className="block py-2 text-lg font-medium" onClick={onClose}>צור קשר</Link>
-              </li>
-              <div className="border-t border-gray-200 my-4"></div>
-              
-              <Button 
-                variant="ghost"
-                className="w-full justify-start text-lg font-medium" 
-                onClick={() => {
-                  onSendRequest();
-                  onClose();
-                }}
-              >
-                שליחת בקשה למקצוען
-              </Button>
-              
-              {!isLoggedIn && (
-                <Button 
-                  variant="outline" 
-                  className="w-full mt-4" 
-                  onClick={handleLogin}
-                >
-                  כניסה / הרשמה
-                </Button>
-              )}
-            </ul>
-          </nav>
-          
-          {isLoggedIn && (
-            <div className="mt-10">
-              <UserDropdown onLogout={onLogout} isMobile={true} />
-            </div>
+    <div className="md:hidden absolute top-full left-0 right-0 bg-white shadow-lg border-t border-gray-100 animate-fade-in-down">
+      <div className="container mx-auto px-6 py-4 flex flex-col space-y-4">
+        <button
+          onClick={() => {
+            onSendRequest();
+            onClose();
+          }}
+          className="text-teal-600 font-medium py-2 border-b border-gray-100 flex items-center bg-transparent border-none text-right w-full"
+        >
+          <Send size={18} className="ml-2" />
+          שליחת פנייה
+        </button>
+        <Link to="/search" className="text-gray-800 py-2 border-b border-gray-100" onClick={onClose}>
+          חיפוש בעלי מקצוע
+        </Link>
+        <Link to="/articles" className="text-gray-800 py-2 border-b border-gray-100" onClick={onClose}>
+          טיפים ומאמרים
+        </Link>
+        <Link to="/about" className="text-gray-800 py-2 border-b border-gray-100" onClick={onClose}>
+          אודות
+        </Link>
+        <a 
+          href="https://biz.ofair.co.il" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-gray-800 py-2 border-b border-gray-100 text-teal-500 font-medium"
+          onClick={onClose}
+        >
+          בעל מקצוע? הצטרף עכשיו
+        </a>
+        <div className="py-2">
+          {isLoggedIn ? (
+            <UserDropdown onLogout={onLogout} isMobile={true} />
+          ) : (
+            <Button variant="outline" className="w-full justify-center" onClick={() => {
+              onClose();
+              navigate('/login');
+            }}>
+              כניסה / הרשמה
+            </Button>
           )}
         </div>
-      </SheetContent>
-    </Sheet>
+      </div>
+    </div>
   );
 };
+
+export default MobileMenu;

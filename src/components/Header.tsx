@@ -1,13 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, User } from 'lucide-react';
+import { Menu, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import UserDropdown from './header/UserDropdown';
-import { MobileMenu } from './header/MobileMenu';
-import { DesktopNav } from './header/DesktopNav';
+import MobileMenu from './header/MobileMenu';
+import DesktopNav from './header/DesktopNav';
 import { useAuth } from '@/providers/AuthProvider';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -15,7 +14,6 @@ const Header = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const isMobile = useIsMobile();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -64,7 +62,7 @@ const Header = () => {
           <img alt="Ofair Logo" src="/lovable-uploads/52b937d1-acd7-4831-b19e-79a55a774829.png" className="h-7 animate-fade-in object-contain" />
         </Link>
 
-        <DesktopNav pathname={location.pathname} />
+        <DesktopNav onSendRequest={handleSendRequest} />
 
         <div className="flex items-center gap-4 animate-fade-in">
           <a 
@@ -89,12 +87,8 @@ const Header = () => {
             </Button>
           )}
 
-          <button 
-            className="md:hidden text-gray-800" 
-            onClick={() => setIsMenuOpen(true)} 
-            aria-label="Toggle menu"
-          >
-            <Menu size={24} />
+          <button className="md:hidden text-gray-800" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </div>

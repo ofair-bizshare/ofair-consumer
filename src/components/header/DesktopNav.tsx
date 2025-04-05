@@ -1,67 +1,37 @@
 
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { useAuth } from "@/providers/AuthProvider";
-import UserDropdown from "./UserDropdown";
-import { cn } from "@/lib/utils";
-
-interface NavLinkProps {
-  href: string;
-  label: string;
-  active?: boolean;
-}
-
-const NavLink = ({ href, label, active }: NavLinkProps) => (
-  <li>
-    <Link
-      to={href}
-      className={cn(
-        "block px-3 py-2 text-[16px] transition hover:text-blue-600",
-        active ? "font-semibold text-blue-700" : "text-gray-800"
-      )}
-    >
-      {label}
-    </Link>
-  </li>
-);
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Send } from 'lucide-react';
 
 interface DesktopNavProps {
-  pathname: string;
+  onSendRequest: () => void;
 }
 
-export const DesktopNav = ({ pathname }: DesktopNavProps) => {
-  const { user, loading } = useAuth();
-  const isLogin = pathname === "/login";
-  
-  const isActive = (path: string) => pathname === path;
-  
+const DesktopNav: React.FC<DesktopNavProps> = ({
+  onSendRequest
+}) => {
   return (
-    <div className="hidden lg:flex items-center gap-2">
-      <nav className="flex-1">
-        <ul className="flex space-x-1 space-x-reverse">
-          <NavLink href="/contact" label="צור קשר" active={isActive('/contact')} />
-          <NavLink href="/faq" label="שאלות נפוצות" active={isActive('/faq')} />
-          <NavLink href="/about" label="אודות" active={isActive('/about')} />
-          <NavLink href="/referrals" label="הפניות" active={isActive('/referrals')} />
-          <NavLink href="/articles" label="מאמרים" active={isActive('/articles')} />
-          <NavLink href="/search" label="בעלי מקצוע" active={isActive('/search')} />
-          <NavLink href="/" label="ראשי" active={isActive('/')} />
-        </ul>
-      </nav>
-      
-      {loading ? (
-        <div className="h-10 w-24 bg-gray-200 animate-pulse rounded-md"></div>
-      ) : user ? (
-        <UserDropdown onLogout={() => {}} />
-      ) : isLogin ? (
-        <Button asChild size="sm" variant="outline">
-          <Link to="/register">הרשמה</Link>
-        </Button>
-      ) : (
-        <Button asChild size="sm">
-          <Link to="/login">כניסה / הרשמה</Link>
-        </Button>
-      )}
-    </div>
+    <nav className="hidden md:flex mx-0 px-0">
+      <button 
+        onClick={onSendRequest} 
+        className="text-gray-800 hover:text-[#00d09e] transition-colors mx-[20px] bg-transparent border-none cursor-pointer"
+      >
+        <span className="flex items-center">
+          <Send size={18} className="ml-1" />
+          <span className="font-semibold text-[#00d09e]">שליחת בקשה</span>
+        </span>
+      </button>
+      <Link to="/search" className="text-gray-800 hover:text-[#00d09e] transition-colors mx-[23px]">
+        חיפוש בעלי מקצוע
+      </Link>
+      <Link to="/articles" className="text-gray-800 hover:text-[#00d09e] transition-colors mx-[23px]">
+        טיפים ומאמרים
+      </Link>
+      <Link to="/about" className="text-gray-800 hover:text-[#00d09e] transition-colors mx-[23px] px-[8px]">
+        אודות
+      </Link>
+    </nav>
   );
 };
+
+export default DesktopNav;
