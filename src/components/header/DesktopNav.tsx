@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/providers/AuthProvider";
-import { UserDropdown } from "./UserDropdown";
+import UserDropdown from "./UserDropdown";
 import { cn } from "@/lib/utils";
 
 interface NavLinkProps {
@@ -52,7 +52,7 @@ export const DesktopNav = ({ pathname }: DesktopNavProps) => {
       {loading ? (
         <div className="h-10 w-24 bg-gray-200 animate-pulse rounded-md"></div>
       ) : user ? (
-        <UserDropdown />
+        <UserDropdown onLogout={() => {}} />
       ) : isLogin ? (
         <Button asChild size="sm" variant="outline">
           <Link to="/register">הרשמה</Link>

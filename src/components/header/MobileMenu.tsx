@@ -1,132 +1,95 @@
 
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/providers/AuthProvider";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useState } from "react";
-
-interface NavLinkProps {
-  href: string;
-  label: string;
-  onClick: () => void;
-  active?: boolean;
-}
-
-const NavLink = ({ href, label, active, onClick }: NavLinkProps) => (
-  <li>
-    <Link
-      to={href}
-      onClick={onClick}
-      className={cn(
-        "block py-3 text-lg transition hover:text-blue-600 border-b border-gray-100",
-        active ? "font-semibold text-blue-700" : "text-gray-800"
-      )}
-    >
-      {label}
-    </Link>
-  </li>
-);
+import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import UserDropdown from './UserDropdown';
 
 interface MobileMenuProps {
-  pathname: string;
+  isOpen: boolean;
+  isLoggedIn: boolean;
+  onSendRequest: () => void;
+  onLogout: () => void;
+  onClose: () => void;
 }
 
-export const MobileMenu = ({ pathname }: MobileMenuProps) => {
-  const { user, logout } = useAuth();
-  const [open, setOpen] = useState(false);
+export const MobileMenu: React.FC<MobileMenuProps> = ({
+  isOpen,
+  isLoggedIn,
+  onSendRequest,
+  onLogout,
+  onClose,
+}) => {
+  const navigate = useNavigate();
   
-  const isActive = (path: string) => pathname === path;
-  
-  const handleNavClick = () => {
-    setOpen(false);
+  const handleLogin = () => {
+    onClose();
+    navigate('/login');
   };
   
-  const handleLogout = async () => {
-    await logout();
-    setOpen(false);
-  };
+  if (!isOpen) return null;
   
   return (
-    <div className="lg:hidden">
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-10 w-10">
-            <Menu className="h-5 w-5" />
-            <span className="sr-only">פתח תפריט</span>
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="right" className="w-72" dir="rtl">
-          <div className="flex flex-col h-full">
-            <div className="flex justify-between items-center border-b pb-4 mb-4">
-              <div className="text-lg font-semibold">תפריט</div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setOpen(false)}
-                className="h-8 w-8"
+    <div className="fixed inset-0 bg-white z-40 md:hidden">
+      <div className="container mx-auto px-5 py-6">
+        <div className="flex justify-end mb-4">
+          <button onClick={onClose} className="p-2" aria-label="Close menu">
+            <X size={24} />
+          </button>
+        </div>
+        
+        <nav>
+          <ul className="space-y-4">
+            <li>
+              <Link to="/" className="block py-2 text-lg font-medium" onClick={onClose}>ראשי</Link>
+            </li>
+            <li>
+              <Link to="/search" className="block py-2 text-lg font-medium" onClick={onClose}>בעלי מקצוע</Link>
+            </li>
+            <li>
+              <Link to="/articles" className="block py-2 text-lg font-medium" onClick={onClose}>מאמרים</Link>
+            </li>
+            <li>
+              <Link to="/referrals" className="block py-2 text-lg font-medium" onClick={onClose}>הפניות</Link>
+            </li>
+            <li>
+              <Link to="/contact" className="block py-2 text-lg font-medium" onClick={onClose}>צור קשר</Link>
+            </li>
+            <li>
+              <Link to="/about" className="block py-2 text-lg font-medium" onClick={onClose}>אודות</Link>
+            </li>
+            <li>
+              <Link to="/faq" className="block py-2 text-lg font-medium" onClick={onClose}>שאלות נפוצות</Link>
+            </li>
+            <div className="border-t border-gray-200 my-4"></div>
+            
+            <Button 
+              variant="ghost"
+              className="w-full justify-start text-lg font-medium" 
+              onClick={onSendRequest}
+            >
+              שליחת בקשה למקצוען
+            </Button>
+            
+            {!isLoggedIn && (
+              <Button 
+                variant="outline" 
+                className="w-full mt-4" 
+                onClick={handleLogin}
               >
-                <X className="h-4 w-4" />
-                <span className="sr-only">סגור</span>
+                כניסה / הרשמה
               </Button>
-            </div>
-            <nav className="flex-1">
-              <ul className="space-y-1">
-                <NavLink href="/" label="ראשי" active={isActive('/')} onClick={handleNavClick} />
-                <NavLink href="/search" label="בעלי מקצוע" active={isActive('/search')} onClick={handleNavClick} />
-                <NavLink href="/articles" label="מאמרים" active={isActive('/articles')} onClick={handleNavClick} />
-                <NavLink href="/referrals" label="הפניות" active={isActive('/referrals')} onClick={handleNavClick} />
-                <NavLink href="/contact" label="צור קשר" active={isActive('/contact')} onClick={handleNavClick} />
-                <NavLink href="/about" label="אודות" active={isActive('/about')} onClick={handleNavClick} />
-                <NavLink href="/faq" label="שאלות נפוצות" active={isActive('/faq')} onClick={handleNavClick} />
-              </ul>
-            </nav>
-            <div className="mt-auto pt-4 border-t">
-              {user ? (
-                <>
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="w-full mb-2"
-                  >
-                    <Link to="/dashboard" onClick={handleNavClick}>
-                      האזור האישי
-                    </Link>
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    className="w-full"
-                    onClick={handleLogout}
-                  >
-                    התנתק
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    asChild
-                    className="w-full mb-2"
-                  >
-                    <Link to="/login" onClick={handleNavClick}>
-                      כניסה / התחברות
-                    </Link>
-                  </Button>
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="w-full"
-                  >
-                    <Link to="/register" onClick={handleNavClick}>
-                      הרשמה
-                    </Link>
-                  </Button>
-                </>
-              )}
-            </div>
+            )}
+          </ul>
+        </nav>
+        
+        {isLoggedIn && (
+          <div className="mt-10">
+            <UserDropdown onLogout={onLogout} isMobile={true} />
           </div>
-        </SheetContent>
-      </Sheet>
+        )}
+        
+      </div>
     </div>
   );
 };

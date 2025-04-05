@@ -4,8 +4,8 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import UserDropdown from './header/UserDropdown';
-import MobileMenu from './header/MobileMenu';
-import DesktopNav from './header/DesktopNav';
+import { MobileMenu } from './header/MobileMenu';
+import { DesktopNav } from './header/DesktopNav';
 import { useAuth } from '@/providers/AuthProvider';
 
 const Header = () => {
@@ -62,7 +62,7 @@ const Header = () => {
           <img alt="Ofair Logo" src="/lovable-uploads/52b937d1-acd7-4831-b19e-79a55a774829.png" className="h-7 animate-fade-in object-contain" />
         </Link>
 
-        <DesktopNav onSendRequest={handleSendRequest} />
+        <DesktopNav pathname={location.pathname} />
 
         <div className="flex items-center gap-4 animate-fade-in">
           <a 
