@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Header from '@/components/Header';
@@ -68,13 +67,11 @@ const Articles = () => {
     if (value === 'all') {
       setFilteredArticles(articles);
     } else {
-      // Now category will be recognized as a valid property of Article
       const filtered = articles.filter(article => article.category === value);
       setFilteredArticles(filtered);
     }
   };
 
-  // Expanded categories to include professional types
   const categories = [
     { value: 'all', label: 'הכל', icon: <Grid2X2 size={16} /> },
     { value: 'general', label: 'כללי', icon: <Folder size={16} /> },
@@ -83,7 +80,6 @@ const Articles = () => {
     { value: 'diy', label: 'עשה זאת בעצמך', icon: <Book size={16} /> },
     { value: 'tips', label: 'טיפים', icon: <Book size={16} /> },
     { value: 'guides', label: 'מדריכים', icon: <Book size={16} /> },
-    // Additional professional categories
     { value: 'electrician', label: 'חשמלאי', icon: <Wrench size={16} /> },
     { value: 'plumber', label: 'אינסטלטור', icon: <Wrench size={16} /> },
     { value: 'carpenter', label: 'נגר', icon: <Wrench size={16} /> },
@@ -155,8 +151,8 @@ const Articles = () => {
                     className="data-[state=active]:bg-white data-[state=active]:text-[#00D09E] data-[state=active]:shadow-sm rounded-md px-4 py-2"
                   >
                     <span className="flex items-center">
+                      <span className="ml-1">{category.label}</span>
                       {category.icon}
-                      <span className="mr-2">{category.label}</span>
                     </span>
                   </TabsTrigger>
                 ))}
