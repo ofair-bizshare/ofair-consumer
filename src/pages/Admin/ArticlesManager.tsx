@@ -8,21 +8,28 @@ import ArticlesEmptyState from '@/components/admin/articles/ArticlesEmptyState';
 import ArticlesLoading from '@/components/admin/articles/ArticlesLoading';
 import ArticleForm from '@/components/admin/articles/ArticleForm';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Filter } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ArticleInterface } from '@/types/dashboard';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { articleCategoryOptions } from '@/components/admin/articles/articleSchema';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const ArticlesManager = () => {
   const [articles, setArticles] = useState<ArticleInterface[]>([]);
+  const [filteredArticles, setFilteredArticles] = useState<ArticleInterface[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [editingArticle, setEditingArticle] = useState<ArticleInterface | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('');
   const { toast } = useToast();
 
   const fetchArticles = async () => {
@@ -40,6 +47,7 @@ const ArticlesManager = () => {
       }
       
       setArticles(data || []);
+      setFilteredArticles(data || []);
     } catch (error) {
       console.error('Error fetching articles:', error);
       setError('אירעה שגיאה בטעינת המאמרים, אנא נסה שוב מאוחר יותר.');
@@ -52,6 +60,23 @@ const ArticlesManager = () => {
       setLoading(false);
     }
   };
+
+  // Filter articles when search term or category changes
+  useEffect(() => {
+    const filtered = articles.filter(article => {
+      const matchesSearch = 
+        !searchTerm || 
+        article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (article.content && article.content.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (article.summary && article.summary.toLowerCase().includes(searchTerm.toLowerCase()));
+        
+      const matchesCategory = !categoryFilter || article.category === categoryFilter;
+      
+      return matchesSearch && matchesCategory;
+    });
+    
+    setFilteredArticles(filtered);
+  }, [articles, searchTerm, categoryFilter]);
 
   useEffect(() => {
     fetchArticles();
@@ -186,13 +211,65 @@ const ArticlesManager = () => {
         </Alert>
       )}
       
+      <div className="bg-white p-4 rounded-lg shadow mb-6">
+        <div className="flex flex-col md:flex-row gap-4 items-end">
+          <div className="w-full md:w-1/2">
+            <Label htmlFor="search" className="mb-2 block">חיפוש מאמרים</Label>
+            <Input 
+              id="search" 
+              placeholder="חפש לפי כותרת או תוכן..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          
+          <div className="w-full md:w-1/4">
+            <Label htmlFor="category" className="mb-2 block">סינון לפי קטגוריה</Label>
+            <select
+              id="category"
+              className="w-full h-10 px-3 py-2 text-base rounded-md border border-input bg-background"
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+            >
+              <option value="">כל הקטגוריות</option>
+              {articleCategoryOptions.map((category) => (
+                <option key={category.value} value={category.value}>
+                  {category.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="w-full md:w-1/4 flex justify-end">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setSearchTerm('');
+                setCategoryFilter('');
+              }}
+            >
+              נקה סינון
+            </Button>
+          </div>
+        </div>
+      </div>
+      
       {loading ? (
         <ArticlesLoading />
-      ) : articles.length === 0 ? (
-        <ArticlesEmptyState onAddArticle={() => setDialogOpen(true)} />
+      ) : filteredArticles.length === 0 ? (
+        searchTerm || categoryFilter ? (
+          <div className="text-center p-8 bg-gray-50 rounded-lg">
+            <h3 className="text-lg font-medium mb-2">לא נמצאו תוצאות</h3>
+            <p className="text-gray-500">
+              לא נמצאו מאמרים התואמים את החיפוש שלך. נסה לשנות את מונחי החיפוש או הסינון.
+            </p>
+          </div>
+        ) : (
+          <ArticlesEmptyState onAddArticle={() => setDialogOpen(true)} />
+        )
       ) : (
         <ArticlesTable 
-          articles={articles} 
+          articles={filteredArticles} 
           onEditArticle={handleEditArticle}
           onDeleteArticle={handleDeleteArticle} 
           onRefetch={fetchArticles}

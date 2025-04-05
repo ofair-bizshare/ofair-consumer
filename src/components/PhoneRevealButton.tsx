@@ -24,7 +24,7 @@ interface PhoneRevealButtonProps {
 }
 
 const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
-  phoneNumber = "000-0000000",
+  phoneNumber = "",
   professionalName,
   professionalId,
   profession = "",
@@ -35,6 +35,9 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  
+  // Format phone number for display
+  const formattedPhoneNumber = phoneNumber || "000-0000000";
   
   // Auto-reveal the phone number if autoReveal is true and user is logged in
   useEffect(() => {
@@ -76,7 +79,7 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
           user_id: user?.id,
           professional_id: professionalId,
           professional_name: professionalName,
-          phone_number: phoneNumber,
+          phone_number: formattedPhoneNumber,
           profession: profession,
           status: 'new'
         });
@@ -103,7 +106,7 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
         className="w-full bg-[#00D09E] hover:bg-[#00C090] text-white"
       >
         <Phone className="ml-2 h-4 w-4" />
-        {isRevealed ? phoneNumber : "צפה במספר טלפון"}
+        {isRevealed ? formattedPhoneNumber : "צפה במספר טלפון"}
       </Button>
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

@@ -24,7 +24,13 @@ export const articleCategoryOptions = [
   { value: 'carpenter', label: 'נגר' },
   { value: 'painter', label: 'צבע' },
   { value: 'gardener', label: 'גנן' },
-  { value: 'renovation', label: 'שיפוצניק' },
   { value: 'locksmith', label: 'מנעולן' },
-  { value: 'air-conditioning', label: 'מיזוג אוויר' }
+  { value: 'renovation', label: 'שיפוצניק' },
+  { value: 'air-conditioning', label: 'מיזוג אוויר' },
+  { value: 'cleaning', label: 'ניקיון' },
+  { value: 'moving', label: 'הובלות' },
+  { value: 'security', label: 'אבטחה ומצלמות' },
+  { value: 'flooring', label: 'ריצוף' },
+  { value: 'roofing', label: 'גגות' },
+  { value: 'solar', label: 'אנרגיה סולרית' }
 ];
