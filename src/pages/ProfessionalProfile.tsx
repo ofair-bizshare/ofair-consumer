@@ -62,6 +62,9 @@ const fetchProfessionalData = async (id: string): Promise<ProfessionalData | nul
       
       const email = professional.email || `${professional.name.replace(/\s+/g, '').toLowerCase()}@example.com`;
       const address = `רחוב הרצל 1, ${professional.location}`;
+      
+      // Use the actual phone number from the professional data
+      const phoneNumber = professional.phone_number || professional.phone || '050-5555555';
 
       // Create some sample projects based on the professional's data
       const projects: Project[] = [{
@@ -99,17 +102,17 @@ const fetchProfessionalData = async (id: string): Promise<ProfessionalData | nul
         profession: professional.profession,
         rating: professional.rating || 4.5,
         reviewCount: professional.reviewCount || 0,
-        location: professional.location,
-        image: professional.image,
+        location: professional.location || professional.city || 'תל אביב',
+        image: professional.image || professional.image_url,
         verified: professional.verified || true,
         yearEstablished,
-        about: professional.about || 'בעל ניסיון רב בתחום, מבצע את העבודה באיכות גבוהה, במחירים הוגנים ובזמנים מוסכמים.',
+        about: professional.about || professional.bio || 'בעל ניסיון רב בתחום, מבצע את העבודה באיכות גבוהה, במחירים הוגנים ובזמנים מוסכמים.',
         contactInfo: {
-          phone: professional.phoneNumber || '050-5555555',
+          phone: phoneNumber,
           email,
           address
         },
-        specialties: professional.specialties || [],
+        specialties: professional.specialties || [professional.profession, professional.specialty || 'שירות מקצועי'].filter(Boolean),
         certifications: professional.certifications || ['מוסמך מקצועי', 'בעל רישיון'],
         workHours: professional.work_hours || 'ימים א-ה: 8:00-18:00, יום ו: 8:00-13:00',
         projects,
@@ -152,8 +155,6 @@ const ProfessionalProfile = () => {
     loadProfessional();
     window.scrollTo(0, 0);
   }, [id, toast]);
-
-  // remove isInIframe check to always show header and footer
   
   if (loading) {
     return (

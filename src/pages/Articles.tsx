@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ArticleCard from '@/components/ArticleCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search as SearchIcon, Folder, Book, Grid2X2, Wrench, Upload } from 'lucide-react';
+import { Search as SearchIcon, X, Folder, Book, Grid2X2, Wrench } from 'lucide-react';
 import { fetchArticles, searchArticles, Article } from '@/services/articles';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
+import { useDebounce } from '@/hooks/useDebounce';
 
 const Articles = () => {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -17,6 +19,9 @@ const Articles = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searching, setSearching] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
+  
+  // Add debounced search query
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   useEffect(() => {
     const loadArticles = async () => {
@@ -35,40 +40,66 @@ const Articles = () => {
     loadArticles();
   }, []);
 
-  const handleSearch = async (e?: React.FormEvent) => {
-    if (e) {
-      e.preventDefault();
-    }
-    
-    setSearching(true);
-    
-    try {
-      if (!searchQuery.trim()) {
-        setFilteredArticles(articles);
-      } else {
-        const results = await searchArticles(searchQuery);
-        setFilteredArticles(results);
+  // Use debounced search query to trigger the search
+  useEffect(() => {
+    const performSearch = async () => {
+      if (!debouncedSearchQuery.trim()) {
+        if (activeTab === 'all') {
+          setFilteredArticles(articles);
+        } else {
+          const filtered = articles.filter(article => article.category === activeTab);
+          setFilteredArticles(filtered);
+        }
+        return;
       }
-    } catch (error) {
-      console.error('Error searching articles:', error);
-    } finally {
-      setSearching(false);
-    }
-  };
+      
+      setSearching(true);
+      try {
+        const results = await searchArticles(debouncedSearchQuery);
+        // Apply category filter to search results if needed
+        if (activeTab !== 'all') {
+          const categoryFiltered = results.filter(article => article.category === activeTab);
+          setFilteredArticles(categoryFiltered);
+        } else {
+          setFilteredArticles(results);
+        }
+      } catch (error) {
+        console.error('Error searching articles:', error);
+      } finally {
+        setSearching(false);
+      }
+    };
+    
+    performSearch();
+  }, [debouncedSearchQuery, activeTab, articles]);
 
   const handleResetSearch = () => {
     setSearchQuery('');
-    setFilteredArticles(articles);
+    if (activeTab === 'all') {
+      setFilteredArticles(articles);
+    } else {
+      const filtered = articles.filter(article => article.category === activeTab);
+      setFilteredArticles(filtered);
+    }
   };
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     
-    if (value === 'all') {
-      setFilteredArticles(articles);
+    if (searchQuery.trim()) {
+      // If there's a search query, filter the results by category
+      const searchAndCategoryFiltered = value === 'all' 
+        ? filteredArticles 
+        : filteredArticles.filter(article => article.category === value);
+      setFilteredArticles(searchAndCategoryFiltered);
     } else {
-      const filtered = articles.filter(article => article.category === value);
-      setFilteredArticles(filtered);
+      // If no search query, just filter by category
+      if (value === 'all') {
+        setFilteredArticles(articles);
+      } else {
+        const filtered = articles.filter(article => article.category === value);
+        setFilteredArticles(filtered);
+      }
     }
   };
 
@@ -110,7 +141,7 @@ const Articles = () => {
             </p>
           </div>
           
-          <form onSubmit={handleSearch} className="mb-8 max-w-2xl mx-auto">
+          <div className="mb-8 max-w-2xl mx-auto">
             <div className="relative flex gap-2">
               <div className="relative flex-grow">
                 <SearchIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -121,25 +152,23 @@ const Articles = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
+                {searchQuery && (
+                  <button
+                    onClick={handleResetSearch}
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    aria-label="נקה חיפוש"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
               </div>
-              <Button 
-                type="submit" 
-                className="bg-[#00D09E] hover:bg-[#00C090]"
-                disabled={searching}
-              >
-                {searching ? 'מחפש...' : 'חיפוש'}
-              </Button>
-              {searchQuery && (
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={handleResetSearch}
-                >
-                  נקה
-                </Button>
+              {searching && (
+                <div className="py-2 px-3 bg-gray-100 rounded-md text-sm text-gray-600">
+                  מחפש...
+                </div>
               )}
             </div>
-          </form>
+          </div>
           
           <Card className="p-1 mb-8 bg-white shadow-sm">
             <Tabs defaultValue="all" value={activeTab} onValueChange={handleTabChange} className="w-full">

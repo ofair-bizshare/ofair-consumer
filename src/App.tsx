@@ -26,6 +26,7 @@ import { seedProfessionals } from '@/services/professionals';
 import Terms from '@/pages/Terms';
 import Privacy from '@/pages/Privacy';
 import Settings from '@/pages/Settings';
+import Contact from '@/pages/Contact';
 
 const AdminDashboard = lazy(() => import('@/pages/Admin/AdminDashboard'));
 const ArticlesManager = lazy(() => import('@/pages/Admin/ArticlesManager'));
@@ -75,6 +76,7 @@ function App() {
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
+                <Route path="/contact" element={<Contact />} />
                 
                 {/* Admin routes */}
                 <Route path="/admin-login" element={<AdminLogin />} />

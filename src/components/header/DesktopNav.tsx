@@ -27,6 +27,9 @@ const DesktopNav: React.FC<DesktopNavProps> = ({
       <Link to="/articles" className="text-gray-800 hover:text-[#00d09e] transition-colors mx-[23px]">
         טיפים ומאמרים
       </Link>
+      <Link to="/contact" className="text-gray-800 hover:text-[#00d09e] transition-colors mx-[23px]">
+        צור קשר
+      </Link>
       <Link to="/about" className="text-gray-800 hover:text-[#00d09e] transition-colors mx-[23px] px-[8px]">
         אודות
       </Link>

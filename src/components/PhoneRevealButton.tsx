@@ -95,6 +95,20 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
       state: { returnUrl: window.location.pathname }
     });
   };
+
+  // Format phone number for display if needed
+  const formatPhoneNumber = (phone: string) => {
+    if (!phone || phone === "000-0000000") return "מספר לא זמין";
+    
+    // Basic formatting: If it's just digits, format as XXX-XXXXXXX
+    if (/^\d+$/.test(phone) && phone.length >= 9) {
+      const prefix = phone.slice(0, 3);
+      const number = phone.slice(3);
+      return `${prefix}-${number}`;
+    }
+    
+    return phone;
+  };
   
   return (
     <>
@@ -103,7 +117,7 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
         className="w-full bg-[#00D09E] hover:bg-[#00C090] text-white"
       >
         <Phone className="ml-2 h-4 w-4" />
-        {isRevealed ? phoneNumber : "צפה במספר טלפון"}
+        {isRevealed ? formatPhoneNumber(phoneNumber) : "צפה במספר טלפון"}
       </Button>
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

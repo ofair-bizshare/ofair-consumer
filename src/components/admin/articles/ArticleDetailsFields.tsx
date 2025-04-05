@@ -5,19 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { UseFormReturn } from 'react-hook-form';
 import { ArticleFormValues } from './articleSchema';
+import { articleCategoryOptions } from './articleSchema';
 
 interface ArticleDetailsFieldsProps {
   form: UseFormReturn<ArticleFormValues>;
 }
-
-const categories = [
-  { value: 'general', label: 'כללי' },
-  { value: 'professionals', label: 'בעלי מקצוע' },
-  { value: 'home-improvement', label: 'שיפוץ הבית' },
-  { value: 'diy', label: 'עשה זאת בעצמך' },
-  { value: 'tips', label: 'טיפים' },
-  { value: 'guides', label: 'מדריכים' }
-];
 
 const ArticleDetailsFields: React.FC<ArticleDetailsFieldsProps> = ({ form }) => {
   return (
@@ -63,7 +55,7 @@ const ArticleDetailsFields: React.FC<ArticleDetailsFieldsProps> = ({ form }) => 
                   {...field}
                 >
                   <option value="">בחר קטגוריה</option>
-                  {categories.map((category) => (
+                  {articleCategoryOptions.map((category) => (
                     <option key={category.value} value={category.value}>{category.label}</option>
                   ))}
                 </select>
