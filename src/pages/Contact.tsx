@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Header from '@/components/Header';
@@ -11,7 +10,6 @@ import { Mail, Phone, MapPin, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/providers/AuthProvider';
-
 const Contact = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -19,8 +17,12 @@ const Contact = () => {
   const [message, setMessage] = useState('');
   const [subject, setSubject] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-  const { user } = useAuth();
+  const {
+    toast
+  } = useToast();
+  const {
+    user
+  } = useAuth();
 
   // Pre-populate fields if user is logged in
   React.useEffect(() => {
@@ -28,12 +30,10 @@ const Contact = () => {
       // Try to get user profile
       const fetchUserProfile = async () => {
         try {
-          const { data, error } = await supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-            
+          const {
+            data,
+            error
+          } = await supabase.from('user_profiles').select('*').eq('id', user.id).single();
           if (data && !error) {
             setName(data.name || '');
             setEmail(data.email || user.email || '');
@@ -46,14 +46,11 @@ const Contact = () => {
           setEmail(user.email || '');
         }
       };
-      
       fetchUserProfile();
     }
   }, [user]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!name || !email || !message) {
       toast({
         title: "שגיאה",
@@ -62,33 +59,31 @@ const Contact = () => {
       });
       return;
     }
-    
     setIsSubmitting(true);
-    
     try {
       // Store the contact form submission
-      const { data, error } = await supabase
-        .from('user_messages')
-        .insert({
-          sender_id: user?.id || '00000000-0000-0000-0000-000000000000',
-          subject: subject || 'פנייה מדף צור קשר', 
-          content: message,
-          recipient_email: 'contact@ofair.co.il', // Admin contact email
-          read: false
-        });
-        
+      const {
+        data,
+        error
+      } = await supabase.from('user_messages').insert({
+        sender_id: user?.id || '00000000-0000-0000-0000-000000000000',
+        subject: subject || 'פנייה מדף צור קשר',
+        content: message,
+        recipient_email: 'contact@ofair.co.il',
+        // Admin contact email
+        read: false
+      });
       if (error) throw error;
-      
+
       // Clear the form
       setName('');
       setEmail('');
       setPhone('');
       setMessage('');
       setSubject('');
-      
       toast({
         title: "תודה על פנייתך",
-        description: "הודעתך התקבלה בהצלחה. נחזור אליך בהקדם.",
+        description: "הודעתך התקבלה בהצלחה. נחזור אליך בהקדם."
       });
     } catch (error) {
       console.error('Error submitting contact form:', error);
@@ -101,9 +96,7 @@ const Contact = () => {
       setIsSubmitting(false);
     }
   };
-
-  return (
-    <div className="flex flex-col min-h-screen" dir="rtl">
+  return <div className="flex flex-col min-h-screen" dir="rtl">
       <Helmet>
         <title>צור קשר | oFair - נשמח לענות לשאלות ולסייע לך</title>
         <meta name="description" content="צור קשר עם צוות oFair בכל שאלה, הצעה או בקשה. אנחנו כאן לשירותך." />
@@ -135,9 +128,7 @@ const Contact = () => {
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">דוא״ל</p>
-                        <a href="mailto:contact@ofair.co.il" className="font-medium text-blue-600 hover:underline">
-                          contact@ofair.co.il
-                        </a>
+                        <a href="mailto:contact@ofair.co.il" className="font-medium text-blue-600 hover:underline">info@ofair.co.il</a>
                       </div>
                     </div>
                     
@@ -147,9 +138,7 @@ const Contact = () => {
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">טלפון</p>
-                        <a href="tel:03-000-0000" className="font-medium">
-                          03-000-0000
-                        </a>
+                        <a href="tel:03-000-0000" className="font-medium">050-552-4542</a>
                       </div>
                     </div>
                     
@@ -159,9 +148,7 @@ const Contact = () => {
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">כתובת</p>
-                        <p className="font-medium">
-                          תל אביב, ישראל
-                        </p>
+                        <p className="font-medium">הקטיף, נתיבות, ישראל</p>
                       </div>
                     </div>
                   </div>
@@ -178,8 +165,8 @@ const Contact = () => {
             </div>
             
             <div className="md:col-span-2">
-              <Card>
-                <CardContent className="p-6">
+              <Card className="mx-[86px]">
+                <CardContent className="p-6 px-[23px] mx-0">
                   <h2 className="text-xl font-semibold mb-6">שלח לנו הודעה</h2>
                   
                   <form onSubmit={handleSubmit} className="space-y-4">
@@ -188,27 +175,14 @@ const Contact = () => {
                         <label htmlFor="name" className="text-sm font-medium">
                           שם מלא <span className="text-red-500">*</span>
                         </label>
-                        <Input
-                          id="name"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          placeholder="הזן את שמך המלא"
-                          required
-                        />
+                        <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="הזן את שמך המלא" required />
                       </div>
                       
                       <div className="space-y-2">
                         <label htmlFor="email" className="text-sm font-medium">
                           דוא״ל <span className="text-red-500">*</span>
                         </label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="הזן את כתובת הדוא״ל שלך"
-                          required
-                        />
+                        <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="הזן את כתובת הדוא״ל שלך" required />
                       </div>
                     </div>
                     
@@ -217,24 +191,14 @@ const Contact = () => {
                         <label htmlFor="phone" className="text-sm font-medium">
                           טלפון
                         </label>
-                        <Input
-                          id="phone"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          placeholder="הזן את מספר הטלפון שלך"
-                        />
+                        <Input id="phone" value={phone} onChange={e => setPhone(e.target.value)} placeholder="הזן את מספר הטלפון שלך" />
                       </div>
                       
                       <div className="space-y-2">
                         <label htmlFor="subject" className="text-sm font-medium">
                           נושא
                         </label>
-                        <Input
-                          id="subject"
-                          value={subject}
-                          onChange={(e) => setSubject(e.target.value)}
-                          placeholder="הזן את נושא הפנייה"
-                        />
+                        <Input id="subject" value={subject} onChange={e => setSubject(e.target.value)} placeholder="הזן את נושא הפנייה" />
                       </div>
                     </div>
                     
@@ -242,33 +206,18 @@ const Contact = () => {
                       <label htmlFor="message" className="text-sm font-medium">
                         הודעה <span className="text-red-500">*</span>
                       </label>
-                      <Textarea
-                        id="message"
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        placeholder="הזן את הודעתך כאן..."
-                        rows={6}
-                        required
-                      />
+                      <Textarea id="message" value={message} onChange={e => setMessage(e.target.value)} placeholder="הזן את הודעתך כאן..." rows={6} required />
                     </div>
                     
-                    <div className="mt-6">
-                      <Button 
-                        type="submit" 
-                        className="w-full md:w-auto bg-[#00D09E] hover:bg-[#00C090]"
-                        disabled={isSubmitting}
-                      >
-                        {isSubmitting ? (
-                          <>
+                    <div className="mt-6 mx-[218px] px-0">
+                      <Button type="submit" disabled={isSubmitting} className="w-full md:w-auto bg-[#00D09E] hover:bg-[#00C090] px-0 mx-0 my-0 text-sm font-medium">
+                        {isSubmitting ? <>
                             <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
                             שולח...
-                          </>
-                        ) : (
-                          <>
+                          </> : <>
                             <Send className="ml-2 h-4 w-4" />
                             שלח הודעה
-                          </>
-                        )}
+                          </>}
                       </Button>
                     </div>
                   </form>
@@ -280,8 +229,6 @@ const Contact = () => {
       </main>
       
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Contact;
