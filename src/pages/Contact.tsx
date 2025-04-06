@@ -10,6 +10,7 @@ import { Mail, Phone, MapPin, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/providers/AuthProvider';
+
 const Contact = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -24,10 +25,8 @@ const Contact = () => {
     user
   } = useAuth();
 
-  // Pre-populate fields if user is logged in
   React.useEffect(() => {
     if (user) {
-      // Try to get user profile
       const fetchUserProfile = async () => {
         try {
           const {
@@ -49,6 +48,7 @@ const Contact = () => {
       fetchUserProfile();
     }
   }, [user]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !message) {
@@ -61,7 +61,6 @@ const Contact = () => {
     }
     setIsSubmitting(true);
     try {
-      // Store the contact form submission
       const {
         data,
         error
@@ -70,12 +69,10 @@ const Contact = () => {
         subject: subject || 'פנייה מדף צור קשר',
         content: message,
         recipient_email: 'contact@ofair.co.il',
-        // Admin contact email
         read: false
       });
       if (error) throw error;
 
-      // Clear the form
       setName('');
       setEmail('');
       setPhone('');
@@ -96,6 +93,7 @@ const Contact = () => {
       setIsSubmitting(false);
     }
   };
+
   return <div className="flex flex-col min-h-screen" dir="rtl">
       <Helmet>
         <title>צור קשר | oFair - נשמח לענות לשאלות ולסייע לך</title>
@@ -210,13 +208,13 @@ const Contact = () => {
                     </div>
                     
                     <div className="mt-6 mx-[218px] px-0">
-                      <Button type="submit" disabled={isSubmitting} className="w-full md:w-auto bg-[#00D09E] hover:bg-[#00C090] px-0 mx-0 my-0 text-sm font-medium">
+                      <Button type="submit" disabled={isSubmitting} className="w-full md:w-auto bg-[#00D09E] hover:bg-[#00C090] px-6 py-2 text-sm font-medium">
                         {isSubmitting ? <>
-                            <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                            <div className="animate-spin ml-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
                             שולח...
                           </> : <>
-                            <Send className="ml-2 h-4 w-4" />
                             שלח הודעה
+                            <Send className="mr-2 h-4 w-4" />
                           </>}
                       </Button>
                     </div>
@@ -231,4 +229,5 @@ const Contact = () => {
       <Footer />
     </div>;
 };
+
 export default Contact;
