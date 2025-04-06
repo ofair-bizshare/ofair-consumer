@@ -8,6 +8,7 @@ import { AuthProvider } from '@/providers/AuthProvider';
 import About from '@/pages/About';
 import Index from '@/pages/Index';
 import Login from '@/pages/Login';
+import Register from '@/pages/Login';
 import FAQ from '@/pages/FAQ';
 import NotFound from '@/pages/NotFound';
 import Dashboard from '@/pages/Dashboard';
@@ -35,6 +36,8 @@ const AdminSettings = lazy(() => import('@/pages/Admin/AdminSettings'));
 const queryClient = new QueryClient();
 
 function App() {
+  // We've completely removed the seed function since we don't want fictional data
+  
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light">
@@ -46,7 +49,7 @@ function App() {
                 <Route path="/" element={<Index />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Login />} />
+                <Route path="/register" element={<Register />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/my-requests" element={<MyRequests />} />
                 <Route path="/my-referrals" element={<MyReferrals />} />
@@ -62,6 +65,7 @@ function App() {
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/contact" element={<Contact />} />
                 
+                {/* Admin routes */}
                 <Route path="/admin-login" element={<AdminLogin />} />
                 <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route
@@ -105,6 +109,7 @@ function App() {
                   }
                 />
                 
+                {/* 404 route */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Router>

@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import SearchBar from '@/components/SearchBar';
 import ProfessionalCard from '@/components/ProfessionalCard';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -10,7 +12,6 @@ import { Filter, Check, Star, Award } from 'lucide-react';
 import { getProfessionals } from '@/services/professionals';
 import { ProfessionalInterface } from '@/types/dashboard';
 import { getProfessionalCategoryLabel } from '@/services/admin/utils/adminCache';
-import ProfessionalSearchByLocation from '@/components/ProfessionalSearchByLocation';
 
 // Dynamic specialties mapping by category - we'll later populate this from the database
 const specialtiesByCategory = {
@@ -39,6 +40,7 @@ const Search = () => {
     categories: [] as string[],
   });
 
+  // Fetch professionals from database
   useEffect(() => {
     const fetchProfessionalsData = async () => {
       try {
@@ -57,10 +59,12 @@ const Search = () => {
     fetchProfessionalsData();
   }, []);
 
+  // Update available specialties when category changes
   useEffect(() => {
     if (selectedCategory in specialtiesByCategory) {
       setAvailableSpecialties(specialtiesByCategory[selectedCategory as keyof typeof specialtiesByCategory]);
       
+      // Clear selected specialties that are no longer available
       setFilters(prev => ({
         ...prev,
         categories: prev.categories.filter(cat => 
@@ -78,42 +82,51 @@ const Search = () => {
     
     let filtered = [...allProfessionals];
     
+    // Filter by profession
     if (profession !== 'all') {
       filtered = filtered.filter(p => p.category === profession);
     }
     
+    // Filter by location
     if (location !== 'all') {
       filtered = filtered.filter(p => p.area === location);
     }
     
+    // Apply additional filters
     applyFilters(filtered);
   };
   
   const applyFilters = (baseList = [...allProfessionals]) => {
     let filtered = [...baseList];
     
+    // If selected category is applied
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(p => p.category === selectedCategory);
     }
     
+    // If selected location is applied
     if (selectedLocation !== 'all') {
       filtered = filtered.filter(p => p.area === selectedLocation);
     }
     
+    // Apply verification filter
     if (filters.verified) {
       filtered = filtered.filter(p => p.verified);
     }
     
+    // Apply rating filter
     if (filters.minRating[0] > 0) {
       filtered = filtered.filter(p => p.rating >= filters.minRating[0]);
     }
     
+    // Apply specialties filter
     if (filters.categories.length > 0) {
       filtered = filtered.filter(p => 
         filters.categories.some(cat => p.specialties && p.specialties.includes(cat))
       );
     }
     
+    // Apply sorting
     sortProfessionals(filtered);
   };
   
@@ -134,6 +147,7 @@ const Search = () => {
         sorted.sort((a, b) => b.name.localeCompare(a.name));
         break;
       default:
+        // Default is rating
         sorted.sort((a, b) => b.rating - a.rating);
     }
     
@@ -170,17 +184,20 @@ const Search = () => {
     sortProfessionals();
   };
   
+  // Apply initial filters and sorting
   useEffect(() => {
     if (allProfessionals.length > 0) {
       applyFilters();
     }
   }, [filters, sortOption, allProfessionals]);
   
+  // This simulates a user revealing a phone number
   const handlePhoneReveal = (professionalName: string) => {
     console.log(`Phone revealed for: ${professionalName}`);
     return true;
   };
 
+  // Loading state
   if (loading) {
     return (
       <div className="flex flex-col min-h-screen" dir="rtl">
@@ -196,6 +213,7 @@ const Search = () => {
     );
   }
 
+  // Error state
   if (error) {
     return (
       <div className="flex flex-col min-h-screen" dir="rtl">
@@ -213,26 +231,36 @@ const Search = () => {
     );
   }
 
+  // Rest of component
   return (
     <div className="flex flex-col min-h-screen" dir="rtl">
       <Header />
       
       <main className="flex-grow pt-28 pb-16">
-        <div className="container mx-auto px-4">
-          <h1 className="text-3xl font-bold text-blue-700 mb-2">
-            <span className="text-[#00D09E]">חיפוש</span> בעלי מקצוע
-          </h1>
-          <p className="text-gray-600 mb-8">מצא את בעלי המקצוע המתאימים ביותר לצרכים שלך</p>
-          
-          <div className="mb-8">
-            <ProfessionalSearchByLocation />
+        <div className="container mx-auto px-6">
+          {/* Hero section */}
+          <div className="text-center mb-10">
+            <h1 className="text-3xl md:text-4xl font-bold text-blue-700 mb-3">
+              חיפוש <span className="text-teal-500">בעלי מקצוע</span>
+            </h1>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              חפשו בין בעלי המקצוע המובילים בתחומם, קראו ביקורות ומצאו את המתאים ביותר לצרכים שלכם
+            </p>
           </div>
           
+          {/* Search bar */}
+          <div className="mb-8 animate-fade-in-up">
+            <SearchBar onSearch={handleSearch} useCities={true} />
+          </div>
+          
+          {/* Content grid */}
           <div className="flex flex-col md:flex-row gap-8">
+            {/* Sidebar - Desktop */}
             <div className="hidden md:block w-64 flex-shrink-0 animate-fade-in-right">
               <div className="glass-card p-6 sticky top-28">
                 <h3 className="text-lg font-semibold text-blue-700 mb-4">סינון תוצאות</h3>
                 
+                {/* Verified filter */}
                 <div className="mb-6">
                   <div className="flex items-center space-x-2 space-x-reverse">
                     <Checkbox 
@@ -249,6 +277,7 @@ const Search = () => {
                   </div>
                 </div>
                 
+                {/* Rating filter */}
                 <div className="mb-6">
                   <h4 className="text-sm font-medium text-gray-700 mb-2">דירוג מינימלי</h4>
                   <div className="flex items-center mb-2">
@@ -274,6 +303,7 @@ const Search = () => {
                   />
                 </div>
                 
+                {/* Categories */}
                 <div className="mb-6">
                   <h4 className="text-sm font-medium text-gray-700 mb-2">תחומי התמחות</h4>
                   <div className="space-y-2">
@@ -310,6 +340,7 @@ const Search = () => {
               </div>
             </div>
             
+            {/* Mobile filter button */}
             <div className="md:hidden mb-4">
               <Button 
                 variant="outline" 
@@ -320,6 +351,7 @@ const Search = () => {
                 סינון תוצאות
               </Button>
               
+              {/* Mobile filters panel */}
               {mobileFiltersOpen && (
                 <div className="fixed inset-0 bg-black/50 z-50 animate-fade-in">
                   <div className="absolute bottom-0 right-0 left-0 bg-white rounded-t-xl p-6 animate-fade-in-up">
@@ -333,7 +365,9 @@ const Search = () => {
                       </button>
                     </div>
                     
+                    {/* Filters content - same as desktop */}
                     <div className="space-y-6 max-h-[60vh] overflow-y-auto">
+                      {/* Verified filter */}
                       <div>
                         <div className="flex items-center space-x-2 space-x-reverse">
                           <Checkbox 
@@ -350,6 +384,7 @@ const Search = () => {
                         </div>
                       </div>
                       
+                      {/* Rating filter */}
                       <div>
                         <h4 className="text-sm font-medium text-gray-700 mb-2">דירוג מינימלי</h4>
                         <div className="flex items-center mb-2">
@@ -375,6 +410,7 @@ const Search = () => {
                         />
                       </div>
                       
+                      {/* Categories */}
                       <div>
                         <h4 className="text-sm font-medium text-gray-700 mb-2">תחומי התמחות</h4>
                         <div className="space-y-2">
@@ -414,6 +450,7 @@ const Search = () => {
               )}
             </div>
             
+            {/* Main content */}
             <div className="flex-grow">
               <div className="mb-6 flex justify-between items-center">
                 <h2 className="text-xl font-semibold text-blue-700">
