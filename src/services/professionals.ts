@@ -7,6 +7,40 @@ import { getRegionByCity } from '@/utils/locationMapping';
  * Professionals Service
  */
 
+// Define a simplified database response type to avoid circular references
+type ProfessionalDatabaseRecord = {
+  id: string;
+  name: string;
+  phone?: string;
+  email?: string;
+  bio?: string;
+  rating?: number;
+  reviews_count?: number;
+  image_url?: string;
+  created_at?: string;
+  city?: string;
+  specialty?: string;
+  verified?: boolean;
+  area?: string;
+  category?: string;
+  profession?: string;
+  location?: string;
+  image?: string;
+  specialties?: string[];
+  phoneNumber?: string;
+  phone_number?: string;
+  about?: string;
+  reviewCount?: number;
+  company_name?: string;
+  work_hours?: string;
+  certifications?: string[];
+  experience_years?: number;
+  year_established?: number;
+  region?: string;
+  review_count?: number;
+  // Add any other properties that might come from the database
+};
+
 export interface ProfessionalInterface {
   id: string;
   name: string;
@@ -53,8 +87,8 @@ export const getProfessionals = async (): Promise<DashboardProfessionalInterface
       return [];
     }
 
-    // Fix recursive type issue by using a type assertion
-    return data.map(professional => getProfessionalFromData(professional as any));
+    // Map database records to our interface to prevent circular type references
+    return data.map(professional => getProfessionalFromData(professional as ProfessionalDatabaseRecord));
   } catch (error) {
     console.error('Error getting professionals:', error);
     return [];
@@ -98,8 +132,8 @@ export const searchProfessionalsByCity = async (
       return [];
     }
 
-    // Fix recursive type issue by using a type assertion
-    return data.map(professional => getProfessionalFromData(professional as any));
+    // Map database records to our interface to prevent circular type references
+    return data.map(professional => getProfessionalFromData(professional as ProfessionalDatabaseRecord));
   } catch (error) {
     console.error('Error in searchProfessionalsByCity:', error);
     return [];
@@ -123,7 +157,7 @@ export const getProfessional = async (id: string): Promise<DashboardProfessional
       return null;
     }
 
-    return getProfessionalFromData(data);
+    return getProfessionalFromData(data as ProfessionalDatabaseRecord);
   } catch (error) {
     console.error('Error getting professional:', error);
     return null;
@@ -137,7 +171,7 @@ export const getProfessionalById = getProfessional;
  * Gets a professional from data
  * @param data Professional data
  */
-export const getProfessionalFromData = (data: any): DashboardProfessionalInterface => {
+export const getProfessionalFromData = (data: ProfessionalDatabaseRecord): DashboardProfessionalInterface => {
   if (!data) return null as any;
   
   // Calculate years of experience based on when they started (if available)
@@ -162,7 +196,7 @@ export const getProfessionalFromData = (data: any): DashboardProfessionalInterfa
     verified: data.verified || false,
     specialties: data.specialties || [data.specialty] || [],
     // Add all compatibility fields
-    phone: data.phone || data.phoneNumber,
+    phone: data.phone || data.phoneNumber || data.phone_number,
     phoneNumber: data.phone || data.phone_number,
     email: data.email,
     bio: data.bio,
