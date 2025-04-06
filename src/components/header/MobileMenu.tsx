@@ -4,6 +4,9 @@ import { Link } from 'react-router-dom';
 import { Send, User, Search, Book, Info, LogOut, Phone, Bell, Settings, Inbox, UserCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/providers/AuthProvider';
+import { fetchUserNotifications } from '@/services/notifications';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Card } from '@/components/ui/card';
 
 interface MobileMenuProps {
   isLoggedIn: boolean;
@@ -22,6 +25,19 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [notificationCount, setNotificationCount] = React.useState<number>(0);
+  
+  React.useEffect(() => {
+    const getNotifications = async () => {
+      if (isLoggedIn) {
+        const notifications = await fetchUserNotifications();
+        const unreadCount = notifications.filter(n => !n.isRead).length;
+        setNotificationCount(unreadCount);
+      }
+    };
+    
+    getNotifications();
+  }, [isLoggedIn]);
   
   if (!isOpen) {
     return null;
@@ -85,50 +101,56 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
           </Link>
           
           {isLoggedIn ? (
-            <>
-              <Link 
-                to="/dashboard" 
-                className="flex items-center justify-between py-3 border-b border-gray-100"
-                onClick={handleItemClick}
+            <div className="mt-2 mb-2">
+              <div className="text-teal-600 text-center mb-3 text-sm">בעל מקצוע? הצטרף עכשיו</div>
+              
+              <Card 
+                className="flex items-center justify-between px-4 py-3 rounded-md mb-2 shadow-sm border-gray-200"
+                onClick={() => { navigate('/dashboard'); onClose(); }}
               >
                 <span>אזור אישי</span>
                 <UserCircle size={18} className="text-gray-500" />
-              </Link>
+              </Card>
               
-              <Link 
-                to="/referrals" 
-                className="flex items-center justify-between py-3 border-b border-gray-100"
-                onClick={handleItemClick}
+              <Card 
+                className="flex items-center justify-between px-4 py-3 rounded-md mb-2 shadow-sm border-gray-200"
+                onClick={() => { navigate('/referrals'); onClose(); }}
               >
                 <span>הפניות שלי</span>
                 <Inbox size={18} className="text-gray-500" />
-              </Link>
+              </Card>
               
-              <button
+              <Card 
+                className="flex items-center justify-between px-4 py-3 rounded-md mb-2 shadow-sm border-gray-200 relative"
                 onClick={handleNotificationsClick}
-                className="flex items-center justify-between py-3 border-b border-gray-100"
               >
                 <span>התראות</span>
-                <Bell size={18} className="text-gray-500" />
-              </button>
+                <div className="flex items-center">
+                  {notificationCount > 0 && (
+                    <span className="absolute left-2 top-0 transform -translate-y-1/2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                      {notificationCount}
+                    </span>
+                  )}
+                  <Bell size={18} className="text-gray-500" />
+                </div>
+              </Card>
               
-              <Link 
-                to="/dashboard/settings" 
-                className="flex items-center justify-between py-3 border-b border-gray-100"
-                onClick={handleItemClick}
+              <Card 
+                className="flex items-center justify-between px-4 py-3 rounded-md mb-4 shadow-sm border-gray-200"
+                onClick={() => { navigate('/dashboard/settings'); onClose(); }}
               >
                 <span>הגדרות</span>
                 <Settings size={18} className="text-gray-500" />
-              </Link>
+              </Card>
               
-              <button
+              <Card 
+                className="flex items-center justify-between px-4 py-3 rounded-md shadow-sm border-gray-200 mb-2 text-red-600"
                 onClick={() => { onLogout(); onClose(); }}
-                className="flex items-center justify-between py-3"
               >
-                <span className="text-red-600">התנתק</span>
+                <span className="text-red-600">יציאה</span>
                 <LogOut size={18} className="text-red-600" />
-              </button>
-            </>
+              </Card>
+            </div>
           ) : (
             <Link 
               to="/login" 
