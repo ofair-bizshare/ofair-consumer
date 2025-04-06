@@ -39,11 +39,10 @@ export const searchProfessionalsByCity = async (
       return [];
     }
 
-    // Using a non-generic type to avoid deep recursion issues
-    const professionals: ProfessionalDatabaseRecord[] = data as ProfessionalDatabaseRecord[];
-    return (professionals || []).map(professional => {
-      return getProfessionalFromData(professional);
-    });
+    // Explicitly cast to avoid deep type recursion issues
+    const professionals = data as unknown as ProfessionalDatabaseRecord[];
+    
+    return professionals.map(professional => getProfessionalFromData(professional));
   } catch (error) {
     console.error('Error in searchProfessionalsByCity:', error);
     return [];
