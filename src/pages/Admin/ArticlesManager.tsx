@@ -77,7 +77,7 @@ const ArticlesManager = () => {
     fetchArticles();
   }, []);
 
-  // Create 2 sample articles for each category
+  // Create sample articles for each category
   const createSampleArticles = async () => {
     if (!articles || articles.length > 0) {
       // Don't create sample articles if we already have articles
@@ -92,6 +92,7 @@ const ArticlesManager = () => {
       // Generate 2 articles for each category
       for (const category of articleCategoryOptions) {
         const categoryName = category.label;
+        const categoryValue = category.value;
         
         // Article 1
         sampleArticles.push({
@@ -118,8 +119,8 @@ const ArticlesManager = () => {
           <p>זכרו תמיד לקבל הצעת מחיר מסודרת בכתב לפני תחילת העבודה!</p>`,
           author: 'צוות oFair',
           published: true,
-          category: category.value,
-          image: 'https://via.placeholder.com/800x400?text=' + encodeURIComponent(categoryName)
+          category: categoryValue,
+          image: await getCategoryImage(categoryValue, 1)
         });
         
         // Article 2
@@ -146,8 +147,8 @@ const ArticlesManager = () => {
           <p>תכנון מדויק וליווי בעל המקצוע במהלך העבודה יסייעו לכם להגיע לתוצאה המיטבית!</p>`,
           author: 'צוות oFair',
           published: true,
-          category: category.value,
-          image: 'https://via.placeholder.com/800x400?text=' + encodeURIComponent(categoryName + ' מקצועי')
+          category: categoryValue,
+          image: await getCategoryImage(categoryValue, 2)
         });
       }
 
@@ -172,6 +173,60 @@ const ArticlesManager = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Get image for specific category
+  const getCategoryImage = async (category: string, index: number): Promise<string> => {
+    // Define relevant images for each category
+    const categoryImages = {
+      'plumbing': [
+        'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&q=80'
+      ],
+      'electrical': [
+        'https://images.unsplash.com/photo-1621905251918-48416bd8575a?auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1558449033-fdc9ecfbc80e?auto=format&fit=crop&q=80'
+      ],
+      'renovation': [
+        'https://images.unsplash.com/photo-1581165825586-bcceb7539f46?auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1493606278519-11aa9f86e40a?auto=format&fit=crop&q=80'
+      ],
+      'gardening': [
+        'https://images.unsplash.com/photo-1617576683096-00fc8eecb3af?auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80'
+      ],
+      'cleaning': [
+        'https://images.unsplash.com/photo-1563453392212-326f5e854473?auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?auto=format&fit=crop&q=80'
+      ],
+      'moving': [
+        'https://images.unsplash.com/photo-1600518863233-5606e8122528?auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1530521954074-e64f6810b32d?auto=format&fit=crop&q=80'
+      ],
+      'painting': [
+        'https://images.unsplash.com/photo-1595815771614-ade501d22bd4?auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1562259929-b4e1fd3aef09?auto=format&fit=crop&q=80'
+      ],
+      'locksmith': [
+        'https://images.unsplash.com/photo-1599508704512-2f19efd1e35f?auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1557127275-f8b5ba93e24e?auto=format&fit=crop&q=80'
+      ],
+      'ac': [
+        'https://images.unsplash.com/photo-1596557072152-c2edcb6c7b04?auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1654055802553-77e035ff08b4?auto=format&fit=crop&q=80'
+      ],
+      'general': [
+        'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1572250383938-ed8c501a29d9?auto=format&fit=crop&q=80'
+      ]
+    };
+
+    // Return the appropriate image or a default
+    if (categoryImages[category] && categoryImages[category][index-1]) {
+      return categoryImages[category][index-1];
+    } else {
+      return `https://via.placeholder.com/800x400?text=${encodeURIComponent(category)}`;
     }
   };
 

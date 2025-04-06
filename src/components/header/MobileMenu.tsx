@@ -1,7 +1,9 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Send, User, Search, Book, Info, LogOut, Phone } from 'lucide-react';
+import { Send, User, Search, Book, Info, LogOut, Phone, Bell, Settings, Inbox, UserCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/providers/AuthProvider';
 
 interface MobileMenuProps {
   isLoggedIn: boolean;
@@ -18,11 +20,19 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
   onLogout,
   onClose
 }) => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  
   if (!isOpen) {
     return null;
   }
 
   const handleItemClick = () => {
+    onClose();
+  };
+
+  const handleNotificationsClick = () => {
+    navigate('/dashboard?tab=notifications');
     onClose();
   };
 
@@ -75,13 +85,50 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
           </Link>
           
           {isLoggedIn ? (
-            <button
-              onClick={() => { onLogout(); onClose(); }}
-              className="flex items-center justify-between py-3"
-            >
-              <span className="text-red-600">התנתק</span>
-              <LogOut size={18} className="text-red-600" />
-            </button>
+            <>
+              <Link 
+                to="/dashboard" 
+                className="flex items-center justify-between py-3 border-b border-gray-100"
+                onClick={handleItemClick}
+              >
+                <span>אזור אישי</span>
+                <UserCircle size={18} className="text-gray-500" />
+              </Link>
+              
+              <Link 
+                to="/referrals" 
+                className="flex items-center justify-between py-3 border-b border-gray-100"
+                onClick={handleItemClick}
+              >
+                <span>הפניות שלי</span>
+                <Inbox size={18} className="text-gray-500" />
+              </Link>
+              
+              <button
+                onClick={handleNotificationsClick}
+                className="flex items-center justify-between py-3 border-b border-gray-100"
+              >
+                <span>התראות</span>
+                <Bell size={18} className="text-gray-500" />
+              </button>
+              
+              <Link 
+                to="/dashboard/settings" 
+                className="flex items-center justify-between py-3 border-b border-gray-100"
+                onClick={handleItemClick}
+              >
+                <span>הגדרות</span>
+                <Settings size={18} className="text-gray-500" />
+              </Link>
+              
+              <button
+                onClick={() => { onLogout(); onClose(); }}
+                className="flex items-center justify-between py-3"
+              >
+                <span className="text-red-600">התנתק</span>
+                <LogOut size={18} className="text-red-600" />
+              </button>
+            </>
           ) : (
             <Link 
               to="/login" 

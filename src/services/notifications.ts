@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -33,11 +32,8 @@ export const fetchUserNotifications = async (): Promise<Notification[]> => {
       return JSON.parse(storedNotifications);
     }
     
-    // Create default notifications if none exist
-    const defaultNotifications = getSampleNotifications();
-    localStorage.setItem('myNotifications', JSON.stringify(defaultNotifications));
-    
-    return defaultNotifications;
+    // Return empty array if no notifications exist
+    return [];
   } catch (error) {
     console.error('Error fetching notifications:', error);
     return [];
@@ -167,56 +163,7 @@ export const deleteNotification = async (id: string): Promise<boolean> => {
  * Get sample notifications for new users
  */
 export const getSampleNotifications = (): Notification[] => {
-  return [
-    {
-      id: '1',
-      title: 'הצעת מחיר חדשה',
-      message: 'התקבלה הצעת מחיר חדשה לבקשתך "שיפוץ אמבטיה"',
-      type: 'quote',
-      timestamp: Date.now() - 3600000, // 1 hour ago
-      isRead: false,
-      actionUrl: '/dashboard#requests-section',
-      actionLabel: 'צפה בהצעה'
-    },
-    {
-      id: '2',
-      title: 'הודעה חדשה',
-      message: 'קיבלת הודעה חדשה מבעל המקצוע משה לוי',
-      type: 'message',
-      timestamp: Date.now() - 86400000, // 1 day ago
-      isRead: true,
-      actionUrl: '/dashboard/messages',
-      actionLabel: 'צפה בהודעה'
-    },
-    {
-      id: '3',
-      title: 'תזכורת: פגישה עם בעל מקצוע',
-      message: 'יש לך פגישה מתוכננת בעוד שעתיים עם האינסטלטור',
-      type: 'reminder',
-      timestamp: Date.now() - 259200000, // 3 days ago
-      isRead: false,
-      actionUrl: '/dashboard/calendar',
-      actionLabel: 'צפה בפגישות'
-    },
-    {
-      id: '4',
-      title: 'בעל מקצוע חדש באזור שלך',
-      message: 'בעל מקצוע חדש בתחום האינסטלציה נרשם באזור תל אביב',
-      type: 'professional',
-      timestamp: Date.now() - 604800000, // 7 days ago
-      isRead: true,
-      actionUrl: '/search?category=plumbing',
-      actionLabel: 'חפש אינסטלטורים'
-    },
-    {
-      id: '5',
-      title: 'עדכון מערכת',
-      message: 'בוצעו שיפורים במערכת שיעזרו לך למצוא בעלי מקצוע בקלות רבה יותר',
-      type: 'system',
-      timestamp: Date.now() - 1209600000, // 14 days ago
-      isRead: true
-    }
-  ];
+  return [];
 };
 
 /**
