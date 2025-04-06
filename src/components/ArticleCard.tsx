@@ -40,7 +40,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   return (
     <div className="glass-card overflow-hidden group">
       <div className="relative overflow-hidden h-48">
-        <img src={image} alt={title} className="w-full h-full transition-transform duration-500 group-hover:scale-105 object-fill" />
+        <img src={image} alt={title} className="w-full h-full transition-transform duration-500 group-hover:scale-105 object-cover" />
         {categoryLabel && (
           <div className="absolute top-3 right-3 bg-teal-500 text-white text-xs px-2 py-1 rounded-full">
             {categoryLabel}
@@ -65,7 +65,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
           {summary}
         </p>
         
-        <Link to={`/article/${id}`} className="text-teal-500 font-medium text-sm hover:text-teal-600 inline-flex items-center">
+        <Link to={`/articles/${id}`} className="text-teal-500 font-medium text-sm hover:text-teal-600 inline-flex items-center">
           קרא עוד
           <span className="mr-1 transform group-hover:translate-x-1 transition-transform">←</span>
         </Link>
