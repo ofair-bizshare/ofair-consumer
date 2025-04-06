@@ -14,17 +14,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { useAuth } from '@/providers/AuthProvider';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { createRequest } from '@/services/requests';
+import { useDebounce } from '@/hooks/useDebounce';
 import { FcGoogle } from "react-icons/fc";
+import { createRequest } from '@/services/requests';
 
 interface RequestFormProps {
   onSuccess?: (value: boolean) => void;
@@ -110,9 +102,16 @@ const RequestForm: React.FC<RequestFormProps> = ({
   const [openCityPopover, setOpenCityPopover] = useState(false);
   const [openCalendar, setOpenCalendar] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [professionSearchTerm, setProfessionSearchTerm] = useState('');
+  const [citySearchTerm, setCitySearchTerm] = useState('');
+  const [filteredProfessions, setFilteredProfessions] = useState(professions);
+  const [filteredCities, setFilteredCities] = useState(cities);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, signIn, signUp, signInWithGoogle } = useAuth();
+  
+  const debouncedProfessionSearch = useDebounce(professionSearchTerm, 300);
+  const debouncedCitySearch = useDebounce(citySearchTerm, 300);
   
   const [formData, setFormData] = useState({
     profession: '',
@@ -378,46 +377,90 @@ const RequestForm: React.FC<RequestFormProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="profession" className="text-gray-700">סוג עבודה</Label>
-              <Select 
-                onValueChange={(value) => handleSelectChange('profession', value)} 
-                value={formData.profession}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="בחר סוג עבודה" />
-                </SelectTrigger>
-                <SelectContent dir="rtl">
-                  <SelectGroup>
-                    <SelectLabel>סוגי עבודות</SelectLabel>
-                    {professions.map((profession) => (
-                      <SelectItem key={profession} value={profession}>
-                        {profession}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+              <Popover open={openProfessionPopover} onOpenChange={setOpenProfessionPopover}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openProfessionPopover}
+                    className="w-full justify-between text-right pr-3 pl-10 relative"
+                  >
+                    {formData.profession || "בחר סוג עבודה"}
+                    <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0" align="start">
+                  <Command dir="rtl">
+                    <CommandInput 
+                      placeholder="חפש סוג עבודה..."
+                      value={professionSearchTerm}
+                      onValueChange={setProfessionSearchTerm} 
+                    />
+                    <CommandEmpty>לא נמצאו תוצאות</CommandEmpty>
+                    <CommandList>
+                      <CommandGroup>
+                        {filteredProfessions.map((profession) => (
+                          <CommandItem
+                            key={profession}
+                            value={profession}
+                            onSelect={() => {
+                              handleSelectChange('profession', profession);
+                              setProfessionSearchTerm('');
+                              setOpenProfessionPopover(false);
+                            }}
+                          >
+                            {profession}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="location" className="text-gray-700">עיר</Label>
-              <Select
-                onValueChange={(value) => handleSelectChange('location', value)}
-                value={formData.location}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="בחר עיר" />
-                </SelectTrigger>
-                <SelectContent dir="rtl">
-                  <SelectGroup>
-                    <SelectLabel>ערים</SelectLabel>
-                    {cities.map((city) => (
-                      <SelectItem key={city} value={city}>
-                        {city}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+              <Popover open={openCityPopover} onOpenChange={setOpenCityPopover}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openCityPopover}
+                    className="w-full justify-between text-right pr-3 pl-10 relative"
+                  >
+                    {formData.location || "בחר עיר"}
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0" align="start">
+                  <Command dir="rtl">
+                    <CommandInput 
+                      placeholder="חפש עיר..." 
+                      value={citySearchTerm}
+                      onValueChange={setCitySearchTerm}
+                    />
+                    <CommandEmpty>לא נמצאו תוצאות</CommandEmpty>
+                    <CommandList>
+                      <CommandGroup>
+                        {filteredCities.map((city) => (
+                          <CommandItem
+                            key={city}
+                            value={city}
+                            onSelect={() => {
+                              handleSelectChange('location', city);
+                              setCitySearchTerm('');
+                              setOpenCityPopover(false);
+                            }}
+                          >
+                            {city}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
 

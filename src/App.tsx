@@ -18,11 +18,10 @@ import AdminLogin from '@/pages/AdminLogin';
 import Search from '@/pages/Search';
 import ProfessionalProfile from '@/pages/ProfessionalProfile';
 import ScrollToTop from '@/components/ScrollToTop';
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense } from 'react';
 import ArticleDetail from '@/pages/ArticleDetail';
 import Articles from '@/pages/Articles';
 import ReferralsPage from '@/pages/ReferralsPage';
-import { seedProfessionals } from '@/services/professionals';
 import Terms from '@/pages/Terms';
 import Privacy from '@/pages/Privacy';
 import Settings from '@/pages/Settings';
@@ -37,19 +36,7 @@ const AdminSettings = lazy(() => import('@/pages/Admin/AdminSettings'));
 const queryClient = new QueryClient();
 
 function App() {
-  // Run seed function when app starts to ensure we have sample data
-  useEffect(() => {
-    const initSampleData = async () => {
-      try {
-        // Comment out the seed professionals function since we don't want fictional data
-        // await seedProfessionals();
-      } catch (error) {
-        console.error('Error initializing sample data:', error);
-      }
-    };
-
-    initSampleData();
-  }, []);
+  // We've completely removed the seed function since we don't want fictional data
   
   return (
     <QueryClientProvider client={queryClient}>

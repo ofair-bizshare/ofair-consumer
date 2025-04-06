@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
+import { useDebounce } from '@/hooks/useDebounce';
 
 const categories = [
   { label: 'שיפוצים', value: 'renovations' },
@@ -51,7 +52,39 @@ const ProfessionalSearchByLocation = () => {
   const [city, setCity] = useState('');
   const [openCategory, setOpenCategory] = useState(false);
   const [openCity, setOpenCity] = useState(false);
+  const [categorySearchTerm, setCategorySearchTerm] = useState('');
+  const [citySearchTerm, setCitySearchTerm] = useState('');
+  const [filteredCategories, setFilteredCategories] = useState(categories);
+  const [filteredCities, setFilteredCities] = useState(cities);
+  
+  const debouncedCategorySearch = useDebounce(categorySearchTerm, 300);
+  const debouncedCitySearch = useDebounce(citySearchTerm, 300);
+  
   const navigate = useNavigate();
+
+  // Filter categories based on search term
+  useEffect(() => {
+    if (debouncedCategorySearch) {
+      const filtered = categories.filter(cat => 
+        cat.label.toLowerCase().includes(debouncedCategorySearch.toLowerCase())
+      );
+      setFilteredCategories(filtered);
+    } else {
+      setFilteredCategories(categories);
+    }
+  }, [debouncedCategorySearch]);
+
+  // Filter cities based on search term
+  useEffect(() => {
+    if (debouncedCitySearch) {
+      const filtered = cities.filter(c => 
+        c.label.toLowerCase().includes(debouncedCitySearch.toLowerCase())
+      );
+      setFilteredCities(filtered);
+    } else {
+      setFilteredCities(cities);
+    }
+  }, [debouncedCitySearch]);
 
   const handleSearch = () => {
     if (category && city) {
@@ -83,16 +116,21 @@ const ProfessionalSearchByLocation = () => {
               </PopoverTrigger>
               <PopoverContent className="w-full p-0" align="start">
                 <Command dir="rtl">
-                  <CommandInput placeholder="חפש קטגוריה..." />
+                  <CommandInput 
+                    placeholder="חפש קטגוריה..." 
+                    value={categorySearchTerm}
+                    onValueChange={setCategorySearchTerm}
+                  />
                   <CommandEmpty>לא נמצאו תוצאות</CommandEmpty>
                   <CommandList>
                     <CommandGroup>
-                      {categories.map(cat => (
+                      {filteredCategories.map(cat => (
                         <CommandItem
                           key={cat.value}
                           value={cat.label}
                           onSelect={() => {
                             setCategory(cat.value);
+                            setCategorySearchTerm('');
                             setOpenCategory(false);
                           }}
                           className="flex items-center justify-between"
@@ -124,16 +162,21 @@ const ProfessionalSearchByLocation = () => {
               </PopoverTrigger>
               <PopoverContent className="w-full p-0" align="start">
                 <Command dir="rtl">
-                  <CommandInput placeholder="חפש עיר..." />
+                  <CommandInput 
+                    placeholder="חפש עיר..." 
+                    value={citySearchTerm}
+                    onValueChange={setCitySearchTerm}
+                  />
                   <CommandEmpty>לא נמצאו תוצאות</CommandEmpty>
                   <CommandList>
                     <CommandGroup>
-                      {cities.map(c => (
+                      {filteredCities.map(c => (
                         <CommandItem
                           key={c.value}
                           value={c.label}
                           onSelect={() => {
                             setCity(c.value);
+                            setCitySearchTerm('');
                             setOpenCity(false);
                           }}
                           className="flex items-center justify-between"
