@@ -144,7 +144,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
               </Card>
               
               <Card 
-                className="flex items-center justify-between px-4 py-3 rounded-md shadow-sm border-gray-200 mb-2"
+                className="flex items-center justify-between px-4 py-3 rounded-md shadow-sm border-gray-200 mb-2 text-red-600"
                 onClick={() => { onLogout(); onClose(); }}
               >
                 <span className="text-red-600">יציאה</span>

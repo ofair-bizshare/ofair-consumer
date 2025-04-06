@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -27,29 +26,10 @@ export const fetchUserNotifications = async (): Promise<Notification[]> => {
       return [];
     }
 
-    // Get notifications from database
-    const { data: notifications, error } = await supabase
-      .from('user_messages')
-      .select('*')
-      .eq('recipient_id', user.id)
-      .eq('read', false)
-      .order('created_at', { ascending: false });
-      
-    if (error) {
-      console.error('Error fetching notifications from database:', error);
-      return [];
-    }
-    
-    if (notifications && notifications.length > 0) {
-      return notifications.map(notification => ({
-        id: notification.id,
-        title: notification.subject,
-        message: notification.content,
-        type: 'message',
-        timestamp: new Date(notification.created_at).getTime(),
-        isRead: notification.read,
-        sender_id: notification.sender_id
-      }));
+    // Get notifications from localStorage for now (future: from database)
+    const storedNotifications = localStorage.getItem('myNotifications');
+    if (storedNotifications) {
+      return JSON.parse(storedNotifications);
     }
     
     // Return empty array if no notifications exist
@@ -78,22 +58,19 @@ export const createNotification = async (
       user_id: user?.id
     };
     
-    // Create a user message in the database
-    if (user) {
-      const { error } = await supabase
-        .from('user_messages')
-        .insert({
-          sender_id: notification.sender_id || user.id,
-          recipient_id: user.id,
-          subject: notification.title,
-          content: notification.message,
-          read: false
-        });
-        
-      if (error) {
-        console.error('Error saving notification to database:', error);
-      }
+    // Get existing notifications
+    let notifications: Notification[] = [];
+    const storedNotifications = localStorage.getItem('myNotifications');
+    
+    if (storedNotifications) {
+      notifications = JSON.parse(storedNotifications);
     }
+    
+    // Add new notification
+    notifications.unshift(newNotification);
+    
+    // Save to localStorage (future: to database)
+    localStorage.setItem('myNotifications', JSON.stringify(notifications));
     
     return newNotification;
   } catch (error) {
@@ -107,15 +84,21 @@ export const createNotification = async (
  */
 export const markNotificationAsRead = async (id: string): Promise<boolean> => {
   try {
-    const { error } = await supabase
-      .from('user_messages')
-      .update({ read: true })
-      .eq('id', id);
-      
-    if (error) {
-      console.error('Error marking notification as read:', error);
+    // Get existing notifications
+    const storedNotifications = localStorage.getItem('myNotifications');
+    if (!storedNotifications) {
       return false;
     }
+    
+    let notifications: Notification[] = JSON.parse(storedNotifications);
+    
+    // Update notification
+    notifications = notifications.map(notification => 
+      notification.id === id ? { ...notification, isRead: true } : notification
+    );
+    
+    // Save to localStorage (future: to database)
+    localStorage.setItem('myNotifications', JSON.stringify(notifications));
     
     return true;
   } catch (error) {
@@ -129,20 +112,19 @@ export const markNotificationAsRead = async (id: string): Promise<boolean> => {
  */
 export const markAllNotificationsAsRead = async (): Promise<boolean> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    // Get existing notifications
+    const storedNotifications = localStorage.getItem('myNotifications');
+    if (!storedNotifications) {
       return false;
     }
     
-    const { error } = await supabase
-      .from('user_messages')
-      .update({ read: true })
-      .eq('recipient_id', user.id);
-      
-    if (error) {
-      console.error('Error marking all notifications as read:', error);
-      return false;
-    }
+    let notifications: Notification[] = JSON.parse(storedNotifications);
+    
+    // Update all notifications
+    notifications = notifications.map(notification => ({ ...notification, isRead: true }));
+    
+    // Save to localStorage (future: to database)
+    localStorage.setItem('myNotifications', JSON.stringify(notifications));
     
     return true;
   } catch (error) {
@@ -156,15 +138,19 @@ export const markAllNotificationsAsRead = async (): Promise<boolean> => {
  */
 export const deleteNotification = async (id: string): Promise<boolean> => {
   try {
-    const { error } = await supabase
-      .from('user_messages')
-      .delete()
-      .eq('id', id);
-      
-    if (error) {
-      console.error('Error deleting notification:', error);
+    // Get existing notifications
+    const storedNotifications = localStorage.getItem('myNotifications');
+    if (!storedNotifications) {
       return false;
     }
+    
+    let notifications: Notification[] = JSON.parse(storedNotifications);
+    
+    // Filter out notification
+    notifications = notifications.filter(notification => notification.id !== id);
+    
+    // Save to localStorage (future: to database)
+    localStorage.setItem('myNotifications', JSON.stringify(notifications));
     
     return true;
   } catch (error) {
