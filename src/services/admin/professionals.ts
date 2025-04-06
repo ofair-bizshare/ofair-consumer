@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { ProfessionalInterface } from '@/types/dashboard';
-import { getRegionByCity } from '@/utils/locationMapping';
 
 /**
  * Creates a new professional
@@ -11,10 +10,6 @@ import { getRegionByCity } from '@/utils/locationMapping';
 export const createProfessional = async (professional: Omit<ProfessionalInterface, 'id' | 'reviewCount' | 'verified'>): Promise<boolean> => {
   try {
     console.log('Creating professional:', professional);
-    
-    // Get the region based on the professional's location/city
-    const city = professional.location.split(',')[0].trim();
-    const region = getRegionByCity(city);
     
     const { data, error } = await supabase.from('professionals').insert({
       name: professional.name,
@@ -28,9 +23,7 @@ export const createProfessional = async (professional: Omit<ProfessionalInterfac
       company_name: professional.company_name,
       work_hours: professional.work_hours,
       certifications: professional.certifications,
-      experience_years: professional.experience_years,
-      region: region, // Add the region field
-      city: city // Also store the city explicitly
+      experience_years: professional.experience_years
     });
     
     if (error) {
@@ -108,19 +101,10 @@ export const uploadProfessionalImage = async (file: File): Promise<string | null
  */
 export const updateProfessional = async (id: string, professional: Partial<Omit<ProfessionalInterface, 'id' | 'reviewCount' | 'verified'>>): Promise<boolean> => {
   try {
-    // If location is updated, update the region as well
-    let updateData: any = { ...professional };
-    
-    if (professional.location) {
-      const city = professional.location.split(',')[0].trim();
-      updateData.region = getRegionByCity(city);
-      updateData.city = city;
-    }
-    
     const { error } = await supabase
       .from('professionals')
       .update({
-        ...updateData,
+        ...professional,
         updated_at: new Date().toISOString()
       })
       .eq('id', id);
@@ -189,27 +173,20 @@ export const uploadProfessionalsFromExcel = async (
     }
     
     // Transform data for the database
-    const professionalsToInsert = professionals.map(p => {
-      const city = p.location.split(',')[0].trim();
-      const region = getRegionByCity(city);
-      
-      return {
-        name: p.name,
-        profession: p.profession,
-        location: p.location,
-        city: city,
-        region: region,
-        specialties: p.specialties ? p.specialties.split(',').map(s => s.trim()) : [],
-        phone_number: p.phoneNumber,
-        about: p.about || `בעל מקצוע בתחום ${p.profession}`,
-        rating: p.rating || 5.0,
-        image: 'https://via.placeholder.com/150',
-        company_name: p.company_name || '',
-        work_hours: p.work_hours || 'ימים א-ה: 8:00-18:00, יום ו: 8:00-13:00',
-        certifications: p.certifications ? p.certifications.split(',').map(c => c.trim()) : ['מוסמך מקצועי'],
-        experience_years: p.experience_years || 5
-      };
-    });
+    const professionalsToInsert = professionals.map(p => ({
+      name: p.name,
+      profession: p.profession,
+      location: p.location,
+      specialties: p.specialties ? p.specialties.split(',').map(s => s.trim()) : [],
+      phone_number: p.phoneNumber,
+      about: p.about || `בעל מקצוע בתחום ${p.profession}`,
+      rating: p.rating || 5.0,
+      image: 'https://via.placeholder.com/150',
+      company_name: p.company_name || '',
+      work_hours: p.work_hours || 'ימים א-ה: 8:00-18:00, יום ו: 8:00-13:00',
+      certifications: p.certifications ? p.certifications.split(',').map(c => c.trim()) : ['מוסמך מקצועי'],
+      experience_years: p.experience_years || 5
+    }));
     
     // Insert all professionals in one batch
     const { error } = await supabase

@@ -28,8 +28,6 @@ export interface ProfessionalInterface {
   experience_years?: number;
   // Add phone_number as an alias for phoneNumber for backward compatibility
   phone_number?: string;
-  // Add the new region field to fix the TypeScript error
-  region?: string;
 }
 
 export interface RequestInterface {

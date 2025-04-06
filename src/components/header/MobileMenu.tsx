@@ -137,7 +137,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
               
               <Card 
                 className="flex items-center justify-between px-4 py-3 rounded-md mb-4 shadow-sm border-gray-200"
-                onClick={() => { navigate('/settings'); onClose(); }}
+                onClick={() => { navigate('/dashboard/settings'); onClose(); }}
               >
                 <span>הגדרות</span>
                 <Settings size={18} className="text-gray-500" />
