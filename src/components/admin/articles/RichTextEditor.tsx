@@ -5,7 +5,7 @@ import StarterKit from '@tiptap/starter-kit';
 import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import { Button } from '@/components/ui/button';
-import { Bold, Italic, Underline, Palette } from 'lucide-react';
+import { Bold, Italic, Palette } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface RichTextEditorProps {
