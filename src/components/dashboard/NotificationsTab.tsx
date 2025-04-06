@@ -94,17 +94,17 @@ const NotificationsTab: React.FC = () => {
   
   return (
     <div className="space-y-6" dir="rtl">
-      <div className="glass-card p-6">
-        <div className="flex justify-between items-center mb-4">
+      <div className="glass-card p-4 md:p-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3">
           <div className="flex items-center">
-            <h2 className="text-2xl font-semibold text-blue-700 flex items-center">
+            <h2 className="text-xl md:text-2xl font-semibold text-blue-700 flex items-center">
               התראות
               {unreadCount > 0 && (
                 <Badge className="mr-2 bg-red-500">{unreadCount}</Badge>
               )}
             </h2>
           </div>
-          <div className="flex space-x-3 space-x-reverse">
+          <div className="flex flex-wrap gap-2">
             <Button 
               variant="outline" 
               size="sm" 
@@ -141,23 +141,23 @@ const NotificationsTab: React.FC = () => {
                 className={`border-r-4 ${notification.isRead ? 'border-gray-200' : 'border-blue-500'} hover:shadow-md transition-shadow cursor-pointer`}
                 onClick={() => handleMarkAsRead(notification.id)}
               >
-                <CardContent className="p-4">
+                <CardContent className="p-3 md:p-4">
                   <div className="flex">
-                    <div className="ml-4 pt-2">
+                    <div className="ml-3 md:ml-4 pt-2">
                       {getNotificationIcon(notification.type)}
                     </div>
                     <div className="flex-grow">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className={`text-lg ${notification.isRead ? 'font-medium' : 'font-semibold'}`}>
+                          <h3 className={`text-base md:text-lg ${notification.isRead ? 'font-medium' : 'font-semibold'}`}>
                             {notification.title}
                           </h3>
-                          <p className="text-gray-600 mt-1">{notification.message}</p>
+                          <p className="text-sm md:text-base text-gray-600 mt-1">{notification.message}</p>
                         </div>
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="text-gray-400 hover:text-gray-700"
+                          className="text-gray-400 hover:text-gray-700 p-1 h-auto"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDeleteNotification(notification.id);
@@ -167,38 +167,41 @@ const NotificationsTab: React.FC = () => {
                         </Button>
                       </div>
                       
-                      <div className="flex justify-between items-center mt-3">
-                        <span className="text-sm text-gray-500">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-3 gap-2">
+                        <span className="text-xs md:text-sm text-gray-500">
                           {formatTime(notification.timestamp)}
                         </span>
                         
-                        {notification.actionUrl && (
-                          <a href={notification.actionUrl}>
+                        <div className="flex flex-wrap gap-2">
+                          {notification.actionUrl && (
+                            <a href={notification.actionUrl}
+                               onClick={(e) => e.stopPropagation()}
+                               className="block w-full sm:w-auto">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="text-blue-700 border-blue-200 hover:bg-blue-50 w-full sm:w-auto"
+                              >
+                                {notification.actionLabel || 'פרטים נוספים'}
+                              </Button>
+                            </a>
+                          )}
+                          
+                          {!notification.isRead && (
                             <Button 
-                              variant="outline" 
+                              variant="ghost" 
                               size="sm" 
-                              className="text-blue-700 border-blue-200 hover:bg-blue-50"
-                              onClick={(e) => e.stopPropagation()}
+                              className="text-green-600 hover:text-green-700 hover:bg-green-50 w-full sm:w-auto"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMarkAsRead(notification.id);
+                              }}
                             >
-                              {notification.actionLabel || 'פרטים נוספים'}
+                              <CheckCircle size={16} className="mr-1 md:ml-1 md:mr-0" />
+                              סמן כנקרא
                             </Button>
-                          </a>
-                        )}
-                        
-                        {!notification.isRead && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleMarkAsRead(notification.id);
-                            }}
-                          >
-                            <CheckCircle size={16} className="ml-1" />
-                            סמן כנקרא
-                          </Button>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -207,10 +210,10 @@ const NotificationsTab: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12">
-            <Bell className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">אין התראות</h3>
-            <p className="text-gray-500">
+          <div className="text-center py-10 md:py-12">
+            <Bell className="h-10 w-10 md:h-12 md:w-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg md:text-xl font-semibold text-gray-700 mb-2">אין התראות</h3>
+            <p className="text-gray-500 text-sm md:text-base">
               כאשר תקבל התראות חדשות, הן יופיעו כאן
             </p>
           </div>

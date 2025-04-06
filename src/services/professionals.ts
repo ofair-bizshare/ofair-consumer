@@ -1,5 +1,7 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ProfessionalInterface as DashboardProfessionalInterface } from '@/types/dashboard';
+import { getRegionByCity } from '@/utils/locationMapping';
 
 /**
  * Professionals Service
@@ -33,6 +35,8 @@ export interface ProfessionalInterface {
   work_hours?: string;
   certifications?: string[];
   experience_years?: number;
+  // Add region field for the new region-based search
+  region?: string;
 }
 
 /**
@@ -58,6 +62,47 @@ export const getProfessionals = async (): Promise<DashboardProfessionalInterface
 
 // Add alias for compatibility with existing code
 export const fetchProfessionals = getProfessionals;
+
+/**
+ * Searches for professionals by city, and maps to region internally
+ * @param city The city to search for
+ * @param category Optional category to filter by
+ */
+export const searchProfessionalsByCity = async (
+  city: string,
+  category?: string
+): Promise<DashboardProfessionalInterface[]> => {
+  try {
+    // Get the region for this city
+    const region = getRegionByCity(city);
+    if (!region) {
+      console.warn(`No region found for city: ${city}`);
+      return [];
+    }
+
+    let query = supabase
+      .from('professionals')
+      .select('*')
+      .eq('region', region);
+    
+    if (category) {
+      // If category is provided, filter by it
+      query = query.eq('category', category);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error searching professionals by city:', error);
+      return [];
+    }
+
+    return data.map(professional => getProfessionalFromData(professional));
+  } catch (error) {
+    console.error('Error in searchProfessionalsByCity:', error);
+    return [];
+  }
+};
 
 /**
  * Gets a professional by ID
@@ -98,6 +143,12 @@ export const getProfessionalFromData = (data: any): DashboardProfessionalInterfa
     (data.year_established ? new Date().getFullYear() - data.year_established : 
     Math.floor(Math.random() * 10) + 5); // Fallback to random value between 5-15 years
   
+  // Get the professional's city from the location if available
+  const city = data.city || (data.location ? data.location.split(',')[0].trim() : 'לא צוין');
+  
+  // Determine the region based on the city
+  const region = data.region || getRegionByCity(city) || 'לא צוין';
+  
   return {
     id: data.id,
     name: data.name,
@@ -117,7 +168,7 @@ export const getProfessionalFromData = (data: any): DashboardProfessionalInterfa
     reviews_count: data.reviews_count || data.reviewCount || 0,
     image_url: data.image_url || data.image || 'https://via.placeholder.com/150',
     created_at: data.created_at,
-    city: data.city || data.location || 'לא צוין',
+    city: city,
     specialty: data.specialty || data.profession || 'לא צוין',
     area: data.area,
     category: data.category,
@@ -125,7 +176,8 @@ export const getProfessionalFromData = (data: any): DashboardProfessionalInterfa
     company_name: data.company_name,
     work_hours: data.work_hours || 'ימים א-ה: 8:00-18:00, יום ו: 8:00-13:00',
     certifications: data.certifications || ['מוסמך מקצועי', 'בעל רישיון'],
-    experience_years: experienceYears
+    experience_years: experienceYears,
+    region: region
   };
 };
 

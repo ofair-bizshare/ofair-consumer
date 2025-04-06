@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { MapPin, Briefcase, Search } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { getAllCities } from '@/utils/locationMapping';
 
 const categories = [
   { label: 'שיפוצים', value: 'renovations' },
@@ -19,18 +20,8 @@ const categories = [
   { label: 'הובלות', value: 'moving' },
 ];
 
-const cities = [
-  { label: 'תל אביב', value: 'tel_aviv' },
-  { label: 'ירושלים', value: 'jerusalem' },
-  { label: 'חיפה', value: 'haifa' },
-  { label: 'באר שבע', value: 'beer_sheva' },
-  { label: 'נתניה', value: 'netanya' },
-  { label: 'חולון', value: 'holon' },
-  { label: 'רמת גן', value: 'ramat_gan' },
-  { label: 'ראשון לציון', value: 'rishon' },
-  { label: 'פתח תקווה', value: 'petah_tikva' },
-  { label: 'אשדוד', value: 'ashdod' },
-];
+// Get all cities from our mapping utility
+const cities = getAllCities().map(city => ({ label: city, value: city.toLowerCase().replace(/\s+/g, '_') }));
 
 const ProfessionalSearchByLocation = () => {
   const [category, setCategory] = useState('');
@@ -84,7 +75,7 @@ const ProfessionalSearchByLocation = () => {
                 <SelectTrigger className="pl-10" id="city">
                   <SelectValue placeholder="בחר עיר" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-60 overflow-y-auto">
                   {cities.map(c => (
                     <SelectItem key={c.value} value={c.value}>
                       {c.label}
