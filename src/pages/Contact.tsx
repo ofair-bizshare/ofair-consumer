@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Header from '@/components/Header';
@@ -10,6 +11,7 @@ import { Mail, Phone, MapPin, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/providers/AuthProvider';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Contact = () => {
   const [name, setName] = useState('');
@@ -18,12 +20,9 @@ const Contact = () => {
   const [message, setMessage] = useState('');
   const [subject, setSubject] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const {
-    toast
-  } = useToast();
-  const {
-    user
-  } = useAuth();
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const isMobile = useIsMobile();
 
   React.useEffect(() => {
     if (user) {
@@ -94,7 +93,8 @@ const Contact = () => {
     }
   };
 
-  return <div className="flex flex-col min-h-screen" dir="rtl">
+  return (
+    <div className="flex flex-col min-h-screen" dir="rtl">
       <Helmet>
         <title>צור קשר | oFair - נשמח לענות לשאלות ולסייע לך</title>
         <meta name="description" content="צור קשר עם צוות oFair בכל שאלה, הצעה או בקשה. אנחנו כאן לשירותך." />
@@ -103,7 +103,7 @@ const Contact = () => {
       <Header />
       
       <main className="flex-grow pt-28 pb-16 bg-gray-50">
-        <div className="container mx-auto px-6">
+        <div className="container mx-auto px-4">
           <div className="mb-10 text-center">
             <h1 className="text-4xl font-bold mb-2">
               <span className="text-[#00D09E]">צור</span> קשר
@@ -113,7 +113,7 @@ const Contact = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-1">
               <Card className="h-full">
                 <CardContent className="p-6 space-y-6">
@@ -121,7 +121,7 @@ const Contact = () => {
                   
                   <div className="space-y-4">
                     <div className="flex items-center">
-                      <div className="bg-[#00D09E]/10 p-3 rounded-full mr-4">
+                      <div className="bg-[#00D09E]/10 p-3 rounded-full ml-4">
                         <Mail className="h-5 w-5 text-[#00D09E]" />
                       </div>
                       <div>
@@ -131,17 +131,17 @@ const Contact = () => {
                     </div>
                     
                     <div className="flex items-center">
-                      <div className="bg-[#00D09E]/10 p-3 rounded-full mr-4">
+                      <div className="bg-[#00D09E]/10 p-3 rounded-full ml-4">
                         <Phone className="h-5 w-5 text-[#00D09E]" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">טלפון</p>
-                        <a href="tel:03-000-0000" className="font-medium">050-552-4542</a>
+                        <a href="tel:050-552-4542" className="font-medium">050-552-4542</a>
                       </div>
                     </div>
                     
                     <div className="flex items-center">
-                      <div className="bg-[#00D09E]/10 p-3 rounded-full mr-4">
+                      <div className="bg-[#00D09E]/10 p-3 rounded-full ml-4">
                         <MapPin className="h-5 w-5 text-[#00D09E]" />
                       </div>
                       <div>
@@ -163,8 +163,8 @@ const Contact = () => {
             </div>
             
             <div className="md:col-span-2">
-              <Card className="mx-[86px]">
-                <CardContent className="p-6 px-[23px] mx-0">
+              <Card className={isMobile ? "mx-0" : "mx-[86px]"}>
+                <CardContent className="p-6">
                   <h2 className="text-xl font-semibold mb-6">שלח לנו הודעה</h2>
                   
                   <form onSubmit={handleSubmit} className="space-y-4">
@@ -207,15 +207,23 @@ const Contact = () => {
                       <Textarea id="message" value={message} onChange={e => setMessage(e.target.value)} placeholder="הזן את הודעתך כאן..." rows={6} required />
                     </div>
                     
-                    <div className="mt-6 mx-[218px] px-0">
-                      <Button type="submit" disabled={isSubmitting} className="w-full md:w-auto bg-[#00D09E] hover:bg-[#00C090] px-6 py-2 text-sm font-medium">
-                        {isSubmitting ? <>
+                    <div className={isMobile ? "mt-6" : "mt-6 mx-[218px]"}>
+                      <Button 
+                        type="submit" 
+                        disabled={isSubmitting} 
+                        className="w-full md:w-auto bg-[#00D09E] hover:bg-[#00C090] px-6 py-2 text-sm font-medium"
+                      >
+                        {isSubmitting ? (
+                          <>
                             <div className="animate-spin ml-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
                             שולח...
-                          </> : <>
+                          </>
+                        ) : (
+                          <>
                             שלח הודעה
                             <Send className="mr-2 h-4 w-4" />
-                          </>}
+                          </>
+                        )}
                       </Button>
                     </div>
                   </form>
@@ -227,7 +235,8 @@ const Contact = () => {
       </main>
       
       <Footer />
-    </div>;
+    </div>
+  );
 };
 
 export default Contact;
