@@ -1,48 +1,15 @@
+
 import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import RequestForm from '@/components/RequestForm';
 import DynamicProfessionalSearch from '@/components/DynamicProfessionalSearch';
-import ProfessionalCard from '@/components/ProfessionalCard';
 import ArticleCard from '@/components/ArticleCard';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Star, Shield, Clock, CheckCircle, FileText, Search, Gift, ChevronDown } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import ScrollIndicator from '@/components/ScrollIndicator';
-
-// Sample data for the professionals
-const professionals = [{
-  id: '1',
-  name: 'אבי כהן',
-  profession: 'חשמלאי מוסמך',
-  rating: 4.8,
-  reviewCount: 124,
-  location: 'תל אביב והמרכז',
-  image: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1180&q=80',
-  verified: true,
-  specialties: ['תיקוני חשמל', 'התקנות', 'תאורה']
-}, {
-  id: '2',
-  name: 'מיכל לוי',
-  profession: 'מעצבת פנים',
-  rating: 4.9,
-  reviewCount: 89,
-  location: 'השרון',
-  image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1161&q=80',
-  verified: true,
-  specialties: ['עיצוב דירות', 'תכנון חללים', 'צביעה']
-}, {
-  id: '3',
-  name: 'יוסי אברהם',
-  profession: 'שיפוצניק כללי',
-  rating: 4.7,
-  reviewCount: 156,
-  location: 'ירושלים והסביבה',
-  image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80',
-  verified: false,
-  specialties: ['שיפוצים כלליים', 'ריצוף', 'גבס']
-}];
 
 // Sample data for articles - update to use summary instead of excerpt
 const articles = [{
@@ -196,29 +163,6 @@ const Index = () => {
               <h3 className="text-xl font-semibold text-blue-700 mb-3">בחרו את המתאים</h3>
               <p className="text-gray-600">השוו בין ההצעות וצרו קשר עם בעל המקצוע שהכי מתאים לצרכים שלכם</p>
             </div>
-          </div>
-        </div>
-      </section>
-      
-      {/* Featured Professionals */}
-      <section className="py-16 md:py-24 bg-gradient-to-br from-blue-50 to-teal-50">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-blue-700 mb-3">בעלי מקצוע <span className="text-custom-green">מובילים</span></h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">אפשר גם פשוט לחפש -  בעלי המקצוע המובילים שלנו עברו תהליך אימות קפדני ומספקים שירות איכותי</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-10 stagger-animation">
-            {professionals.map(professional => <ProfessionalCard key={professional.id} {...professional} />)}
-          </div>
-          
-          <div className="text-center">
-            <Link to="/search">
-              <Button className="text-white button-transition bg-[#00d09e]">
-                הצג עוד בעלי מקצוע
-                <ArrowLeft size={16} className="mr-2" />
-              </Button>
-            </Link>
           </div>
         </div>
       </section>

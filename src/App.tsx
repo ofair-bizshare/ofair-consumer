@@ -41,8 +41,8 @@ function App() {
   useEffect(() => {
     const initSampleData = async () => {
       try {
-        // Seed professionals if needed
-        await seedProfessionals();
+        // Comment out the seed professionals function since we don't want fictional data
+        // await seedProfessionals();
       } catch (error) {
         console.error('Error initializing sample data:', error);
       }

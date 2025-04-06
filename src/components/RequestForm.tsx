@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -25,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createRequest } from '@/services/requests';
+import { FcGoogle } from "react-icons/fc";
 
 interface RequestFormProps {
   onSuccess?: (value: boolean) => void;
@@ -112,7 +112,7 @@ const RequestForm: React.FC<RequestFormProps> = ({
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, signIn, signUp } = useAuth();
+  const { user, signIn, signUp, signInWithGoogle } = useAuth();
   
   const [formData, setFormData] = useState({
     profession: '',
@@ -278,6 +278,27 @@ const RequestForm: React.FC<RequestFormProps> = ({
     }
   };
   
+  const handleGoogleSignIn = async () => {
+    try {
+      const { error } = await signInWithGoogle();
+      if (error) {
+        console.error('Error signing in with Google:', error.message);
+        toast({
+          title: "שגיאת התחברות",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error during Google sign in:', error);
+      toast({
+        title: "שגיאת התחברות",
+        description: "אירעה שגיאה בהתחברות באמצעות Google",
+        variant: "destructive"
+      });
+    }
+  };
+  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginData.email || !loginData.password) {
@@ -294,6 +315,7 @@ const RequestForm: React.FC<RequestFormProps> = ({
       handleFormSubmit();
     }
   };
+  
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!registerData.name || !registerData.email || !registerData.password || !registerData.passwordConfirm) {
@@ -330,9 +352,11 @@ const RequestForm: React.FC<RequestFormProps> = ({
       handleFormSubmit();
     }
   };
+  
   const handleBack = () => {
     setStep(step - 1);
   };
+  
   const handleGoToDashboard = () => {
     setShowSuccessDialog(false);
     navigate('/dashboard');
@@ -476,6 +500,25 @@ const RequestForm: React.FC<RequestFormProps> = ({
             <UserRound className="mx-auto h-12 w-12 text-blue-500 mb-2" />
             <h3 className="text-lg font-medium text-gray-700">כניסה או הרשמה לשליחת הבקשה</h3>
             <p className="text-sm text-gray-500">כדי להמשיך, יש להתחבר או להירשם</p>
+          </div>
+          
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full flex items-center justify-center gap-2 py-6"
+            onClick={handleGoogleSignIn}
+          >
+            <FcGoogle className="h-5 w-5" />
+            <span>התחברות עם Google</span>
+          </Button>
+          
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-gray-300"></span>
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="px-2 bg-white text-gray-500">או</span>
+            </div>
           </div>
           
           <Tabs defaultValue="login" className="w-full">
