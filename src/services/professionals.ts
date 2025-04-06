@@ -132,8 +132,12 @@ export const searchProfessionalsByCity = async (
       return [];
     }
 
-    // Map database records to our interface to prevent circular type references
-    return data.map(professional => getProfessionalFromData(professional as ProfessionalDatabaseRecord));
+    // Using a non-generic type to avoid deep recursion issues
+    return (data || []).map(professional => {
+      // Convert each professional to our defined record type
+      const record: ProfessionalDatabaseRecord = professional as ProfessionalDatabaseRecord;
+      return getProfessionalFromData(record);
+    });
   } catch (error) {
     console.error('Error in searchProfessionalsByCity:', error);
     return [];
