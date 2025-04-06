@@ -4,8 +4,22 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { MapPin, Briefcase, Search } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { Check } from "lucide-react";
 
 const categories = [
   { label: 'שיפוצים', value: 'renovations' },
@@ -35,6 +49,8 @@ const cities = [
 const ProfessionalSearchByLocation = () => {
   const [category, setCategory] = useState('');
   const [city, setCity] = useState('');
+  const [openCategory, setOpenCategory] = useState(false);
+  const [openCity, setOpenCity] = useState(false);
   const navigate = useNavigate();
 
   const handleSearch = () => {
@@ -53,53 +69,91 @@ const ProfessionalSearchByLocation = () => {
         <div className="grid grid-cols-1 md:grid-cols-7 gap-3">
           <div className="space-y-2 md:col-span-3">
             <Label htmlFor="category" className="text-gray-700">קטגוריה</Label>
-            <div className="relative">
-              <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <Select 
-                onValueChange={setCategory}
-                value={category}
-              >
-                <SelectTrigger className="pl-10" id="category">
-                  <SelectValue placeholder="בחר קטגוריה" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map(cat => (
-                    <SelectItem key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Popover open={openCategory} onOpenChange={setOpenCategory}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openCategory}
+                  className="w-full justify-between text-right pl-10 relative"
+                >
+                  {category ? categories.find(cat => cat.value === category)?.label : "בחר קטגוריה"}
+                  <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0" align="start">
+                <Command dir="rtl">
+                  <CommandInput placeholder="חפש קטגוריה..." />
+                  <CommandEmpty>לא נמצאו תוצאות</CommandEmpty>
+                  <CommandList>
+                    <CommandGroup>
+                      {categories.map(cat => (
+                        <CommandItem
+                          key={cat.value}
+                          value={cat.label}
+                          onSelect={() => {
+                            setCategory(cat.value);
+                            setOpenCategory(false);
+                          }}
+                          className="flex items-center justify-between"
+                        >
+                          {cat.label}
+                          {cat.value === category && <Check className="ml-2 h-4 w-4" />}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="space-y-2 md:col-span-3">
             <Label htmlFor="city" className="text-gray-700">עיר</Label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <Select 
-                onValueChange={setCity}
-                value={city}
-              >
-                <SelectTrigger className="pl-10" id="city">
-                  <SelectValue placeholder="בחר עיר" />
-                </SelectTrigger>
-                <SelectContent>
-                  {cities.map(c => (
-                    <SelectItem key={c.value} value={c.value}>
-                      {c.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Popover open={openCity} onOpenChange={setOpenCity}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openCity}
+                  className="w-full justify-between text-right pl-10 relative"
+                >
+                  {city ? cities.find(c => c.value === city)?.label : "בחר עיר"}
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0" align="start">
+                <Command dir="rtl">
+                  <CommandInput placeholder="חפש עיר..." />
+                  <CommandEmpty>לא נמצאו תוצאות</CommandEmpty>
+                  <CommandList>
+                    <CommandGroup>
+                      {cities.map(c => (
+                        <CommandItem
+                          key={c.value}
+                          value={c.label}
+                          onSelect={() => {
+                            setCity(c.value);
+                            setOpenCity(false);
+                          }}
+                          className="flex items-center justify-between"
+                        >
+                          {c.label}
+                          {c.value === city && <Check className="ml-2 h-4 w-4" />}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="flex items-end md:col-span-1">
             <Button
               type="button"
               onClick={handleSearch}
-              className="w-full bg-blue-600 hover:bg-blue-700 h-10 flex flex-row-reverse"
+              className="w-full bg-blue-600 hover:bg-blue-700 h-10 flex items-center justify-between"
               aria-label="חיפוש בעלי מקצוע לפי קטגוריה ועיר"
             >
               <Search size={18} />
