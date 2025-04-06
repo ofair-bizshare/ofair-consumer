@@ -53,7 +53,8 @@ export const getProfessionals = async (): Promise<DashboardProfessionalInterface
       return [];
     }
 
-    return data.map(professional => getProfessionalFromData(professional));
+    // Fix recursive type issue by using a type assertion
+    return data.map(professional => getProfessionalFromData(professional as any));
   } catch (error) {
     console.error('Error getting professionals:', error);
     return [];
@@ -97,7 +98,8 @@ export const searchProfessionalsByCity = async (
       return [];
     }
 
-    return data.map(professional => getProfessionalFromData(professional));
+    // Fix recursive type issue by using a type assertion
+    return data.map(professional => getProfessionalFromData(professional as any));
   } catch (error) {
     console.error('Error in searchProfessionalsByCity:', error);
     return [];

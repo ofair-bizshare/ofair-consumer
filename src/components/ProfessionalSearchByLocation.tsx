@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { MapPin, Briefcase, Search } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { getAllCities } from '@/utils/locationMapping';
+import { getAllCities, getAllRegions } from '@/utils/locationMapping';
 
 const categories = [
   { label: 'שיפוצים', value: 'renovations' },
