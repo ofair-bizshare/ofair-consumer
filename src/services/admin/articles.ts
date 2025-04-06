@@ -11,15 +11,17 @@ export const createArticle = async (article: Omit<ArticleInterface, 'id' | 'crea
   try {
     console.log('Creating article in admin service:', article);
     
+    // Make sure the content is properly preserved as HTML
     const { data, error } = await supabase
       .from('articles')
       .insert({
         title: article.title,
-        content: article.content,
-        summary: article.summary || article.content.substring(0, 150) + '...',
+        content: article.content, // This will now contain HTML from the rich text editor
+        summary: article.summary || article.content.replace(/<[^>]*>/g, '').substring(0, 150) + '...', // Strip HTML for summary if not provided
         image: article.image || 'https://via.placeholder.com/800x400?text=No+Image',
         author: article.author,
-        published: article.published !== undefined ? article.published : true
+        published: article.published !== undefined ? article.published : true,
+        category: article.category
       })
       .select()
       .single();
@@ -52,10 +54,16 @@ export const updateArticle = async (id: string, article: Partial<Omit<ArticleInt
   try {
     console.log(`Updating article ${id}:`, article);
     
+    // For summary, strip HTML tags if needed
+    const updatedArticle = { ...article };
+    if (updatedArticle.content && !updatedArticle.summary) {
+      updatedArticle.summary = updatedArticle.content.replace(/<[^>]*>/g, '').substring(0, 150) + '...';
+    }
+    
     const { data, error } = await supabase
       .from('articles')
       .update({
-        ...article,
+        ...updatedArticle,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)

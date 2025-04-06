@@ -4,6 +4,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { Textarea } from '@/components/ui/textarea';
 import { UseFormReturn } from 'react-hook-form';
 import { ArticleFormValues } from './articleSchema';
+import RichTextEditor from './RichTextEditor';
 
 interface ArticleContentFieldsProps {
   form: UseFormReturn<ArticleFormValues>;
@@ -37,10 +38,10 @@ const ArticleContentFields: React.FC<ArticleContentFieldsProps> = ({ form }) => 
           <FormItem>
             <FormLabel>תוכן</FormLabel>
             <FormControl>
-              <Textarea 
+              <RichTextEditor 
+                content={field.value} 
+                onChange={field.onChange}
                 placeholder="תוכן המאמר המלא"
-                className="min-h-[200px]"
-                {...field} 
               />
             </FormControl>
             <FormMessage />
