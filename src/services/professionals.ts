@@ -87,8 +87,12 @@ export const getProfessionals = async (): Promise<DashboardProfessionalInterface
       return [];
     }
 
-    // Map database records to our interface to prevent circular type references
-    return data.map(professional => getProfessionalFromData(professional as ProfessionalDatabaseRecord));
+    // Using a non-generic type to avoid deep recursion issues
+    return (data || []).map(professional => {
+      // Convert each professional to our defined record type
+      const record: ProfessionalDatabaseRecord = professional as ProfessionalDatabaseRecord;
+      return getProfessionalFromData(record);
+    });
   } catch (error) {
     console.error('Error getting professionals:', error);
     return [];
@@ -161,7 +165,9 @@ export const getProfessional = async (id: string): Promise<DashboardProfessional
       return null;
     }
 
-    return getProfessionalFromData(data as ProfessionalDatabaseRecord);
+    // Explicitly cast to our database record type to avoid circular reference
+    const record: ProfessionalDatabaseRecord = data as ProfessionalDatabaseRecord;
+    return getProfessionalFromData(record);
   } catch (error) {
     console.error('Error getting professional:', error);
     return null;
