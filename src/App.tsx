@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
@@ -8,7 +7,7 @@ import { AuthProvider } from '@/providers/AuthProvider';
 import About from '@/pages/About';
 import Index from '@/pages/Index';
 import Login from '@/pages/Login';
-import Register from '@/pages/Login';
+import Register from '@/pages/Register';
 import FAQ from '@/pages/FAQ';
 import NotFound from '@/pages/NotFound';
 import Dashboard from '@/pages/Dashboard';
@@ -36,8 +35,6 @@ const AdminSettings = lazy(() => import('@/pages/Admin/AdminSettings'));
 const queryClient = new QueryClient();
 
 function App() {
-  // We've completely removed the seed function since we don't want fictional data
-  
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light">
@@ -65,7 +62,6 @@ function App() {
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/contact" element={<Contact />} />
                 
-                {/* Admin routes */}
                 <Route path="/admin-login" element={<AdminLogin />} />
                 <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route
@@ -109,7 +105,6 @@ function App() {
                   }
                 />
                 
-                {/* 404 route */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Router>

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Phone, Eye } from 'lucide-react';
+import { Phone, Eye, Calendar, CheckCircle } from 'lucide-react';
 import { ReferralInterface } from '@/types/dashboard';
 
 interface ReferralCardProps {
@@ -24,20 +24,28 @@ const ReferralCard: React.FC<ReferralCardProps> = ({ referral, onMarkContacted }
               {referral.status === 'new' ? (
                 <span className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">חדש</span>
               ) : (
-                <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">נוצר קשר</span>
+                <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full flex items-center">
+                  <CheckCircle className="h-3 w-3 ml-1" />
+                  נוצר קשר
+                </span>
               )}
             </div>
           </div>
           
-          <div className="text-gray-700 mb-3">
-            <div className="flex items-center mb-1">
+          <div className="text-gray-700 mb-4">
+            <div className="flex items-center mb-2">
               <Phone className="h-4 w-4 text-[#00D09E] ml-2" />
-              <p className="font-medium">{referral.phoneNumber}</p>
+              <a href={`tel:${referral.phoneNumber}`} className="font-medium hover:text-blue-600 transition-colors">
+                {referral.phoneNumber}
+              </a>
             </div>
-            <p className="text-sm text-gray-500">{referral.date}</p>
+            <div className="flex items-center text-sm text-gray-500">
+              <Calendar className="h-3 w-3 ml-1" />
+              <p>{referral.date}</p>
+            </div>
           </div>
           
-          <div className="flex justify-between pt-2">
+          <div className="flex justify-between pt-2 border-t border-gray-100">
             <Button 
               variant="outline" 
               size="sm" 
