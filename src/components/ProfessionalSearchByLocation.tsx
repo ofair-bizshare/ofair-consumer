@@ -99,7 +99,7 @@ const ProfessionalSearchByLocation = () => {
             <Button
               type="button"
               onClick={handleSearch}
-              className="w-full bg-blue-600 hover:bg-blue-700 h-10"
+              className="w-full bg-blue-600 hover:bg-blue-700 h-10 flex flex-row-reverse"
               aria-label="חיפוש בעלי מקצוע לפי קטגוריה ועיר"
             >
               <Search size={18} />

@@ -16,9 +16,9 @@ const DesktopNav: React.FC<DesktopNavProps> = ({
         onClick={onSendRequest} 
         className="text-gray-800 hover:text-[#00d09e] transition-colors mx-[20px] bg-transparent border-none cursor-pointer"
       >
-        <span className="flex items-center">
-          <Send size={18} className="ml-1" />
+        <span className="flex flex-row-reverse items-center">
           <span className="font-semibold text-[#00d09e]">שליחת בקשה</span>
+          <Send size={18} className="mr-1" />
         </span>
       </button>
       <Link to="/search" className="text-gray-800 hover:text-[#00d09e] transition-colors mx-[23px]">
