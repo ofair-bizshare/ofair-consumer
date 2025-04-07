@@ -101,12 +101,31 @@ export const uploadProfessionalImage = async (file: File): Promise<string | null
  */
 export const updateProfessional = async (id: string, professional: Partial<Omit<ProfessionalInterface, 'id' | 'reviewCount' | 'verified'>>): Promise<boolean> => {
   try {
+    console.log(`Updating professional ${id}:`, professional);
+    
+    // Create an object with only the fields we want to update
+    const updateData: any = {};
+    
+    // Only include fields that are defined
+    if (professional.name) updateData.name = professional.name;
+    if (professional.profession) updateData.profession = professional.profession;
+    if (professional.location) updateData.location = professional.location;
+    if (professional.specialties) updateData.specialties = professional.specialties;
+    if (professional.phoneNumber || professional.phone_number) updateData.phone_number = professional.phoneNumber || professional.phone_number;
+    if (professional.about) updateData.about = professional.about;
+    if (professional.rating !== undefined) updateData.rating = professional.rating;
+    if (professional.image) updateData.image = professional.image;
+    if (professional.company_name !== undefined) updateData.company_name = professional.company_name;
+    if (professional.work_hours !== undefined) updateData.work_hours = professional.work_hours;
+    if (professional.certifications !== undefined) updateData.certifications = professional.certifications;
+    if (professional.experience_years !== undefined) updateData.experience_years = professional.experience_years;
+    
+    // Add updated_at timestamp
+    updateData.updated_at = new Date().toISOString();
+    
     const { error } = await supabase
       .from('professionals')
-      .update({
-        ...professional,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', id);
     
     if (error) {
@@ -114,6 +133,7 @@ export const updateProfessional = async (id: string, professional: Partial<Omit<
       return false;
     }
     
+    console.log('Professional updated successfully');
     return true;
   } catch (error) {
     console.error('Error updating professional:', error);

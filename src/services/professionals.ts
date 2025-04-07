@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ProfessionalInterface as DashboardProfessionalInterface } from '@/types/dashboard';
 
@@ -109,7 +110,7 @@ export const getProfessionalFromData = (data: any): DashboardProfessionalInterfa
     verified: data.verified || false,
     specialties: data.specialties || [data.specialty] || [],
     // Add all compatibility fields
-    phone: data.phone || data.phoneNumber,
+    phone: data.phone || data.phoneNumber || data.phone_number,
     phoneNumber: data.phone || data.phone_number,
     email: data.email,
     bio: data.bio,

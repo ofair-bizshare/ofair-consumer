@@ -78,6 +78,7 @@ export type Database = {
       articles: {
         Row: {
           author: string | null
+          category: string | null
           content: string
           created_at: string | null
           id: string
@@ -89,6 +90,7 @@ export type Database = {
         }
         Insert: {
           author?: string | null
+          category?: string | null
           content: string
           created_at?: string | null
           id?: string
@@ -100,6 +102,7 @@ export type Database = {
         }
         Update: {
           author?: string | null
+          category?: string | null
           content?: string
           created_at?: string | null
           id?: string
@@ -205,8 +208,11 @@ export type Database = {
         Row: {
           about: string | null
           areas: string | null
+          certifications: string[] | null
+          company_name: string | null
           created_at: string | null
           email: string | null
+          experience_years: number | null
           id: string
           image: string | null
           location: string
@@ -218,13 +224,17 @@ export type Database = {
           specialties: string[] | null
           updated_at: string | null
           user_id: string | null
+          work_hours: string | null
           working_hours: string | null
         }
         Insert: {
           about?: string | null
           areas?: string | null
+          certifications?: string[] | null
+          company_name?: string | null
           created_at?: string | null
           email?: string | null
+          experience_years?: number | null
           id?: string
           image?: string | null
           location: string
@@ -236,13 +246,17 @@ export type Database = {
           specialties?: string[] | null
           updated_at?: string | null
           user_id?: string | null
+          work_hours?: string | null
           working_hours?: string | null
         }
         Update: {
           about?: string | null
           areas?: string | null
+          certifications?: string[] | null
+          company_name?: string | null
           created_at?: string | null
           email?: string | null
+          experience_years?: number | null
           id?: string
           image?: string | null
           location?: string
@@ -254,6 +268,7 @@ export type Database = {
           specialties?: string[] | null
           updated_at?: string | null
           user_id?: string | null
+          work_hours?: string | null
           working_hours?: string | null
         }
         Relationships: []

@@ -21,7 +21,7 @@ export const createArticle = async (article: Omit<ArticleInterface, 'id' | 'crea
         image: article.image || 'https://via.placeholder.com/800x400?text=No+Image',
         author: article.author,
         published: article.published !== undefined ? article.published : true,
-        category: article.category
+        category: article.category || null
       })
       .select()
       .single();
@@ -55,17 +55,28 @@ export const updateArticle = async (id: string, article: Partial<Omit<ArticleInt
     console.log(`Updating article ${id}:`, article);
     
     // For summary, strip HTML tags if needed
-    const updatedArticle = { ...article };
+    const updatedArticle: any = { ...article };
     if (updatedArticle.content && !updatedArticle.summary) {
       updatedArticle.summary = updatedArticle.content.replace(/<[^>]*>/g, '').substring(0, 150) + '...';
     }
     
+    // Only include fields that are defined
+    const updateData: any = {};
+    
+    if (updatedArticle.title !== undefined) updateData.title = updatedArticle.title;
+    if (updatedArticle.content !== undefined) updateData.content = updatedArticle.content;
+    if (updatedArticle.summary !== undefined) updateData.summary = updatedArticle.summary;
+    if (updatedArticle.image !== undefined) updateData.image = updatedArticle.image;
+    if (updatedArticle.author !== undefined) updateData.author = updatedArticle.author;
+    if (updatedArticle.published !== undefined) updateData.published = updatedArticle.published;
+    if (updatedArticle.category !== undefined) updateData.category = updatedArticle.category;
+    
+    // Add updated_at timestamp
+    updateData.updated_at = new Date().toISOString();
+    
     const { data, error } = await supabase
       .from('articles')
-      .update({
-        ...updatedArticle,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
