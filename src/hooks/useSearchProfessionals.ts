@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { ProfessionalInterface } from '@/types/dashboard';
+import { ProfessionalInterface } from '@/services/professionals/types';
 import { getProfessionals } from '@/services/professionals';
 import { specialtiesByCategory } from '@/utils/professionData';
 

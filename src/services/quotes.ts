@@ -1,7 +1,6 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { QuoteInterface, ProfessionalInterface } from '@/types/dashboard';
-import { getProfessional } from './professionals';
+import { QuoteInterface } from '@/types/dashboard';
+import { getProfessional } from '@/services/professionals';
 
 // Fetch quotes for a specific request
 export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInterface[]> => {
