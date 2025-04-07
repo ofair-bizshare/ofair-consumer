@@ -7,7 +7,24 @@ import RequestForm from '@/components/RequestForm';
 import DynamicProfessionalSearch from '@/components/DynamicProfessionalSearch';
 import ArticleCard from '@/components/ArticleCard';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Star, Shield, Clock, CheckCircle, FileText, Search, Gift, ChevronDown } from 'lucide-react';
+import { 
+  ArrowLeft, 
+  Star, 
+  Shield, 
+  Clock, 
+  CheckCircle, 
+  FileText, 
+  Search, 
+  Gift, 
+  ChevronDown, 
+  Wrench, 
+  Hammer, 
+  PaintBucket, 
+  Plug, 
+  Lightbulb, 
+  Home as HomeIcon,
+  ThumbsUp
+} from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import ScrollIndicator from '@/components/ScrollIndicator';
 
@@ -27,6 +44,32 @@ const articles = [{
   date: '18 באפריל, 2023',
   category: 'שיפוצים'
 }];
+
+// Popular services for the new services section
+const popularServices = [
+  { icon: <Wrench size={32} />, name: 'שיפוצים כלליים', color: 'bg-blue-500' },
+  { icon: <Plug size={32} />, name: 'חשמלאי', color: 'bg-amber-500' },
+  { icon: <PaintBucket size={32} />, name: 'צביעה וטיח', color: 'bg-green-500' },
+  { icon: <Hammer size={32} />, name: 'נגרות', color: 'bg-purple-500' },
+  { icon: <Lightbulb size={32} />, name: 'חשמל ותאורה', color: 'bg-red-500' },
+  { icon: <HomeIcon size={32} />, name: 'עיצוב פנים', color: 'bg-indigo-500' },
+];
+
+// Testimonials for the new testimonials section
+const testimonials = [
+  {
+    text: 'קיבלתי 5 הצעות מחיר תוך יום ובחרתי את בעל המקצוע המושלם לפרויקט שלי. חסכתי המון זמן וכסף!',
+    name: 'שירה כהן',
+    role: 'בעלת דירה ברמת גן',
+    image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=256&q=80',
+  },
+  {
+    text: 'השירות הזה פשוט מדהים! מצאתי בעל מקצוע מעולה לשיפוץ המטבח שלי. התהליך היה פשוט וקל.',
+    name: 'אבי לוי',
+    role: 'בעל דירה בתל אביב',
+    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=256&q=80',
+  },
+];
 
 const Index = () => {
   const requestFormRef = useRef<HTMLDivElement>(null);
@@ -64,17 +107,20 @@ const Index = () => {
       
       <Header />
       
-      {/* Hero Section - Updated for better layout and added scroll indicator */}
-      <section className="relative pt-28 pb-16 md:pt-32 md:pb-24">
+      {/* Hero Section - Updated with better visuals */}
+      <section className="relative pt-28 pb-16 md:pt-32 md:pb-24 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-teal-50 z-[-1]"></div>
-        <div className="absolute inset-0 z-[-1] opacity-70 bg-[url('https://images.unsplash.com/photo-1600607687644-c7e39cf7d8b7?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80')] bg-cover bg-center"></div>
+        <div className="absolute inset-0 z-[-1] opacity-50 bg-[url('https://images.unsplash.com/photo-1612968953208-56c5052b9ec4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80')] bg-cover bg-center"></div>
         <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-[-1]"></div>
         
         <div className="container mx-auto px-6">
           <div className="flex flex-col lg:flex-row items-start lg:items-start gap-8">
             {/* Left side - Text content */}
-            <div className="w-full lg:w-1/2 animate-fade-in-up">
-              <div className="text-base font-semibold text-[#00D09E] mb-3">oFair - הפתרון המושלם לבעלי בתים</div>
+            <div className="w-full lg:w-1/2 animate-fade-in-up relative z-10">
+              <div className="text-base font-semibold text-[#00D09E] mb-3 flex items-center">
+                <ThumbsUp className="w-5 h-5 inline-block mr-2" />
+                oFair - הפתרון המושלם לבעלי בתים
+              </div>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-blue-800 mb-4 leading-tight">
                 מצאו את 
                 <span className="text-[#00D09E] mx-2">בעל המקצוע</span>
@@ -108,9 +154,15 @@ const Index = () => {
               </div>
             </div>
             
-            {/* Right side - Form */}
-            <div className="w-full lg:w-1/2 animate-fade-in pt-0">
-              <div id="request-form" ref={requestFormRef}>
+            {/* Right side - Form with decorative elements */}
+            <div className="w-full lg:w-1/2 animate-fade-in pt-0 relative z-10">
+              {/* Decorative elements */}
+              <div className="absolute -top-12 -right-12 w-24 h-24 bg-gradient-to-br from-blue-400 to-teal-300 rounded-full blur-xl opacity-30 hidden lg:block"></div>
+              <div className="absolute -bottom-8 -left-8 w-20 h-20 bg-gradient-to-br from-yellow-400 to-amber-300 rounded-full blur-lg opacity-30 hidden lg:block"></div>
+              
+              <div id="request-form" ref={requestFormRef} className="relative">
+                <div className="absolute -top-4 -left-4 w-8 h-8 bg-[#00D09E] rounded-full opacity-80 animate-pulse hidden md:block"></div>
+                <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-blue-500 rounded-full opacity-70 animate-pulse hidden md:block"></div>
                 <RequestForm />
               </div>
             </div>
@@ -128,18 +180,60 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Search Section */}
-      <section id="professional-search-section" className="py-16 bg-white">
+      {/* Popular Services Section - New */}
+      <section className="py-14 bg-white">
         <div className="container mx-auto px-6">
-          <div className="animate-fade-in">
-            <DynamicProfessionalSearch />
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-blue-700 mb-3">שירותים <span className="text-custom-green">פופולריים</span></h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">מצא בעלי מקצוע מובילים בתחומים המבוקשים ביותר</p>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 stagger-animation">
+            {popularServices.map((service, idx) => (
+              <Link key={idx} to="/search" className="group">
+                <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-white border border-gray-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                  <div className={`w-16 h-16 ${service.color} text-white rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
+                    {service.icon}
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-800">{service.name}</h3>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
       
-      {/* How it Works Section */}
-      <section className="py-16 md:py-24 bg-gray-50">
-        <div className="container mx-auto px-6">
+      {/* Search Section with Visual Enhancements */}
+      <section id="professional-search-section" ref={searchSectionRef} className="py-16 bg-gradient-to-br from-gray-50 to-blue-50 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-white to-transparent"></div>
+        <div className="absolute -bottom-16 -left-16 w-32 h-32 bg-blue-400 rounded-full opacity-10"></div>
+        <div className="absolute -top-10 -right-10 w-40 h-40 bg-teal-400 rounded-full opacity-10"></div>
+        
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-blue-700 mb-3">חיפוש <span className="text-custom-green">מתקדם</span></h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">מצא בעלי מקצוע מובילים בתחומם באזור שלך בקלות ובמהירות</p>
+          </div>
+          <div className="animate-fade-in">
+            <DynamicProfessionalSearch />
+          </div>
+          {/* Visual element - professionals illustration */}
+          <div className="flex justify-center mt-12">
+            <img 
+              src="https://images.unsplash.com/photo-1556912172-45518114e8a5?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80" 
+              alt="בעלי מקצוע מובילים" 
+              className="rounded-lg shadow-lg max-w-full h-auto max-h-96 object-cover"
+            />
+          </div>
+        </div>
+      </section>
+      
+      {/* How it Works Section - Enhanced with Icons */}
+      <section className="py-16 md:py-24 bg-white relative">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100 rounded-full opacity-40 transform translate-x-16 -translate-y-16"></div>
+        <div className="absolute bottom-0 left-0 w-40 h-40 bg-teal-100 rounded-full opacity-50 transform -translate-x-20 translate-y-20"></div>
+        
+        <div className="container mx-auto px-6 relative z-10">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-blue-700 mb-3">איך זה <span className="text-custom-green">עובד?</span></h2>
             <p className="text-gray-600 max-w-2xl mx-auto">תהליך פשוט בשלושה שלבים למציאת בעל המקצוע המושלם לעבודה שלכם</p>
@@ -150,24 +244,63 @@ const Index = () => {
               <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-4 bg-[#00d09e]">1</div>
               <h3 className="text-xl font-semibold text-blue-700 mb-3">שלחו בקשה</h3>
               <p className="text-gray-600">מלאו טופס קצר עם פרטי העבודה שברצונכם לבצע</p>
+              <div className="mt-4">
+                <FileText size={32} className="mx-auto text-[#00d09e]" />
+              </div>
             </div>
             
             <div className="text-center p-6 rounded-xl bg-blue-50/50 border border-blue-100 hover:shadow-lg transition-all duration-300">
               <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-4 bg-[#00d09e]">2</div>
               <h3 className="text-xl font-semibold text-blue-700 mb-3">קבלו הצעות מחיר וזמינות</h3>
               <p className="text-gray-600">בעלי מקצוע מובילים ישלחו לכם הצעות מותאמות אישית </p>
+              <div className="mt-4">
+                <Wrench size={32} className="mx-auto text-[#00d09e]" />
+              </div>
             </div>
             
             <div className="text-center p-6 rounded-xl bg-blue-50/50 border border-blue-100 hover:shadow-lg transition-all duration-300">
               <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-4 bg-[#00d09e]">3</div>
               <h3 className="text-xl font-semibold text-blue-700 mb-3">בחרו את המתאים</h3>
               <p className="text-gray-600">השוו בין ההצעות וצרו קשר עם בעל המקצוע שהכי מתאים לצרכים שלכם</p>
+              <div className="mt-4">
+                <CheckCircle size={32} className="mx-auto text-[#00d09e]" />
+              </div>
             </div>
           </div>
         </div>
       </section>
       
-      {/* Why Choose Us */}
+      {/* Testimonials Section - New */}
+      <section className="py-16 bg-gradient-to-br from-blue-50 to-teal-50 relative overflow-hidden">
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-blue-700 mb-3">לקוחות <span className="text-custom-green">מספרים</span></h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">מה אומרים לקוחות שכבר השתמשו בשירות שלנו</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto stagger-animation">
+            {testimonials.map((testimonial, i) => (
+              <div key={i} className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex flex-col h-full">
+                <div className="mb-4">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star key={star} size={18} className="inline-block text-yellow-400 fill-yellow-400 mr-1" />
+                  ))}
+                </div>
+                <p className="text-gray-700 mb-6 flex-grow">{testimonial.text}</p>
+                <div className="flex items-center">
+                  <img src={testimonial.image} alt={testimonial.name} className="w-12 h-12 rounded-full object-cover mr-4" />
+                  <div>
+                    <h4 className="font-semibold text-blue-700">{testimonial.name}</h4>
+                    <p className="text-sm text-gray-500">{testimonial.role}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      
+      {/* Why Choose Us - Enhanced with Animations */}
       <section className="py-16 md:py-24 bg-white">
         <div className="container mx-auto px-6">
           <div className="text-center mb-12">
@@ -176,7 +309,7 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 stagger-animation">
-            <div className="text-center p-6 rounded-xl hover:shadow-lg transition-all duration-300">
+            <div className="text-center p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
               <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-4">
                 <Shield className="h-7 w-7 text-blue-700" />
               </div>
@@ -184,7 +317,7 @@ const Index = () => {
               <p className="text-gray-600 text-sm">כל בעלי המקצוע עוברים תהליך אימות ובדיקה</p>
             </div>
             
-            <div className="text-center p-6 rounded-xl hover:shadow-lg transition-all duration-300">
+            <div className="text-center p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
               <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-4">
                 <Star className="h-7 w-7 text-blue-700" />
               </div>
@@ -192,7 +325,7 @@ const Index = () => {
               <p className="text-gray-600 text-sm">דירוגים וביקורות אמיתיות מלקוחות קודמים</p>
             </div>
             
-            <div className="text-center p-6 rounded-xl hover:shadow-lg transition-all duration-300">
+            <div className="text-center p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
               <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-4">
                 <Clock className="h-7 w-7 text-blue-700" />
               </div>
@@ -200,7 +333,7 @@ const Index = () => {
               <p className="text-gray-600 text-sm">קבלו הצעות מחיר במהירות ללא צורך בחיפושים</p>
             </div>
             
-            <div className="text-center p-6 rounded-xl hover:shadow-lg transition-all duration-300">
+            <div className="text-center p-6 rounded-xl hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
               <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="h-7 w-7 text-blue-700" />
               </div>
@@ -234,9 +367,10 @@ const Index = () => {
         </div>
       </section>
       
-      {/* CTA Section */}
-      <section className="py-16 md:py-24 bg-blue-700 text-white">
-        <div className="container mx-auto px-6 text-center">
+      {/* CTA Section with Background Image */}
+      <section className="py-16 md:py-24 bg-blue-700 text-white relative">
+        <div className="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1590479773265-7464e5d48118?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80')] bg-cover bg-center"></div>
+        <div className="container mx-auto px-6 text-center relative z-10">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
             מוכנים למצוא את
             <span className="text-[#00D09E] mx-2">בעל המקצוע</span>
