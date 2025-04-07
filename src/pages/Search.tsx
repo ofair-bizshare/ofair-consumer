@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import DynamicSearchComponent from '@/components/DynamicSearchComponent';
+import DynamicProfessionalSearch from '@/components/DynamicProfessionalSearch';
 import ProfessionalCard from '@/components/ProfessionalCard';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -246,7 +245,7 @@ const Search = () => {
           </div>
           
           <div className="mb-8 animate-fade-in-up">
-            <DynamicSearchComponent 
+            <DynamicProfessionalSearch 
               onSearch={handleSearch} 
               initialProfession={selectedCategory === 'all' ? '' : selectedCategory}
               initialLocation={selectedLocation === 'all' ? '' : selectedLocation}
