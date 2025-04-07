@@ -68,7 +68,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           </div>
           
           {isOpen.profession && (
-            <div className="absolute z-20 mt-1 w-full rounded-md bg-white shadow-lg max-h-60 overflow-auto">
+            <div className="absolute z-[50] mt-1 w-full rounded-md bg-white shadow-lg max-h-60 overflow-auto">
               <ul className="py-1">
                 {professions.map(item => (
                   <li key={item.id} className="cursor-pointer px-4 py-2 hover:bg-blue-50" onClick={() => handleProfessionSelect(item.id)}>
@@ -95,7 +95,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           </div>
           
           {isOpen.location && (
-            <div className="absolute z-20 mt-1 w-full rounded-md bg-white shadow-lg max-h-60 overflow-auto">
+            <div className="absolute z-[50] mt-1 w-full rounded-md bg-white shadow-lg max-h-60 overflow-auto">
               <ul className="py-1">
                 {locationOptions.map(item => (
                   <li key={item.id} className="cursor-pointer px-4 py-2 hover:bg-blue-50" onClick={() => handleLocationSelect(item.id)}>

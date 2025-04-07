@@ -91,7 +91,7 @@ const ProfessionalSearchByLocation = () => {
                   <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-full p-0 z-50" align="start">
+              <PopoverContent className="w-full p-0 z-[150]" align="start">
                 <Command dir="rtl">
                   <CommandInput 
                     placeholder="חפש קטגוריה..." 
@@ -137,7 +137,7 @@ const ProfessionalSearchByLocation = () => {
                   <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-full p-0 z-50" align="start">
+              <PopoverContent className="w-full p-0 z-[150]" align="start">
                 <Command dir="rtl">
                   <CommandInput 
                     placeholder="חפש עיר..." 
