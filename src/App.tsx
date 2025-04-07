@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
@@ -25,7 +26,6 @@ import Terms from '@/pages/Terms';
 import Privacy from '@/pages/Privacy';
 import Settings from '@/pages/Settings';
 import Contact from '@/pages/Contact';
-import Home from '@/pages/Home';
 import UserSettings from '@/pages/UserSettings';
 import Payment from '@/pages/Payment';
 
@@ -47,7 +47,7 @@ function App() {
               <ScrollToTop />
               <div className="App">
                 <Routes>
-                  <Route path="/" element={<Home />} />
+                  <Route path="/" element={<Index />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
@@ -65,6 +65,8 @@ function App() {
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="/contact" element={<Contact />} />
+                  <Route path="/user-settings" element={<UserSettings />} />
+                  <Route path="/payment" element={<Payment />} />
                   
                   {/* Admin routes */}
                   <Route path="/admin-login" element={<AdminLogin />} />
