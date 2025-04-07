@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -252,7 +251,7 @@ const Index = () => {
           {/* Visual element - professionals illustration */}
           <div className="flex justify-center mt-12">
             <img 
-              src="https://images.unsplash.com/photo-1556912172-45518114e8a5?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80" 
+              src="https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80" 
               alt="בעלי מקצוע מובילים" 
               className="rounded-lg shadow-lg max-w-full h-auto max-h-96 object-cover"
             />
@@ -430,4 +429,3 @@ const Index = () => {
     </div>;
 };
 export default Index;
-
