@@ -66,7 +66,7 @@ function App() {
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/user-settings" element={<UserSettings />} />
-                  <Route path="/payment" element={<Payment />} />
+                  <Route path="/payment/:quoteId" element={<Payment />} />
                   
                   {/* Admin routes */}
                   <Route path="/admin-login" element={<AdminLogin />} />
