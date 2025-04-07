@@ -1,6 +1,5 @@
-
 import React, { useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import RequestForm from '@/components/RequestForm';
@@ -45,14 +44,14 @@ const articles = [{
   category: 'שיפוצים'
 }];
 
-// Popular services for the new services section
+// Popular services for the new services section - added serviceId to match with search filtering
 const popularServices = [
-  { icon: <Wrench size={32} />, name: 'שיפוצים כלליים', color: 'bg-blue-500' },
-  { icon: <Plug size={32} />, name: 'חשמלאי', color: 'bg-amber-500' },
-  { icon: <PaintBucket size={32} />, name: 'צביעה וטיח', color: 'bg-green-500' },
-  { icon: <Hammer size={32} />, name: 'נגרות', color: 'bg-purple-500' },
-  { icon: <Lightbulb size={32} />, name: 'חשמל ותאורה', color: 'bg-red-500' },
-  { icon: <HomeIcon size={32} />, name: 'עיצוב פנים', color: 'bg-indigo-500' },
+  { icon: <Wrench size={32} />, name: 'שיפוצים כלליים', color: 'bg-blue-500', serviceId: 'renovations' },
+  { icon: <Plug size={32} />, name: 'חשמלאי', color: 'bg-amber-500', serviceId: 'electricity' },
+  { icon: <PaintBucket size={32} />, name: 'צביעה וטיח', color: 'bg-green-500', serviceId: 'renovations' },
+  { icon: <Hammer size={32} />, name: 'נגרות', color: 'bg-purple-500', serviceId: 'carpentry' },
+  { icon: <Lightbulb size={32} />, name: 'חשמל ותאורה', color: 'bg-red-500', serviceId: 'electricity' },
+  { icon: <HomeIcon size={32} />, name: 'עיצוב פנים', color: 'bg-indigo-500', serviceId: 'interior_design' },
 ];
 
 // Testimonials for the new testimonials section
@@ -74,16 +73,24 @@ const testimonials = [
 const Index = () => {
   const requestFormRef = useRef<HTMLDivElement>(null);
   const searchSectionRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  
   const scrollToRequestForm = () => {
     requestFormRef.current?.scrollIntoView({
       behavior: 'smooth'
     });
   };
+  
   const scrollToSearchSection = () => {
     searchSectionRef.current?.scrollIntoView({
       behavior: 'smooth'
     });
   };
+
+  const handleSearchSubmit = (profession: string, location: string) => {
+    navigate(`/search?profession=${profession}&location=${location}`);
+  };
+  
   return <div className="flex flex-col min-h-screen" dir="rtl">
       <Helmet>
         {/* Preload critical assets for performance */}
@@ -118,7 +125,7 @@ const Index = () => {
             {/* Left side - Text content */}
             <div className="w-full lg:w-1/2 animate-fade-in-up relative z-10">
               <div className="text-base font-semibold text-[#00D09E] mb-3 flex items-center">
-                <ThumbsUp className="w-5 h-5 inline-block mr-2" />
+                <ThumbsUp className="w-5 h-5 inline-block ml-2" />
                 oFair - הפתרון המושלם לבעלי בתים
               </div>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-blue-800 mb-4 leading-tight">
@@ -180,7 +187,7 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Popular Services Section - New */}
+      {/* Popular Services Section - Updated with links to search page */}
       <section className="py-14 bg-white">
         <div className="container mx-auto px-6">
           <div className="text-center mb-10">
@@ -190,7 +197,11 @@ const Index = () => {
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 stagger-animation">
             {popularServices.map((service, idx) => (
-              <Link key={idx} to="/search" className="group">
+              <Link 
+                key={idx} 
+                to={`/search?profession=${service.serviceId}&location=all`} 
+                className="group"
+              >
                 <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-white border border-gray-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                   <div className={`w-16 h-16 ${service.color} text-white rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
                     {service.icon}
@@ -203,7 +214,7 @@ const Index = () => {
         </div>
       </section>
       
-      {/* Search Section with Visual Enhancements */}
+      {/* Search Section with Visual Enhancements - Updated to use handleSearchSubmit */}
       <section id="professional-search-section" ref={searchSectionRef} className="py-16 bg-gradient-to-br from-gray-50 to-blue-50 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-white to-transparent"></div>
         <div className="absolute -bottom-16 -left-16 w-32 h-32 bg-blue-400 rounded-full opacity-10"></div>
@@ -215,7 +226,7 @@ const Index = () => {
             <p className="text-gray-600 max-w-2xl mx-auto">מצא בעלי מקצוע מובילים בתחומם באזור שלך בקלות ובמהירות</p>
           </div>
           <div className="animate-fade-in">
-            <DynamicProfessionalSearch />
+            <DynamicProfessionalSearch onSearch={handleSearchSubmit} />
           </div>
           {/* Visual element - professionals illustration */}
           <div className="flex justify-center mt-12">
