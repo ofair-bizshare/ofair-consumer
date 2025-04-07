@@ -2,6 +2,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Wrench, Plug, PaintBucket, Hammer, Lightbulb, Home } from 'lucide-react';
+import { professions } from '@/utils/professionData';
+
+// Filter out some professions for the popular services section
+const popularProfessions = professions.filter(p => 
+  ['renovations', 'electricity', 'plumbing', 'carpentry', 'interior_design', 'painting'].includes(p.id)
+);
 
 // Service interface
 interface ServiceItem {
@@ -9,13 +15,13 @@ interface ServiceItem {
   name: string;
   color: string;
   serviceId: string;
-  displayName: string; // Added displayName for showing in the search form
+  displayName: string;
 }
 
 const popularServices: ServiceItem[] = [
   { icon: <Wrench size={32} />, name: 'שיפוצים כלליים', color: 'bg-blue-500', serviceId: 'renovations', displayName: 'שיפוצים כלליים' },
   { icon: <Plug size={32} />, name: 'חשמלאי', color: 'bg-amber-500', serviceId: 'electricity', displayName: 'חשמלאי' },
-  { icon: <PaintBucket size={32} />, name: 'צביעה וטיח', color: 'bg-green-500', serviceId: 'renovations', displayName: 'צביעה וטיח' },
+  { icon: <PaintBucket size={32} />, name: 'צביעה וטיח', color: 'bg-green-500', serviceId: 'painting', displayName: 'צביעה וטיח' },
   { icon: <Hammer size={32} />, name: 'נגרות', color: 'bg-purple-500', serviceId: 'carpentry', displayName: 'נגרות' },
   { icon: <Lightbulb size={32} />, name: 'חשמל ותאורה', color: 'bg-red-500', serviceId: 'electricity', displayName: 'חשמל ותאורה' },
   { icon: <Home size={32} />, name: 'עיצוב פנים', color: 'bg-indigo-500', serviceId: 'interior_design', displayName: 'עיצוב פנים' },

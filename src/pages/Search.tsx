@@ -12,17 +12,7 @@ import { Filter, Check, Star, Award } from 'lucide-react';
 import { getProfessionals } from '@/services/professionals';
 import { ProfessionalInterface } from '@/types/dashboard';
 import { getProfessionalCategoryLabel } from '@/services/admin/utils/adminCache';
-
-// Dynamic specialties mapping by category - we'll later populate this from the database
-const specialtiesByCategory = {
-  'electricity': ['תיקוני חשמל', 'התקנות', 'תאורה', 'חשמל חכם', 'לוחות חשמל'],
-  'plumbing': ['אינסטלציה כללית', 'פתיחת סתימות', 'ברזים וברזיות', 'דודי שמש', 'ביוב'],
-  'renovations': ['שיפוצים כלליים', 'ריצוף', 'גבס', 'צביעה', 'עבודות בטון'],
-  'carpentry': ['ארונות', 'מטבחים', 'רהיטים', 'דלתות', 'פרקט'],
-  'architecture': ['תכנון אדריכלי', 'תכנון דירות', 'בנייה ירוקה', 'עיצוב פנים', 'הדמיות'],
-  'interior_design': ['עיצוב דירות', 'תכנון חללים', 'צביעה', 'עיצוב מטבחים', 'אבזור'],
-  'all': ['תיקוני חשמל', 'שיפוצים כלליים', 'אינסטלציה כללית', 'ארונות', 'צביעה', 'עיצוב פנים', 'תכנון אדריכלי', 'גבס']
-};
+import { specialtiesByCategory } from '@/utils/professionData';
 
 const Search = () => {
   const [allProfessionals, setAllProfessionals] = useState<ProfessionalInterface[]>([]);
@@ -258,7 +248,7 @@ const Search = () => {
             <SearchBar 
               onSearch={handleSearch} 
               useCities={true} 
-              initialProfession={displayProfessionName || selectedCategory === 'all' ? '' : selectedCategory}
+              initialProfession={selectedCategory === 'all' ? '' : selectedCategory}
               initialLocation={selectedLocation === 'all' ? '' : selectedLocation}
             />
           </div>

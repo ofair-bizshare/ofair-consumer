@@ -21,31 +21,8 @@ import {
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
 import { useDebounce } from '@/hooks/useDebounce';
-
-const categories = [
-  { label: 'שיפוצים', value: 'renovations' },
-  { label: 'חשמל', value: 'electricity' },
-  { label: 'אינסטלציה', value: 'plumbing' },
-  { label: 'נגרות', value: 'carpentry' },
-  { label: 'מיזוג אוויר', value: 'air_conditioning' },
-  { label: 'גינון', value: 'gardening' },
-  { label: 'ניקיון', value: 'cleaning' },
-  { label: 'צביעה', value: 'painting' },
-  { label: 'הובלות', value: 'moving' },
-];
-
-const cities = [
-  { label: 'תל אביב', value: 'tel_aviv' },
-  { label: 'ירושלים', value: 'jerusalem' },
-  { label: 'חיפה', value: 'haifa' },
-  { label: 'באר שבע', value: 'beer_sheva' },
-  { label: 'נתניה', value: 'netanya' },
-  { label: 'חולון', value: 'holon' },
-  { label: 'רמת גן', value: 'ramat_gan' },
-  { label: 'ראשון לציון', value: 'rishon' },
-  { label: 'פתח תקווה', value: 'petah_tikva' },
-  { label: 'אשדוד', value: 'ashdod' },
-];
+import { professions } from '@/utils/professionData';
+import { israelLocations } from '@/utils/locationData';
 
 const ProfessionalSearchByLocation = () => {
   const [category, setCategory] = useState('');
@@ -54,8 +31,8 @@ const ProfessionalSearchByLocation = () => {
   const [openCity, setOpenCity] = useState(false);
   const [categorySearchTerm, setCategorySearchTerm] = useState('');
   const [citySearchTerm, setCitySearchTerm] = useState('');
-  const [filteredCategories, setFilteredCategories] = useState(categories);
-  const [filteredCities, setFilteredCities] = useState(cities);
+  const [filteredCategories, setFilteredCategories] = useState(professions);
+  const [filteredCities, setFilteredCities] = useState(israelLocations);
   
   const debouncedCategorySearch = useDebounce(categorySearchTerm, 300);
   const debouncedCitySearch = useDebounce(citySearchTerm, 300);
@@ -65,30 +42,30 @@ const ProfessionalSearchByLocation = () => {
   // Filter categories based on search term
   useEffect(() => {
     if (debouncedCategorySearch) {
-      const filtered = categories.filter(cat => 
+      const filtered = professions.filter(cat => 
         cat.label.toLowerCase().includes(debouncedCategorySearch.toLowerCase())
       );
       setFilteredCategories(filtered);
     } else {
-      setFilteredCategories(categories);
+      setFilteredCategories(professions);
     }
   }, [debouncedCategorySearch]);
 
   // Filter cities based on search term
   useEffect(() => {
     if (debouncedCitySearch) {
-      const filtered = cities.filter(c => 
+      const filtered = israelLocations.filter(c => 
         c.label.toLowerCase().includes(debouncedCitySearch.toLowerCase())
       );
       setFilteredCities(filtered);
     } else {
-      setFilteredCities(cities);
+      setFilteredCities(israelLocations);
     }
   }, [debouncedCitySearch]);
 
   const handleSearch = () => {
     if (category && city) {
-      navigate(`/search?category=${category}&city=${city}`);
+      navigate(`/search?profession=${category}&location=${city}`);
     }
   };
 
@@ -110,7 +87,7 @@ const ProfessionalSearchByLocation = () => {
                   aria-expanded={openCategory}
                   className="w-full justify-between text-right pl-10 relative"
                 >
-                  {category ? categories.find(cat => cat.value === category)?.label : "בחר קטגוריה"}
+                  {category ? professions.find(cat => cat.value === category)?.label || "בחר קטגוריה" : "בחר קטגוריה"}
                   <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 </Button>
               </PopoverTrigger>
@@ -126,17 +103,17 @@ const ProfessionalSearchByLocation = () => {
                     <CommandGroup>
                       {filteredCategories.map(cat => (
                         <CommandItem
-                          key={cat.value}
+                          key={cat.id}
                           value={cat.label}
                           onSelect={() => {
-                            setCategory(cat.value);
+                            setCategory(cat.id);
                             setCategorySearchTerm('');
                             setOpenCategory(false);
                           }}
                           className="flex items-center justify-between"
                         >
                           {cat.label}
-                          {cat.value === category && <Check className="ml-2 h-4 w-4" />}
+                          {cat.id === category && <Check className="ml-2 h-4 w-4" />}
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -156,7 +133,7 @@ const ProfessionalSearchByLocation = () => {
                   aria-expanded={openCity}
                   className="w-full justify-between text-right pl-10 relative"
                 >
-                  {city ? cities.find(c => c.value === city)?.label : "בחר עיר"}
+                  {city ? israelLocations.find(c => c.id === city)?.label || "בחר עיר" : "בחר עיר"}
                   <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 </Button>
               </PopoverTrigger>
@@ -172,17 +149,17 @@ const ProfessionalSearchByLocation = () => {
                     <CommandGroup>
                       {filteredCities.map(c => (
                         <CommandItem
-                          key={c.value}
+                          key={c.id}
                           value={c.label}
                           onSelect={() => {
-                            setCity(c.value);
+                            setCity(c.id);
                             setCitySearchTerm('');
                             setOpenCity(false);
                           }}
                           className="flex items-center justify-between"
                         >
                           {c.label}
-                          {c.value === city && <Check className="ml-2 h-4 w-4" />}
+                          {c.id === city && <Check className="ml-2 h-4 w-4" />}
                         </CommandItem>
                       ))}
                     </CommandGroup>

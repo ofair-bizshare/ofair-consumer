@@ -1,0 +1,56 @@
+
+// Comprehensive list of professions in Hebrew
+export const professions = [
+  { id: 'all', label: 'כל המקצועות' },
+  { id: 'plumbing', label: 'אינסטלציה' },
+  { id: 'electricity', label: 'חשמל' },
+  { id: 'renovations', label: 'שיפוצים' },
+  { id: 'carpentry', label: 'נגרות' },
+  { id: 'architecture', label: 'אדריכלות' },
+  { id: 'interior_design', label: 'עיצוב פנים' },
+  { id: 'air_conditioning', label: 'מיזוג אוויר' },
+  { id: 'gardening', label: 'גינון' },
+  { id: 'cleaning', label: 'ניקיון' },
+  { id: 'painting', label: 'צביעה' },
+  { id: 'locksmith', label: 'מנעולן' },
+  { id: 'moving', label: 'הובלות' },
+  { id: 'pest_control', label: 'הדברה' },
+  { id: 'furniture_assembly', label: 'הרכבת רהיטים' },
+  { id: 'roofing', label: 'איטום וגגות' },
+  { id: 'tiling', label: 'ריצוף וקרמיקה' },
+  { id: 'plastering', label: 'טיח וגבס' },
+  { id: 'security_systems', label: 'מערכות אבטחה' },
+  { id: 'solar_systems', label: 'מערכות סולאריות' },
+  { id: 'insulation', label: 'בידוד' },
+  { id: 'kitchen_design', label: 'עיצוב מטבחים' },
+  { id: 'bathroom_renovation', label: 'שיפוץ חדרי אמבטיה' },
+  { id: 'concrete_work', label: 'עבודות בטון' },
+  { id: 'metal_work', label: 'עבודות מתכת' },
+  { id: 'smart_home', label: 'בית חכם' },
+  { id: 'handyman', label: 'איש תחזוקה' },
+  { id: 'window_installation', label: 'התקנת חלונות' },
+  { id: 'door_installation', label: 'התקנת דלתות' },
+  { id: 'pool_maintenance', label: 'תחזוקת בריכות' },
+  { id: 'sauna_installation', label: 'התקנת סאונות' },
+  { id: 'home_theater', label: 'קולנוע ביתי' },
+  { id: 'landscape_design', label: 'עיצוב נוף' },
+  { id: 'irrigation', label: 'השקיה' },
+  { id: 'demolition', label: 'הריסה' },
+  { id: 'flooring', label: 'רצפות וחיפויים' },
+  { id: 'stonework', label: 'עבודות אבן' }
+];
+
+// Various specialties by profession category
+export const specialtiesByCategory = {
+  'electricity': ['תיקוני חשמל', 'התקנות', 'תאורה', 'חשמל חכם', 'לוחות חשמל', 'קצרים חשמליים', 'תקלות חשמל', 'חיווט'],
+  'plumbing': ['אינסטלציה כללית', 'פתיחת סתימות', 'ברזים וברזיות', 'דודי שמש', 'ביוב', 'צנרת', 'התקנת כיורים', 'התקנת אסלות'],
+  'renovations': ['שיפוצים כלליים', 'ריצוף', 'גבס', 'צביעה', 'עבודות בטון', 'איטום', 'הריסה ובנייה', 'שיפוץ חדרי אמבטיה', 'שיפוץ מטבחים'],
+  'carpentry': ['ארונות', 'מטבחים', 'רהיטים', 'דלתות', 'פרקט', 'ריהוט מותאם אישית', 'עבודות עץ כלליות', 'תיקוני נגרות'],
+  'architecture': ['תכנון אדריכלי', 'תכנון דירות', 'בנייה ירוקה', 'עיצוב פנים', 'הדמיות', 'תכנון מבנים', 'תכנון מרחבים ציבוריים'],
+  'interior_design': ['עיצוב דירות', 'תכנון חללים', 'צביעה', 'עיצוב מטבחים', 'אבזור', 'עיצוב חללי מגורים', 'עיצוב משרדים', 'בחירת חומרים וצבעים'],
+  'air_conditioning': ['התקנת מזגנים', 'תיקון מזגנים', 'ניקוי מזגנים', 'מערכות מיזוג מרכזיות', 'תחזוקת מזגנים'],
+  'gardening': ['גינון שוטף', 'תכנון גינות', 'דשא סינטטי', 'השקיה אוטומטית', 'גיזום עצים', 'שתילת צמחים'],
+  'cleaning': ['ניקיון בתים', 'ניקיון משרדים', 'ניקיון לאחר שיפוץ', 'ניקיון חלונות', 'ניקיון שטיחים וספות'],
+  'painting': ['צביעת קירות', 'צביעת תקרות', 'צביעת עץ', 'צבעי דקורציה', 'סיוד', 'ציורי קיר'],
+  'all': ['תיקוני חשמל', 'שיפוצים כלליים', 'אינסטלציה כללית', 'ארונות', 'צביעה', 'עיצוב פנים', 'תכנון אדריכלי', 'גבס', 'התקנת מזגנים', 'גינון']
+};
