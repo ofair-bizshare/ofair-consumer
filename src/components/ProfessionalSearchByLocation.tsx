@@ -87,7 +87,7 @@ const ProfessionalSearchByLocation = () => {
                   aria-expanded={openCategory}
                   className="w-full justify-between text-right pl-10 relative"
                 >
-                  {category ? professions.find(cat => cat.value === category)?.label || "בחר קטגוריה" : "בחר קטגוריה"}
+                  {category ? professions.find(cat => cat.id === category)?.label || "בחר קטגוריה" : "בחר קטגוריה"}
                   <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 </Button>
               </PopoverTrigger>
