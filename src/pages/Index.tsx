@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -25,7 +24,7 @@ import {
   Home as HomeIcon,
   ThumbsUp,
   Users,
-  Tool,
+  Wrench as ToolIcon,
   Badge,
   Rocket
 } from 'lucide-react';
@@ -141,7 +140,7 @@ const Index = () => {
                   <span className="text-sm">אלפי בעלי מקצוע זמינים</span>
                 </div>
                 <div className="bg-white/80 p-3 rounded-lg shadow-sm border border-gray-100 flex items-center">
-                  <Tool className="h-5 w-5 text-[#00D09E] mr-2 flex-shrink-0" />
+                  <ToolIcon className="h-5 w-5 text-[#00D09E] mr-2 flex-shrink-0" />
                   <span className="text-sm">מגוון תחומי מומחיות</span>
                 </div>
                 <div className="bg-white/80 p-3 rounded-lg shadow-sm border border-gray-100 flex items-center">
@@ -430,4 +429,3 @@ const Index = () => {
     </div>;
 };
 export default Index;
-
