@@ -19,7 +19,7 @@ const SearchSection: React.FC<SearchSectionProps> = ({ onSearchSubmit }) => {
           <p className="text-gray-600 max-w-2xl mx-auto">מצא בעלי מקצוע מובילים בתחומם באזור שלך בקלות ובמהירות</p>
         </div>
         <div className="animate-fade-in">
-          <DynamicProfessionalSearch onSearch={onSearchSubmit} />
+          <DynamicProfessionalSearch onSearch={onSearchSubmit} initialProfession="" initialLocation="" />
         </div>
         {/* Visual element - professionals illustration */}
         <div className="flex justify-center mt-12">

@@ -32,6 +32,7 @@ const Search = () => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLocation, setSelectedLocation] = useState('all');
+  const [displayProfessionName, setDisplayProfessionName] = useState('');
   const [availableSpecialties, setAvailableSpecialties] = useState(specialtiesByCategory.all);
   const [sortOption, setSortOption] = useState('rating');
   const [filters, setFilters] = useState({
@@ -44,6 +45,7 @@ const Search = () => {
   const queryParams = new URLSearchParams(location.search);
   const professionParam = queryParams.get('profession');
   const locationParam = queryParams.get('location');
+  const displayNameParam = queryParams.get('displayName');
 
   useEffect(() => {
     const fetchProfessionalsData = async () => {
@@ -72,10 +74,14 @@ const Search = () => {
         setSelectedCategory(profession);
         setSelectedLocation(location);
         
+        if (displayNameParam) {
+          setDisplayProfessionName(decodeURIComponent(displayNameParam));
+        }
+        
         handleSearch(profession, location);
       }
     }
-  }, [loading, allProfessionals, professionParam, locationParam]);
+  }, [loading, allProfessionals, professionParam, locationParam, displayNameParam]);
 
   useEffect(() => {
     if (selectedCategory in specialtiesByCategory) {
@@ -249,7 +255,12 @@ const Search = () => {
           </div>
           
           <div className="mb-8 animate-fade-in-up">
-            <SearchBar onSearch={handleSearch} useCities={true} />
+            <SearchBar 
+              onSearch={handleSearch} 
+              useCities={true} 
+              initialProfession={displayProfessionName || selectedCategory === 'all' ? '' : selectedCategory}
+              initialLocation={selectedLocation === 'all' ? '' : selectedLocation}
+            />
           </div>
           
           <div className="flex flex-col md:flex-row gap-8">

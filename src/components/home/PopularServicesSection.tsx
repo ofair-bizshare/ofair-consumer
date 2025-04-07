@@ -9,15 +9,16 @@ interface ServiceItem {
   name: string;
   color: string;
   serviceId: string;
+  displayName: string; // Added displayName for showing in the search form
 }
 
 const popularServices: ServiceItem[] = [
-  { icon: <Wrench size={32} />, name: 'שיפוצים כלליים', color: 'bg-blue-500', serviceId: 'renovations' },
-  { icon: <Plug size={32} />, name: 'חשמלאי', color: 'bg-amber-500', serviceId: 'electricity' },
-  { icon: <PaintBucket size={32} />, name: 'צביעה וטיח', color: 'bg-green-500', serviceId: 'renovations' },
-  { icon: <Hammer size={32} />, name: 'נגרות', color: 'bg-purple-500', serviceId: 'carpentry' },
-  { icon: <Lightbulb size={32} />, name: 'חשמל ותאורה', color: 'bg-red-500', serviceId: 'electricity' },
-  { icon: <Home size={32} />, name: 'עיצוב פנים', color: 'bg-indigo-500', serviceId: 'interior_design' },
+  { icon: <Wrench size={32} />, name: 'שיפוצים כלליים', color: 'bg-blue-500', serviceId: 'renovations', displayName: 'שיפוצים כלליים' },
+  { icon: <Plug size={32} />, name: 'חשמלאי', color: 'bg-amber-500', serviceId: 'electricity', displayName: 'חשמלאי' },
+  { icon: <PaintBucket size={32} />, name: 'צביעה וטיח', color: 'bg-green-500', serviceId: 'renovations', displayName: 'צביעה וטיח' },
+  { icon: <Hammer size={32} />, name: 'נגרות', color: 'bg-purple-500', serviceId: 'carpentry', displayName: 'נגרות' },
+  { icon: <Lightbulb size={32} />, name: 'חשמל ותאורה', color: 'bg-red-500', serviceId: 'electricity', displayName: 'חשמל ותאורה' },
+  { icon: <Home size={32} />, name: 'עיצוב פנים', color: 'bg-indigo-500', serviceId: 'interior_design', displayName: 'עיצוב פנים' },
 ];
 
 const PopularServicesSection: React.FC = () => {
@@ -33,7 +34,7 @@ const PopularServicesSection: React.FC = () => {
           {popularServices.map((service, idx) => (
             <Link 
               key={idx} 
-              to={`/search?profession=${service.serviceId}&location=all`} 
+              to={`/search?profession=${service.serviceId}&location=all&displayName=${encodeURIComponent(service.displayName)}`}
               className="group"
             >
               <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-white border border-gray-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
