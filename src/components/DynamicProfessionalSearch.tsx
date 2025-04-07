@@ -1,6 +1,6 @@
 
 import React from 'react';
-import SearchBar from '@/components/SearchBar';
+import DynamicSearchComponent from '@/components/DynamicSearchComponent';
 
 interface DynamicProfessionalSearchProps {
   onSearch?: (profession: string, location: string) => void;
@@ -21,9 +21,8 @@ const DynamicProfessionalSearch: React.FC<DynamicProfessionalSearchProps> = ({
 
   return (
     <div>
-      <SearchBar 
+      <DynamicSearchComponent 
         onSearch={handleSearch} 
-        useCities={true} 
         initialProfession={initialProfession}
         initialLocation={initialLocation}
       />

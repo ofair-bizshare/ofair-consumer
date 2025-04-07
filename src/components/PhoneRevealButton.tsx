@@ -70,19 +70,30 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
   
   const saveReferral = async () => {
     try {
-      const { error } = await supabase
+      // Check if referral already exists for this professional and user
+      const { data: existingReferrals } = await supabase
         .from('referrals')
-        .insert({
-          user_id: user?.id,
-          professional_id: professionalId,
-          professional_name: professionalName,
-          phone_number: phoneNumber,
-          profession: profession,
-          status: 'new'
-        });
-      
-      if (error) {
-        console.error("Error saving referral:", error);
+        .select('id')
+        .eq('user_id', user?.id)
+        .eq('professional_id', professionalId)
+        .limit(1);
+        
+      // Only insert if no existing referral found
+      if (!existingReferrals || existingReferrals.length === 0) {
+        const { error } = await supabase
+          .from('referrals')
+          .insert({
+            user_id: user?.id,
+            professional_id: professionalId,
+            professional_name: professionalName,
+            phone_number: phoneNumber,
+            profession: profession,
+            status: 'new'
+          });
+        
+        if (error) {
+          console.error("Error saving referral:", error);
+        }
       }
     } catch (error) {
       console.error("Error saving referral:", error);
@@ -109,16 +120,27 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
     
     return phone;
   };
+
+  // Display formatted phone number or reveal button
+  const buttonText = isRevealed ? formatPhoneNumber(phoneNumber) : "צפה במספר טלפון";
+  const displayedPhone = formatPhoneNumber(phoneNumber);
   
   return (
     <>
-      <Button 
-        onClick={handleReveal}
-        className="w-full bg-[#00D09E] hover:bg-[#00C090] text-white"
-      >
-        <Phone className="ml-2 h-4 w-4" />
-        {isRevealed ? formatPhoneNumber(phoneNumber) : "צפה במספר טלפון"}
-      </Button>
+      {autoReveal && user ? (
+        <div className="flex items-center gap-2 text-green-600 font-medium">
+          <Phone className="h-4 w-4" />
+          {displayedPhone}
+        </div>
+      ) : (
+        <Button 
+          onClick={handleReveal}
+          className="w-full bg-[#00D09E] hover:bg-[#00C090] text-white"
+        >
+          <Phone className="ml-2 h-4 w-4" />
+          {buttonText}
+        </Button>
+      )}
       
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md" dir="rtl">

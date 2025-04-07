@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ProfessionalInterface as DashboardProfessionalInterface } from '@/types/dashboard';
 
@@ -88,6 +87,23 @@ export const getProfessional = async (id: string): Promise<DashboardProfessional
 export const getProfessionalById = getProfessional;
 
 /**
+ * Format a phone number for display
+ * @param phone The phone number to format
+ */
+const formatPhoneNumber = (phone?: string): string => {
+  if (!phone) return '';
+  
+  // If it's just digits, format as XXX-XXXXXXX
+  if (/^\d+$/.test(phone) && phone.length >= 9) {
+    const prefix = phone.slice(0, 3);
+    const number = phone.slice(3);
+    return `${prefix}-${number}`;
+  }
+  
+  return phone;
+};
+
+/**
  * Gets a professional from data
  * @param data Professional data
  */
@@ -98,6 +114,9 @@ export const getProfessionalFromData = (data: any): DashboardProfessionalInterfa
   const experienceYears = data.experience_years || 
     (data.year_established ? new Date().getFullYear() - data.year_established : 
     Math.floor(Math.random() * 10) + 5); // Fallback to random value between 5-15 years
+
+  // Ensure the phone number is properly formatted  
+  const phoneNumber = formatPhoneNumber(data.phone_number || data.phone || '');
   
   return {
     id: data.id,
@@ -108,10 +127,10 @@ export const getProfessionalFromData = (data: any): DashboardProfessionalInterfa
     location: data.city || data.location || 'לא צוין',
     image: data.image_url || data.image || 'https://via.placeholder.com/150',
     verified: data.verified || false,
-    specialties: data.specialties || [data.specialty] || [],
+    specialties: data.specialties || [data.specialty].filter(Boolean) || [],
     // Add all compatibility fields
-    phone: data.phone || data.phoneNumber || data.phone_number,
-    phoneNumber: data.phone || data.phone_number,
+    phone: phoneNumber,
+    phoneNumber: phoneNumber,
     email: data.email,
     bio: data.bio,
     about: data.bio || data.about,

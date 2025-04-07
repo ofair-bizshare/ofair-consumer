@@ -97,7 +97,13 @@ const ProfessionalCard: React.FC<ProfessionalCardProps> = ({
           </div>
           
           <div className="mt-4 space-y-2">
-            <PhoneRevealButton phoneNumber={phoneNumber} professionalName={name} professionalId={id} profession={profession} onBeforeReveal={handlePhoneClick} />
+            <PhoneRevealButton 
+              phoneNumber={phoneNumber} 
+              professionalName={name} 
+              professionalId={id} 
+              profession={profession} 
+              onBeforeReveal={handlePhoneClick} 
+            />
             
             <Button asChild variant="outline" className="w-full border-teal-500 text-teal-600 hover:bg-teal-50">
               <Link to={`/professional/${id}`}>צפה בפרופיל</Link>

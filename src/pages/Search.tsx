@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import SearchBar from '@/components/SearchBar';
+import DynamicSearchComponent from '@/components/DynamicSearchComponent';
 import ProfessionalCard from '@/components/ProfessionalCard';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -245,9 +246,8 @@ const Search = () => {
           </div>
           
           <div className="mb-8 animate-fade-in-up">
-            <SearchBar 
+            <DynamicSearchComponent 
               onSearch={handleSearch} 
-              useCities={true} 
               initialProfession={selectedCategory === 'all' ? '' : selectedCategory}
               initialLocation={selectedLocation === 'all' ? '' : selectedLocation}
             />
@@ -472,6 +472,7 @@ const Search = () => {
                       location={professional.location}
                       image={professional.image || 'https://via.placeholder.com/200?text=No+Image'}
                       specialties={professional.specialties || []}
+                      phoneNumber={professional.phone || professional.phoneNumber}
                       verified={professional.verified}
                       onPhoneReveal={() => handlePhoneReveal(professional.name)}
                     />
