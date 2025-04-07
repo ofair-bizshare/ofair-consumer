@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -123,7 +124,7 @@ const Index = () => {
             {/* Left side - Text content */}
             <div className="w-full lg:w-1/2 animate-fade-in-up relative z-10">
               <div className="text-base font-semibold text-[#00D09E] mb-3 flex items-center">
-                <Badge className="w-5 h-5 inline-block mr-2" />
+                <Badge className="w-5 h-5 inline-block ml-3" />
                 oFair - הפלטפורמה המובילה בישראל
               </div>
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-blue-800 mb-4 leading-tight">
@@ -136,26 +137,26 @@ const Index = () => {
               {/* Feature boxes with icons */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
                 <div className="bg-white/80 p-3 rounded-lg shadow-sm border border-gray-100 flex items-center">
-                  <Users className="h-5 w-5 text-[#00D09E] mr-2 flex-shrink-0" />
+                  <Users className="h-5 w-5 text-[#00D09E] ml-3 flex-shrink-0" />
                   <span className="text-sm">אלפי בעלי מקצוע זמינים</span>
                 </div>
                 <div className="bg-white/80 p-3 rounded-lg shadow-sm border border-gray-100 flex items-center">
-                  <ToolIcon className="h-5 w-5 text-[#00D09E] mr-2 flex-shrink-0" />
+                  <ToolIcon className="h-5 w-5 text-[#00D09E] ml-3 flex-shrink-0" />
                   <span className="text-sm">מגוון תחומי מומחיות</span>
                 </div>
                 <div className="bg-white/80 p-3 rounded-lg shadow-sm border border-gray-100 flex items-center">
-                  <Rocket className="h-5 w-5 text-[#00D09E] mr-2 flex-shrink-0" />
+                  <Rocket className="h-5 w-5 text-[#00D09E] ml-3 flex-shrink-0" />
                   <span className="text-sm">שירות זריז ואיכותי</span>
                 </div>
               </div>
               
               <div className="flex flex-wrap gap-4 mb-8 lg:mb-0">
-                <Button size="lg" className="bg-[#00D09E] hover:bg-[#00C090] text-white button-transition flex items-center gap-2 shadow-md" onClick={scrollToRequestForm}>
+                <Button size="lg" className="bg-[#00D09E] hover:bg-[#00C090] text-white button-transition flex items-center gap-3" onClick={scrollToRequestForm}>
                   <FileText size={20} />
                   שליחת פנייה לבעלי מקצוע
                 </Button>
                 <Link to="/search">
-                  <Button size="lg" variant="outline" className="border-blue-500 text-blue-700 hover:bg-blue-50 button-transition flex items-center gap-2">
+                  <Button size="lg" variant="outline" className="border-blue-500 text-blue-700 hover:bg-blue-50 button-transition flex items-center gap-3">
                     <Search size={20} />
                     חיפוש בעלי מקצוע
                   </Button>
@@ -164,7 +165,7 @@ const Index = () => {
               {/* Add new cashback benefit info */}
               <div className="mt-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg shadow-sm">
                 <div className="flex items-start">
-                  <Gift className="h-6 w-6 text-[#00D09E] mt-1 ml-2 flex-shrink-0" />
+                  <Gift className="h-6 w-6 text-[#00D09E] mt-1 ml-3 flex-shrink-0" />
                   <div>
                     <h3 className="font-bold text-blue-800 text-lg">5% חזרה לעבודה הבאה!</h3>
                     <p className="text-gray-700">קבלו 5% חזרה על העבודה הראשונה דרך oFair, לשימוש בעבודה הבאה שלכם.</p>
@@ -429,3 +430,4 @@ const Index = () => {
     </div>;
 };
 export default Index;
+
