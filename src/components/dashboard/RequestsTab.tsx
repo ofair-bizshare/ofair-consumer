@@ -8,6 +8,7 @@ import RequestDialog from './RequestDialog';
 import EmptyRequestState from './EmptyRequestState';
 import { useRequests } from '@/hooks/useRequests';
 import { useQuotes } from '@/hooks/useQuotes';
+import PaymentMethodDialog from './quotes/PaymentMethodDialog';
 
 const RequestsTab: React.FC = () => {
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
@@ -17,9 +18,18 @@ const RequestsTab: React.FC = () => {
   const navigate = useNavigate();
   
   const { requests, isLoading } = useRequests();
-  const { quotes, handleAcceptQuote, handleRejectQuote } = useQuotes(selectedRequestId);
+  const { 
+    quotes, 
+    handleAcceptQuote, 
+    handleRejectQuote, 
+    showPaymentDialog,
+    selectedQuoteId,
+    processQuoteAcceptance,
+    closePaymentDialog
+  } = useQuotes(selectedRequestId);
   
   const selectedRequest = requests.find(r => r.id === selectedRequestId);
+  const selectedQuote = selectedQuoteId ? quotes.find(q => q.id === selectedQuoteId) : null;
 
   // Scroll to selected request when it changes
   useEffect(() => {
@@ -33,6 +43,13 @@ const RequestsTab: React.FC = () => {
   const handleViewProfile = (professionalId: string) => {
     // Consistently use window.open to open in a new tab
     window.open(`/professional/${professionalId}`, '_blank');
+  };
+  
+  const handleSelectPaymentMethod = (method: 'cash' | 'credit') => {
+    if (selectedQuoteId) {
+      processQuoteAcceptance(selectedQuoteId, method);
+      closePaymentDialog();
+    }
   };
 
   return (
@@ -77,6 +94,16 @@ const RequestsTab: React.FC = () => {
           />
         )}
       </div>
+      
+      {/* Payment Method Dialog */}
+      {selectedQuote && (
+        <PaymentMethodDialog
+          open={showPaymentDialog}
+          onOpenChange={closePaymentDialog}
+          onSelectPaymentMethod={handleSelectPaymentMethod}
+          quotePrice={selectedQuote.price}
+        />
+      )}
     </div>
   );
 };

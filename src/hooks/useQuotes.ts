@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { fetchQuotesForRequest, updateQuoteStatus } from '@/services/quotes';
@@ -7,6 +8,8 @@ import { useAuth } from '@/providers/AuthProvider';
 
 export const useQuotes = (selectedRequestId: string | null) => {
   const [quotes, setQuotes] = useState<QuoteInterface[]>([]);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -30,6 +33,12 @@ export const useQuotes = (selectedRequestId: string | null) => {
   }, [selectedRequestId]);
 
   const handleAcceptQuote = async (quoteId: string) => {
+    // Store the quote ID and show payment preference dialog
+    setSelectedQuoteId(quoteId);
+    setShowPaymentDialog(true);
+  };
+  
+  const processQuoteAcceptance = async (quoteId: string, paymentMethod: 'cash' | 'credit') => {
     // Find the quote that's being accepted
     const acceptedQuote = quotes.find(q => q.id === quoteId);
     if (!acceptedQuote || !user) return;
@@ -77,7 +86,8 @@ export const useQuotes = (selectedRequestId: string | null) => {
         price: acceptedQuote.price,
         date: new Date().toISOString(),
         status: 'accepted',
-        description: acceptedQuote.description
+        description: acceptedQuote.description,
+        payment_method: paymentMethod
       };
       
       const { error } = await supabase
@@ -107,6 +117,21 @@ export const useQuotes = (selectedRequestId: string | null) => {
         .insert(referral);
       
       if (referralError) console.error("Error saving referral:", referralError);
+      
+      // If payment method is credit card, redirect to payment page
+      if (paymentMethod === 'credit') {
+        // Here you would normally redirect to a payment page
+        // For now we'll just show a toast
+        toast({
+          title: "הועברת לעמוד תשלום",
+          description: "עמוד התשלום ייפתח בקרוב...",
+          variant: "default",
+        });
+        
+        // Navigate to payment page (placeholder)
+        window.location.href = `/payment/${quoteId}`;
+        return;
+      }
       
     } catch (error) {
       console.error("Error saving accepted quote:", error);
@@ -182,9 +207,18 @@ export const useQuotes = (selectedRequestId: string | null) => {
     }
   };
 
+  const closePaymentDialog = () => {
+    setShowPaymentDialog(false);
+    setSelectedQuoteId(null);
+  };
+
   return { 
     quotes: quotes.filter(q => q.requestId === selectedRequestId), 
     handleAcceptQuote, 
-    handleRejectQuote 
+    handleRejectQuote,
+    showPaymentDialog,
+    selectedQuoteId,
+    processQuoteAcceptance,
+    closePaymentDialog
   };
 };
