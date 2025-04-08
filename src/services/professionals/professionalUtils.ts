@@ -33,12 +33,15 @@ export const getProfessionalFromData = (data: any): ProfessionalInterface => {
   // Ensure the phone number is properly formatted  
   const phoneNumber = formatPhoneNumber(data.phone_number || data.phone || '');
   
+  // Ensure review count is always populated
+  const reviewCount = data.reviews_count || data.review_count || 0;
+  
   return {
     id: data.id,
     name: data.name,
     profession: data.specialty || data.profession || 'לא צוין', // Ensure profession is always populated
     rating: data.rating || 0,
-    reviewCount: data.reviews_count || data.review_count || 0,
+    reviewCount: reviewCount, // Ensure reviewCount is always populated
     location: data.city || data.location || 'לא צוין',
     image: data.image_url || data.image || 'https://via.placeholder.com/150',
     verified: data.verified || false,
@@ -49,7 +52,7 @@ export const getProfessionalFromData = (data: any): ProfessionalInterface => {
     email: data.email,
     bio: data.bio,
     about: data.bio || data.about,
-    reviews_count: data.reviews_count || data.reviewCount || 0,
+    reviews_count: reviewCount, // Use the same value as reviewCount for consistency
     image_url: data.image_url || data.image || 'https://via.placeholder.com/150',
     created_at: data.created_at,
     city: data.city || data.location || 'לא צוין',

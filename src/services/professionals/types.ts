@@ -21,7 +21,7 @@ export interface ProfessionalInterface {
   specialties?: string[];
   phoneNumber?: string;
   about?: string;
-  reviewCount?: number;
+  reviewCount: number; // Changed from optional to required to match dashboard.ts
   // Additional fields from the professional creation form
   company_name?: string;
   work_hours?: string;
