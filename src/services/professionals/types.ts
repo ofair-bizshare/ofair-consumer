@@ -15,7 +15,7 @@ export interface ProfessionalInterface {
   area?: string;
   category?: string;
   // Adding compatibility with Search and Components
-  profession?: string;
+  profession: string; // Changed from optional to required to match dashboard.ts
   location?: string;
   image?: string;
   specialties?: string[];

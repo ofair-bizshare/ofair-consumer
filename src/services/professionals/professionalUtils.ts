@@ -36,7 +36,7 @@ export const getProfessionalFromData = (data: any): ProfessionalInterface => {
   return {
     id: data.id,
     name: data.name,
-    profession: data.specialty || data.profession || 'לא צוין',
+    profession: data.specialty || data.profession || 'לא צוין', // Ensure profession is always populated
     rating: data.rating || 0,
     reviewCount: data.reviews_count || data.review_count || 0,
     location: data.city || data.location || 'לא צוין',
