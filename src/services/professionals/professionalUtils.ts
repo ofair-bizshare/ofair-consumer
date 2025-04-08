@@ -36,13 +36,16 @@ export const getProfessionalFromData = (data: any): ProfessionalInterface => {
   // Ensure review count is always populated
   const reviewCount = data.reviews_count || data.review_count || 0;
   
+  // Ensure location is always populated with a fallback value
+  const location = data.city || data.location || 'לא צוין';
+  
   return {
     id: data.id,
     name: data.name,
     profession: data.specialty || data.profession || 'לא צוין', // Ensure profession is always populated
     rating: data.rating || 0,
     reviewCount: reviewCount, // Ensure reviewCount is always populated
-    location: data.city || data.location || 'לא צוין',
+    location: location, // Ensure location is always populated
     image: data.image_url || data.image || 'https://via.placeholder.com/150',
     verified: data.verified || false,
     specialties: data.specialties || [data.specialty].filter(Boolean) || [],
