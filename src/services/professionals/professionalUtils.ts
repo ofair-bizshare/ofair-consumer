@@ -39,6 +39,9 @@ export const getProfessionalFromData = (data: any): ProfessionalInterface => {
   // Ensure location is always populated with a fallback value
   const location = data.city || data.location || 'לא צוין';
   
+  // Ensure image is always populated with a fallback value
+  const image = data.image_url || data.image || 'https://via.placeholder.com/150';
+  
   return {
     id: data.id,
     name: data.name,
@@ -46,7 +49,7 @@ export const getProfessionalFromData = (data: any): ProfessionalInterface => {
     rating: data.rating || 0,
     reviewCount: reviewCount, // Ensure reviewCount is always populated
     location: location, // Ensure location is always populated
-    image: data.image_url || data.image || 'https://via.placeholder.com/150',
+    image: image, // Ensure image is always populated
     verified: data.verified || false,
     specialties: data.specialties || [data.specialty].filter(Boolean) || [],
     // Add all compatibility fields
@@ -56,7 +59,7 @@ export const getProfessionalFromData = (data: any): ProfessionalInterface => {
     bio: data.bio,
     about: data.bio || data.about,
     reviews_count: reviewCount, // Use the same value as reviewCount for consistency
-    image_url: data.image_url || data.image || 'https://via.placeholder.com/150',
+    image_url: image, // Use the same value as image for consistency
     created_at: data.created_at,
     city: data.city || data.location || 'לא צוין',
     specialty: data.specialty || data.profession || 'לא צוין',
