@@ -18,7 +18,7 @@ export interface ProfessionalInterface {
   profession: string; // Changed from optional to required to match dashboard.ts
   location: string;  // Changed from optional to required to match dashboard.ts
   image: string;     // Changed from optional to required to match dashboard.ts
-  specialties?: string[];
+  specialties: string[]; // Changed from optional to required to match dashboard.ts
   phoneNumber?: string;
   about?: string;
   reviewCount: number; // Changed from optional to required to match dashboard.ts

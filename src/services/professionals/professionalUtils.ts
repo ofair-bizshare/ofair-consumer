@@ -42,6 +42,12 @@ export const getProfessionalFromData = (data: any): ProfessionalInterface => {
   // Ensure image is always populated with a fallback value
   const image = data.image_url || data.image || 'https://via.placeholder.com/150';
   
+  // Ensure specialties is always populated with an array
+  const specialties = data.specialties || 
+                     (data.specialty ? [data.specialty] : []).filter(Boolean) || 
+                     [data.profession].filter(Boolean) || 
+                     ['לא צוין'];
+  
   return {
     id: data.id,
     name: data.name,
@@ -51,7 +57,7 @@ export const getProfessionalFromData = (data: any): ProfessionalInterface => {
     location: location, // Ensure location is always populated
     image: image, // Ensure image is always populated
     verified: data.verified || false,
-    specialties: data.specialties || [data.specialty].filter(Boolean) || [],
+    specialties: specialties, // Ensure specialties is always populated with a non-empty array
     // Add all compatibility fields
     phone: phoneNumber,
     phoneNumber: phoneNumber,
