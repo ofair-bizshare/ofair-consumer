@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,7 +40,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log("Ensuring user profile exists for:", userId);
       
-      // Always check localStorage first
       const localProfile = localStorage.getItem(`userProfile-${userId}`);
       let existingLocalProfile = null;
       
@@ -54,9 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
       
-      // If we have a local profile, use it and try to update in background
       if (existingLocalProfile) {
-        // Update the local profile with any new data
         const updatedLocalProfile = {
           ...existingLocalProfile,
           name: userData.name || existingLocalProfile.name || userData.email,
@@ -65,11 +61,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           updated_at: new Date().toISOString()
         };
         
-        // Save updated profile back to localStorage
         localStorage.setItem(`userProfile-${userId}`, JSON.stringify(updatedLocalProfile));
       } else {
-        // Create a new profile in localStorage
-        console.log("Creating new user profile for:", userId);
         const newLocalProfile = {
           id: userId,
           name: userData.name || userData.email,
@@ -83,7 +76,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log("New profile saved to localStorage");
       }
       
-      // Try to update the database in the background - don't wait for it
       try {
         const { data: existingProfile, error: checkError } = await supabase
           .from('user_profiles')
@@ -136,7 +128,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log("User profile ensured successfully");
     } catch (error) {
       console.error("Error in profile management:", error);
-      // Store profile data in localStorage as fallback
       const fallbackProfile = {
         id: userId,
         name: userData.name || userData.email,
@@ -151,31 +142,85 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Lazy initialization of auth state
+  const handleOAuthRedirect = async () => {
+    if (window.location.hash && window.location.hash.includes('access_token')) {
+      try {
+        console.log("Detected OAuth redirect with hash, attempting to process");
+        
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Error processing OAuth redirect:", error);
+          throw error;
+        }
+        
+        if (data?.session) {
+          console.log("Successfully processed OAuth redirect session");
+          
+          window.history.replaceState({}, document.title, window.location.pathname);
+          
+          return data.session;
+        } else {
+          console.log("No session found after OAuth redirect");
+        }
+      } catch (error) {
+        console.error("Error handling OAuth redirect:", error);
+        toast({
+          title: "שגיאת התחברות",
+          description: "אירעה שגיאה בעת עיבוד ההתחברות, אנא נסה שוב",
+          variant: "destructive",
+        });
+      }
+    }
+    return null;
+  };
+
   const initAuth = async () => {
     try {
-      const { data } = await supabase.auth.getSession();
+      const oauthSession = await handleOAuthRedirect();
       
-      if (data?.session) {
-        setSession(data.session);
-        setUser(data.session.user);
+      if (oauthSession) {
+        setSession(oauthSession);
+        setUser(oauthSession.user);
         
         localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('userId', data.session.user.id);
+        localStorage.setItem('userId', oauthSession.user.id);
         
-        // Use setTimeout to avoid possible deadlocks with Supabase auth
         setTimeout(async () => {
           await ensureUserProfile(
-            data.session.user.id, 
+            oauthSession.user.id, 
             {
-              name: data.session.user.user_metadata?.name,
-              email: data.session.user.email || '',
-              phone: data.session.user.user_metadata?.phone
+              name: oauthSession.user.user_metadata?.name,
+              email: oauthSession.user.email || '',
+              phone: oauthSession.user.user_metadata?.phone
             }
           );
           
           await checkPhoneVerification();
         }, 100);
+      } else {
+        const { data } = await supabase.auth.getSession();
+        
+        if (data?.session) {
+          setSession(data.session);
+          setUser(data.session.user);
+          
+          localStorage.setItem('isLoggedIn', 'true');
+          localStorage.setItem('userId', data.session.user.id);
+          
+          setTimeout(async () => {
+            await ensureUserProfile(
+              data.session.user.id, 
+              {
+                name: data.session.user.user_metadata?.name,
+                email: data.session.user.email || '',
+                phone: data.session.user.user_metadata?.phone
+              }
+            );
+            
+            await checkPhoneVerification();
+          }, 100);
+        }
       }
     } catch (error) {
       console.error("Error initializing auth:", error);
@@ -185,15 +230,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Initialize auth state
     initAuth();
     
-    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
         console.log('Auth state changed:', event);
         
-        // Only update state if there's an actual change
         if ((currentSession?.user?.id !== user?.id) || event === 'SIGNED_OUT') {
           setSession(currentSession);
           setUser(currentSession?.user ?? null);
@@ -202,7 +244,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             localStorage.setItem('isLoggedIn', 'true');
             localStorage.setItem('userId', currentSession.user.id);
             
-            // Use setTimeout to avoid possible deadlocks with Supabase auth
             setTimeout(async () => {
               await ensureUserProfile(
                 currentSession.user.id, 
@@ -263,7 +304,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + '/login',
+          redirectTo: window.location.origin + '/dashboard',
         },
       });
       if (error) throw error;

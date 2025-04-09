@@ -13,12 +13,15 @@ import { useAuth } from '@/providers/AuthProvider';
 import PhoneVerificationForm from '@/components/auth/PhoneVerificationForm';
 import { useLoginForm } from '@/hooks/useLoginForm';
 import { useRegisterForm } from '@/hooks/useRegisterForm';
+import { useToast } from '@/hooks/use-toast';
 
 const Login = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { toast } = useToast(); 
   const { user, loading, phoneVerified, signInWithPhone, checkPhoneVerification } = useAuth();
   const fromRequest = location.state?.fromRequest;
+  const returnTo = location.state?.returnTo || '/dashboard';
   
   const [needsPhoneVerification, setNeedsPhoneVerification] = useState(false);
   const {
@@ -38,6 +41,16 @@ const Login = () => {
     handleRegister
   } = useRegisterForm();
 
+  // Handle OAuth redirects when the page loads
+  useEffect(() => {
+    // Check for OAuth hash fragments in URL
+    if (window.location.hash && window.location.hash.includes('access_token')) {
+      console.log("Login page: Detected OAuth redirect hash, will be handled by AuthProvider");
+    }
+    
+    // The actual handling is done in AuthProvider
+  }, []);
+
   useEffect(() => {
     const checkAuth = async () => {
       if (!loading && user) {
@@ -46,13 +59,18 @@ const Login = () => {
         if (!hasPhoneVerified) {
           setNeedsPhoneVerification(true);
         } else {
-          navigate('/dashboard');
+          // If the user has been authenticated and has phone verification, navigate to intended destination
+          toast({
+            title: "התחברת בהצלחה",
+            description: "ברוך הבא!",
+          });
+          navigate(returnTo);
         }
       }
     };
     
     checkAuth();
-  }, [user, loading, phoneVerified, navigate, checkPhoneVerification]);
+  }, [user, loading, phoneVerified, navigate, checkPhoneVerification, returnTo, toast]);
 
   const handlePhoneVerificationComplete = () => {
     navigate('/dashboard');

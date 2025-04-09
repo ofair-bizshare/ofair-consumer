@@ -61,6 +61,7 @@ export const useLoginForm = () => {
 
   const handleGoogleLogin = async () => {
     await signInWithGoogle();
+    // No need to navigate - this will be handled by OAuth redirect
   };
 
   const handlePhoneLogin = async (e: React.FormEvent) => {
