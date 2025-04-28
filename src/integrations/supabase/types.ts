@@ -114,38 +114,111 @@ export type Database = {
         }
         Relationships: []
       }
-      business_accounts: {
+      leads: {
         Row: {
-          business_name: string
-          business_type: string
+          budget: number | null
+          client_address: string | null
+          client_name: string | null
+          client_phone: string | null
           created_at: string
+          description: string
           id: string
-          owner_name: string
-          phone: string
-          updated_at: string
-          user_id: string
+          image_url: string | null
+          location: string
+          professional_id: string | null
+          share_percentage: number
+          status: string
+          title: string
+          work_date: string | null
+          work_time: string | null
         }
         Insert: {
-          business_name: string
-          business_type: string
+          budget?: number | null
+          client_address?: string | null
+          client_name?: string | null
+          client_phone?: string | null
           created_at?: string
+          description: string
           id?: string
-          owner_name: string
-          phone: string
-          updated_at?: string
-          user_id: string
+          image_url?: string | null
+          location: string
+          professional_id?: string | null
+          share_percentage?: number
+          status?: string
+          title: string
+          work_date?: string | null
+          work_time?: string | null
         }
         Update: {
-          business_name?: string
-          business_type?: string
+          budget?: number | null
+          client_address?: string | null
+          client_name?: string | null
+          client_phone?: string | null
           created_at?: string
+          description?: string
           id?: string
-          owner_name?: string
-          phone?: string
-          updated_at?: string
-          user_id?: string
+          image_url?: string | null
+          location?: string
+          professional_id?: string | null
+          share_percentage?: number
+          status?: string
+          title?: string
+          work_date?: string | null
+          work_time?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "leads_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          is_read: boolean
+          professional_id: string
+          related_id: string | null
+          related_type: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          is_read?: boolean
+          professional_id: string
+          related_id?: string | null
+          related_type?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          is_read?: boolean
+          professional_id?: string
+          related_id?: string | null
+          related_type?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       professional_ratings: {
         Row: {
@@ -215,6 +288,7 @@ export type Database = {
           experience_years: number | null
           id: string
           image: string | null
+          is_verified: boolean | null
           location: string
           name: string
           phone_number: string | null
@@ -222,6 +296,7 @@ export type Database = {
           rating: number | null
           review_count: number | null
           specialties: string[] | null
+          status: string | null
           updated_at: string | null
           user_id: string | null
           work_hours: string | null
@@ -237,6 +312,7 @@ export type Database = {
           experience_years?: number | null
           id?: string
           image?: string | null
+          is_verified?: boolean | null
           location: string
           name: string
           phone_number?: string | null
@@ -244,6 +320,7 @@ export type Database = {
           rating?: number | null
           review_count?: number | null
           specialties?: string[] | null
+          status?: string | null
           updated_at?: string | null
           user_id?: string | null
           work_hours?: string | null
@@ -259,6 +336,7 @@ export type Database = {
           experience_years?: number | null
           id?: string
           image?: string | null
+          is_verified?: boolean | null
           location?: string
           name?: string
           phone_number?: string | null
@@ -266,12 +344,103 @@ export type Database = {
           rating?: number | null
           review_count?: number | null
           specialties?: string[] | null
+          status?: string | null
           updated_at?: string | null
           user_id?: string | null
           work_hours?: string | null
           working_hours?: string | null
         }
         Relationships: []
+      }
+      projects: {
+        Row: {
+          client: string
+          created_at: string | null
+          end_date: string
+          id: string
+          price: number
+          professional_id: string
+          progress: number
+          start_date: string
+          status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          client: string
+          created_at?: string | null
+          end_date: string
+          id?: string
+          price: number
+          professional_id: string
+          progress: number
+          start_date: string
+          status: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          client?: string
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          price?: number
+          professional_id?: string
+          progress?: number
+          start_date?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      proposals: {
+        Row: {
+          created_at: string
+          description: string
+          estimated_completion: string | null
+          id: string
+          lead_id: string | null
+          price: number
+          professional_id: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          estimated_completion?: string | null
+          id?: string
+          lead_id?: string | null
+          price: number
+          professional_id?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          estimated_completion?: string | null
+          id?: string
+          lead_id?: string | null
+          price?: number
+          professional_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposals_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposals_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quotes: {
         Row: {
@@ -482,66 +651,6 @@ export type Database = {
         }
         Relationships: []
       }
-      users_signup: {
-        Row: {
-          city: string
-          company_name: string | null
-          created_at: string
-          email: string
-          experience: string
-          first_name: string
-          id: string
-          last_name: string
-          other_work_field: string | null
-          phone: string
-          utm_campaign: string | null
-          utm_content: string | null
-          utm_medium: string | null
-          utm_source: string | null
-          utm_term: string | null
-          work_fields: string
-          work_regions: string
-        }
-        Insert: {
-          city: string
-          company_name?: string | null
-          created_at?: string
-          email: string
-          experience: string
-          first_name: string
-          id?: string
-          last_name: string
-          other_work_field?: string | null
-          phone: string
-          utm_campaign?: string | null
-          utm_content?: string | null
-          utm_medium?: string | null
-          utm_source?: string | null
-          utm_term?: string | null
-          work_fields: string
-          work_regions: string
-        }
-        Update: {
-          city?: string
-          company_name?: string | null
-          created_at?: string
-          email?: string
-          experience?: string
-          first_name?: string
-          id?: string
-          last_name?: string
-          other_work_field?: string | null
-          phone?: string
-          utm_campaign?: string | null
-          utm_content?: string | null
-          utm_medium?: string | null
-          utm_source?: string | null
-          utm_term?: string | null
-          work_fields?: string
-          work_regions?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
@@ -552,7 +661,7 @@ export type Database = {
         Returns: boolean
       }
       check_is_super_admin: {
-        Args: { user_id_param: string } | Record<PropertyKey, never>
+        Args: Record<PropertyKey, never> | { user_id_param: string }
         Returns: boolean
       }
       check_is_super_admin_user: {
@@ -566,6 +675,49 @@ export type Database = {
       create_super_admin: {
         Args: { admin_email_param: string }
         Returns: string
+      }
+      get_professional_by_identifier: {
+        Args: { identifier_param: string; is_email_param: boolean }
+        Returns: {
+          id: string
+          user_id: string
+          name: string
+          phone_number: string
+          email: string
+          profession: string
+          location: string
+          specialties: string[]
+          image: string
+          about: string
+        }[]
+      }
+      get_projects_for_professional: {
+        Args: { professional_id_param: string }
+        Returns: {
+          client: string
+          created_at: string | null
+          end_date: string
+          id: string
+          price: number
+          professional_id: string
+          progress: number
+          start_date: string
+          status: string
+          title: string
+          updated_at: string | null
+        }[]
+      }
+      insert_project: {
+        Args: { project_data: Json }
+        Returns: string
+      }
+      is_super_admin_safe: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      update_project: {
+        Args: { project_id_param: string; project_data: Json }
+        Returns: boolean
       }
     }
     Enums: {

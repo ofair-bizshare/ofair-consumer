@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { UserCircle, Gift, Upload } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { UserCircle, Gift, Upload } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
