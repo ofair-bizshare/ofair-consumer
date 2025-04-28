@@ -13,7 +13,8 @@ export const getCachedAdminStatus = (userId: string): { isAdmin: boolean } | nul
     const cachedAdminStatus = localStorage.getItem(`adminStatus-${userId}`);
     if (cachedAdminStatus) {
       const parsed = JSON.parse(cachedAdminStatus);
-      if (parsed.timestamp > Date.now() - 3600000) { // Cache valid for 1 hour
+      // Reduce cache validity to 5 minutes to ensure more frequent checks
+      if (parsed.timestamp > Date.now() - 300000) { // Cache valid for 5 minutes
         console.log("Using cached admin status:", parsed.isAdmin);
         return { isAdmin: parsed.isAdmin };
       }
@@ -36,6 +37,7 @@ export const setCachedAdminStatus = (userId: string, isAdmin: boolean): void => 
       isAdmin,
       timestamp: Date.now()
     }));
+    console.log(`Admin status cached for user ${userId}:`, isAdmin);
   } catch (cacheError) {
     console.error('Error updating admin cache:', cacheError);
   }
@@ -51,6 +53,22 @@ export const clearAdminCache = (userId: string): void => {
     console.log(`Admin cache cleared for user: ${userId}`);
   } catch (error) {
     console.error('Error clearing admin cache:', error);
+  }
+};
+
+// Force clear all admin caches (for troubleshooting)
+export const clearAllAdminCaches = (): void => {
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('adminStatus-')) {
+        localStorage.removeItem(key);
+        console.log(`Cleared admin cache: ${key}`);
+      }
+    }
+    console.log("All admin caches cleared");
+  } catch (error) {
+    console.error('Error clearing all admin caches:', error);
   }
 };
 

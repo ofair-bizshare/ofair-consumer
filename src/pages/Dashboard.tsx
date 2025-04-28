@@ -14,8 +14,17 @@ import DashboardLoading from '@/components/dashboard/DashboardLoading';
 const Dashboard = () => {
   const { user, loading } = useAuth();
   const { loading: profileLoading } = useUserProfile();
-  const { isAdmin, isChecking } = useAdminStatus();
+  const { isAdmin, isChecking, forceRefreshAdminStatus } = useAdminStatus();
   const location = useLocation();
+
+  // Check for special admin refresh query parameter
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    if (queryParams.get('refresh_admin') === 'true') {
+      console.log("Auto-refreshing admin status due to query parameter");
+      forceRefreshAdminStatus();
+    }
+  }, [location.search, forceRefreshAdminStatus]);
   
   useEffect(() => {
     if (location.hash) {

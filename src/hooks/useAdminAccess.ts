@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { clearAdminCache, getCachedAdminStatus, setCachedAdminStatus } from '@/services/admin/utils/adminCache';
+import { clearAdminCache, getCachedAdminStatus, setCachedAdminStatus, clearAllAdminCaches } from '@/services/admin/utils/adminCache';
 
 export const useAdminAccess = () => {
   const { user } = useAuth();
@@ -13,7 +13,12 @@ export const useAdminAccess = () => {
   const [adminCheckError, setAdminCheckError] = useState<string | null>(null);
   const [retryAttempt, setRetryAttempt] = useState(0);
 
-  const checkAdminStatus = useCallback(async () => {
+  const checkAdminStatus = useCallback(async (options: {
+    bypassCache?: boolean,
+    showToast?: boolean
+  } = {}) => {
+    const { bypassCache = false, showToast = false } = options;
+    
     if (!user) {
       setLoading(false);
       return { hasAccess: false, needsLogin: true };
@@ -23,19 +28,22 @@ export const useAdminAccess = () => {
       console.log("AdminAccess: Checking admin status for user:", user.id, "Attempt:", retryAttempt + 1);
       setAdminCheckError(null);
       
-      // First check if we have a cached result
-      const cachedAdminStatus = getCachedAdminStatus(user.id);
-      if (cachedAdminStatus) {
-        console.log("AdminAccess: Using cached admin status:", cachedAdminStatus.isAdmin);
-        setIsSuperAdmin(cachedAdminStatus.isAdmin);
-        
-        if (cachedAdminStatus.isAdmin) {
-          return { hasAccess: true, fromCache: true };
+      // Check cached value if not bypassing cache
+      if (!bypassCache) {
+        const cachedAdminStatus = getCachedAdminStatus(user.id);
+        if (cachedAdminStatus) {
+          console.log("AdminAccess: Using cached admin status:", cachedAdminStatus.isAdmin);
+          setIsSuperAdmin(cachedAdminStatus.isAdmin);
+          
+          if (cachedAdminStatus.isAdmin) {
+            return { hasAccess: true, fromCache: true };
+          }
         }
       }
       
       try {
-        // Use the security definer function - use check_is_super_admin which is the correct function name
+        console.log("AdminAccess: Performing fresh admin status check");
+        // Use the security definer function
         const { data: isAdmin, error } = await supabase.rpc('check_is_super_admin');
         
         if (error) {
@@ -49,11 +57,29 @@ export const useAdminAccess = () => {
           console.log("AdminAccess: User confirmed as admin");
           setIsSuperAdmin(true);
           setCachedAdminStatus(user.id, true);
+          
+          if (showToast) {
+            toast({
+              title: "הרשאות מנהל אומתו",
+              description: "יש לך הרשאות מנהל במערכת",
+              variant: "default"
+            });
+          }
+          
           return { hasAccess: true };
         } else {
           console.log("AdminAccess: User is not an admin:", user.id);
           setIsSuperAdmin(false);
           setCachedAdminStatus(user.id, false);
+          
+          if (showToast) {
+            toast({
+              title: "אין הרשאות מנהל",
+              description: "אין לך הרשאות מנהל למערכת",
+              variant: "destructive"
+            });
+          }
+          
           return { hasAccess: false, notAdmin: true };
         }
       } catch (error) {
@@ -69,13 +95,23 @@ export const useAdminAccess = () => {
         }
         
         // Check if we have a cached admin status as fallback
-        const cachedAdminStatus = getCachedAdminStatus(user.id);
-        if (cachedAdminStatus) {
-          console.log("AdminAccess: Using cached admin status as fallback:", cachedAdminStatus.isAdmin);
-          setIsSuperAdmin(cachedAdminStatus.isAdmin);
-          if (cachedAdminStatus.isAdmin) {
-            return { hasAccess: true, fromCache: true };
+        if (!bypassCache) {
+          const cachedAdminStatus = getCachedAdminStatus(user.id);
+          if (cachedAdminStatus) {
+            console.log("AdminAccess: Using cached admin status as fallback:", cachedAdminStatus.isAdmin);
+            setIsSuperAdmin(cachedAdminStatus.isAdmin);
+            if (cachedAdminStatus.isAdmin) {
+              return { hasAccess: true, fromCache: true };
+            }
           }
+        }
+        
+        if (showToast) {
+          toast({
+            title: "שגיאה בבדיקת הרשאות",
+            description: (error as Error).message || "אירעה שגיאה בבדיקת הרשאות מנהל",
+            variant: "destructive"
+          });
         }
         
         return { hasAccess: false, error: (error as Error).message || "שגיאה לא ידועה" };
@@ -85,7 +121,7 @@ export const useAdminAccess = () => {
       setAdminCheckError((error as Error).message || "שגיאה לא ידועה");
       return { hasAccess: false, error: (error as Error).message || "שגיאה לא ידועה" };
     }
-  }, [user, retryAttempt]);
+  }, [user, retryAttempt, toast]);
 
   useEffect(() => {
     const runCheck = async () => {
@@ -97,7 +133,7 @@ export const useAdminAccess = () => {
     runCheck();
   }, [checkAdminStatus]);
 
-  const forceRefresh = useCallback(() => {
+  const forceRefresh = useCallback(async () => {
     // Clear cache and force a fresh check
     if (user) {
       clearAdminCache(user.id);
@@ -105,14 +141,32 @@ export const useAdminAccess = () => {
     setRetryAttempt(0);
     setAdminCheckError(null);
     setLoading(true);
-    checkAdminStatus().finally(() => setLoading(false));
+    
+    const result = await checkAdminStatus({ 
+      bypassCache: true,
+      showToast: true 
+    });
+    
+    setLoading(false);
+    return result;
   }, [user, checkAdminStatus]);
+
+  const resetAllCaches = useCallback(async () => {
+    clearAllAdminCaches();
+    toast({
+      title: "איפוס מטמון",
+      description: "כל נתוני המטמון של הרשאות אדמין נוקו",
+      variant: "default"
+    });
+    return forceRefresh();
+  }, [forceRefresh, toast]);
 
   return {
     isSuperAdmin,
     loading,
     adminCheckError,
     checkAdminStatus,
-    forceRefresh
+    forceRefresh,
+    resetAllCaches
   };
 };
