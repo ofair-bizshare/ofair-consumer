@@ -21,35 +21,13 @@ export const useAdminStatus = () => {
     }
     
     try {
-      console.log(`Checking admin status (attempt ${retryCount + 1})...`);
+      console.log(`Checking admin status for user ${user.id} (attempt ${retryCount + 1})...`);
       setError(null);
       
-      // Try to get from cache first
-      try {
-        const cachedAdminStatus = localStorage.getItem(`adminStatus-${user.id}`);
-        if (cachedAdminStatus) {
-          const parsed = JSON.parse(cachedAdminStatus);
-          if (parsed.timestamp > Date.now() - 3600000) { // 1 hour cache
-            setIsAdmin(parsed.isAdmin);
-            setIsChecking(false);
-            console.log("Using cached admin status:", parsed.isAdmin);
-            return;
-          }
-        }
-      } catch (cacheError) {
-        console.error('Error checking cached admin status:', cacheError);
-      }
-      
-      // Using the security definer function
+      // Using the security definer function to check admin status
       const adminStatus = await checkIsSuperAdmin();
-      console.log("Security definer function returned admin status:", adminStatus);
+      console.log("Admin status check result:", adminStatus);
       setIsAdmin(adminStatus);
-      
-      // Update cache
-      localStorage.setItem(`adminStatus-${user.id}`, JSON.stringify({
-        isAdmin: adminStatus,
-        timestamp: Date.now()
-      }));
       
     } catch (error) {
       console.error('Error checking admin status:', error);
@@ -61,21 +39,6 @@ export const useAdminStatus = () => {
           description: (error as Error).message || "אירעה שגיאה בבדיקת הרשאות מנהל",
           variant: "destructive"
         });
-      }
-      
-      // Try to fallback to cached status if available
-      try {
-        const cachedAdminStatus = localStorage.getItem(`adminStatus-${user.id}`);
-        if (cachedAdminStatus) {
-          const parsed = JSON.parse(cachedAdminStatus);
-          console.log("Using cached status as fallback after error");
-          setIsAdmin(parsed.isAdmin);
-        } else {
-          setIsAdmin(false);
-        }
-      } catch (cacheError) {
-        console.error('Error with fallback cache:', cacheError);
-        setIsAdmin(false);
       }
       
       // If we have attempted less than 3 times, retry after a delay

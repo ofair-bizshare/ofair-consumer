@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/providers/AuthProvider';
@@ -31,7 +30,6 @@ const RequestsTab: React.FC = () => {
   const selectedRequest = requests.find(r => r.id === selectedRequestId);
   const selectedQuote = selectedQuoteId ? quotes.find(q => q.id === selectedQuoteId) : null;
 
-  // Scroll to selected request when it changes
   useEffect(() => {
     if (selectedRequestId && selectedRequestRef.current) {
       setTimeout(() => {
@@ -41,7 +39,6 @@ const RequestsTab: React.FC = () => {
   }, [selectedRequestId]);
 
   const handleViewProfile = (professionalId: string) => {
-    // Consistently use window.open to open in a new tab
     window.open(`/professional/${professionalId}`, '_blank');
   };
   
