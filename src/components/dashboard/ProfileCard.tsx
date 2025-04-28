@@ -6,7 +6,6 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
 
 interface ProfileCardProps {
   isAdmin: boolean;

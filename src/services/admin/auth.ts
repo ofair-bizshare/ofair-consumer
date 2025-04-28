@@ -25,30 +25,13 @@ export const checkIsSuperAdmin = async (): Promise<boolean> => {
       return cachedStatus.isAdmin;
     }
     
-    // Primary method: Use the security definer function
+    // Use the correct security definer function name
     console.log("No cache found, checking via security definer function");
     const { data: isAdmin, error } = await supabase.rpc('check_is_super_admin');
     
     if (error) {
       console.error("Error in security definer function check:", error);
-      
-      // Try fallback direct method in case RPC fails
-      console.log("Attempting fallback direct check method");
-      const { data, error: directError } = await supabase
-        .from('admin_users')
-        .select('is_super_admin')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      if (directError) {
-        console.error("Direct check also failed:", directError);
-        throw error; // Throw the original error
-      }
-      
-      const isAdminDirect = !!data?.is_super_admin;
-      console.log("Direct admin status check result:", isAdminDirect);
-      setCachedAdminStatus(user.id, isAdminDirect);
-      return isAdminDirect;
+      throw error;
     }
     
     console.log("Admin status from security definer function:", isAdmin);
@@ -88,68 +71,30 @@ export const createSuperAdmin = async (email: string): Promise<{ success: boolea
     
     console.log("Found user with ID:", userResponse.id);
     
-    try {
-      // Try the RPC function first
-      const { data, error } = await supabase.rpc('create_super_admin', {
-        admin_email_param: email
-      });
-      
-      if (error) {
-        console.error("Error using RPC to create admin:", error);
-        // Fall back to direct insertion
-      } else {
-        // Clear and update cache
-        clearAdminCache(userResponse.id);
-        setCachedAdminStatus(userResponse.id, true);
-        
-        return { success: true, message: "נוסף בהצלחה כמנהל על באמצעות RPC" };
-      }
-    } catch (rpcError) {
-      console.error("Exception trying to use RPC:", rpcError);
-      // Continue to fallback
-    }
-    
-    // Direct DB approach as fallback
-    console.log("Using direct DB approach to create admin");
-    
-    // Check if admin record exists
-    const { data: existingAdmin } = await supabase
+    // Insert or update the admin record
+    const { data, error } = await supabase
       .from('admin_users')
-      .select('id')
-      .eq('user_id', userResponse.id)
-      .maybeSingle();
-      
-    if (existingAdmin) {
-      // Update existing record
-      const { error: updateError } = await supabase
-        .from('admin_users')
-        .update({ is_super_admin: true })
-        .eq('id', existingAdmin.id);
-        
-      if (updateError) {
-        console.error("Error updating admin record:", updateError);
-        return { success: false, message: `שגיאה בעדכון הרשאות מנהל: ${updateError.message}` };
-      }
-    } else {
-      // Insert new record
-      const { error: insertError } = await supabase
-        .from('admin_users')
-        .insert({
+      .upsert(
+        { 
           user_id: userResponse.id,
           is_super_admin: true
-        });
-        
-      if (insertError) {
-        console.error("Error creating admin record:", insertError);
-        return { success: false, message: `שגיאה בהוספת מנהל על: ${insertError.message}` };
-      }
+        },
+        { 
+          onConflict: 'user_id',
+          ignoreDuplicates: false 
+        }
+      );
+    
+    if (error) {
+      console.error("Error creating/updating super admin:", error);
+      return { success: false, message: `שגיאה בהוספת מנהל על: ${error.message}` };
     }
     
     // Clear and update cache
     clearAdminCache(userResponse.id);
     setCachedAdminStatus(userResponse.id, true);
     
-    return { success: true, message: "נוסף בהצלחה כמנהל על באמצעות DB ישיר" };
+    return { success: true, message: "נוסף בהצלחה כמנהל על" };
   } catch (error) {
     console.error('Error creating super admin:', error);
     return { success: false, message: 'An unexpected error occurred: ' + (error as Error).message };
