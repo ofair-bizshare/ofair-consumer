@@ -1,7 +1,7 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { FileQuestion, MousePointerClick, PlusCircle } from 'lucide-react';
-import TestQuoteButton from './TestQuoteButton';
 
 interface EmptyRequestStateProps {
   isLoading: boolean;
@@ -39,12 +39,6 @@ const EmptyRequestState = ({
           <PlusCircle className="ml-2 h-4 w-4" />
           צור בקשה חדשה
         </Button>
-        
-        {/* Add test quote button for development */}
-        <div className="mt-8 pt-4 border-t border-gray-100">
-          <p className="text-xs text-gray-400 mb-2">כלי פיתוח</p>
-          <TestQuoteButton />
-        </div>
       </div>
     );
   }
