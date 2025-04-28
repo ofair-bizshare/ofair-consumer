@@ -14,6 +14,7 @@ export const useAdminStatus = () => {
 
   const checkAdminStatus = useCallback(async (showToastOnError = false) => {
     if (!user) {
+      console.log('No user found, setting admin status to false');
       setIsAdmin(false);
       setIsChecking(false);
       setError(null);
@@ -21,13 +22,19 @@ export const useAdminStatus = () => {
     }
     
     try {
-      console.log(`Checking admin status for user ${user.id} (attempt ${retryCount + 1})...`);
+      console.log('Checking admin status for user:', user.id);
       setError(null);
       
       // Using the security definer function to check admin status
       const adminStatus = await checkIsSuperAdmin();
-      console.log("Admin status check result:", adminStatus);
+      console.log('Admin status check result:', adminStatus);
       setIsAdmin(adminStatus);
+      
+      if (adminStatus) {
+        console.log('User confirmed as admin');
+      } else {
+        console.log('User is not an admin');
+      }
       
     } catch (error) {
       console.error('Error checking admin status:', error);
@@ -43,9 +50,10 @@ export const useAdminStatus = () => {
       
       // If we have attempted less than 3 times, retry after a delay
       if (retryCount < 2) {
+        console.log(`Retrying admin check (attempt ${retryCount + 1})`);
         setTimeout(() => {
           setRetryCount(prev => prev + 1);
-        }, 2000); // Retry after 2 seconds
+        }, 2000);
       }
     } finally {
       setIsChecking(false);
@@ -56,5 +64,10 @@ export const useAdminStatus = () => {
     checkAdminStatus();
   }, [checkAdminStatus]);
 
-  return { isAdmin, isChecking, error, recheckStatus: () => checkAdminStatus(true) };
+  return { 
+    isAdmin, 
+    isChecking, 
+    error, 
+    recheckStatus: () => checkAdminStatus(true) 
+  };
 };
