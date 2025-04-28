@@ -273,6 +273,7 @@ export type Database = {
           experience_years: number | null
           id: string
           image: string | null
+          is_verified: boolean | null
           location: string
           name: string
           phone_number: string | null
@@ -280,6 +281,7 @@ export type Database = {
           rating: number | null
           review_count: number | null
           specialties: string[] | null
+          status: string | null
           updated_at: string | null
           user_id: string | null
           work_hours: string | null
@@ -295,6 +297,7 @@ export type Database = {
           experience_years?: number | null
           id?: string
           image?: string | null
+          is_verified?: boolean | null
           location: string
           name: string
           phone_number?: string | null
@@ -302,6 +305,7 @@ export type Database = {
           rating?: number | null
           review_count?: number | null
           specialties?: string[] | null
+          status?: string | null
           updated_at?: string | null
           user_id?: string | null
           work_hours?: string | null
@@ -317,6 +321,7 @@ export type Database = {
           experience_years?: number | null
           id?: string
           image?: string | null
+          is_verified?: boolean | null
           location?: string
           name?: string
           phone_number?: string | null
@@ -324,6 +329,7 @@ export type Database = {
           rating?: number | null
           review_count?: number | null
           specialties?: string[] | null
+          status?: string | null
           updated_at?: string | null
           user_id?: string | null
           work_hours?: string | null

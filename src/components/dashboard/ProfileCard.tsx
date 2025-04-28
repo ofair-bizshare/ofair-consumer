@@ -1,27 +1,23 @@
 
 import React, { useState } from 'react';
-import { UserCircle, Gift, Upload, RefreshCw } from 'lucide-react';
+import { UserCircle, Gift, Upload } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/providers/AuthProvider';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { useAdminStatus } from '@/hooks/useAdminStatus';
 
 interface ProfileCardProps {
   isAdmin: boolean;
 }
 
-const ProfileCard: React.FC<ProfileCardProps> = ({ isAdmin: initialIsAdmin }) => {
+const ProfileCard: React.FC<ProfileCardProps> = ({ isAdmin }) => {
   const { user } = useAuth();
   const { profile, updateProfile } = useUserProfile();
   const { toast } = useToast();
   const [profileImage, setProfileImage] = useState<string | null>(profile?.profile_image || null);
   const [isSavingImage, setIsSavingImage] = useState(false);
-  const [isCheckingAdmin, setIsCheckingAdmin] = useState(false);
-  const { forceRefreshAdminStatus, resetAllAdminCaches } = useAdminStatus();
-  const [localIsAdmin, setLocalIsAdmin] = useState(initialIsAdmin);
 
   const handleProfileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -105,49 +101,6 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ isAdmin: initialIsAdmin }) =>
     }
   };
 
-  const handleRefreshAdminStatus = async () => {
-    setIsCheckingAdmin(true);
-    try {
-      const result = await forceRefreshAdminStatus();
-      setLocalIsAdmin(!!result.hasAccess);
-      
-      if (result.hasAccess) {
-        toast({
-          title: "הרשאות אדמין אומתו",
-          description: "יש לך הרשאות אדמין במערכת",
-          variant: "default"
-        });
-      } else {
-        toast({
-          title: "אין הרשאות אדמין",
-          description: "אין לך הרשאות אדמין במערכת",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error("Error refreshing admin status:", error);
-      toast({
-        title: "שגיאה בבדיקת הרשאות",
-        description: (error as Error).message || "אירעה שגיאה בבדיקת הרשאות האדמין",
-        variant: "destructive"
-      });
-    } finally {
-      setIsCheckingAdmin(false);
-    }
-  };
-
-  const handleResetAdminCache = async () => {
-    setIsCheckingAdmin(true);
-    try {
-      const result = await resetAllAdminCaches();
-      setLocalIsAdmin(!!result.hasAccess);
-    } catch (error) {
-      console.error("Error resetting admin caches:", error);
-    } finally {
-      setIsCheckingAdmin(false);
-    }
-  };
-
   return (
     <div className="glass-card p-6 mb-8">
       <div className="flex items-center justify-between">
@@ -194,37 +147,13 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ isAdmin: initialIsAdmin }) =>
             </div>
           </div>
           
-          {localIsAdmin && (
+          {isAdmin && (
             <Link 
               to="/admin" 
               className="text-sm flex items-center text-blue-600 hover:text-blue-800 transition-colors"
             >
               <span>כניסה לממשק ניהול</span>
             </Link>
-          )}
-          
-          {user?.email === 'info@ofair.co.il' && (
-            <div className="flex flex-col gap-2 mt-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-1"
-                onClick={handleRefreshAdminStatus}
-                disabled={isCheckingAdmin}
-              >
-                <RefreshCw size={14} className={`mr-1 ${isCheckingAdmin ? 'animate-spin' : ''}`} />
-                <span>רענון הרשאות</span>
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="text-xs"
-                onClick={handleResetAdminCache}
-                disabled={isCheckingAdmin}
-              >
-                איפוס מטמון הרשאות
-              </Button>
-            </div>
           )}
         </div>
       </div>

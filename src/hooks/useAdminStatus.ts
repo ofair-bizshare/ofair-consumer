@@ -15,10 +15,9 @@ export const useAdminStatus = () => {
 
   const checkAdminStatus = useCallback(async (options: { 
     showToastOnError?: boolean, 
-    bypassCache?: boolean,
-    forceRefresh?: boolean 
+    bypassCache?: boolean
   } = {}) => {
-    const { showToastOnError = false, bypassCache = false, forceRefresh = false } = options;
+    const { showToastOnError = false, bypassCache = false } = options;
     
     if (!user) {
       setIsAdmin(false);
@@ -31,8 +30,8 @@ export const useAdminStatus = () => {
       console.log(`Checking admin status (attempt ${retryCount + 1})...`);
       setError(null);
       
-      // Only check cache if we're not bypassing it or forcing refresh
-      if (!bypassCache && !forceRefresh) {
+      // Only check cache if we're not bypassing it
+      if (!bypassCache) {
         try {
           const cachedAdminStatus = getCachedAdminStatus(user.id);
           if (cachedAdminStatus) {
@@ -44,10 +43,6 @@ export const useAdminStatus = () => {
         } catch (cacheError) {
           console.error('Error checking cached admin status:', cacheError);
         }
-      } else if (forceRefresh) {
-        // Clear cache if forcing refresh
-        console.log("Forcing refresh of admin status, clearing cache");
-        clearAdminCache(user.id);
       }
       
       // Using the security definer function
@@ -105,17 +100,31 @@ export const useAdminStatus = () => {
     }
   }, [user, toast, retryCount]);
 
+  // Initial check on load
   useEffect(() => {
     checkAdminStatus();
   }, [checkAdminStatus]);
+  
+  // Setup periodic check every 2 minutes
+  useEffect(() => {
+    if (!user) return;
+    
+    const intervalId = setInterval(() => {
+      console.log("Performing periodic admin status check");
+      checkAdminStatus({ bypassCache: true });
+    }, 120000); // Check every 2 minutes
+    
+    return () => clearInterval(intervalId);
+  }, [user, checkAdminStatus]);
 
-  // Force refresh function that bypasses cache and clears it
+  // Force refresh function that bypasses cache
   const forceRefreshAdminStatus = useCallback(async () => {
     setIsChecking(true);
+    clearAdminCache(user?.id || '');
+    
     const result = await checkAdminStatus({ 
       showToastOnError: true, 
-      bypassCache: true,
-      forceRefresh: true 
+      bypassCache: true
     });
     
     if (result.hasAccess) {
@@ -127,25 +136,13 @@ export const useAdminStatus = () => {
     }
     
     return result;
-  }, [checkAdminStatus, toast]);
-
-  // Emergency function to reset all caches
-  const resetAllAdminCaches = useCallback(() => {
-    clearAllAdminCaches();
-    toast({
-      title: "מטמון אדמין אופס",
-      description: "כל נתוני המטמון של הרשאות האדמין נוקו",
-      variant: "default"
-    });
-    return forceRefreshAdminStatus();
-  }, [forceRefreshAdminStatus, toast]);
+  }, [checkAdminStatus, toast, user]);
 
   return { 
     isAdmin, 
     isChecking, 
     error, 
     recheckStatus: () => checkAdminStatus({ showToastOnError: true }),
-    forceRefreshAdminStatus,
-    resetAllAdminCaches
+    forceRefreshAdminStatus
   };
 };

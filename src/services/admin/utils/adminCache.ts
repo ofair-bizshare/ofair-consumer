@@ -13,8 +13,8 @@ export const getCachedAdminStatus = (userId: string): { isAdmin: boolean } | nul
     const cachedAdminStatus = localStorage.getItem(`adminStatus-${userId}`);
     if (cachedAdminStatus) {
       const parsed = JSON.parse(cachedAdminStatus);
-      // Reduce cache validity to 5 minutes to ensure more frequent checks
-      if (parsed.timestamp > Date.now() - 300000) { // Cache valid for 5 minutes
+      // Reduce cache validity to 2 minutes to ensure more frequent checks
+      if (parsed.timestamp > Date.now() - 120000) { // Cache valid for 2 minutes
         console.log("Using cached admin status:", parsed.isAdmin);
         return { isAdmin: parsed.isAdmin };
       }
@@ -56,7 +56,7 @@ export const clearAdminCache = (userId: string): void => {
   }
 };
 
-// Force clear all admin caches (for troubleshooting)
+// Clear all admin caches (for troubleshooting)
 export const clearAllAdminCaches = (): void => {
   try {
     for (let i = 0; i < localStorage.length; i++) {

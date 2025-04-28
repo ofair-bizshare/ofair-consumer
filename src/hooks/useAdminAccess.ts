@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { clearAdminCache, getCachedAdminStatus, setCachedAdminStatus, clearAllAdminCaches } from '@/services/admin/utils/adminCache';
+import { clearAdminCache, getCachedAdminStatus, setCachedAdminStatus } from '@/services/admin/utils/adminCache';
 
 export const useAdminAccess = () => {
   const { user } = useAuth();
@@ -48,7 +48,42 @@ export const useAdminAccess = () => {
         
         if (error) {
           console.error("AdminAccess: Error in security definer function check:", error);
-          throw error;
+          
+          // Try direct DB approach as fallback
+          console.log("AdminAccess: Attempting direct DB check as fallback");
+          const { data, error: directError } = await supabase
+            .from('admin_users')
+            .select('is_super_admin')
+            .eq('user_id', user.id)
+            .maybeSingle();
+            
+          if (directError) {
+            console.error("AdminAccess: Direct check failed too:", directError);
+            throw error; // Throw original error
+          }
+          
+          const isDirect = !!data?.is_super_admin;
+          console.log("AdminAccess: Direct DB check result:", isDirect);
+          setIsSuperAdmin(isDirect);
+          setCachedAdminStatus(user.id, isDirect);
+          
+          if (showToast) {
+            if (isDirect) {
+              toast({
+                title: "הרשאות מנהל אומתו",
+                description: "יש לך הרשאות מנהל במערכת",
+                variant: "default"
+              });
+            } else {
+              toast({
+                title: "אין הרשאות מנהל",
+                description: "אין לך הרשאות מנהל למערכת",
+                variant: "destructive"
+              });
+            }
+          }
+          
+          return { hasAccess: isDirect };
         }
         
         console.log("AdminAccess: Admin check result:", isAdmin);
@@ -132,6 +167,18 @@ export const useAdminAccess = () => {
     
     runCheck();
   }, [checkAdminStatus]);
+  
+  // Setup periodic check every 2 minutes
+  useEffect(() => {
+    if (!user) return;
+    
+    const intervalId = setInterval(() => {
+      console.log("AdminAccess: Performing periodic admin status check");
+      checkAdminStatus({ bypassCache: true });
+    }, 120000); // Check every 2 minutes
+    
+    return () => clearInterval(intervalId);
+  }, [user, checkAdminStatus]);
 
   const forceRefresh = useCallback(async () => {
     // Clear cache and force a fresh check
@@ -151,22 +198,11 @@ export const useAdminAccess = () => {
     return result;
   }, [user, checkAdminStatus]);
 
-  const resetAllCaches = useCallback(async () => {
-    clearAllAdminCaches();
-    toast({
-      title: "איפוס מטמון",
-      description: "כל נתוני המטמון של הרשאות אדמין נוקו",
-      variant: "default"
-    });
-    return forceRefresh();
-  }, [forceRefresh, toast]);
-
   return {
     isSuperAdmin,
     loading,
     adminCheckError,
     checkAdminStatus,
-    forceRefresh,
-    resetAllCaches
+    forceRefresh
   };
 };

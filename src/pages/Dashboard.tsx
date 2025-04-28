@@ -23,8 +23,23 @@ const Dashboard = () => {
     if (queryParams.get('refresh_admin') === 'true') {
       console.log("Auto-refreshing admin status due to query parameter");
       forceRefreshAdminStatus();
+      
+      // Remove the query parameter to avoid multiple refreshes
+      const newParams = new URLSearchParams(location.search);
+      newParams.delete('refresh_admin');
+      const newSearch = newParams.toString() ? `?${newParams.toString()}` : '';
+      const newPath = `${location.pathname}${newSearch}${location.hash}`;
+      window.history.replaceState({}, '', newPath);
     }
   }, [location.search, forceRefreshAdminStatus]);
+  
+  // Force admin status check when dashboard loads
+  useEffect(() => {
+    if (user && !isChecking) {
+      console.log("Dashboard: Initial admin status check");
+      forceRefreshAdminStatus();
+    }
+  }, [user, isChecking, forceRefreshAdminStatus]);
   
   useEffect(() => {
     if (location.hash) {
