@@ -2,9 +2,9 @@
 export interface ProfessionalInterface {
   id: string;
   name: string;
-  phone: string;
-  email: string;
-  bio: string;
+  phone?: string; // Changed from required to optional
+  email?: string;
+  bio?: string;
   rating: number;
   reviews_count: number;
   image_url: string;

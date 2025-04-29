@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { ProfessionalInterface } from '@/types/dashboard';
+import { ProfessionalInterface } from '@/services/professionals/types';
 
 /**
  * Creates a new professional
@@ -37,7 +37,27 @@ export const createProfessional = async (professional: Omit<ProfessionalInterfac
     }
     
     console.log('Professional created successfully:', data[0]);
-    return data[0] as ProfessionalInterface;
+    
+    // Cast and transform the data to match the required interface
+    const createdProfessional: ProfessionalInterface = {
+      ...data[0],
+      reviewCount: data[0].review_count || 0,
+      phoneNumber: data[0].phone_number,
+      image: data[0].image || data[0].image_url || 'https://via.placeholder.com/150',
+      // Ensure all required properties are present
+      phone: data[0].phone_number || data[0].phone || '',
+      email: data[0].email || '',
+      bio: data[0].about || '',
+      reviews_count: data[0].review_count || 0,
+      image_url: data[0].image || data[0].image_url || '',
+      created_at: data[0].created_at || new Date().toISOString(),
+      city: data[0].location || '',
+      specialty: (data[0].specialties && data[0].specialties.length > 0) ? data[0].specialties[0] : '',
+      area: data[0].area || data[0].location || '',
+      category: data[0].category || professional.profession || ''
+    };
+    
+    return createdProfessional;
   } catch (error) {
     console.error('Error creating professional:', error);
     throw error;
@@ -102,7 +122,7 @@ export const uploadProfessionalImage = async (file: File): Promise<string | null
  * Updates an existing professional
  * @param id Professional ID to update
  * @param professional Professional data to update
- * @returns Promise<boolean> True if successful, false otherwise
+ * @returns Promise<ProfessionalInterface | null> The updated professional data or null on error
  */
 export const updateProfessional = async (id: string, professional: Partial<Omit<ProfessionalInterface, 'id' | 'reviewCount' | 'verified'>>): Promise<ProfessionalInterface | null> => {
   try {
@@ -145,7 +165,27 @@ export const updateProfessional = async (id: string, professional: Partial<Omit<
     }
     
     console.log('Professional updated successfully:', data[0]);
-    return data[0] as ProfessionalInterface;
+    
+    // Cast and transform the data to match the required interface
+    const updatedProfessional: ProfessionalInterface = {
+      ...data[0],
+      reviewCount: data[0].review_count || 0,
+      phoneNumber: data[0].phone_number,
+      image: data[0].image || data[0].image_url || 'https://via.placeholder.com/150',
+      // Ensure all required properties are present
+      phone: data[0].phone_number || data[0].phone || '',
+      email: data[0].email || '',
+      bio: data[0].about || '',
+      reviews_count: data[0].review_count || 0,
+      image_url: data[0].image || data[0].image_url || '',
+      created_at: data[0].created_at || new Date().toISOString(),
+      city: data[0].location || '',
+      specialty: (data[0].specialties && data[0].specialties.length > 0) ? data[0].specialties[0] : '',
+      area: data[0].area || data[0].location || '',
+      category: data[0].category || professional.profession || ''
+    };
+    
+    return updatedProfessional;
   } catch (error) {
     console.error('Error updating professional:', error);
     throw error;

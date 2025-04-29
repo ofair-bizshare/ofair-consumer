@@ -67,7 +67,7 @@ const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
         profession: professional.profession,
         location: professional.location,
         specialties: professional.specialties?.join(', ') || '',
-        phoneNumber: professional.phoneNumber || professional.phone_number || '',
+        phoneNumber: professional.phoneNumber || professional.phone_number || professional.phone || '',
         about: professional.about || professional.bio || '',
         rating: professional.rating || 5,
         company_name: professional.company_name || '',

@@ -4,7 +4,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { useToast } from '@/hooks/use-toast';
 import { getProfessionals } from '@/services/professionals';
 import { createProfessional, updateProfessional, deleteProfessional, uploadProfessionalImage } from '@/services/admin/professionals';
-import { ProfessionalInterface } from '@/services/professionals/types';
+import { ProfessionalInterface } from '@/services/professionals/types'; // Import from services/professionals/types
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, AlertCircle, FileSpreadsheet, Star } from 'lucide-react';

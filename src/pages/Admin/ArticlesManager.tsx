@@ -253,7 +253,7 @@ const ArticlesManager = () => {
           toast({
             title: 'שגיאה בהעלאת תמונה',
             description: 'אירעה שגיאה בהעלאת התמונה, ממשיך ביצירת המאמר ללא תמונה',
-            variant: 'warning',
+            variant: "destructive",
           });
         }
       }
@@ -311,7 +311,7 @@ const ArticlesManager = () => {
           toast({
             title: 'שגיאה בהעלאת תמונה',
             description: 'אירעה שגיאה בהעלאת התמונה, ממשיך בעדכון המאמר ללא שינוי בתמונה',
-            variant: 'warning',
+            variant: "destructive",
           });
         }
       }
