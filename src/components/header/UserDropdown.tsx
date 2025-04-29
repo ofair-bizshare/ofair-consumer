@@ -30,13 +30,13 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
         if (cachedCount) {
           setNotificationsCount(parseInt(cachedCount, 10));
         } else {
-          // Default to 0 notifications instead of random
+          // Default to 0 notifications
           setNotificationsCount(0);
           // Store in localStorage
           localStorage.setItem(`notificationCount-${user.id}`, '0');
         }
         
-        // Try to fetch from database if available
+        // Try to fetch real notifications from database
         try {
           const { count, error } = await supabase
             .from('notifications')
@@ -58,25 +58,30 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
     
     fetchNotifications();
     
-    // Set up subscription for real-time notifications
-    const channel = supabase
-      .channel('notifications')
-      .on('postgres_changes', { 
-        event: 'INSERT', 
-        schema: 'public', 
-        table: 'notifications',
-        filter: `user_id=eq.${user?.id}`
-      }, (payload) => {
-        setNotificationsCount(prev => {
-          const newCount = prev + 1;
-          localStorage.setItem(`notificationCount-${user?.id}`, newCount.toString());
-          return newCount;
-        });
-      })
-      .subscribe();
+    // Set up subscription for real-time notifications if user exists
+    let channel;
+    if (user) {
+      channel = supabase
+        .channel('notifications')
+        .on('postgres_changes', { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        }, (payload) => {
+          setNotificationsCount(prev => {
+            const newCount = prev + 1;
+            localStorage.setItem(`notificationCount-${user.id}`, newCount.toString());
+            return newCount;
+          });
+        })
+        .subscribe();
+    }
       
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [user]);
 

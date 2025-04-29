@@ -77,7 +77,9 @@ const UserSettings = () => {
       
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      const filePath = `avatars/${user.id}-${Math.random()}.${fileExt}`;
+      // Use a variable that can be modified instead of const
+      let filePath = `avatars/${user.id}-${Math.random()}.${fileExt}`;
+      let bucketName = 'public';
       
       // Check if public bucket exists
       try {
@@ -107,6 +109,7 @@ const UserSettings = () => {
           }
           
           // Use images bucket instead
+          bucketName = 'images';
           filePath = `images/${user.id}-${Math.random()}.${fileExt}`;
         } catch (imagesBucketError) {
           console.error('Error with images bucket check:', imagesBucketError);
@@ -116,32 +119,37 @@ const UserSettings = () => {
       
       // Upload the file to Supabase storage
       const { error: uploadError } = await supabase.storage
-        .from('public')
+        .from(bucketName)
         .upload(filePath, file, { upsert: true });
       
       if (uploadError) {
-        // Try with images bucket instead
-        const { error: imagesUploadError } = await supabase.storage
-          .from('images')
-          .upload(`images/${user.id}-${Math.random()}.${fileExt}`, file, { upsert: true });
+        // If public bucket upload fails, try with images bucket
+        if (bucketName === 'public') {
+          bucketName = 'images';
+          const imagesFilePath = `images/${user.id}-${Math.random()}.${fileExt}`;
           
-        if (imagesUploadError) throw imagesUploadError;
-        
-        // Get the public URL from images bucket
-        const { data: imagesData } = supabase.storage
-          .from('images')
-          .getPublicUrl(`images/${user.id}-${Math.random()}.${fileExt}`);
+          const { error: imagesUploadError } = await supabase.storage
+            .from('images')
+            .upload(imagesFilePath, file, { upsert: true });
+            
+          if (imagesUploadError) throw imagesUploadError;
           
-        if (imagesData) {
-          // Update the profile with the new avatar URL
-          await updateProfile({ profile_image: imagesData.publicUrl });
-          setAvatarUrl(imagesData.publicUrl);
-          
-          toast({
-            title: "תמונת פרופיל עודכנה",
-            description: "תמונת הפרופיל שלך הועלתה בהצלחה",
-          });
-          return;
+          // Get the public URL from images bucket
+          const { data: imagesData } = supabase.storage
+            .from('images')
+            .getPublicUrl(imagesFilePath);
+            
+          if (imagesData) {
+            // Update the profile with the new avatar URL
+            await updateProfile({ profile_image: imagesData.publicUrl });
+            setAvatarUrl(imagesData.publicUrl);
+            
+            toast({
+              title: "תמונת פרופיל עודכנה",
+              description: "תמונת הפרופיל שלך הועלתה בהצלחה",
+            });
+            return;
+          }
         }
         
         throw uploadError;
@@ -149,7 +157,7 @@ const UserSettings = () => {
       
       // Get the public URL
       const { data } = supabase.storage
-        .from('public')
+        .from(bucketName)
         .getPublicUrl(filePath);
       
       if (data) {
