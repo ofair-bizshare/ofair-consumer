@@ -2,7 +2,7 @@
 export interface ProfessionalInterface {
   id: string;
   name: string;
-  phone?: string; // Changed from required to optional
+  phone?: string;
   email?: string;
   bio?: string;
   rating: number;
@@ -11,17 +11,17 @@ export interface ProfessionalInterface {
   created_at: string;
   city: string;
   specialty: string;
-  verified: boolean;
+  verified?: boolean; // Changed from required to optional
   area?: string;
   category?: string;
   // Adding compatibility with Search and Components
-  profession: string; // Changed from optional to required to match dashboard.ts
-  location: string;  // Changed from optional to required to match dashboard.ts
-  image: string;     // Changed from optional to required to match dashboard.ts
-  specialties: string[]; // Changed from optional to required to match dashboard.ts
+  profession: string;
+  location: string;
+  image: string;
+  specialties: string[];
   phoneNumber?: string;
   about?: string;
-  reviewCount: number; // Changed from optional to required to match dashboard.ts
+  reviewCount: number;
   // Additional fields from the professional creation form
   company_name?: string;
   work_hours?: string;
@@ -29,4 +29,8 @@ export interface ProfessionalInterface {
   experience_years?: number;
   // Add phone_number as an alias for phoneNumber for backward compatibility
   phone_number?: string;
+  // Additional fields from Supabase database mapping
+  areas?: string;
+  working_hours?: string;
+  is_verified?: boolean;
 }

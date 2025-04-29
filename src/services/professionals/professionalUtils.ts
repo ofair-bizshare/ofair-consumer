@@ -54,27 +54,31 @@ export const getProfessionalFromData = (data: any): ProfessionalInterface => {
     profession: data.specialty || data.profession || 'לא צוין', // Ensure profession is always populated
     rating: data.rating || 0,
     reviewCount: reviewCount, // Ensure reviewCount is always populated
+    reviews_count: reviewCount,
     location: location, // Ensure location is always populated
     image: image, // Ensure image is always populated
-    verified: data.verified || false,
+    image_url: image,
+    verified: data.verified || data.is_verified || false,
     specialties: specialties, // Ensure specialties is always populated with a non-empty array
     // Add all compatibility fields
     phone: phoneNumber,
     phoneNumber: phoneNumber,
+    phone_number: phoneNumber,
     email: data.email,
-    bio: data.bio,
+    bio: data.bio || data.about,
     about: data.bio || data.about,
-    reviews_count: reviewCount, // Use the same value as reviewCount for consistency
-    image_url: image, // Use the same value as image for consistency
-    created_at: data.created_at,
+    created_at: data.created_at || new Date().toISOString(),
     city: data.city || data.location || 'לא צוין',
     specialty: data.specialty || data.profession || 'לא צוין',
-    area: data.area,
+    area: data.area || data.areas,
+    areas: data.area || data.areas,
     category: data.category,
     // Additional fields 
     company_name: data.company_name,
-    work_hours: data.work_hours || 'ימים א-ה: 8:00-18:00, יום ו: 8:00-13:00',
+    work_hours: data.work_hours || data.working_hours || 'ימים א-ה: 8:00-18:00, יום ו: 8:00-13:00',
+    working_hours: data.work_hours || data.working_hours,
     certifications: data.certifications || ['מוסמך מקצועי', 'בעל רישיון'],
-    experience_years: experienceYears
+    experience_years: experienceYears,
+    is_verified: data.verified || data.is_verified || false
   };
 };

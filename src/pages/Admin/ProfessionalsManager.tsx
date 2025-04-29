@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useToast } from '@/hooks/use-toast';
@@ -68,6 +67,7 @@ const ProfessionalsManager = () => {
         }
       }
       
+      // Prepare professional data with all required fields for TypeScript
       const professional = {
         name: data.name,
         profession: data.profession,
@@ -80,7 +80,12 @@ const ProfessionalsManager = () => {
         company_name: data.company_name,
         work_hours: data.work_hours,
         certifications: data.certifications?.split(',').map(s => s.trim()) || [],
-        experience_years: data.experience_years
+        experience_years: data.experience_years,
+        reviews_count: 0,
+        image_url: imageUrl,
+        created_at: new Date().toISOString(),
+        city: data.location, // Use location as city
+        specialty: data.specialties.split(',')[0]?.trim() || '' // Use first specialty
       };
       
       console.log('Professional data prepared:', professional);
@@ -191,7 +196,7 @@ const ProfessionalsManager = () => {
   return (
     <AdminLayout>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">ניהול בעלי מקצוע</h1>
+        <h1 className="text-3xl font-bold">נ��הול בעלי מקצוע</h1>
         
         <div className="flex items-center gap-2">
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

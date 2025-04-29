@@ -71,7 +71,7 @@ const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
         about: professional.about || professional.bio || '',
         rating: professional.rating || 5,
         company_name: professional.company_name || '',
-        work_hours: professional.work_hours || 'ימים א-ה: 8:00-18:00, יום ו: 8:00-13:00',
+        work_hours: professional.work_hours || professional.working_hours || 'ימים א-ה: 8:00-18:00, יום ו: 8:00-13:00',
         certifications: professional.certifications?.join(', ') || 'מוסמך מקצועי, בעל רישיון',
         experience_years: professional.experience_years || 5
       });

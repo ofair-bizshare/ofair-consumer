@@ -23,7 +23,11 @@ export const createProfessional = async (professional: Omit<ProfessionalInterfac
       company_name: professional.company_name,
       work_hours: professional.work_hours,
       certifications: professional.certifications,
-      experience_years: professional.experience_years
+      experience_years: professional.experience_years,
+      // Add missing required fields
+      review_count: professional.reviews_count || 0,
+      city: professional.city || professional.location || '',
+      specialty: professional.specialty || (professional.specialties && professional.specialties.length > 0 ? professional.specialties[0] : '')
     }).select();
     
     if (error) {
@@ -41,20 +45,35 @@ export const createProfessional = async (professional: Omit<ProfessionalInterfac
     // Cast and transform the data to match the required interface
     const createdProfessional: ProfessionalInterface = {
       ...data[0],
+      id: data[0].id,
+      name: data[0].name,
+      profession: data[0].profession,
+      location: data[0].location,
+      rating: data[0].rating || 0,
       reviewCount: data[0].review_count || 0,
-      phoneNumber: data[0].phone_number,
-      image: data[0].image || data[0].image_url || 'https://via.placeholder.com/150',
-      // Ensure all required properties are present
-      phone: data[0].phone_number || data[0].phone || '',
+      reviews_count: data[0].review_count || 0,
+      specialties: data[0].specialties || [],
+      image: data[0].image || 'https://via.placeholder.com/150',
+      image_url: data[0].image || 'https://via.placeholder.com/150',
+      phone: data[0].phone_number || '',
+      phoneNumber: data[0].phone_number || '',
+      phone_number: data[0].phone_number || '',
       email: data[0].email || '',
       bio: data[0].about || '',
-      reviews_count: data[0].review_count || 0,
-      image_url: data[0].image || data[0].image_url || '',
+      about: data[0].about || '',
       created_at: data[0].created_at || new Date().toISOString(),
       city: data[0].location || '',
       specialty: (data[0].specialties && data[0].specialties.length > 0) ? data[0].specialties[0] : '',
-      area: data[0].area || data[0].location || '',
-      category: data[0].category || professional.profession || ''
+      area: data[0].areas || data[0].location || '',
+      category: data[0].profession || '',
+      verified: data[0].is_verified || false,
+      is_verified: data[0].is_verified || false,
+      company_name: data[0].company_name || '',
+      work_hours: data[0].work_hours || data[0].working_hours || '',
+      working_hours: data[0].work_hours || data[0].working_hours || '',
+      certifications: data[0].certifications || [],
+      experience_years: data[0].experience_years || 0,
+      areas: data[0].areas || data[0].location || ''
     };
     
     return createdProfessional;
@@ -144,6 +163,9 @@ export const updateProfessional = async (id: string, professional: Partial<Omit<
     if (professional.work_hours !== undefined) updateData.work_hours = professional.work_hours;
     if (professional.certifications !== undefined) updateData.certifications = professional.certifications;
     if (professional.experience_years !== undefined) updateData.experience_years = professional.experience_years;
+    // Add missing fields for update
+    if (professional.city) updateData.city = professional.city;
+    if (professional.specialty) updateData.specialty = professional.specialty;
     
     // Add updated_at timestamp
     updateData.updated_at = new Date().toISOString();
@@ -169,20 +191,35 @@ export const updateProfessional = async (id: string, professional: Partial<Omit<
     // Cast and transform the data to match the required interface
     const updatedProfessional: ProfessionalInterface = {
       ...data[0],
+      id: data[0].id,
+      name: data[0].name,
+      profession: data[0].profession,
+      location: data[0].location,
+      rating: data[0].rating || 0,
       reviewCount: data[0].review_count || 0,
-      phoneNumber: data[0].phone_number,
-      image: data[0].image || data[0].image_url || 'https://via.placeholder.com/150',
-      // Ensure all required properties are present
-      phone: data[0].phone_number || data[0].phone || '',
+      reviews_count: data[0].review_count || 0,
+      specialties: data[0].specialties || [],
+      image: data[0].image || 'https://via.placeholder.com/150',
+      image_url: data[0].image || 'https://via.placeholder.com/150',
+      phone: data[0].phone_number || '',
+      phoneNumber: data[0].phone_number || '',
+      phone_number: data[0].phone_number || '',
       email: data[0].email || '',
       bio: data[0].about || '',
-      reviews_count: data[0].review_count || 0,
-      image_url: data[0].image || data[0].image_url || '',
+      about: data[0].about || '',
       created_at: data[0].created_at || new Date().toISOString(),
       city: data[0].location || '',
       specialty: (data[0].specialties && data[0].specialties.length > 0) ? data[0].specialties[0] : '',
-      area: data[0].area || data[0].location || '',
-      category: data[0].category || professional.profession || ''
+      area: data[0].areas || data[0].location || '',
+      category: data[0].profession || '',
+      verified: data[0].is_verified || false,
+      is_verified: data[0].is_verified || false,
+      company_name: data[0].company_name || '',
+      work_hours: data[0].work_hours || data[0].working_hours || '',
+      working_hours: data[0].work_hours || data[0].working_hours || '',
+      certifications: data[0].certifications || [],
+      experience_years: data[0].experience_years || 0,
+      areas: data[0].areas || data[0].location || ''
     };
     
     return updatedProfessional;
