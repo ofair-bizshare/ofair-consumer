@@ -14,13 +14,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Building, Phone, Mail, MapPin, Upload } from 'lucide-react';
+import { User, Phone, Mail, MapPin, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const UserSettings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { profile, loading: profileLoading, refetchProfile, updateProfile } = useUserProfile();
+  const { profile, loading: profileLoading, updateProfile } = useUserProfile();
   
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -79,12 +79,73 @@ const UserSettings = () => {
       const fileExt = file.name.split('.').pop();
       const filePath = `avatars/${user.id}-${Math.random()}.${fileExt}`;
       
+      // Check if public bucket exists
+      try {
+        const { data: bucketData, error: bucketError } = await supabase.storage
+          .getBucket('public');
+          
+        if (bucketError && bucketError.message.includes('The resource was not found')) {
+          console.log('Creating public bucket...');
+          const { error: createBucketError } = await supabase.storage
+            .createBucket('public', { public: true });
+            
+          if (createBucketError) throw createBucketError;
+        }
+      } catch (bucketError) {
+        console.error('Error with bucket check:', bucketError);
+        // Try with images bucket instead
+        try {
+          const { data: bucketData, error: bucketError } = await supabase.storage
+            .getBucket('images');
+            
+          if (bucketError && bucketError.message.includes('The resource was not found')) {
+            console.log('Creating images bucket...');
+            const { error: createBucketError } = await supabase.storage
+              .createBucket('images', { public: true });
+              
+            if (createBucketError) throw createBucketError;
+          }
+          
+          // Use images bucket instead
+          filePath = `images/${user.id}-${Math.random()}.${fileExt}`;
+        } catch (imagesBucketError) {
+          console.error('Error with images bucket check:', imagesBucketError);
+          throw imagesBucketError;
+        }
+      }
+      
       // Upload the file to Supabase storage
       const { error: uploadError } = await supabase.storage
         .from('public')
         .upload(filePath, file, { upsert: true });
       
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        // Try with images bucket instead
+        const { error: imagesUploadError } = await supabase.storage
+          .from('images')
+          .upload(`images/${user.id}-${Math.random()}.${fileExt}`, file, { upsert: true });
+          
+        if (imagesUploadError) throw imagesUploadError;
+        
+        // Get the public URL from images bucket
+        const { data: imagesData } = supabase.storage
+          .from('images')
+          .getPublicUrl(`images/${user.id}-${Math.random()}.${fileExt}`);
+          
+        if (imagesData) {
+          // Update the profile with the new avatar URL
+          await updateProfile({ profile_image: imagesData.publicUrl });
+          setAvatarUrl(imagesData.publicUrl);
+          
+          toast({
+            title: "תמונת פרופיל עודכנה",
+            description: "תמונת הפרופיל שלך הועלתה בהצלחה",
+          });
+          return;
+        }
+        
+        throw uploadError;
+      }
       
       // Get the public URL
       const { data } = supabase.storage
@@ -104,11 +165,28 @@ const UserSettings = () => {
       }
     } catch (error) {
       console.error('Error uploading avatar:', error);
-      toast({
-        title: "שגיאה בהעלאת תמונה",
-        description: "אירעה שגיאה בעת העלאת תמונת הפרופיל",
-        variant: "destructive"
-      });
+      
+      // Fallback to local storage if Supabase upload fails
+      try {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onloadend = async function() {
+          const base64data = reader.result as string;
+          await updateProfile({ profile_image: base64data });
+          setAvatarUrl(base64data);
+          toast({
+            title: "תמונת פרופיל נשמרה מקומית",
+            description: "התמונה נשמרה מקומית בלבד",
+          });
+        };
+        reader.readAsDataURL(file);
+      } catch (localError) {
+        toast({
+          title: "שגיאה בהעלאת תמונה",
+          description: "אירעה שגיאה בעת העלאת תמונת הפרופיל",
+          variant: "destructive"
+        });
+      }
     } finally {
       setUploading(false);
     }
@@ -123,18 +201,18 @@ const UserSettings = () => {
   }
   
   return (
-    <div className="container mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-6">הגדרות משתמש</h1>
+    <div className="container mx-auto py-6 px-4 sm:py-8">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">הגדרות משתמש</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         {/* Profile Card */}
         <Card className="md:col-span-2">
-          <CardHeader>
+          <CardHeader className="px-4 sm:px-6 pb-2 sm:pb-4">
             <CardTitle>פרטי פרופיל</CardTitle>
             <CardDescription>עדכן את פרטי הפרופיל שלך</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
+          <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6">
+            <div className="space-y-1 sm:space-y-2">
               <label className="text-sm font-medium" htmlFor="name">
                 שם מלא
               </label>
@@ -152,7 +230,7 @@ const UserSettings = () => {
               </div>
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-1 sm:space-y-2">
               <label className="text-sm font-medium" htmlFor="phone">
                 טלפון
               </label>
@@ -170,7 +248,7 @@ const UserSettings = () => {
               </div>
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-1 sm:space-y-2">
               <label className="text-sm font-medium" htmlFor="email">
                 דוא״ל
               </label>
@@ -190,7 +268,7 @@ const UserSettings = () => {
               </p>
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-1 sm:space-y-2">
               <label className="text-sm font-medium" htmlFor="address">
                 כתובת
               </label>
@@ -208,10 +286,11 @@ const UserSettings = () => {
               </div>
             </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="px-4 sm:px-6 pt-2 sm:pt-4">
             <Button 
               onClick={handleSaveProfile} 
               disabled={saving}
+              className="w-full sm:w-auto"
             >
               {saving ? 'שומר...' : 'שמור שינויים'}
             </Button>
@@ -220,17 +299,19 @@ const UserSettings = () => {
         
         {/* Avatar Card */}
         <Card>
-          <CardHeader>
+          <CardHeader className="px-4 sm:px-6 pb-2 sm:pb-4">
             <CardTitle>תמונת פרופיל</CardTitle>
             <CardDescription>העלה או עדכן את תמונת הפרופיל שלך</CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col items-center space-y-4">
-            <Avatar className="w-32 h-32">
-              <AvatarImage src={avatarUrl || undefined} />
-              <AvatarFallback className="text-2xl">
-                {name ? name.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+          <CardContent className="flex flex-col items-center space-y-4 px-4 sm:px-6">
+            <div className="w-32 h-32 relative">
+              <Avatar className="w-full h-full">
+                <AvatarImage src={avatarUrl || undefined} />
+                <AvatarFallback className="text-2xl">
+                  {name ? name.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </div>
             
             <div className="w-full">
               <label 
