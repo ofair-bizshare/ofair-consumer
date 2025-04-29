@@ -34,7 +34,7 @@ export const useAdminAccess = () => {
         }
       }
       
-      // Use RPC function directly to avoid RLS recursion issues
+      // Use the is_super_admin_check function we just created
       try {
         const { data: isAdmin, error: functionError } = await supabase.rpc('check_is_super_admin');
         
@@ -57,34 +57,8 @@ export const useAdminAccess = () => {
           return { hasAccess: false, notAdmin: true };
         }
       } catch (rpcError) {
-        console.error("AdminAccess: RPC admin check failed, trying direct query:", rpcError);
-        
-        // Fallback to direct query if RPC fails
-        const { data, error } = await supabase
-          .from('admin_users')
-          .select('is_super_admin')
-          .eq('user_id', user.id)
-          .maybeSingle();
-        
-        if (error) {
-          console.error("AdminAccess: Error checking admin status via direct query:", error);
-          throw error;
-        }
-        
-        const isAdmin = data && data.is_super_admin;
-        console.log("AdminAccess: Admin check result from direct query:", isAdmin);
-        
-        if (isAdmin) {
-          console.log("AdminAccess: User confirmed as admin via direct query");
-          setIsSuperAdmin(true);
-          setCachedAdminStatus(user.id, true);
-          return { hasAccess: true };
-        } else {
-          console.log("AdminAccess: User is not an admin via direct query:", user.id);
-          setIsSuperAdmin(false);
-          setCachedAdminStatus(user.id, false);
-          return { hasAccess: false, notAdmin: true };
-        }
+        console.error("AdminAccess: RPC admin check failed:", rpcError);
+        throw rpcError;
       }
     } catch (error) {
       console.error("AdminAccess: Error in admin access check:", error);

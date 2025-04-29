@@ -1,93 +1,98 @@
 
-/**
- * Utilities for admin status caching
- */
+interface AdminCacheEntry {
+  isAdmin: boolean;
+  timestamp: number;
+}
+
+const ADMIN_CACHE_KEY = 'admin_status_cache';
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutes in milliseconds
 
 /**
- * Gets cached admin status for a user
+ * Get cached admin status for a user
  * @param userId User ID to check
- * @returns The cached admin status or null if not cached or expired
+ * @returns Admin status if found and not expired, null otherwise
  */
-export const getCachedAdminStatus = (userId: string): { isAdmin: boolean } | null => {
+export const getCachedAdminStatus = (userId: string): AdminCacheEntry | null => {
   try {
-    const cachedAdminStatus = localStorage.getItem(`adminStatus-${userId}`);
-    if (cachedAdminStatus) {
-      const parsed = JSON.parse(cachedAdminStatus);
-      if (parsed.timestamp > Date.now() - 3600000) { // Cache valid for 1 hour
-        console.log("Using cached admin status:", parsed.isAdmin);
-        return { isAdmin: parsed.isAdmin };
-      }
+    const cacheJson = localStorage.getItem(ADMIN_CACHE_KEY);
+    if (!cacheJson) {
+      return null;
     }
-    return null;
-  } catch (cacheError) {
-    console.error('Error checking cached admin status:', cacheError);
+    
+    const cache: Record<string, AdminCacheEntry> = JSON.parse(cacheJson);
+    const entry = cache[userId];
+    
+    if (!entry) {
+      return null;
+    }
+    
+    // Check if the cache entry has expired
+    const now = Date.now();
+    if (now - entry.timestamp > CACHE_TTL) {
+      // Entry expired, remove it
+      delete cache[userId];
+      localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(cache));
+      return null;
+    }
+    
+    return entry;
+  } catch (error) {
+    console.error('Error getting cached admin status:', error);
+    clearAllAdminCache();
     return null;
   }
 };
 
 /**
- * Sets cached admin status for a user
- * @param userId User ID to cache for
- * @param isAdmin Admin status to cache
+ * Set cached admin status for a user
+ * @param userId User ID to cache status for
+ * @param isAdmin Whether the user is an admin
  */
 export const setCachedAdminStatus = (userId: string, isAdmin: boolean): void => {
   try {
-    localStorage.setItem(`adminStatus-${userId}`, JSON.stringify({
+    const cacheJson = localStorage.getItem(ADMIN_CACHE_KEY);
+    const cache: Record<string, AdminCacheEntry> = cacheJson ? JSON.parse(cacheJson) : {};
+    
+    cache[userId] = {
       isAdmin,
       timestamp: Date.now()
-    }));
-  } catch (cacheError) {
-    console.error('Error updating admin cache:', cacheError);
+    };
+    
+    localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(cache));
+  } catch (error) {
+    console.error('Error setting cached admin status:', error);
   }
 };
 
 /**
- * Clears the admin status cache for a user
+ * Clear cached admin status for a user
  * @param userId User ID to clear cache for
  */
 export const clearAdminCache = (userId: string): void => {
   try {
-    localStorage.removeItem(`adminStatus-${userId}`);
-    console.log(`Admin cache cleared for user: ${userId}`);
+    const cacheJson = localStorage.getItem(ADMIN_CACHE_KEY);
+    if (!cacheJson) {
+      return;
+    }
+    
+    const cache: Record<string, AdminCacheEntry> = JSON.parse(cacheJson);
+    
+    if (cache[userId]) {
+      delete cache[userId];
+      localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(cache));
+    }
   } catch (error) {
     console.error('Error clearing admin cache:', error);
   }
 };
 
 /**
- * Adds category mapping for professionals
+ * Clear all admin cache entries
  */
-export const getProfessionalCategoryLabel = (category: string): string => {
-  const categoryMap: {[key: string]: string} = {
-    'electricity': 'חשמל',
-    'plumbing': 'אינסטלציה',
-    'renovations': 'שיפוצים',
-    'carpentry': 'נגרות',
-    'architecture': 'אדריכלות',
-    'interior_design': 'עיצוב פנים',
-    'gardening': 'גינון',
-    'maintenance': 'תחזוקת בית',
-    'painting': 'צביעה',
-    'locksmith': 'מנעולנות'
-  };
-  
-  return categoryMap[category] || category;
-};
-
-/**
- * Adds area/location mapping
- */
-export const getLocationLabel = (area: string): string => {
-  const areaMap: {[key: string]: string} = {
-    'tel_aviv': 'תל אביב והמרכז',
-    'jerusalem': 'ירושלים והסביבה',
-    'haifa': 'חיפה והצפון',
-    'beer_sheva': 'באר שבע והדרום',
-    'sharon': 'השרון',
-    'shfela': 'השפלה',
-    'eilat': 'אילת והערבה',
-    'galilee': 'הגליל'
-  };
-  
-  return areaMap[area] || area;
+export const clearAllAdminCache = (): void => {
+  try {
+    localStorage.removeItem(ADMIN_CACHE_KEY);
+  } catch (error) {
+    console.error('Error clearing all admin cache:', error);
+  }
 };

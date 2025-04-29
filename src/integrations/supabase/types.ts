@@ -282,6 +282,7 @@ export type Database = {
           about: string | null
           areas: string | null
           certifications: string[] | null
+          city: string | null
           company_name: string | null
           created_at: string | null
           email: string | null
@@ -306,6 +307,7 @@ export type Database = {
           about?: string | null
           areas?: string | null
           certifications?: string[] | null
+          city?: string | null
           company_name?: string | null
           created_at?: string | null
           email?: string | null
@@ -330,6 +332,7 @@ export type Database = {
           about?: string | null
           areas?: string | null
           certifications?: string[] | null
+          city?: string | null
           company_name?: string | null
           created_at?: string | null
           email?: string | null
@@ -718,6 +721,14 @@ export type Database = {
       insert_project: {
         Args: { project_data: Json }
         Returns: string
+      }
+      is_admin_check: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_super_admin_check: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       is_super_admin_safe: {
         Args: Record<PropertyKey, never>

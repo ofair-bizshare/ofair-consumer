@@ -1,67 +1,55 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { UserMessageInterface } from '@/types/dashboard';
+import { AdminUserInterface, UserProfileInterface } from '@/types/dashboard';
 
 /**
- * Fetches all users from the system
- * @returns Promise<any[]> List of all users
+ * Get all admin users
+ * @returns Promise<AdminUserInterface[]> List of admin users
  */
-export const fetchAllUsers = async (): Promise<any[]> => {
+export const getAdminUsers = async (): Promise<AdminUserInterface[]> => {
   try {
     const { data, error } = await supabase
-      .from('user_profiles')
+      .from('admin_users')
       .select('*')
       .order('created_at', { ascending: false });
     
     if (error) {
-      console.error('Error fetching users:', error);
-      return [];
+      console.error('Error fetching admin users:', error);
+      throw error;
     }
     
     return data || [];
   } catch (error) {
-    console.error('Error fetching users:', error);
-    return [];
+    console.error('Error in getAdminUsers:', error);
+    throw error;
   }
 };
 
 /**
- * Sends a message to a user
- * @param messageData Message data including recipient, subject, and content
- * @returns Promise<boolean> True if successful, false otherwise
+ * Get user profile by ID
+ * @param userId User ID to fetch profile for
+ * @returns Promise<UserProfileInterface | null> The user profile or null if not found
  */
-export const sendUserMessage = async (messageData: {
-  recipient_id?: string;
-  recipient_email?: string;
-  subject: string;
-  content: string;
-}): Promise<boolean> => {
+export const getUserProfile = async (userId: string): Promise<UserProfileInterface | null> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      console.error('No authenticated user found');
-      return false;
-    }
-    
-    const { data, error } = await supabase.from('user_messages').insert({
-      sender_id: user.id,
-      recipient_id: messageData.recipient_id,
-      recipient_email: messageData.recipient_email,
-      subject: messageData.subject,
-      content: messageData.content,
-      read: false
-    });
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
     
     if (error) {
-      console.error('Error sending message:', error);
-      return false;
+      if (error.code === 'PGRST116') {
+        // No rows returned
+        return null;
+      }
+      console.error('Error fetching user profile:', error);
+      throw error;
     }
     
-    return true;
+    return data;
   } catch (error) {
-    console.error('Error sending message:', error);
-    return false;
+    console.error('Error in getUserProfile:', error);
+    throw error;
   }
 };
-

@@ -1,139 +1,82 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ArticleInterface } from '@/types/dashboard';
 
 /**
- * Creates a new article
- * @param article Article data
- * @returns Promise<ArticleInterface | null> The created article data or null on error
+ * Create a new article
+ * @param article The article to create
+ * @returns The created article or null if there was an error
  */
-export const createArticle = async (article: Omit<ArticleInterface, 'id' | 'created_at' | 'updated_at'>): Promise<ArticleInterface | null> => {
+export const createArticle = async (article: Omit<ArticleInterface, 'id' | 'created_at'>): Promise<ArticleInterface | null> => {
   try {
-    console.log('Creating article in admin service:', article);
-    
-    // Make sure the content is properly preserved as HTML
     const { data, error } = await supabase
       .from('articles')
       .insert({
         title: article.title,
-        content: article.content, // This will now contain HTML from the rich text editor
-        summary: article.summary || article.content.replace(/<[^>]*>/g, '').substring(0, 150) + '...', // Strip HTML for summary if not provided
-        image: article.image || 'https://via.placeholder.com/800x400?text=No+Image',
+        content: article.content,
+        summary: article.summary,
         author: article.author,
-        published: article.published !== undefined ? article.published : true,
-        category: article.category || null
+        image: article.image,
+        published: article.published === undefined ? true : article.published,
+        category: article.category || 'general'
       })
-      .select('*');
-      
+      .select();
+
     if (error) {
-      console.error('Error creating article in admin service:', error);
       throw error;
     }
-    
-    if (!data || data.length === 0) {
-      console.error('No data returned from article creation');
-      throw new Error('No data returned from article creation');
-    }
-    
-    console.log('Article created successfully:', data[0]);
-    return data[0] as ArticleInterface;
+
+    return data?.[0] || null;
   } catch (error) {
-    console.error('Error in createArticle admin service:', error);
+    console.error('Error creating article:', error);
     throw error;
   }
 };
 
 /**
- * Updates an existing article
- * @param id Article ID to update
- * @param article Article data to update
- * @returns Promise<ArticleInterface | null> The updated article data or null on error
+ * Update an existing article
+ * @param id The ID of the article to update
+ * @param article The updated article data
+ * @returns The updated article or null if there was an error
  */
-export const updateArticle = async (id: string, article: Partial<Omit<ArticleInterface, 'id' | 'created_at' | 'updated_at'>>): Promise<ArticleInterface | null> => {
+export const updateArticle = async (id: string, article: Partial<ArticleInterface>): Promise<ArticleInterface | null> => {
   try {
-    console.log(`Updating article ${id}:`, article);
-    
-    // For summary, strip HTML tags if needed
-    const updatedArticle: any = { ...article };
-    if (updatedArticle.content && !updatedArticle.summary) {
-      updatedArticle.summary = updatedArticle.content.replace(/<[^>]*>/g, '').substring(0, 150) + '...';
-    }
-    
-    // Only include fields that are defined
-    const updateData: any = {};
-    
-    if (updatedArticle.title !== undefined) updateData.title = updatedArticle.title;
-    if (updatedArticle.content !== undefined) updateData.content = updatedArticle.content;
-    if (updatedArticle.summary !== undefined) updateData.summary = updatedArticle.summary;
-    if (updatedArticle.image !== undefined) updateData.image = updatedArticle.image;
-    if (updatedArticle.author !== undefined) updateData.author = updatedArticle.author;
-    if (updatedArticle.published !== undefined) updateData.published = updatedArticle.published;
-    if (updatedArticle.category !== undefined) updateData.category = updatedArticle.category;
-    
-    // Add updated_at timestamp
-    updateData.updated_at = new Date().toISOString();
-    
     const { data, error } = await supabase
       .from('articles')
-      .update(updateData)
+      .update({
+        title: article.title,
+        content: article.content,
+        summary: article.summary,
+        author: article.author,
+        image: article.image,
+        published: article.published,
+        category: article.category,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', id)
-      .select('*');
-      
+      .select();
+
     if (error) {
-      console.error('Error updating article:', error);
       throw error;
     }
-    
-    if (!data || data.length === 0) {
-      console.error('No data returned from article update');
-      throw new Error('No data returned from article update');
-    }
-    
-    console.log('Article updated successfully:', data[0]);
-    return data[0] as ArticleInterface;
+
+    return data?.[0] || null;
   } catch (error) {
-    console.error('Error in updateArticle admin service:', error);
+    console.error('Error updating article:', error);
     throw error;
   }
 };
 
 /**
- * Deletes an article
- * @param id Article ID to delete
- * @returns Promise<boolean> True if successful, false otherwise
- */
-export const deleteArticle = async (id: string): Promise<boolean> => {
-  try {
-    console.log(`Deleting article ${id}`);
-    
-    const { error } = await supabase
-      .from('articles')
-      .delete()
-      .eq('id', id);
-      
-    if (error) {
-      console.error('Error deleting article:', error);
-      return false;
-    }
-    
-    console.log('Article deleted successfully');
-    return true;
-  } catch (error) {
-    console.error('Error deleting article:', error);
-    return false;
-  }
-};
-
-/**
- * Uploads an article image
- * @param file Image file to upload
- * @returns Promise<string | null> URL of the uploaded image or null if failed
+ * Upload an article image to storage
+ * @param file The image file to upload
+ * @returns The public URL of the uploaded image or null if there was an error
  */
 export const uploadArticleImage = async (file: File): Promise<string | null> => {
   try {
-    console.log('Uploading article image:', file.name);
     const fileExt = file.name.split('.').pop();
     const fileName = `article-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-    
+
     // Try uploading to the articles bucket
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('articles')
@@ -143,7 +86,7 @@ export const uploadArticleImage = async (file: File): Promise<string | null> => 
       });
       
     if (uploadError) {
-      console.error(`Error uploading to articles bucket:`, uploadError);
+      console.error('Error uploading to articles bucket:', uploadError);
       
       // Try uploading to the images bucket as fallback
       const { data: fallbackData, error: fallbackError } = await supabase.storage
@@ -154,8 +97,8 @@ export const uploadArticleImage = async (file: File): Promise<string | null> => 
         });
         
       if (fallbackError) {
-        console.error(`Error uploading to images bucket:`, fallbackError);
-        return 'https://via.placeholder.com/800x400?text=Upload+Failed';
+        console.error('Error uploading to images bucket:', fallbackError);
+        return null;
       }
       
       const { data: fallbackUrl } = supabase.storage
@@ -165,15 +108,37 @@ export const uploadArticleImage = async (file: File): Promise<string | null> => 
       return fallbackUrl.publicUrl;
     }
     
-    // Get public URL from articles bucket
-    const { data: publicURL } = supabase.storage
+    // Get the public URL from the articles bucket
+    const { data: publicUrl } = supabase.storage
       .from('articles')
       .getPublicUrl(`images/${fileName}`);
     
-    return publicURL.publicUrl;
+    return publicUrl.publicUrl;
   } catch (error) {
     console.error('Error uploading article image:', error);
-    // Return a placeholder image URL as fallback
-    return 'https://via.placeholder.com/800x400?text=Upload+Failed';
+    return null;
+  }
+};
+
+/**
+ * Delete an article
+ * @param id The ID of the article to delete
+ * @returns True if successful, false otherwise
+ */
+export const deleteArticle = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('articles')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      throw error;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error deleting article:', error);
+    return false;
   }
 };
