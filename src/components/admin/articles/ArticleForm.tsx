@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/hooks/use-toast';
-import { uploadArticleImage } from '@/services/articles'; // Now correctly imported from services/articles
+import { uploadArticleImage } from '@/services/articles';
 import { createArticle } from '@/services/admin';
 import { Form } from '@/components/ui/form';
 import { articleFormSchema, ArticleFormValues } from './articleSchema';
@@ -62,6 +62,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
 
   useEffect(() => {
     if (defaultValues) {
+      console.log('Setting up form with default values:', defaultValues);
       form.reset({
         title: defaultValues.title,
         summary: defaultValues.summary || '',
@@ -78,24 +79,29 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
     try {
       setFormError(null);
       setUploadProgress(0);
+      console.log('Article form submission starting:', data);
       
       if (onSubmit) {
+        console.log('Using provided onSubmit handler');
         await onSubmit(data, imageFile);
         return;
       }
       
       // Legacy submission flow
       setUploading(true);
+      console.log('Using legacy submission flow');
       
       // Upload image if selected
       let imageUrl = '';
       if (imageFile) {
         try {
+          console.log('Uploading article image');
           setUploadProgress(10);
           const uploadedUrl = await uploadArticleImage(imageFile);
           setUploadProgress(50);
           if (uploadedUrl) {
             imageUrl = uploadedUrl;
+            console.log('Image uploaded successfully:', imageUrl);
           }
         } catch (uploadError) {
           console.error('Error uploading image:', uploadError);
@@ -111,6 +117,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
       }
       
       setUploadProgress(70);
+      console.log('Preparing to create article');
       
       // Create article
       const article = {

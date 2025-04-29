@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useToast } from '@/hooks/use-toast';
@@ -34,15 +33,18 @@ const ArticlesManager = () => {
       setError(null);
       setLoading(true);
       
+      console.log('Fetching articles from the database');
       const { data, error } = await supabase
         .from('articles')
         .select('*')
         .order('created_at', { ascending: false });
         
       if (error) {
+        console.error('Supabase error when fetching articles:', error);
         throw error;
       }
       
+      console.log(`Successfully fetched ${data?.length || 0} articles`);
       setArticles(data || []);
       applyFilters(data || [], categoryFilter);
     } catch (error) {
@@ -65,6 +67,7 @@ const ArticlesManager = () => {
       result = result.filter(article => article.category === category);
     }
     
+    console.log(`Applied filters - Category: ${category}, Results: ${result.length}`);
     setFilteredArticles(result);
   };
 

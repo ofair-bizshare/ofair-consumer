@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ProfessionalInterface } from '@/types/dashboard';
 
@@ -24,18 +23,18 @@ export const createProfessional = async (professional: Omit<ProfessionalInterfac
       work_hours: professional.work_hours,
       certifications: professional.certifications,
       experience_years: professional.experience_years
-    });
+    }).select();
     
     if (error) {
       console.error('Error creating professional:', error);
-      return false;
+      throw error;
     }
     
-    console.log('Professional created successfully');
+    console.log('Professional created successfully:', data);
     return true;
   } catch (error) {
     console.error('Error creating professional:', error);
-    return false;
+    throw error;
   }
 };
 
@@ -123,21 +122,22 @@ export const updateProfessional = async (id: string, professional: Partial<Omit<
     // Add updated_at timestamp
     updateData.updated_at = new Date().toISOString();
     
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('professionals')
       .update(updateData)
-      .eq('id', id);
+      .eq('id', id)
+      .select();
     
     if (error) {
       console.error('Error updating professional:', error);
-      return false;
+      throw error;
     }
     
-    console.log('Professional updated successfully');
+    console.log('Professional updated successfully:', data);
     return true;
   } catch (error) {
     console.error('Error updating professional:', error);
-    return false;
+    throw error;
   }
 };
 

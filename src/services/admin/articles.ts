@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ArticleInterface } from '@/types/dashboard';
 
@@ -23,21 +22,20 @@ export const createArticle = async (article: Omit<ArticleInterface, 'id' | 'crea
         published: article.published !== undefined ? article.published : true,
         category: article.category || null
       })
-      .select()
-      .single();
+      .select('*');
       
     if (error) {
       console.error('Error creating article in admin service:', error);
       throw error;
     }
     
-    if (!data) {
+    if (!data || data.length === 0) {
       console.error('No data returned from article creation');
       throw new Error('No data returned from article creation');
     }
     
-    console.log('Article created successfully:', data);
-    return data;
+    console.log('Article created successfully:', data[0]);
+    return data[0] as ArticleInterface;
   } catch (error) {
     console.error('Error in createArticle admin service:', error);
     throw error;
@@ -78,21 +76,20 @@ export const updateArticle = async (id: string, article: Partial<Omit<ArticleInt
       .from('articles')
       .update(updateData)
       .eq('id', id)
-      .select()
-      .single();
+      .select('*');
       
     if (error) {
       console.error('Error updating article:', error);
       throw error;
     }
     
-    if (!data) {
+    if (!data || data.length === 0) {
       console.error('No data returned from article update');
       throw new Error('No data returned from article update');
     }
     
-    console.log('Article updated successfully:', data);
-    return data;
+    console.log('Article updated successfully:', data[0]);
+    return data[0] as ArticleInterface;
   } catch (error) {
     console.error('Error in updateArticle admin service:', error);
     throw error;

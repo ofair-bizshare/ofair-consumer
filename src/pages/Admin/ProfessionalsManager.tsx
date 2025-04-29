@@ -55,9 +55,14 @@ const ProfessionalsManager = () => {
       setUploading(true);
       setError(null);
       
+      // Log the beginning of the submission process
+      console.log('Starting professional submission process', { isEditing: !!editingProfessional, data });
+      
       let imageUrl = editingProfessional?.image || 'https://via.placeholder.com/150';
       if (imageFile) {
+        console.log('Uploading professional image');
         const uploadedUrl = await uploadProfessionalImage(imageFile);
+        console.log('Image upload result:', uploadedUrl);
         if (uploadedUrl) {
           imageUrl = uploadedUrl;
         }
@@ -78,10 +83,15 @@ const ProfessionalsManager = () => {
         experience_years: data.experience_years
       };
       
+      console.log('Professional data prepared:', professional);
+      
       let result = false;
       
       if (editingProfessional) {
+        console.log('Updating existing professional:', editingProfessional.id);
         result = await updateProfessional(editingProfessional.id, professional);
+        console.log('Update professional result:', result);
+        
         if (result) {
           toast({
             title: "בעל מקצוע עודכן בהצלחה",
@@ -89,7 +99,10 @@ const ProfessionalsManager = () => {
           });
         }
       } else {
+        console.log('Creating new professional');
         result = await createProfessional(professional);
+        console.log('Create professional result:', result);
+        
         if (result) {
           toast({
             title: "בעל מקצוע נוצר בהצלחה",
@@ -102,13 +115,9 @@ const ProfessionalsManager = () => {
         setImageFile(null);
         setDialogOpen(false);
         setEditingProfessional(null);
-        fetchData();
+        await fetchData(); // Refetch professionals after successful creation/update
       } else {
-        toast({
-          title: editingProfessional ? "שגיאה בעדכון בעל מקצוע" : "שגיאה ביצירת בעל מקצוע",
-          description: "אירעה שגיאה. אנא נסה שוב.",
-          variant: "destructive"
-        });
+        throw new Error('Operation failed with no specific error');
       }
     } catch (error) {
       console.error('Error creating/updating professional:', error);
