@@ -59,7 +59,8 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
     fetchNotifications();
     
     // Set up subscription for real-time notifications if user exists
-    let subscription;
+    let subscription: any = null;
+    
     if (user) {
       const channel = supabase
         .channel('notifications')
