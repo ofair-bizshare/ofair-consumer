@@ -1,12 +1,13 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ProfessionalInterface } from '@/types/dashboard';
 
 /**
  * Creates a new professional
  * @param professional Professional data
- * @returns Promise<boolean> True if successful, false otherwise
+ * @returns Promise<ProfessionalInterface | null> The created professional or null if failed
  */
-export const createProfessional = async (professional: Omit<ProfessionalInterface, 'id' | 'reviewCount' | 'verified'>): Promise<boolean> => {
+export const createProfessional = async (professional: Omit<ProfessionalInterface, 'id' | 'reviewCount' | 'verified'>): Promise<ProfessionalInterface | null> => {
   try {
     console.log('Creating professional:', professional);
     
@@ -30,8 +31,13 @@ export const createProfessional = async (professional: Omit<ProfessionalInterfac
       throw error;
     }
     
-    console.log('Professional created successfully:', data);
-    return true;
+    if (!data || data.length === 0) {
+      console.error('No data returned from professional creation');
+      throw new Error('No data returned from professional creation');
+    }
+    
+    console.log('Professional created successfully:', data[0]);
+    return data[0] as ProfessionalInterface;
   } catch (error) {
     console.error('Error creating professional:', error);
     throw error;
@@ -98,7 +104,7 @@ export const uploadProfessionalImage = async (file: File): Promise<string | null
  * @param professional Professional data to update
  * @returns Promise<boolean> True if successful, false otherwise
  */
-export const updateProfessional = async (id: string, professional: Partial<Omit<ProfessionalInterface, 'id' | 'reviewCount' | 'verified'>>): Promise<boolean> => {
+export const updateProfessional = async (id: string, professional: Partial<Omit<ProfessionalInterface, 'id' | 'reviewCount' | 'verified'>>): Promise<ProfessionalInterface | null> => {
   try {
     console.log(`Updating professional ${id}:`, professional);
     
@@ -133,8 +139,13 @@ export const updateProfessional = async (id: string, professional: Partial<Omit<
       throw error;
     }
     
-    console.log('Professional updated successfully:', data);
-    return true;
+    if (!data || data.length === 0) {
+      console.error('No data returned from professional update');
+      return null;
+    }
+    
+    console.log('Professional updated successfully:', data[0]);
+    return data[0] as ProfessionalInterface;
   } catch (error) {
     console.error('Error updating professional:', error);
     throw error;

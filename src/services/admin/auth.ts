@@ -4,6 +4,7 @@ import { getCachedAdminStatus, setCachedAdminStatus, clearAdminCache } from './u
 
 /**
  * Checks if the current user is a super admin using the security definer function
+ * This function has been updated to use the new check_is_super_admin function
  * @returns Promise<boolean> True if the user is a super admin, false otherwise
  */
 export const checkIsSuperAdmin = async (): Promise<boolean> => {
@@ -25,7 +26,7 @@ export const checkIsSuperAdmin = async (): Promise<boolean> => {
       return cachedStatus.isAdmin;
     }
     
-    // Use the correct security definer function name
+    // Use the security definer function which now works correctly
     console.log("No cache found, checking via security definer function");
     const { data: isAdmin, error } = await supabase.rpc('check_is_super_admin');
     

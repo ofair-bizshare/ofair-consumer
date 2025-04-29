@@ -47,12 +47,12 @@ const ArticlesManager = () => {
       console.log(`Successfully fetched ${data?.length || 0} articles`);
       setArticles(data || []);
       applyFilters(data || [], categoryFilter);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching articles:', error);
-      setError('אירעה שגיאה בטעינת המאמרים, אנא נסה שוב מאוחר יותר.');
+      setError(error.message || 'אירעה שגיאה בטעינת המאמרים, אנא נסה שוב מאוחר יותר.');
       toast({
         title: 'שגיאה בטעינת מאמרים',
-        description: 'אירעה שגיאה בטעינת המאמרים מהשרת',
+        description: error.message || 'אירעה שגיאה בטעינת המאמרים מהשרת',
         variant: 'destructive',
       });
     } finally {
@@ -76,11 +76,60 @@ const ArticlesManager = () => {
     applyFilters(articles, value);
   };
 
-  useEffect(() => {
-    fetchArticles();
-  }, []);
+  // Get image for specific category
+  const getCategoryImage = async (category: string, index: number): Promise<string> => {
+    // Define relevant images for each category
+    const categoryImages = {
+      'plumbing': [
+        'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&q=80'
+      ],
+      'electrical': [
+        'https://images.unsplash.com/photo-1621905251918-48416bd8575a?auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1558449033-fdc9ecfbc80e?auto=format&fit=crop&q=80'
+      ],
+      'renovation': [
+        'https://images.unsplash.com/photo-1581165825586-bcceb7539f46?auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1493606278519-11aa9f86e40a?auto=format&fit=crop&q=80'
+      ],
+      'gardening': [
+        'https://images.unsplash.com/photo-1617576683096-00fc8eecb3af?auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80'
+      ],
+      'cleaning': [
+        'https://images.unsplash.com/photo-1563453392212-326f5e854473?auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?auto=format&fit=crop&q=80'
+      ],
+      'moving': [
+        'https://images.unsplash.com/photo-1600518863233-5606e8122528?auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1530521954074-e64f6810b32d?auto=format&fit=crop&q=80'
+      ],
+      'painting': [
+        'https://images.unsplash.com/photo-1595815771614-ade501d22bd4?auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1562259929-b4e1fd3aef09?auto=format&fit=crop&q=80'
+      ],
+      'locksmith': [
+        'https://images.unsplash.com/photo-1599508704512-2f19efd1e35f?auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1557127275-f8b5ba93e24e?auto=format&fit=crop&q=80'
+      ],
+      'ac': [
+        'https://images.unsplash.com/photo-1596557072152-c2edcb6c7b04?auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1654055802553-77e035ff08b4?auto=format&fit=crop&q=80'
+      ],
+      'general': [
+        'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&q=80',
+        'https://images.unsplash.com/photo-1572250383938-ed8c501a29d9?auto=format&fit=crop&q=80'
+      ]
+    };
 
-  // Create sample articles for each category
+    // Return the appropriate image or a default
+    if (categoryImages[category] && categoryImages[category][index-1]) {
+      return categoryImages[category][index-1];
+    } else {
+      return `https://via.placeholder.com/800x400?text=${encodeURIComponent(category)}`;
+    }
+  };
+
   const createSampleArticles = async () => {
     if (!articles || articles.length > 0) {
       // Don't create sample articles if we already have articles
@@ -179,95 +228,63 @@ const ArticlesManager = () => {
     }
   };
 
-  // Get image for specific category
-  const getCategoryImage = async (category: string, index: number): Promise<string> => {
-    // Define relevant images for each category
-    const categoryImages = {
-      'plumbing': [
-        'https://images.unsplash.com/photo-1542013936693-884638332954?auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&q=80'
-      ],
-      'electrical': [
-        'https://images.unsplash.com/photo-1621905251918-48416bd8575a?auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1558449033-fdc9ecfbc80e?auto=format&fit=crop&q=80'
-      ],
-      'renovation': [
-        'https://images.unsplash.com/photo-1581165825586-bcceb7539f46?auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1493606278519-11aa9f86e40a?auto=format&fit=crop&q=80'
-      ],
-      'gardening': [
-        'https://images.unsplash.com/photo-1617576683096-00fc8eecb3af?auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80'
-      ],
-      'cleaning': [
-        'https://images.unsplash.com/photo-1563453392212-326f5e854473?auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?auto=format&fit=crop&q=80'
-      ],
-      'moving': [
-        'https://images.unsplash.com/photo-1600518863233-5606e8122528?auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1530521954074-e64f6810b32d?auto=format&fit=crop&q=80'
-      ],
-      'painting': [
-        'https://images.unsplash.com/photo-1595815771614-ade501d22bd4?auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1562259929-b4e1fd3aef09?auto=format&fit=crop&q=80'
-      ],
-      'locksmith': [
-        'https://images.unsplash.com/photo-1599508704512-2f19efd1e35f?auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1557127275-f8b5ba93e24e?auto=format&fit=crop&q=80'
-      ],
-      'ac': [
-        'https://images.unsplash.com/photo-1596557072152-c2edcb6c7b04?auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1654055802553-77e035ff08b4?auto=format&fit=crop&q=80'
-      ],
-      'general': [
-        'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1572250383938-ed8c501a29d9?auto=format&fit=crop&q=80'
-      ]
-    };
-
-    // Return the appropriate image or a default
-    if (categoryImages[category] && categoryImages[category][index-1]) {
-      return categoryImages[category][index-1];
-    } else {
-      return `https://via.placeholder.com/800x400?text=${encodeURIComponent(category)}`;
-    }
-  };
-
   useEffect(() => {
-    // After fetching articles, create sample articles if needed
+    fetchArticles();
+  }, []);
+
+  // After fetching articles, create sample articles if needed
+  useEffect(() => {
     if (!loading && articles.length === 0) {
       createSampleArticles();
     }
-  }, [loading]);
+  }, [loading, articles.length]);
 
   const handleCreateArticle = async (articleData: any, imageFile: File | null) => {
     try {
       setSubmitting(true);
+      setError(null);
       
       let imageUrl = undefined;
       if (imageFile) {
-        imageUrl = await uploadArticleImage(imageFile);
+        try {
+          imageUrl = await uploadArticleImage(imageFile);
+        } catch (uploadError) {
+          console.error('Error uploading article image:', uploadError);
+          toast({
+            title: 'שגיאה בהעלאת תמונה',
+            description: 'אירעה שגיאה בהעלאת התמונה, ממשיך ביצירת המאמר ללא תמונה',
+            variant: 'warning',
+          });
+        }
       }
       
-      const article = await createArticle({
-        ...articleData,
-        image: imageUrl
-      });
-      
-      if (article) {
-        toast({
-          title: 'מאמר נוצר בהצלחה',
-          description: 'המאמר נוסף למערכת בהצלחה',
+      try {
+        const article = await createArticle({
+          ...articleData,
+          image: imageUrl
         });
         
-        setDialogOpen(false);
-        fetchArticles();
+        if (article) {
+          toast({
+            title: 'מאמר נוצר בהצלחה',
+            description: 'המאמר נוסף למערכת בהצלחה',
+          });
+          
+          setDialogOpen(false);
+          fetchArticles();
+        } else {
+          throw new Error('No article returned from creation');
+        }
+      } catch (createError: any) {
+        console.error('Error creating article:', createError);
+        throw createError;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating article:', error);
+      setError(error.message || 'אירעה שגיאה בעת יצירת המאמר');
       toast({
         title: 'שגיאה ביצירת מאמר',
-        description: 'אירעה שגיאה בעת יצירת המאמר',
+        description: error.message || 'אירעה שגיאה בעת יצירת המאמר',
         variant: 'destructive',
       });
     } finally {
@@ -280,35 +297,53 @@ const ArticlesManager = () => {
     
     try {
       setSubmitting(true);
+      setError(null);
       
       let imageUrl = editingArticle.image;
       if (imageFile) {
-        const uploadedUrl = await uploadArticleImage(imageFile);
-        if (uploadedUrl) {
-          imageUrl = uploadedUrl;
+        try {
+          const uploadedUrl = await uploadArticleImage(imageFile);
+          if (uploadedUrl) {
+            imageUrl = uploadedUrl;
+          }
+        } catch (uploadError) {
+          console.error('Error uploading article image:', uploadError);
+          toast({
+            title: 'שגיאה בהעלאת תמונה',
+            description: 'אירעה שגיאה בהעלאת התמונה, ממשיך בעדכון המאמר ללא שינוי בתמונה',
+            variant: 'warning',
+          });
         }
       }
       
-      const updatedArticle = await updateArticle(editingArticle.id, {
-        ...articleData,
-        image: imageUrl
-      });
-      
-      if (updatedArticle) {
-        toast({
-          title: 'מאמר עודכן בהצלחה',
-          description: 'המאמר עודכן במערכת בהצלחה',
+      try {
+        const updatedArticle = await updateArticle(editingArticle.id, {
+          ...articleData,
+          image: imageUrl
         });
         
-        setDialogOpen(false);
-        setEditingArticle(null);
-        fetchArticles();
+        if (updatedArticle) {
+          toast({
+            title: 'מאמר עודכן בהצלחה',
+            description: 'המאמר עודכן במערכת בהצלחה',
+          });
+          
+          setDialogOpen(false);
+          setEditingArticle(null);
+          fetchArticles();
+        } else {
+          throw new Error('No article returned from update');
+        }
+      } catch (updateError: any) {
+        console.error('Error updating article:', updateError);
+        throw updateError;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating article:', error);
+      setError(error.message || 'אירעה שגיאה בעת עדכון המאמר');
       toast({
         title: 'שגיאה בעדכון מאמר',
-        description: 'אירעה שגיאה בעת עדכון המאמר',
+        description: error.message || 'אירעה שגיאה בעת עדכון המאמר',
         variant: 'destructive',
       });
     } finally {

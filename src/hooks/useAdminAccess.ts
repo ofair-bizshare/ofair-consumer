@@ -35,7 +35,7 @@ export const useAdminAccess = () => {
       }
       
       try {
-        // Use the security definer function - use check_is_super_admin which is the correct function name
+        // Use the updated security definer function
         const { data: isAdmin, error } = await supabase.rpc('check_is_super_admin');
         
         if (error) {
@@ -60,15 +60,7 @@ export const useAdminAccess = () => {
         console.error("AdminAccess: Error during admin check:", error);
         setAdminCheckError((error as Error).message || "שגיאה לא ידועה");
         
-        // If we've tried less than 3 times, schedule another retry
-        if (retryAttempt < 2) {
-          console.log(`AdminAccess: Scheduling retry attempt ${retryAttempt + 1} in 2 seconds`);
-          setTimeout(() => {
-            setRetryAttempt(prev => prev + 1);
-          }, 2000);
-        }
-        
-        // Check if we have a cached admin status as fallback
+        // If we have a cached admin status as fallback
         const cachedAdminStatus = getCachedAdminStatus(user.id);
         if (cachedAdminStatus) {
           console.log("AdminAccess: Using cached admin status as fallback:", cachedAdminStatus.isAdmin);

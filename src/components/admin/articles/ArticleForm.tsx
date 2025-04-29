@@ -3,8 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useToast } from '@/hooks/use-toast';
-import { uploadArticleImage } from '@/services/articles';
-import { createArticle } from '@/services/admin';
 import { Form } from '@/components/ui/form';
 import { articleFormSchema, ArticleFormValues } from './articleSchema';
 import FormErrorAlert from './FormErrorAlert';
@@ -87,89 +85,25 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
         return;
       }
       
-      // Legacy submission flow
-      setUploading(true);
-      console.log('Using legacy submission flow');
-      
-      // Upload image if selected
-      let imageUrl = '';
-      if (imageFile) {
-        try {
-          console.log('Uploading article image');
-          setUploadProgress(10);
-          const uploadedUrl = await uploadArticleImage(imageFile);
-          setUploadProgress(50);
-          if (uploadedUrl) {
-            imageUrl = uploadedUrl;
-            console.log('Image uploaded successfully:', imageUrl);
-          }
-        } catch (uploadError) {
-          console.error('Error uploading image:', uploadError);
-          toast({
-            title: "שגיאה בהעלאת תמונה",
-            description: "התמונה לא הועלתה, אבל נמשיך ביצירת המאמר ללא תמונה",
-            variant: "destructive"
-          });
-          imageUrl = 'https://via.placeholder.com/800x400?text=תמונה+לא+זמינה';
-        }
-      } else {
-        imageUrl = 'https://via.placeholder.com/800x400?text=אין+תמונה';
-      }
-      
-      setUploadProgress(70);
-      console.log('Preparing to create article');
-      
-      // Create article
-      const article = {
-        title: data.title,
-        summary: data.summary,
-        content: data.content,
-        author: data.author,
-        published: data.published,
-        category: data.category,
-        image: imageUrl
-      };
-      
-      console.log("Submitting article:", article);
-      
-      try {
-        const result = await createArticle(article);
-        setUploadProgress(100);
-        
-        if (result) {
-          console.log("Article created successfully:", result);
-          toast({
-            title: "מאמר נוצר בהצלחה",
-            description: `המאמר "${data.title}" נוסף בהצלחה`
-          });
-          
-          // Reset form and close dialog
-          form.reset();
-          setImageFile(null);
-          setImagePreview(null);
-          if (onSuccess) onSuccess();
-        } else {
-          throw new Error("Failed to create article, no result returned");
-        }
-      } catch (createError) {
-        console.error('Error creating article:', createError);
-        setFormError("אירעה שגיאה ביצירת המאמר. אנא נסה שנית.");
-        toast({
-          title: "שגיאה ביצירת מאמר",
-          description: "אירעה שגיאה בעת יצירת המאמר. אנא נסה שנית.",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
+      // Legacy submission flow is never reached as we now always provide onSubmit
+      setFormError("שגיאה: לא סופק handler לשליחת הטופס");
+      toast({
+        title: "שגיאה",
+        description: "שגיאה בשליחת הטופס, אנא נסה שוב",
+        variant: "destructive"
+      });
+    } catch (error: any) {
       console.error('Error in article submission workflow:', error);
-      setFormError("אירעה שגיאה בלתי צפויה. אנא נסה שנית.");
+      setFormError(error.message || "אירעה שגיאה בלתי צפויה. אנא נסה שוב מאוחר יותר.");
       toast({
         title: "שגיאה ביצירת מאמר",
-        description: "אירעה שגיאה בלתי צפויה",
+        description: error.message || "אירעה שגיאה בלתי צפויה",
         variant: "destructive"
       });
     } finally {
-      setUploading(false);
+      if (setUploading) {
+        setUploading(false);
+      }
     }
   };
 

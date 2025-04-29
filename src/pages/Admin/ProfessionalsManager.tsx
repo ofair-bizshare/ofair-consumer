@@ -85,46 +85,56 @@ const ProfessionalsManager = () => {
       
       console.log('Professional data prepared:', professional);
       
-      let result = false;
-      
-      if (editingProfessional) {
-        console.log('Updating existing professional:', editingProfessional.id);
-        result = await updateProfessional(editingProfessional.id, professional);
-        console.log('Update professional result:', result);
+      try {
+        let result: ProfessionalInterface | null = null;
+        
+        if (editingProfessional) {
+          console.log('Updating existing professional:', editingProfessional.id);
+          result = await updateProfessional(editingProfessional.id, professional);
+          console.log('Update professional result:', result);
+          
+          if (result) {
+            toast({
+              title: "בעל מקצוע עודכן בהצלחה",
+              description: `${data.name} עודכן במערכת`
+            });
+          }
+        } else {
+          console.log('Creating new professional');
+          result = await createProfessional(professional);
+          console.log('Create professional result:', result);
+          
+          if (result) {
+            toast({
+              title: "בעל מקצוע נוצר בהצלחה",
+              description: `${data.name} נוסף למערכת`
+            });
+          }
+        }
         
         if (result) {
-          toast({
-            title: "בעל מקצוע עודכן בהצלחה",
-            description: `${data.name} עודכן במערכת`
-          });
+          setImageFile(null);
+          setDialogOpen(false);
+          setEditingProfessional(null);
+          await fetchData(); // Refetch professionals after successful creation/update
+        } else {
+          throw new Error('Operation failed with no specific error');
         }
-      } else {
-        console.log('Creating new professional');
-        result = await createProfessional(professional);
-        console.log('Create professional result:', result);
-        
-        if (result) {
-          toast({
-            title: "בעל מקצוע נוצר בהצלחה",
-            description: `${data.name} נוסף למערכת`
-          });
-        }
+      } catch (error: any) {
+        console.error('Error creating/updating professional:', error);
+        setError(error.message || 'אירעה שגיאה. אנא נסה שוב מאוחר יותר.');
+        toast({
+          title: editingProfessional ? "שגיאה בעדכון בעל מקצוע" : "שגיאה ביצירת בעל מקצוע",
+          description: error.message || "אירעה שגיאה בלתי צפויה",
+          variant: "destructive"
+        });
       }
-      
-      if (result) {
-        setImageFile(null);
-        setDialogOpen(false);
-        setEditingProfessional(null);
-        await fetchData(); // Refetch professionals after successful creation/update
-      } else {
-        throw new Error('Operation failed with no specific error');
-      }
-    } catch (error) {
-      console.error('Error creating/updating professional:', error);
-      setError('אירעה שגיאה. אנא נסה שוב מאוחר יותר.');
+    } catch (error: any) {
+      console.error('Error in professional submission workflow:', error);
+      setError(error.message || "אירעה שגיאה בלתי צפויה. אנא נסה שוב מאוחר יותר.");
       toast({
         title: editingProfessional ? "שגיאה בעדכון בעל מקצוע" : "שגיאה ביצירת בעל מקצוע",
-        description: "אירעה שגיאה בלתי צפויה",
+        description: error.message || "אירעה שגיאה בלתי צפויה",
         variant: "destructive"
       });
     } finally {

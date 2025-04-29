@@ -656,6 +656,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_admin_status: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
       check_is_admin_user: {
         Args: { user_id_param: string }
         Returns: boolean
@@ -665,6 +669,10 @@ export type Database = {
         Returns: boolean
       }
       check_is_super_admin_user: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
+      check_super_admin_status: {
         Args: { user_id_param: string }
         Returns: boolean
       }
