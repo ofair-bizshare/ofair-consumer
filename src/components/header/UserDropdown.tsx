@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, LogOut, Settings, Inbox, UserCircle, Bell } from 'lucide-react';
@@ -6,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/providers/AuthProvider';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 interface UserDropdownProps {
   onLogout: () => void;
@@ -59,10 +59,10 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
     fetchNotifications();
     
     // Set up subscription for real-time notifications if user exists
-    let subscription: any = null;
+    let channel: RealtimeChannel | null = null;
     
     if (user) {
-      const channel = supabase
+      channel = supabase
         .channel('notifications')
         .on('postgres_changes', { 
           event: 'INSERT', 
@@ -77,13 +77,11 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
           });
         })
         .subscribe();
-        
-      subscription = channel;
     }
       
     return () => {
-      if (subscription) {
-        supabase.removeChannel(subscription);
+      if (channel) {
+        supabase.removeChannel(channel);
       }
     };
   }, [user]);
