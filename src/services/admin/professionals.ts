@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 /**
@@ -261,13 +260,17 @@ export const uploadProfessionalsFromExcel = async (professionals: any[]): Promis
  * Create a new professional
  * @param professionalData Professional data to create
  */
-export const createProfessional = createOrUpdateProfessional;
+export const createProfessional = async (professionalData: any): Promise<any> => {
+  return createOrUpdateProfessional(professionalData);
+};
 
 /**
  * Update an existing professional
- * @param professionalData Professional data with ID to update
+ * @param professionalData Professional data to update
  */
-export const updateProfessional = createOrUpdateProfessional;
+export const updateProfessional = async (professionalData: any): Promise<any> => {
+  return createOrUpdateProfessional(professionalData);
+};
 
 /**
  * Delete a professional
@@ -277,13 +280,12 @@ export const deleteProfessional = deleteProfessionalById;
 
 /**
  * Upload a professional's image
- * @param id Professional ID
  * @param imageFile Image file to upload
  */
-export const uploadProfessionalImage = async (id: string, imageFile: File): Promise<string> => {
+export const uploadProfessionalImage = async (imageFile: File): Promise<string> => {
   try {
     const fileExt = imageFile.name.split('.').pop();
-    const fileName = `${id}-${Date.now()}.${fileExt}`;
+    const fileName = `${Date.now()}.${fileExt}`;
     const filePath = `professionals/${fileName}`;
     
     // Check if professionals bucket exists
@@ -311,14 +313,6 @@ export const uploadProfessionalImage = async (id: string, imageFile: File): Prom
       .getPublicUrl(filePath);
       
     if (!publicURL) throw new Error('Failed to get public URL');
-    
-    // Update the professional with the new image URL
-    const { error: updateError } = await supabase
-      .from('professionals')
-      .update({ image: publicURL.publicUrl })
-      .eq('id', id);
-      
-    if (updateError) throw updateError;
     
     return publicURL.publicUrl;
   } catch (error) {

@@ -59,9 +59,9 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
     fetchNotifications();
     
     // Set up subscription for real-time notifications if user exists
-    let channel;
+    let subscription;
     if (user) {
-      channel = supabase
+      const channel = supabase
         .channel('notifications')
         .on('postgres_changes', { 
           event: 'INSERT', 
@@ -76,11 +76,13 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
           });
         })
         .subscribe();
+        
+      subscription = channel;
     }
       
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
+      if (subscription) {
+        supabase.removeChannel(subscription);
       }
     };
   }, [user]);

@@ -95,7 +95,7 @@ const ProfessionalsManager = () => {
         
         if (editingProfessional) {
           console.log('Updating existing professional:', editingProfessional.id);
-          result = await updateProfessional(editingProfessional.id, professional);
+          result = await updateProfessional(professional);
           console.log('Update professional result:', result);
           
           if (result) {
@@ -196,7 +196,7 @@ const ProfessionalsManager = () => {
   return (
     <AdminLayout>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">נ��הול בעלי מקצוע</h1>
+        <h1 className="text-3xl font-bold">ניהול בעלי מקצוע</h1>
         
         <div className="flex items-center gap-2">
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

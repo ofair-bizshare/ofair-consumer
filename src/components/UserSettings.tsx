@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
@@ -77,9 +76,8 @@ const UserSettings = () => {
       
       const file = event.target.files[0];
       const fileExt = file.name.split('.').pop();
-      // Use a variable that can be modified instead of const
+      // Use let instead of const for filePath since it might be reassigned
       let filePath = `avatars/${user.id}-${Math.random()}.${fileExt}`;
-      let bucketName = 'public';
       
       // Check if public bucket exists
       try {
@@ -109,7 +107,6 @@ const UserSettings = () => {
           }
           
           // Use images bucket instead
-          bucketName = 'images';
           filePath = `images/${user.id}-${Math.random()}.${fileExt}`;
         } catch (imagesBucketError) {
           console.error('Error with images bucket check:', imagesBucketError);
@@ -119,37 +116,35 @@ const UserSettings = () => {
       
       // Upload the file to Supabase storage
       const { error: uploadError } = await supabase.storage
-        .from(bucketName)
+        .from('public')
         .upload(filePath, file, { upsert: true });
       
       if (uploadError) {
-        // If public bucket upload fails, try with images bucket
-        if (bucketName === 'public') {
-          bucketName = 'images';
-          const imagesFilePath = `images/${user.id}-${Math.random()}.${fileExt}`;
+        // Try with images bucket instead
+        const imagesFileName = `${user.id}-${Math.random()}.${fileExt}`;
+        const imagesFilePath = `images/${imagesFileName}`;
+        
+        const { error: imagesUploadError } = await supabase.storage
+          .from('images')
+          .upload(imagesFilePath, file, { upsert: true });
           
-          const { error: imagesUploadError } = await supabase.storage
-            .from('images')
-            .upload(imagesFilePath, file, { upsert: true });
-            
-          if (imagesUploadError) throw imagesUploadError;
+        if (imagesUploadError) throw imagesUploadError;
+        
+        // Get the public URL from images bucket
+        const { data: imagesData } = supabase.storage
+          .from('images')
+          .getPublicUrl(imagesFilePath);
           
-          // Get the public URL from images bucket
-          const { data: imagesData } = supabase.storage
-            .from('images')
-            .getPublicUrl(imagesFilePath);
-            
-          if (imagesData) {
-            // Update the profile with the new avatar URL
-            await updateProfile({ profile_image: imagesData.publicUrl });
-            setAvatarUrl(imagesData.publicUrl);
-            
-            toast({
-              title: "תמונת פרופיל עודכנה",
-              description: "תמונת הפרופיל שלך הועלתה בהצלחה",
-            });
-            return;
-          }
+        if (imagesData) {
+          // Update the profile with the new avatar URL
+          await updateProfile({ profile_image: imagesData.publicUrl });
+          setAvatarUrl(imagesData.publicUrl);
+          
+          toast({
+            title: "תמונת פרופיל עודכנה",
+            description: "תמונת הפרופיל שלך הועלתה בהצלחה",
+          });
+          return;
         }
         
         throw uploadError;
@@ -157,7 +152,7 @@ const UserSettings = () => {
       
       // Get the public URL
       const { data } = supabase.storage
-        .from(bucketName)
+        .from('public')
         .getPublicUrl(filePath);
       
       if (data) {
