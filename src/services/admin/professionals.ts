@@ -1,6 +1,6 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ProfessionalInterface } from '@/services/professionals/types';
+import { getProfessionalFromData } from '../professionals/professionalUtils';
 
 /**
  * Creates a new professional
@@ -11,24 +11,28 @@ export const createProfessional = async (professional: Omit<ProfessionalInterfac
   try {
     console.log('Creating professional:', professional);
     
-    const { data, error } = await supabase.from('professionals').insert({
+    // Prepare the data for insertion
+    const professionalData = {
       name: professional.name,
       profession: professional.profession,
       location: professional.location,
       specialties: professional.specialties,
-      phone_number: professional.phoneNumber || professional.phone_number,
-      about: professional.about,
-      rating: professional.rating,
-      image: professional.image || 'https://via.placeholder.com/150',
+      phone_number: professional.phoneNumber || professional.phone_number || professional.phone,
+      about: professional.about || professional.bio,
+      rating: professional.rating || 0,
+      image: professional.image || professional.image_url || 'https://via.placeholder.com/150',
       company_name: professional.company_name,
-      work_hours: professional.work_hours,
+      work_hours: professional.work_hours || professional.working_hours,
       certifications: professional.certifications,
       experience_years: professional.experience_years,
-      // Add missing required fields
+      // Add compatibility fields
       review_count: professional.reviews_count || 0,
-      city: professional.city || professional.location || '',
-      specialty: professional.specialty || (professional.specialties && professional.specialties.length > 0 ? professional.specialties[0] : '')
-    }).select();
+      city: professional.city || professional.location || '', // Use location as city if not provided
+      specialty: professional.specialty || (professional.specialties && professional.specialties.length > 0 ? professional.specialties[0] : ''),
+      areas: professional.area || professional.areas || professional.location || '' // Use location as areas if not provided
+    };
+    
+    const { data, error } = await supabase.from('professionals').insert(professionalData).select();
     
     if (error) {
       console.error('Error creating professional:', error);
@@ -42,41 +46,8 @@ export const createProfessional = async (professional: Omit<ProfessionalInterfac
     
     console.log('Professional created successfully:', data[0]);
     
-    // Cast and transform the data to match the required interface
-    const createdProfessional: ProfessionalInterface = {
-      ...data[0],
-      id: data[0].id,
-      name: data[0].name,
-      profession: data[0].profession,
-      location: data[0].location,
-      rating: data[0].rating || 0,
-      reviewCount: data[0].review_count || 0,
-      reviews_count: data[0].review_count || 0,
-      specialties: data[0].specialties || [],
-      image: data[0].image || 'https://via.placeholder.com/150',
-      image_url: data[0].image || 'https://via.placeholder.com/150',
-      phone: data[0].phone_number || '',
-      phoneNumber: data[0].phone_number || '',
-      phone_number: data[0].phone_number || '',
-      email: data[0].email || '',
-      bio: data[0].about || '',
-      about: data[0].about || '',
-      created_at: data[0].created_at || new Date().toISOString(),
-      city: data[0].location || '',
-      specialty: (data[0].specialties && data[0].specialties.length > 0) ? data[0].specialties[0] : '',
-      area: data[0].areas || data[0].location || '',
-      category: data[0].profession || '',
-      verified: data[0].is_verified || false,
-      is_verified: data[0].is_verified || false,
-      company_name: data[0].company_name || '',
-      work_hours: data[0].work_hours || data[0].working_hours || '',
-      working_hours: data[0].work_hours || data[0].working_hours || '',
-      certifications: data[0].certifications || [],
-      experience_years: data[0].experience_years || 0,
-      areas: data[0].areas || data[0].location || ''
-    };
-    
-    return createdProfessional;
+    // Use the utility function to transform the data
+    return getProfessionalFromData(data[0]);
   } catch (error) {
     console.error('Error creating professional:', error);
     throw error;
@@ -153,19 +124,34 @@ export const updateProfessional = async (id: string, professional: Partial<Omit<
     // Only include fields that are defined
     if (professional.name) updateData.name = professional.name;
     if (professional.profession) updateData.profession = professional.profession;
-    if (professional.location) updateData.location = professional.location;
-    if (professional.specialties) updateData.specialties = professional.specialties;
-    if (professional.phoneNumber || professional.phone_number) updateData.phone_number = professional.phoneNumber || professional.phone_number;
-    if (professional.about) updateData.about = professional.about;
+    if (professional.location) {
+      updateData.location = professional.location;
+      // Also update city with location if not explicitly provided
+      if (!professional.city) updateData.city = professional.location;
+    }
+    if (professional.specialties) {
+      updateData.specialties = professional.specialties;
+      // Also update specialty with first specialty if not explicitly provided
+      if (!professional.specialty && professional.specialties.length > 0) {
+        updateData.specialty = professional.specialties[0];
+      }
+    }
+    if (professional.phoneNumber || professional.phone_number || professional.phone) {
+      updateData.phone_number = professional.phoneNumber || professional.phone_number || professional.phone;
+    }
+    if (professional.about || professional.bio) updateData.about = professional.about || professional.bio;
     if (professional.rating !== undefined) updateData.rating = professional.rating;
-    if (professional.image) updateData.image = professional.image;
+    if (professional.image || professional.image_url) updateData.image = professional.image || professional.image_url;
     if (professional.company_name !== undefined) updateData.company_name = professional.company_name;
-    if (professional.work_hours !== undefined) updateData.work_hours = professional.work_hours;
+    if (professional.work_hours !== undefined || professional.working_hours !== undefined) {
+      updateData.work_hours = professional.work_hours || professional.working_hours;
+      updateData.working_hours = professional.work_hours || professional.working_hours;
+    }
     if (professional.certifications !== undefined) updateData.certifications = professional.certifications;
     if (professional.experience_years !== undefined) updateData.experience_years = professional.experience_years;
-    // Add missing fields for update
     if (professional.city) updateData.city = professional.city;
     if (professional.specialty) updateData.specialty = professional.specialty;
+    if (professional.area || professional.areas) updateData.areas = professional.area || professional.areas;
     
     // Add updated_at timestamp
     updateData.updated_at = new Date().toISOString();
@@ -188,41 +174,8 @@ export const updateProfessional = async (id: string, professional: Partial<Omit<
     
     console.log('Professional updated successfully:', data[0]);
     
-    // Cast and transform the data to match the required interface
-    const updatedProfessional: ProfessionalInterface = {
-      ...data[0],
-      id: data[0].id,
-      name: data[0].name,
-      profession: data[0].profession,
-      location: data[0].location,
-      rating: data[0].rating || 0,
-      reviewCount: data[0].review_count || 0,
-      reviews_count: data[0].review_count || 0,
-      specialties: data[0].specialties || [],
-      image: data[0].image || 'https://via.placeholder.com/150',
-      image_url: data[0].image || 'https://via.placeholder.com/150',
-      phone: data[0].phone_number || '',
-      phoneNumber: data[0].phone_number || '',
-      phone_number: data[0].phone_number || '',
-      email: data[0].email || '',
-      bio: data[0].about || '',
-      about: data[0].about || '',
-      created_at: data[0].created_at || new Date().toISOString(),
-      city: data[0].location || '',
-      specialty: (data[0].specialties && data[0].specialties.length > 0) ? data[0].specialties[0] : '',
-      area: data[0].areas || data[0].location || '',
-      category: data[0].profession || '',
-      verified: data[0].is_verified || false,
-      is_verified: data[0].is_verified || false,
-      company_name: data[0].company_name || '',
-      work_hours: data[0].work_hours || data[0].working_hours || '',
-      working_hours: data[0].work_hours || data[0].working_hours || '',
-      certifications: data[0].certifications || [],
-      experience_years: data[0].experience_years || 0,
-      areas: data[0].areas || data[0].location || ''
-    };
-    
-    return updatedProfessional;
+    // Use the utility function to transform the data
+    return getProfessionalFromData(data[0]);
   } catch (error) {
     console.error('Error updating professional:', error);
     throw error;

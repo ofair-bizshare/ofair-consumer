@@ -9,9 +9,9 @@ export interface ProfessionalInterface {
   reviews_count: number;
   image_url: string;
   created_at: string;
-  city: string;
-  specialty: string;
-  verified?: boolean; // Changed from required to optional
+  city?: string; // Made optional to match database structure
+  specialty?: string; // Made optional to match database structure
+  verified?: boolean;
   area?: string;
   category?: string;
   // Adding compatibility with Search and Components

@@ -34,15 +34,35 @@ export const useAdminAccess = () => {
         }
       }
       
+      // Direct check without using RLS policies
       try {
-        // Use the updated security definer function
-        const { data: isAdmin, error } = await supabase.rpc('check_is_super_admin');
+        // Use a simpler query to avoid RLS policy issues
+        const { data, error } = await supabase
+          .from('admin_users')
+          .select('is_super_admin')
+          .eq('user_id', user.id)
+          .single();
         
         if (error) {
-          console.error("AdminAccess: Error in security definer function check:", error);
-          throw error;
+          console.error("AdminAccess: Error checking admin status directly:", error);
+          // Try fallback to function approach if direct query fails
+          const functionCheck = await supabase.rpc('check_is_super_admin');
+          if (functionCheck.error) {
+            throw new Error("Failed to check admin status: " + functionCheck.error.message);
+          }
+          
+          if (functionCheck.data) {
+            setIsSuperAdmin(true);
+            setCachedAdminStatus(user.id, true);
+            return { hasAccess: true };
+          } else {
+            setIsSuperAdmin(false);
+            setCachedAdminStatus(user.id, false);
+            return { hasAccess: false, notAdmin: true };
+          }
         }
         
+        const isAdmin = data && data.is_super_admin;
         console.log("AdminAccess: Admin check result:", isAdmin);
         
         if (isAdmin) {
@@ -94,7 +114,7 @@ export const useAdminAccess = () => {
     if (user) {
       clearAdminCache(user.id);
     }
-    setRetryAttempt(0);
+    setRetryAttempt(prev => prev + 1);
     setAdminCheckError(null);
     setLoading(true);
     checkAdminStatus().finally(() => setLoading(false));

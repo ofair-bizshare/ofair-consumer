@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useToast } from '@/hooks/use-toast';
@@ -67,7 +68,7 @@ const ProfessionalsManager = () => {
         }
       }
       
-      // Prepare professional data with all required fields for TypeScript
+      // Prepare professional data with all required fields
       const professional = {
         name: data.name,
         profession: data.profession,
@@ -77,13 +78,13 @@ const ProfessionalsManager = () => {
         about: data.about,
         rating: data.rating,
         image: imageUrl,
+        image_url: imageUrl, // Add image_url for compatibility
         company_name: data.company_name,
         work_hours: data.work_hours,
         certifications: data.certifications?.split(',').map(s => s.trim()) || [],
         experience_years: data.experience_years,
-        reviews_count: 0,
-        image_url: imageUrl,
-        created_at: new Date().toISOString(),
+        reviews_count: editingProfessional?.reviews_count || 0,
+        created_at: editingProfessional?.created_at || new Date().toISOString(),
         city: data.location, // Use location as city
         specialty: data.specialties.split(',')[0]?.trim() || '' // Use first specialty
       };

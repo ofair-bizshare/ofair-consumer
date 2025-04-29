@@ -48,6 +48,7 @@ export const getProfessionalFromData = (data: any): ProfessionalInterface => {
                      [data.profession].filter(Boolean) || 
                      ['לא צוין'];
   
+  // Construct the professional object with all required and optional fields
   return {
     id: data.id,
     name: data.name,
