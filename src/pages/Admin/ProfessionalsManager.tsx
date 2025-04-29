@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useToast } from '@/hooks/use-toast';
@@ -73,6 +72,7 @@ const ProfessionalsManager = () => {
         name: data.name,
         profession: data.profession,
         location: data.location,
+        city: data.location, // Explicitly set city to location
         specialties: data.specialties.split(',').map(s => s.trim()),
         phoneNumber: data.phoneNumber,
         about: data.about,
@@ -85,7 +85,6 @@ const ProfessionalsManager = () => {
         experience_years: data.experience_years,
         reviews_count: editingProfessional?.reviews_count || 0,
         created_at: editingProfessional?.created_at || new Date().toISOString(),
-        city: data.location, // Use location as city
         specialty: data.specialties.split(',')[0]?.trim() || '' // Use first specialty
       };
       
@@ -173,7 +172,7 @@ const ProfessionalsManager = () => {
         } else {
           toast({
             title: "שגיאה במחיקת בעל מקצוע",
-            description: "אירעה שגיאה במחיקת בעל המקצוע",
+            description: "אירעה שגיאה במחיקת בעל מקצוע",
             variant: "destructive"
           });
         }

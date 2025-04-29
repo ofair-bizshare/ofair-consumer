@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ProfessionalInterface } from '@/services/professionals/types';
 import { getProfessionalFromData } from '../professionals/professionalUtils';
@@ -16,6 +17,8 @@ export const createProfessional = async (professional: Omit<ProfessionalInterfac
       name: professional.name,
       profession: professional.profession,
       location: professional.location,
+      city: professional.city || professional.location,  // Use location as city if not provided
+      specialty: professional.specialty || (professional.specialties && professional.specialties.length > 0 ? professional.specialties[0] : ''),
       specialties: professional.specialties,
       phone_number: professional.phoneNumber || professional.phone_number || professional.phone,
       about: professional.about || professional.bio,
@@ -27,8 +30,6 @@ export const createProfessional = async (professional: Omit<ProfessionalInterfac
       experience_years: professional.experience_years,
       // Add compatibility fields
       review_count: professional.reviews_count || 0,
-      city: professional.city || professional.location || '', // Use location as city if not provided
-      specialty: professional.specialty || (professional.specialties && professional.specialties.length > 0 ? professional.specialties[0] : ''),
       areas: professional.area || professional.areas || professional.location || '' // Use location as areas if not provided
     };
     

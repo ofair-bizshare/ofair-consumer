@@ -34,67 +34,72 @@ export const useAdminAccess = () => {
         }
       }
       
-      // Direct check without using RLS policies
+      // Use RPC function directly to avoid RLS recursion issues
       try {
-        // Use a simpler query to avoid RLS policy issues
-        const { data, error } = await supabase
-          .from('admin_users')
-          .select('is_super_admin')
-          .eq('user_id', user.id)
-          .single();
+        const { data: isAdmin, error: functionError } = await supabase.rpc('check_is_super_admin');
         
-        if (error) {
-          console.error("AdminAccess: Error checking admin status directly:", error);
-          // Try fallback to function approach if direct query fails
-          const functionCheck = await supabase.rpc('check_is_super_admin');
-          if (functionCheck.error) {
-            throw new Error("Failed to check admin status: " + functionCheck.error.message);
-          }
-          
-          if (functionCheck.data) {
-            setIsSuperAdmin(true);
-            setCachedAdminStatus(user.id, true);
-            return { hasAccess: true };
-          } else {
-            setIsSuperAdmin(false);
-            setCachedAdminStatus(user.id, false);
-            return { hasAccess: false, notAdmin: true };
-          }
+        if (functionError) {
+          console.error("AdminAccess: Error calling check_is_super_admin function:", functionError);
+          throw new Error("Failed to check admin status: " + functionError.message);
         }
         
-        const isAdmin = data && data.is_super_admin;
-        console.log("AdminAccess: Admin check result:", isAdmin);
+        console.log("AdminAccess: Admin check result from RPC:", isAdmin);
         
         if (isAdmin) {
-          console.log("AdminAccess: User confirmed as admin");
+          console.log("AdminAccess: User confirmed as admin via RPC");
           setIsSuperAdmin(true);
           setCachedAdminStatus(user.id, true);
           return { hasAccess: true };
         } else {
-          console.log("AdminAccess: User is not an admin:", user.id);
+          console.log("AdminAccess: User is not an admin via RPC:", user.id);
           setIsSuperAdmin(false);
           setCachedAdminStatus(user.id, false);
           return { hasAccess: false, notAdmin: true };
         }
-      } catch (error) {
-        console.error("AdminAccess: Error during admin check:", error);
-        setAdminCheckError((error as Error).message || "שגיאה לא ידועה");
+      } catch (rpcError) {
+        console.error("AdminAccess: RPC admin check failed, trying direct query:", rpcError);
         
-        // If we have a cached admin status as fallback
-        const cachedAdminStatus = getCachedAdminStatus(user.id);
-        if (cachedAdminStatus) {
-          console.log("AdminAccess: Using cached admin status as fallback:", cachedAdminStatus.isAdmin);
-          setIsSuperAdmin(cachedAdminStatus.isAdmin);
-          if (cachedAdminStatus.isAdmin) {
-            return { hasAccess: true, fromCache: true };
-          }
+        // Fallback to direct query if RPC fails
+        const { data, error } = await supabase
+          .from('admin_users')
+          .select('is_super_admin')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (error) {
+          console.error("AdminAccess: Error checking admin status via direct query:", error);
+          throw error;
         }
         
-        return { hasAccess: false, error: (error as Error).message || "שגיאה לא ידועה" };
+        const isAdmin = data && data.is_super_admin;
+        console.log("AdminAccess: Admin check result from direct query:", isAdmin);
+        
+        if (isAdmin) {
+          console.log("AdminAccess: User confirmed as admin via direct query");
+          setIsSuperAdmin(true);
+          setCachedAdminStatus(user.id, true);
+          return { hasAccess: true };
+        } else {
+          console.log("AdminAccess: User is not an admin via direct query:", user.id);
+          setIsSuperAdmin(false);
+          setCachedAdminStatus(user.id, false);
+          return { hasAccess: false, notAdmin: true };
+        }
       }
     } catch (error) {
       console.error("AdminAccess: Error in admin access check:", error);
       setAdminCheckError((error as Error).message || "שגיאה לא ידועה");
+      
+      // If we have a cached admin status as fallback
+      const cachedAdminStatus = getCachedAdminStatus(user.id);
+      if (cachedAdminStatus) {
+        console.log("AdminAccess: Using cached admin status as fallback:", cachedAdminStatus.isAdmin);
+        setIsSuperAdmin(cachedAdminStatus.isAdmin);
+        if (cachedAdminStatus.isAdmin) {
+          return { hasAccess: true, fromCache: true };
+        }
+      }
+      
       return { hasAccess: false, error: (error as Error).message || "שגיאה לא ידועה" };
     }
   }, [user, retryAttempt]);
