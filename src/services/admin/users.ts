@@ -36,13 +36,9 @@ export const getUserProfile = async (userId: string): Promise<UserProfileInterfa
       .from('user_profiles')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
     
     if (error) {
-      if (error.code === 'PGRST116') {
-        // No rows returned
-        return null;
-      }
       console.error('Error fetching user profile:', error);
       throw error;
     }
@@ -50,6 +46,29 @@ export const getUserProfile = async (userId: string): Promise<UserProfileInterfa
     return data;
   } catch (error) {
     console.error('Error in getUserProfile:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get all user profiles
+ * @returns Promise<UserProfileInterface[]> List of user profiles
+ */
+export const getAllUsers = async (): Promise<UserProfileInterface[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching all users:', error);
+      throw error;
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error in getAllUsers:', error);
     throw error;
   }
 };

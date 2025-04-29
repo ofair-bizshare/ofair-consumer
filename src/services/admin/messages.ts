@@ -72,3 +72,48 @@ export const deleteMessage = async (messageId: string): Promise<boolean> => {
     return false;
   }
 };
+
+/**
+ * Send a new message
+ * @param messageData Message data (recipient_id/email, subject, content)
+ * @returns Promise<boolean> True if successful, false otherwise
+ */
+export const sendMessage = async (messageData: {
+  recipient_id?: string;
+  recipient_email?: string;
+  subject: string;
+  content: string;
+}): Promise<boolean> => {
+  try {
+    // Get current user's ID
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
+
+    // Prepare message data
+    const message = {
+      sender_id: user.id,
+      recipient_id: messageData.recipient_id,
+      recipient_email: messageData.recipient_email,
+      subject: messageData.subject,
+      content: messageData.content,
+      read: false
+    };
+    
+    // Insert message
+    const { error } = await supabase
+      .from('user_messages')
+      .insert(message);
+    
+    if (error) {
+      console.error('Error sending message:', error);
+      throw error;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error in sendMessage:', error);
+    return false;
+  }
+};

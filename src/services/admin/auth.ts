@@ -1,13 +1,19 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
+interface AdminResult {
+  success: boolean;
+  message: string;
+  data?: any;
+}
+
 /**
  * Check if the current user is a super admin
  * @returns Promise<boolean> True if user is super admin, false otherwise
  */
 export const checkIsSuperAdmin = async (): Promise<boolean> => {
   try {
-    const { data, error } = await supabase.rpc('check_is_super_admin');
+    const { data, error } = await supabase.rpc('is_super_admin_check');
     
     if (error) {
       console.error('Error checking super admin status:', error);
@@ -24,9 +30,9 @@ export const checkIsSuperAdmin = async (): Promise<boolean> => {
 /**
  * Create a new super admin user
  * @param adminEmail The email of the user to make a super admin
- * @returns Promise<string> The ID of the created admin user
+ * @returns Promise<AdminResult> Result with success status and message
  */
-export const createSuperAdmin = async (adminEmail: string): Promise<string> => {
+export const createSuperAdmin = async (adminEmail: string): Promise<AdminResult> => {
   try {
     const { data, error } = await supabase.rpc('create_super_admin', {
       admin_email_param: adminEmail
@@ -34,13 +40,23 @@ export const createSuperAdmin = async (adminEmail: string): Promise<string> => {
     
     if (error) {
       console.error('Error creating super admin:', error);
-      throw error;
+      return {
+        success: false,
+        message: `Failed to create super admin: ${error.message}`
+      };
     }
     
-    return data;
+    return {
+      success: true,
+      message: `Successfully added ${adminEmail} as super admin`,
+      data
+    };
   } catch (error) {
     console.error('Error in createSuperAdmin:', error);
-    throw error;
+    return {
+      success: false,
+      message: `An unexpected error occurred: ${(error as Error).message}`
+    };
   }
 };
 
