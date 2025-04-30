@@ -690,7 +690,19 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: boolean
       }
+      check_professional_ownership: {
+        Args: { professional_id_param: string; user_id_param: string }
+        Returns: boolean
+      }
       check_super_admin_status: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
+      check_user_is_admin: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
+      check_user_is_super_admin: {
         Args: { user_id_param: string }
         Returns: boolean
       }

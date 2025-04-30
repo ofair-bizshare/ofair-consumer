@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { formatError } from '@/utils/errorUtils';
@@ -13,6 +14,16 @@ import { createBucketIfNotExists, findBucketByName } from './utils/storageUtils'
 export const createProfessional = async (professionalData: any): Promise<ProfessionalInterface | null> => {
   try {
     console.log('Creating professional with data:', professionalData);
+    
+    // Ensure image field is properly set
+    // If image_url exists but image doesn't, copy the value
+    if (professionalData.image_url && !professionalData.image) {
+      professionalData.image = professionalData.image_url;
+    }
+    // If image exists but image_url doesn't, copy the value
+    if (professionalData.image && !professionalData.image_url) {
+      professionalData.image_url = professionalData.image;
+    }
     
     // Prepare data for insert
     const professionalToInsert = {
@@ -53,6 +64,14 @@ export const createProfessional = async (professionalData: any): Promise<Profess
 export const updateProfessional = async (id: string, professionalData: any): Promise<ProfessionalInterface | null> => {
   try {
     console.log(`Updating professional ${id} with data:`, professionalData);
+    
+    // Ensure image field is properly set
+    if (professionalData.image_url && !professionalData.image) {
+      professionalData.image = professionalData.image_url;
+    }
+    if (professionalData.image && !professionalData.image_url) {
+      professionalData.image_url = professionalData.image;
+    }
     
     // Prepare data for update
     const professionalToUpdate = {
@@ -118,7 +137,8 @@ export const uploadProfessionalImage = async (imageFile: File): Promise<string> 
     console.log('Uploading professional image', imageFile.name);
     
     // First ensure the bucket exists
-    await createBucketIfNotExists('professionals', true);
+    const bucketCreated = await createBucketIfNotExists('professionals', true);
+    console.log('Bucket creation status:', bucketCreated);
     
     // Generate a unique file name to avoid conflicts
     const fileExt = imageFile.name.split('.').pop();
@@ -191,6 +211,7 @@ export const uploadProfessionalsFromExcel = async (professionals: any[]): Promis
           location: professional.location,
           city: professional.location, // Set city to location for consistency
           phoneNumber: professional.phoneNumber,
+          phone_number: professional.phoneNumber, // Add both field names for compatibility
           about: professional.about || '',
           specialties: professional.specialties ? 
             (typeof professional.specialties === 'string' ? 

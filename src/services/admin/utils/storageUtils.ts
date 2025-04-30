@@ -36,31 +36,51 @@ export const createBucketIfNotExists = async (bucketName: string, isPublic: bool
     const buckets = await listBuckets();
     
     // Case-insensitive check for existing bucket
-    const bucketExists = buckets.some(name => 
+    const existingBucket = buckets.find(name => 
       name.toLowerCase() === bucketName.toLowerCase()
     );
     
-    if (!bucketExists) {
+    if (!existingBucket) {
       console.log(`Creating bucket '${bucketName}'...`);
-      const { error } = await supabase.storage.createBucket(bucketName, {
-        public: isPublic,
-        fileSizeLimit: 10 * 1024 * 1024 // 10 MB file size limit
-      });
       
-      if (error) {
-        if (error.message.includes('already exists')) {
-          console.log(`Bucket '${bucketName}' already exists (name collision)`);
-          return true;
+      try {
+        const { error } = await supabase.storage.createBucket(bucketName, {
+          public: isPublic,
+          fileSizeLimit: 10 * 1024 * 1024 // 10 MB file size limit
+        });
+        
+        if (error) {
+          // If the error is that the bucket already exists (due to a race condition),
+          // we can consider this successful
+          if (error.message && error.message.includes('already exists')) {
+            console.log(`Bucket '${bucketName}' already exists (name collision)`);
+            return true;
+          }
+          
+          console.error(`Error creating '${bucketName}' bucket:`, error);
+          return false;
         }
         
-        console.error(`Error creating '${bucketName}' bucket:`, error);
+        console.log(`Bucket '${bucketName}' created successfully`);
+        
+        // After creating bucket, add public policy if needed
+        if (isPublic) {
+          try {
+            await makeStorageBucketPublic(bucketName);
+          } catch (policyError) {
+            console.error(`Error setting public policy for bucket '${bucketName}':`, policyError);
+          }
+        }
+        
+        return true;
+      } catch (createError) {
+        console.error(`Exception creating bucket '${bucketName}':`, createError);
         return false;
       }
-      
-      console.log(`Bucket '${bucketName}' created successfully`);
-      return true;
     } else {
-      console.log(`Bucket '${bucketName}' already exists`);
+      console.log(`Bucket '${bucketName}' already exists as '${existingBucket}'`);
+      
+      // If we found the bucket but with different case, return the actual name
       return true;
     }
   } catch (error) {
@@ -93,7 +113,7 @@ export const createBuckets = async (): Promise<boolean> => {
           });
           
           if (error) {
-            if (error.message.includes('already exists')) {
+            if (error.message && error.message.includes('already exists')) {
               console.log(`Bucket '${bucketName}' already exists (name collision)`);
               continue;
             }
@@ -101,6 +121,13 @@ export const createBuckets = async (): Promise<boolean> => {
             console.error(`Error creating '${bucketName}' bucket:`, error);
           } else {
             console.log(`Bucket '${bucketName}' created successfully`);
+            
+            // After creating bucket, add public policy
+            try {
+              await makeStorageBucketPublic(bucketName);
+            } catch (policyError) {
+              console.error(`Error setting public policy for bucket '${bucketName}':`, policyError);
+            }
           }
         } catch (bucketError) {
           console.error(`Exception creating bucket '${bucketName}':`, bucketError);
@@ -113,6 +140,42 @@ export const createBuckets = async (): Promise<boolean> => {
     return true;
   } catch (error) {
     console.error('Error in createBuckets:', error);
+    return false;
+  }
+};
+
+/**
+ * Make a storage bucket public
+ * @param {string} bucketName - The name of the bucket
+ * @returns {Promise<boolean>} - Result of the operation
+ */
+export const makeStorageBucketPublic = async (bucketName: string): Promise<boolean> => {
+  try {
+    console.log(`Setting bucket '${bucketName}' to public...`);
+    
+    // First, check if the bucket exists with case-insensitive matching
+    const exactBucketName = await findBucketByName(bucketName);
+    
+    if (!exactBucketName) {
+      console.error(`Bucket '${bucketName}' not found`);
+      return false;
+    }
+    
+    // Update bucket to be public if it's not already
+    const { error } = await supabase.storage.updateBucket(exactBucketName, {
+      public: true,
+      fileSizeLimit: 10 * 1024 * 1024 // 10 MB
+    });
+    
+    if (error) {
+      console.error(`Error updating bucket '${exactBucketName}' to public:`, error);
+      return false;
+    }
+    
+    console.log(`Bucket '${exactBucketName}' is now public`);
+    return true;
+  } catch (error) {
+    console.error(`Error making bucket '${bucketName}' public:`, error);
     return false;
   }
 };

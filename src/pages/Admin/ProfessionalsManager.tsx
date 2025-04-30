@@ -38,9 +38,12 @@ const ProfessionalsManager = () => {
         const buckets = await listBuckets();
         console.log('Available storage buckets:', buckets);
         
-        const hasProfessionals = buckets.includes('professionals');
-        const hasArticles = buckets.includes('articles');
-        const hasImages = buckets.includes('images');
+        const hasProfessionals = buckets.some(bucket => 
+          bucket.toLowerCase() === 'professionals');
+        const hasArticles = buckets.some(bucket => 
+          bucket.toLowerCase() === 'articles');
+        const hasImages = buckets.some(bucket => 
+          bucket.toLowerCase() === 'images');
         
         setBucketStatus({
           professionals: hasProfessionals,
@@ -112,10 +115,15 @@ const ProfessionalsManager = () => {
       let imageUrl = editingProfessional?.image || 'https://via.placeholder.com/150';
       if (imageFile) {
         console.log('Uploading professional image...');
-        const uploadedUrl = await uploadProfessionalImage(imageFile);
-        console.log('Image upload result:', uploadedUrl);
-        if (uploadedUrl) {
-          imageUrl = uploadedUrl;
+        try {
+          const uploadedUrl = await uploadProfessionalImage(imageFile);
+          console.log('Image upload result:', uploadedUrl);
+          if (uploadedUrl) {
+            imageUrl = uploadedUrl;
+          }
+        } catch (imageError) {
+          console.error('Error uploading image:', imageError);
+          // Continue with the default image if upload fails
         }
       }
       
@@ -127,6 +135,7 @@ const ProfessionalsManager = () => {
         city: data.location, // Explicitly set city to location
         specialties: data.specialties.split(',').map(s => s.trim()),
         phoneNumber: data.phoneNumber,
+        phone_number: data.phoneNumber, // Add both field names for compatibility
         about: data.about,
         rating: data.rating,
         image: imageUrl,
