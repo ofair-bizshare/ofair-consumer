@@ -19,9 +19,10 @@ const PhoneRequiredDialog: React.FC = () => {
 
   useEffect(() => {
     const checkPhone = async () => {
-      // Only show for logged in users
+      // Only show for logged in users who don't have a phone verified
       if (user) {
         const hasPhone = await checkPhoneVerification();
+        // Only open dialog if user doesn't have a phone verified
         setOpen(!hasPhone);
       } else {
         setOpen(false);

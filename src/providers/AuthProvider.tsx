@@ -30,6 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const checkPhoneVerification = async (): Promise<boolean> => {
     if (!user) return false;
     
+    // Check if user has a phone number in user_metadata
     const hasPhone = user.user_metadata?.phone !== undefined && 
                    user.user_metadata?.phone !== null && 
                    user.user_metadata?.phone !== '';
