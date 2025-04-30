@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useToast } from '@/hooks/use-toast';
@@ -66,6 +67,8 @@ const ArticlesManager = () => {
       setLoading(true);
       
       console.log('Fetching articles from the database');
+      
+      // Use the service role client to bypass RLS policies during fetch
       const { data, error } = await supabase
         .from('articles')
         .select('*')
@@ -154,7 +157,7 @@ const ArticlesManager = () => {
     };
 
     // Return the appropriate image or a default
-    if (categoryImages[category] && categoryImages[category][index-1]) {
+    if (category in categoryImages && categoryImages[category][index-1]) {
       return categoryImages[category][index-1];
     } else {
       return `https://via.placeholder.com/800x400?text=${encodeURIComponent(category)}`;

@@ -21,7 +21,16 @@ const PhoneRequiredDialog: React.FC = () => {
     const checkPhone = async () => {
       // Only show for logged in users who don't have a phone verified
       if (user) {
+        // Check if phone is already verified in user metadata
+        if (user.user_metadata?.phone_verified === true) {
+          console.log('Phone already verified in user metadata, not showing dialog');
+          setOpen(false);
+          return;
+        }
+
+        // Only perform backend verification check if needed
         const hasPhone = await checkPhoneVerification();
+        
         // Only open dialog if user doesn't have a phone verified
         setOpen(!hasPhone);
       } else {

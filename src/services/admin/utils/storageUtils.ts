@@ -2,136 +2,118 @@
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Check if a storage bucket exists
- * @param bucketName The name of the bucket to check
- * @returns Promise<boolean> True if the bucket exists, false otherwise
- */
-export const checkBucketExists = async (bucketName: string): Promise<boolean> => {
-  try {
-    const { data, error } = await supabase.storage.getBucket(bucketName);
-    if (error) {
-      console.error(`Error checking if bucket ${bucketName} exists:`, error);
-      return false;
-    }
-    return !!data;
-  } catch (error) {
-    console.error(`Error checking if bucket ${bucketName} exists:`, error);
-    return false;
-  }
-};
-
-/**
- * Create a new storage bucket if it doesn't exist
- * @param bucketName The name of the bucket to create
- * @param isPublic Whether the bucket should be public
- * @returns Promise<boolean> True if the bucket was created or already exists, false otherwise
- */
-export const createBucketIfNotExists = async (bucketName: string, isPublic: boolean = true): Promise<boolean> => {
-  try {
-    // First, check if the bucket already exists
-    const bucketExists = await checkBucketExists(bucketName);
-    
-    if (bucketExists) {
-      console.log(`Bucket ${bucketName} already exists`);
-      return true;
-    }
-    
-    // Create the bucket if it doesn't exist
-    const { data, error } = await supabase.storage.createBucket(bucketName, {
-      public: isPublic
-    });
-    
-    if (error) {
-      console.error(`Error creating bucket ${bucketName}:`, error);
-      return false;
-    }
-    
-    console.log(`Successfully created bucket ${bucketName}`);
-    return true;
-  } catch (error) {
-    console.error(`Error creating bucket ${bucketName}:`, error);
-    return false;
-  }
-};
-
-/**
- * List all buckets in storage
- * @returns Promise<string[]> Array of bucket names
+ * Lists existing buckets in storage
+ * @returns {Promise<string[]>} - List of bucket names
  */
 export const listBuckets = async (): Promise<string[]> => {
   try {
+    console.log('Listing storage buckets...');
     const { data, error } = await supabase.storage.listBuckets();
     
     if (error) {
       console.error('Error listing buckets:', error);
-      return [];
+      throw error;
     }
     
-    return data.map(bucket => bucket.name);
+    const bucketNames = data.map(bucket => bucket.name);
+    console.log('Available buckets:', bucketNames);
+    return bucketNames;
   } catch (error) {
-    console.error('Error listing buckets:', error);
+    console.error('Error in listBuckets:', error);
     return [];
   }
 };
 
 /**
- * Test upload to see if storage permissions are working
- * @param bucketName The name of the bucket to upload to
- * @returns Promise<boolean> True if the test was successful, false otherwise
+ * Creates necessary storage buckets for the application
+ * @returns {Promise<boolean>} - Result of the operation
  */
-export const testStorageUpload = async (bucketName: string): Promise<boolean> => {
+export const createBuckets = async (): Promise<boolean> => {
   try {
-    // Create a small test file
-    const testFile = new File(['test'], 'test.txt', { type: 'text/plain' });
+    console.log('Creating necessary storage buckets...');
+    const requiredBuckets = ['professionals', 'articles', 'images'];
+    const existingBuckets = await listBuckets();
     
-    // Try uploading to the bucket
-    const { data, error } = await supabase.storage
-      .from(bucketName)
-      .upload(`test-${Date.now()}.txt`, testFile, {
-        cacheControl: '3600',
-        upsert: false
-      });
-      
-    if (error) {
-      console.error(`Error testing upload to ${bucketName}:`, error);
-      return false;
+    for (const bucketName of requiredBuckets) {
+      if (!existingBuckets.includes(bucketName)) {
+        console.log(`Creating bucket '${bucketName}'...`);
+        const { error } = await supabase.storage.createBucket(bucketName, {
+          public: true, // Make buckets public by default
+          fileSizeLimit: 10 * 1024 * 1024 // 10 MB file size limit
+        });
+        
+        if (error) {
+          console.error(`Error creating '${bucketName}' bucket:`, error);
+        } else {
+          console.log(`Bucket '${bucketName}' created successfully`);
+          
+          // Create public policy for the bucket
+          const { error: policyError } = await supabase.rpc('create_storage_policy', { 
+            bucket_id: bucketName,
+            policy_definition: 'true' // Public access
+          });
+          
+          if (policyError) {
+            console.error(`Error creating policy for '${bucketName}' bucket:`, policyError);
+          }
+        }
+      } else {
+        console.log(`Bucket '${bucketName}' already exists`);
+      }
     }
     
-    console.log(`Test upload to ${bucketName} successful:`, data);
     return true;
   } catch (error) {
-    console.error(`Error testing upload to ${bucketName}:`, error);
+    console.error('Error in createBuckets:', error);
     return false;
   }
 };
 
 /**
- * Initialize required storage buckets for the application
- * @returns Promise<boolean> True if all buckets were initialized successfully
+ * Initialize all storage buckets for the application
+ * @returns {Promise<boolean>} - Result of the operation
  */
 export const initializeStorageBuckets = async (): Promise<boolean> => {
   try {
-    // Create required buckets if they don't exist
-    const articlesBucketCreated = await createBucketIfNotExists('articles', true);
-    const professionalsBucketCreated = await createBucketIfNotExists('professionals', true);
-    const imagesBucketCreated = await createBucketIfNotExists('images', true);
-    
-    // Test uploads to each bucket
-    if (articlesBucketCreated) {
-      await testStorageUpload('articles');
-    }
-    
-    if (professionalsBucketCreated) {
-      await testStorageUpload('professionals');
-    }
-    
-    if (imagesBucketCreated) {
-      await testStorageUpload('images');
-    }
-    
-    return articlesBucketCreated && professionalsBucketCreated && imagesBucketCreated;
+    console.log('Initializing storage buckets...');
+    const result = await createBuckets();
+    console.log('Storage buckets initialization result:', result);
+    return result;
   } catch (error) {
     console.error('Error initializing storage buckets:', error);
     return false;
+  }
+};
+
+/**
+ * Helper function to get the storage URL for an object
+ * @param {string} bucket - Bucket name
+ * @param {string} path - Path to the object
+ * @returns {string} - Public URL to the object
+ */
+export const getPublicUrl = (bucket: string, path: string): string => {
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  return data.publicUrl;
+};
+
+/**
+ * Get a signed URL for temporary access to a file
+ * @param {string} bucket - Bucket name
+ * @param {string} path - Path to the object
+ * @returns {Promise<string | null>} - Signed URL or null
+ */
+export const getSignedUrl = async (bucket: string, path: string): Promise<string | null> => {
+  try {
+    const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 60); // 1 hour
+    
+    if (error) {
+      console.error('Error getting signed URL:', error);
+      return null;
+    }
+    
+    return data.signedUrl;
+  } catch (error) {
+    console.error('Error in getSignedUrl:', error);
+    return null;
   }
 };

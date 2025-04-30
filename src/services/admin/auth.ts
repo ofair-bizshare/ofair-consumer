@@ -1,45 +1,32 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { getCachedAdminStatus, setCachedAdminStatus } from './utils/adminCache';
+import { setCachedAdminStatus } from './utils/adminCache';
 
 /**
  * Check if the current user is a super admin
- * @returns Promise<boolean> True if the current user is a super admin, false otherwise
+ * @returns {Promise<boolean>} - Returns true if user is a super admin
  */
 export const checkIsSuperAdmin = async (): Promise<boolean> => {
   try {
-    console.log('Checking if current user is a super admin');
+    console.log('Checking super admin status...');
     
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    
-    if (!user) {
-      console.log('No user found for admin check');
-      return false;
-    }
-    
-    // Check cache first
-    const cached = getCachedAdminStatus(user.id);
-    if (cached) {
-      console.log('Using cached admin status:', cached.isAdmin);
-      return cached.isAdmin;
-    }
-    
-    console.log('Calling check_is_super_admin RPC function');
-    const { data, error } = await supabase.rpc('check_is_super_admin');
+    // Using the RPC function to check admin status
+    const { data: isAdmin, error } = await supabase.rpc('check_is_super_admin');
     
     if (error) {
       console.error('Error checking super admin status:', error);
       throw error;
     }
     
-    console.log('Super admin check result:', data);
+    console.log('Super admin status check result:', isAdmin);
     
-    // Cache the result
-    setCachedAdminStatus(user.id, !!data);
+    // Cache the admin status if we have a valid user id
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.id) {
+      setCachedAdminStatus(user.id, isAdmin || false);
+    }
     
-    return !!data;
+    return isAdmin || false;
   } catch (error) {
     console.error('Error in checkIsSuperAdmin:', error);
     return false;
@@ -47,75 +34,36 @@ export const checkIsSuperAdmin = async (): Promise<boolean> => {
 };
 
 /**
- * Check if a specific user is a super admin
- * @param userId The user ID to check
- * @returns Promise<boolean> True if the user is a super admin, false otherwise
+ * Creates a super admin using the email
+ * @param {string} email - Email of the user to make super admin
+ * @returns {Promise<{ success: boolean; message: string }>} - Result of the operation
  */
-export const checkUserIsSuperAdmin = async (userId: string): Promise<boolean> => {
+export const createSuperAdmin = async (email: string): Promise<{ success: boolean; message: string }> => {
   try {
-    console.log('Checking if user is a super admin:', userId);
+    console.log(`Creating super admin with email: ${email}`);
     
-    // Check cache first
-    const cached = getCachedAdminStatus(userId);
-    if (cached) {
-      console.log('Using cached admin status for user:', cached.isAdmin);
-      return cached.isAdmin;
-    }
-    
-    const { data, error } = await supabase.rpc('check_is_super_admin_user', { 
-      user_id_param: userId 
-    });
-    
-    if (error) {
-      console.error('Error checking user super admin status:', error);
-      throw error;
-    }
-    
-    console.log('Super admin check result for user:', data);
-    
-    // Cache the result
-    setCachedAdminStatus(userId, !!data);
-    
-    return !!data;
-  } catch (error) {
-    console.error('Error in checkUserIsSuperAdmin:', error);
-    return false;
-  }
-};
-
-/**
- * Create a super admin user
- * @param email The email address of the user to make a super admin
- * @returns Promise<{success: boolean, message: string, userId?: string}> Result of the operation
- */
-export const createSuperAdmin = async (email: string): Promise<{success: boolean, message: string, userId?: string}> => {
-  try {
-    console.log('Creating super admin for email:', email);
-    
-    const { data, error } = await supabase.rpc('create_super_admin', { 
-      admin_email_param: email 
+    const { data: adminId, error } = await supabase.rpc('create_super_admin', {
+      admin_email_param: email
     });
     
     if (error) {
       console.error('Error creating super admin:', error);
-      return {
-        success: false,
-        message: error.message || 'Error creating super admin'
+      return { 
+        success: false, 
+        message: error.message || 'Failed to create super admin'
       };
     }
     
-    console.log('Super admin created successfully:', data);
-    
-    return {
-      success: true,
-      message: `User ${email} has been successfully made a super admin`,
-      userId: data
+    console.log('Super admin created successfully, ID:', adminId);
+    return { 
+      success: true, 
+      message: `User with email ${email} was successfully made a super admin` 
     };
   } catch (error) {
     console.error('Error in createSuperAdmin:', error);
-    return {
-      success: false,
-      message: (error as Error).message || 'Unknown error creating super admin'
+    return { 
+      success: false, 
+      message: (error as Error).message || 'An unexpected error occurred' 
     };
   }
 };

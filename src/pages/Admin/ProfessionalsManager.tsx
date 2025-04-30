@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Plus, AlertCircle, FileSpreadsheet, Star } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { supabase } from '@/integrations/supabase/client';
 
 // Import our refactored components
 import ProfessionalForm, { ProfessionalFormValues } from '@/components/admin/professionals/ProfessionalForm';
@@ -65,9 +66,20 @@ const ProfessionalsManager = () => {
       setLoading(true);
       setError(null);
       console.log('Fetching professionals data...');
-      const data = await getProfessionals();
-      console.log('Professionals data fetched:', data.length);
-      setProfessionals(data);
+      
+      // Use direct Supabase query instead of the getProfessionals service
+      const { data, error } = await supabase
+        .from('professionals')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        console.error('Supabase error when fetching professionals:', error);
+        throw error;
+      }
+      
+      console.log('Professionals data fetched:', data?.length);
+      setProfessionals(data || []);
     } catch (error) {
       console.error('Error fetching professionals:', error);
       setError('אירעה שגיאה בטעינת בעלי המקצוע. אנא נסה שוב מאוחר יותר.');
