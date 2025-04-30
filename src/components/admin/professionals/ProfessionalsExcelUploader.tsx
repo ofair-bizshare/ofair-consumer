@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Upload, AlertCircle, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -97,7 +96,7 @@ const ProfessionalsExcelUploader = ({ onUploaded }: { onUploaded: () => void }) 
           const worksheet = workbook.Sheets[worksheetName];
           const jsonData = XLSX.utils.sheet_to_json<ExcelProfessional>(worksheet);
           
-          // Process each professional
+          // Process each professional using our new function
           const result = await uploadProfessionalsFromExcel(jsonData);
           
           if (result.success) {

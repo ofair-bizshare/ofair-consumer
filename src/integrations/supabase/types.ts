@@ -407,8 +407,11 @@ export type Database = {
           estimated_completion: string | null
           id: string
           lead_id: string | null
+          lower_price_value: number | null
+          lower_price_willing: boolean | null
           price: number
           professional_id: string | null
+          sample_image_url: string | null
           status: string
         }
         Insert: {
@@ -417,8 +420,11 @@ export type Database = {
           estimated_completion?: string | null
           id?: string
           lead_id?: string | null
+          lower_price_value?: number | null
+          lower_price_willing?: boolean | null
           price: number
           professional_id?: string | null
+          sample_image_url?: string | null
           status?: string
         }
         Update: {
@@ -427,8 +433,11 @@ export type Database = {
           estimated_completion?: string | null
           id?: string
           lead_id?: string | null
+          lower_price_value?: number | null
+          lower_price_willing?: boolean | null
           price?: number
           professional_id?: string | null
+          sample_image_url?: string | null
           status?: string
         }
         Relationships: [
@@ -457,6 +466,7 @@ export type Database = {
           price: string
           professional_id: string
           request_id: string
+          sample_image_url: string | null
           status: string
           updated_at: string
         }
@@ -468,6 +478,7 @@ export type Database = {
           price: string
           professional_id: string
           request_id: string
+          sample_image_url?: string | null
           status?: string
           updated_at?: string
         }
@@ -479,6 +490,7 @@ export type Database = {
           price?: string
           professional_id?: string
           request_id?: string
+          sample_image_url?: string | null
           status?: string
           updated_at?: string
         }

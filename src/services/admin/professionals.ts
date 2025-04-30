@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { formatError } from '@/utils/errorUtils';
@@ -153,5 +152,98 @@ export const uploadProfessionalImage = async (imageFile: File): Promise<string> 
   } catch (error) {
     console.error('Error in uploadProfessionalImage:', error);
     throw new Error(formatError(error, 'Failed to upload image'));
+  }
+};
+
+/**
+ * Upload professionals from Excel file data
+ * @param {Array} professionals - Array of professional objects from Excel
+ * @returns {Promise<{success: boolean, created: number, errors: number, error?: string}>} - Result of the operation
+ */
+export const uploadProfessionalsFromExcel = async (professionals: any[]): Promise<{
+  success: boolean;
+  created: number;
+  errors: number;
+  error?: string;
+}> => {
+  try {
+    console.log(`Processing ${professionals.length} professionals from Excel`);
+    
+    if (!professionals || professionals.length === 0) {
+      return {
+        success: false,
+        created: 0,
+        errors: 0,
+        error: 'No professionals data found in Excel file'
+      };
+    }
+    
+    let created = 0;
+    let errors = 0;
+    
+    // Process each professional
+    for (const professional of professionals) {
+      try {
+        // Prepare the professional data with required fields
+        const professionalData = {
+          name: professional.name,
+          profession: professional.profession,
+          location: professional.location,
+          city: professional.location, // Set city to location for consistency
+          phoneNumber: professional.phoneNumber,
+          about: professional.about || '',
+          specialties: professional.specialties ? 
+            (typeof professional.specialties === 'string' ? 
+              professional.specialties.split(',').map((s: string) => s.trim()) : 
+              [professional.specialties]) : 
+            [],
+          specialty: professional.specialties ? 
+            (typeof professional.specialties === 'string' ? 
+              professional.specialties.split(',')[0].trim() : 
+              professional.specialties) : 
+            '',
+          rating: professional.rating || 4.0,
+          image: professional.image || 'https://via.placeholder.com/150',
+          image_url: professional.image || 'https://via.placeholder.com/150',
+          company_name: professional.company_name || '',
+          work_hours: professional.work_hours || '',
+          certifications: professional.certifications ? 
+            (typeof professional.certifications === 'string' ? 
+              professional.certifications.split(',').map((s: string) => s.trim()) : 
+              [professional.certifications]) : 
+            [],
+          experience_years: professional.experience_years || 0,
+          reviews_count: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          status: 'active',
+          is_verified: false
+        };
+        
+        // Create the professional
+        await createProfessional(professionalData);
+        created++;
+      } catch (error) {
+        console.error(`Error creating professional from Excel: ${professional.name}`, error);
+        errors++;
+      }
+    }
+    
+    console.log(`Upload complete. Created: ${created}, Errors: ${errors}`);
+    
+    return {
+      success: created > 0,
+      created,
+      errors,
+      error: errors > 0 ? `${errors} professionals failed to import` : undefined
+    };
+  } catch (error) {
+    console.error('Error in uploadProfessionalsFromExcel:', error);
+    return {
+      success: false,
+      created: 0,
+      errors: professionals?.length || 0,
+      error: formatError(error, 'Failed to upload professionals from Excel')
+    };
   }
 };
