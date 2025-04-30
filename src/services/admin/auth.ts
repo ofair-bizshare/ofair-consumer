@@ -86,9 +86,9 @@ export const checkUserIsSuperAdmin = async (userId: string): Promise<boolean> =>
 /**
  * Create a super admin user
  * @param email The email address of the user to make a super admin
- * @returns Promise<string | null> The ID of the created admin user if successful, null otherwise
+ * @returns Promise<{success: boolean, message: string, userId?: string}> Result of the operation
  */
-export const createSuperAdmin = async (email: string): Promise<string | null> => {
+export const createSuperAdmin = async (email: string): Promise<{success: boolean, message: string, userId?: string}> => {
   try {
     console.log('Creating super admin for email:', email);
     
@@ -98,14 +98,24 @@ export const createSuperAdmin = async (email: string): Promise<string | null> =>
     
     if (error) {
       console.error('Error creating super admin:', error);
-      throw error;
+      return {
+        success: false,
+        message: error.message || 'Error creating super admin'
+      };
     }
     
     console.log('Super admin created successfully:', data);
     
-    return data;
+    return {
+      success: true,
+      message: `User ${email} has been successfully made a super admin`,
+      userId: data
+    };
   } catch (error) {
     console.error('Error in createSuperAdmin:', error);
-    return null;
+    return {
+      success: false,
+      message: (error as Error).message || 'Unknown error creating super admin'
+    };
   }
 };
