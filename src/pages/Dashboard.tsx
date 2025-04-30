@@ -47,10 +47,10 @@ const Dashboard = () => {
       
       <Header />
       
-      <main className="flex-grow pt-28 pb-16">
-        <div className="container mx-auto px-6">
-          <div className="mb-10">
-            <h1 className="text-3xl font-bold text-blue-700 mb-2">
+      <main className="flex-grow pt-20 sm:pt-28 pb-10 sm:pb-16">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="mb-6 sm:mb-10">
+            <h1 className="text-2xl sm:text-3xl font-bold text-blue-700 mb-2">
               <span className="text-[#00D09E]">האזור</span> האישי שלי
             </h1>
             <p className="text-gray-600">
@@ -60,7 +60,7 @@ const Dashboard = () => {
           
           {user && <ProfileCard isAdmin={isAdmin} />}
           
-          <div id="requests-section">
+          <div id="requests-section" className="mt-6">
             <DashboardTabs isLoggedIn={!!user} />
           </div>
         </div>

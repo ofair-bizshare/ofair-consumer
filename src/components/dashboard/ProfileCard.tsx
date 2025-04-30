@@ -6,6 +6,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 interface ProfileCardProps {
   isAdmin: boolean;
@@ -101,21 +102,25 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ isAdmin }) => {
   };
 
   return (
-    <div className="glass-card p-6 mb-8">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center">
-          <div className="relative ml-6">
-            {profileImage ? (
-              <img 
-                src={profileImage} 
-                alt="תמונת פרופיל" 
-                className="w-16 h-16 rounded-full object-cover border-2 border-blue-100"
-              />
-            ) : (
-              <div className="bg-blue-100 rounded-full p-3 w-16 h-16 flex items-center justify-center">
-                <UserCircle size={36} className="text-blue-700" />
-              </div>
-            )}
+    <div className="glass-card p-4 sm:p-6 mb-6 sm:mb-8">
+      <div className="flex flex-col sm:flex-row items-center sm:items-center sm:justify-between gap-4 sm:gap-0">
+        <div className="flex flex-col sm:flex-row items-center w-full sm:w-auto gap-4">
+          <div className="relative">
+            <div className="w-20 h-20 overflow-hidden rounded-full border-2 border-blue-100">
+              {profileImage ? (
+                <AspectRatio ratio={1} className="h-full w-full">
+                  <img 
+                    src={profileImage} 
+                    alt="תמונת פרופיל" 
+                    className="w-full h-full object-cover"
+                  />
+                </AspectRatio>
+              ) : (
+                <div className="bg-blue-100 rounded-full p-3 w-full h-full flex items-center justify-center">
+                  <UserCircle size={36} className="text-blue-700" />
+                </div>
+              )}
+            </div>
             <div className="absolute bottom-0 right-0">
               <label htmlFor="profile-upload" className="cursor-pointer">
                 <div className="bg-blue-500 rounded-full p-1 text-white hover:bg-blue-600 transition-colors">
@@ -132,13 +137,13 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ isAdmin }) => {
               </label>
             </div>
           </div>
-          <div className="ml-4">
+          <div className="text-center sm:text-right">
             <h2 className="text-xl font-semibold">ברוך הבא, {profile?.name || user?.user_metadata?.name || user?.email}!</h2>
             <p className="text-gray-600">שמחים לראות אותך שוב</p>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-3">
-          <div className="flex items-center bg-gradient-to-r from-teal-500 to-blue-600 text-white px-4 py-2 rounded-lg">
+        <div className="flex flex-col items-center sm:items-end gap-3 mt-2 sm:mt-0 w-full sm:w-auto">
+          <div className="flex items-center bg-gradient-to-r from-teal-500 to-blue-600 text-white px-4 py-2 rounded-lg w-full sm:w-auto justify-center sm:justify-start">
             <Gift className="ml-2 h-5 w-5" aria-hidden="true" />
             <div>
               <div className="text-sm opacity-80">הקרדיט שלי</div>

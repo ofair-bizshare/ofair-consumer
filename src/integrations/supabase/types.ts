@@ -125,6 +125,7 @@ export type Database = {
           id: string
           image_url: string | null
           location: string
+          notes: string | null
           professional_id: string | null
           share_percentage: number
           status: string
@@ -142,6 +143,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           location: string
+          notes?: string | null
           professional_id?: string | null
           share_percentage?: number
           status?: string
@@ -159,6 +161,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           location?: string
+          notes?: string | null
           professional_id?: string | null
           share_percentage?: number
           status?: string
