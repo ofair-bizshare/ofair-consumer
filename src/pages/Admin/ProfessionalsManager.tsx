@@ -12,6 +12,7 @@ import { Plus, AlertCircle, FileSpreadsheet, Star } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
+import { getProfessionalFromData } from '@/services/professionals/professionalUtils';
 
 // Import our refactored components
 import ProfessionalForm, { ProfessionalFormValues } from '@/components/admin/professionals/ProfessionalForm';
@@ -79,7 +80,10 @@ const ProfessionalsManager = () => {
       }
       
       console.log('Professionals data fetched:', data?.length);
-      setProfessionals(data || []);
+      
+      // Transform the data to ensure it matches the ProfessionalInterface
+      const professionalData = (data || []).map(item => getProfessionalFromData(item));
+      setProfessionals(professionalData);
     } catch (error) {
       console.error('Error fetching professionals:', error);
       setError('אירעה שגיאה בטעינת בעלי המקצוע. אנא נסה שוב מאוחר יותר.');

@@ -25,6 +25,41 @@ export const listBuckets = async (): Promise<string[]> => {
 };
 
 /**
+ * Creates a bucket if it doesn't exist already
+ * @param {string} bucketName - The name of the bucket to create
+ * @param {boolean} isPublic - Whether the bucket should be public
+ * @returns {Promise<boolean>} - Result of the operation
+ */
+export const createBucketIfNotExists = async (bucketName: string, isPublic: boolean = true): Promise<boolean> => {
+  try {
+    console.log(`Checking if bucket '${bucketName}' exists...`);
+    const buckets = await listBuckets();
+    
+    if (!buckets.includes(bucketName)) {
+      console.log(`Creating bucket '${bucketName}'...`);
+      const { error } = await supabase.storage.createBucket(bucketName, {
+        public: isPublic,
+        fileSizeLimit: 10 * 1024 * 1024 // 10 MB file size limit
+      });
+      
+      if (error) {
+        console.error(`Error creating '${bucketName}' bucket:`, error);
+        return false;
+      }
+      
+      console.log(`Bucket '${bucketName}' created successfully`);
+      return true;
+    } else {
+      console.log(`Bucket '${bucketName}' already exists`);
+      return true;
+    }
+  } catch (error) {
+    console.error(`Error creating bucket '${bucketName}':`, error);
+    return false;
+  }
+};
+
+/**
  * Creates necessary storage buckets for the application
  * @returns {Promise<boolean>} - Result of the operation
  */
@@ -47,15 +82,8 @@ export const createBuckets = async (): Promise<boolean> => {
         } else {
           console.log(`Bucket '${bucketName}' created successfully`);
           
-          // Create public policy for the bucket
-          const { error: policyError } = await supabase.rpc('create_storage_policy', { 
-            bucket_id: bucketName,
-            policy_definition: 'true' // Public access
-          });
-          
-          if (policyError) {
-            console.error(`Error creating policy for '${bucketName}' bucket:`, policyError);
-          }
+          // Note: Removed the RPC call that was causing an error as it's not needed
+          // Storage buckets should be public by default if created with public: true
         }
       } else {
         console.log(`Bucket '${bucketName}' already exists`);
