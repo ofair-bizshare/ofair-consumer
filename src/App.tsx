@@ -1,126 +1,91 @@
 
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
-import { Toaster } from '@/components/ui/sonner';
-import { ThemeProvider } from '@/components/theme-provider';
-import { AuthProvider } from '@/providers/AuthProvider';
-import About from '@/pages/About';
+
+// Pages
 import Index from '@/pages/Index';
 import Login from '@/pages/Login';
-import Register from '@/pages/Login';
-import FAQ from '@/pages/FAQ';
-import NotFound from '@/pages/NotFound';
-import Dashboard from '@/pages/Dashboard';
-import MyRequests from '@/pages/MyRequests';
-import MyReferrals from '@/pages/MyReferrals';
-import AdminLogin from '@/pages/AdminLogin';
 import Search from '@/pages/Search';
 import ProfessionalProfile from '@/pages/ProfessionalProfile';
-import ScrollToTop from '@/components/ScrollToTop';
-import { lazy, Suspense } from 'react';
-import ArticleDetail from '@/pages/ArticleDetail';
-import Articles from '@/pages/Articles';
-import ReferralsPage from '@/pages/ReferralsPage';
-import Terms from '@/pages/Terms';
-import Privacy from '@/pages/Privacy';
-import Settings from '@/pages/Settings';
+import Dashboard from '@/pages/Dashboard';
+import About from '@/pages/About';
 import Contact from '@/pages/Contact';
+import Articles from '@/pages/Articles';
+import ArticleDetail from '@/pages/ArticleDetail';
+import FAQ from '@/pages/FAQ';
+import Privacy from '@/pages/Privacy';
+import Terms from '@/pages/Terms';
+import NotFound from '@/pages/NotFound';
+import AdminLogin from '@/pages/AdminLogin';
 import UserSettings from '@/pages/UserSettings';
-import Payment from '@/pages/Payment';
+import MyReferrals from '@/pages/MyReferrals';
+import MyRequests from '@/pages/MyRequests';
+import ReferralsPage from '@/pages/ReferralsPage';
 
-const AdminDashboard = lazy(() => import('@/pages/Admin/AdminDashboard'));
-const ArticlesManager = lazy(() => import('@/pages/Admin/ArticlesManager'));
-const MessagesManager = lazy(() => import('@/pages/Admin/MessagesManager'));
-const ProfessionalsManager = lazy(() => import('@/pages/Admin/ProfessionalsManager'));
-const AdminSettings = lazy(() => import('@/pages/Admin/AdminSettings'));
+// Admin Pages
+import AdminDashboard from '@/pages/Admin/AdminDashboard';
+import ProfessionalsManager from '@/pages/Admin/ProfessionalsManager';
+import ArticlesManager from '@/pages/Admin/ArticlesManager';
+import MessagesManager from '@/pages/Admin/MessagesManager';
+import AdminSettings from '@/pages/Admin/AdminSettings';
+
+// Context Providers
+import { ThemeProvider } from '@/components/theme-provider';
+import { AuthProvider } from '@/providers/AuthProvider';
+
+// Components
+import ScrollToTop from '@/components/ScrollToTop';
+import { Toaster } from '@/components/ui/toaster';
+import PhoneRequiredDialog from '@/components/auth/PhoneRequiredDialog';
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="light">
-        <HelmetProvider>
-          <AuthProvider>
-            <Router>
+      <AuthProvider>
+        <ThemeProvider defaultTheme="light">
+          <HelmetProvider>
+            <BrowserRouter>
               <ScrollToTop />
-              <div className="App">
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/my-requests" element={<MyRequests />} />
-                  <Route path="/my-referrals" element={<MyReferrals />} />
-                  <Route path="/search" element={<Search />} />
-                  <Route path="/faq" element={<FAQ />} />
-                  <Route path="/professional/:id" element={<ProfessionalProfile />} />
-                  <Route path="/professionals/:id" element={<ProfessionalProfile />} />
-                  <Route path="/articles" element={<Articles />} />
-                  <Route path="/articles/:id" element={<ArticleDetail />} />
-                  <Route path="/referrals" element={<ReferralsPage />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/terms" element={<Terms />} />
-                  <Route path="/privacy" element={<Privacy />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/user-settings" element={<UserSettings />} />
-                  <Route path="/payment/:quoteId" element={<Payment />} />
-                  
-                  {/* Admin routes */}
-                  <Route path="/admin-login" element={<AdminLogin />} />
-                  <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-                  <Route
-                    path="/admin/dashboard"
-                    element={
-                      <Suspense fallback={<div>טוען...</div>}>
-                        <AdminDashboard />
-                      </Suspense>
-                    }
-                  />
-                  <Route
-                    path="/admin/articles"
-                    element={
-                      <Suspense fallback={<div>טוען...</div>}>
-                        <ArticlesManager />
-                      </Suspense>
-                    }
-                  />
-                  <Route
-                    path="/admin/messages"
-                    element={
-                      <Suspense fallback={<div>טוען...</div>}>
-                        <MessagesManager />
-                      </Suspense>
-                    }
-                  />
-                  <Route
-                    path="/admin/professionals"
-                    element={
-                      <Suspense fallback={<div>טוען...</div>}>
-                        <ProfessionalsManager />
-                      </Suspense>
-                    }
-                  />
-                  <Route
-                    path="/admin/settings"
-                    element={
-                      <Suspense fallback={<div>טוען...</div>}>
-                        <AdminSettings />
-                      </Suspense>
-                    }
-                  />
-                  
-                  {/* 404 route */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </div>
-            </Router>
-          </AuthProvider>
-          <Toaster />
-        </HelmetProvider>
-      </ThemeProvider>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/search" element={<Search />} />
+                <Route path="/professional/:id" element={<ProfessionalProfile />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/referrals" element={<ReferralsPage />} />
+                <Route path="/my-referrals" element={<MyReferrals />} />
+                <Route path="/my-requests" element={<MyRequests />} />
+                <Route path="/settings" element={<UserSettings />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/articles" element={<Articles />} />
+                <Route path="/articles/:slug" element={<ArticleDetail />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/terms" element={<Terms />} />
+                
+                {/* Admin Routes */}
+                <Route path="/admin-login" element={<AdminLogin />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/professionals" element={<ProfessionalsManager />} />
+                <Route path="/admin/articles" element={<ArticlesManager />} />
+                <Route path="/admin/messages" element={<MessagesManager />} />
+                <Route path="/admin/settings" element={<AdminSettings />} />
+                
+                {/* 404 */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <PhoneRequiredDialog />
+              <Toaster />
+            </BrowserRouter>
+          </HelmetProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

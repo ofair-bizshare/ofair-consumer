@@ -13,6 +13,7 @@ import {
   DialogTitle 
 } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface PhoneRevealButtonProps {
   phoneNumber?: string;
@@ -33,18 +34,27 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
 }) => {
   const [isRevealed, setIsRevealed] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { user } = useAuth();
+  const [showPhoneRequiredDialog, setShowPhoneRequiredDialog] = useState(false);
+  const { user, phoneVerified, checkPhoneVerification } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   
-  // Auto-reveal the phone number if autoReveal is true and user is logged in
+  // Auto-reveal the phone number if autoReveal is true and user is logged in with phone verified
   useEffect(() => {
-    if (autoReveal && user) {
-      setIsRevealed(true);
-      saveReferral().catch(error => {
-        console.error("Error auto-saving referral:", error);
-      });
-    }
-  }, [autoReveal, user]);
+    const checkPhoneStatus = async () => {
+      if (autoReveal && user) {
+        const hasPhoneVerified = await checkPhoneVerification();
+        if (hasPhoneVerified) {
+          setIsRevealed(true);
+          saveReferral().catch(error => {
+            console.error("Error auto-saving referral:", error);
+          });
+        }
+      }
+    };
+    
+    checkPhoneStatus();
+  }, [autoReveal, user, checkPhoneVerification]);
   
   const handleReveal = async () => {
     if (onBeforeReveal && !onBeforeReveal()) {
@@ -53,6 +63,14 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
     
     if (!user) {
       setIsDialogOpen(true);
+      return;
+    }
+    
+    // Check if user has verified phone number
+    const hasPhoneVerified = await checkPhoneVerification();
+    
+    if (!hasPhoneVerified) {
+      setShowPhoneRequiredDialog(true);
       return;
     }
     
@@ -107,6 +125,23 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
     });
   };
 
+  const handleVerificationComplete = () => {
+    setShowPhoneRequiredDialog(false);
+    setIsRevealed(true);
+    
+    // After verification, save the referral
+    if (user) {
+      saveReferral().catch(error => {
+        console.error("Error saving referral after verification:", error);
+      });
+    }
+    
+    toast({
+      title: "אימות הושלם בהצלחה",
+      description: "כעת באפשרותך לראות את מספרי הטלפון של בעלי המקצוע",
+    });
+  };
+
   // Format phone number for display if needed
   const formatPhoneNumber = (phone: string) => {
     if (!phone || phone === "000-0000000") return "מספר לא זמין";
@@ -127,7 +162,7 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
   
   return (
     <>
-      {autoReveal && user ? (
+      {autoReveal && user && isRevealed ? (
         <div className="flex items-center gap-2 text-green-600 font-medium">
           <Phone className="h-4 w-4" />
           {displayedPhone}
@@ -142,6 +177,7 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
         </Button>
       )}
       
+      {/* Login Required Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md" dir="rtl">
           <DialogHeader>
@@ -170,6 +206,24 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
               עבור לדף ההתחברות
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Phone Verification Dialog */}
+      <Dialog open={showPhoneRequiredDialog} onOpenChange={setShowPhoneRequiredDialog}>
+        <DialogContent className="sm:max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>אימות מספר טלפון נדרש</DialogTitle>
+            <DialogDescription>
+              כדי לצפות במספר הטלפון של בעל המקצוע, עליך לאמת את מספר הטלפון שלך
+            </DialogDescription>
+          </DialogHeader>
+          {user && (
+            <PhoneVerification 
+              phone={user.user_metadata?.phone || ''} 
+              onVerified={handleVerificationComplete}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </>
