@@ -1,5 +1,5 @@
 
-import { initializeStorageBuckets } from './storageUtils';
+import { initializeStorageBuckets, listBuckets } from './storageUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { checkIsSuperAdmin } from '../auth';
 
@@ -33,12 +33,18 @@ export const initializeAdminServices = async (): Promise<{
     
     // Initialize storage buckets
     console.log('Initializing storage buckets...');
-    await initializeStorageBuckets();
+    try {
+      await initializeStorageBuckets();
+    } catch (storageError) {
+      console.error('Error initializing storage buckets:', storageError);
+      // Continue anyway to check status, don't return early
+    }
     
     // Check storage bucket status
-    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-    
-    if (bucketsError) {
+    let buckets = [];
+    try {
+      buckets = await listBuckets();
+    } catch (bucketsError) {
       console.error('Error listing buckets:', bucketsError);
       return {
         isInitialized: false,
@@ -48,13 +54,14 @@ export const initializeAdminServices = async (): Promise<{
       };
     }
     
-    const bucketNames = buckets.map(b => b.name);
-    console.log('Available buckets:', bucketNames);
+    console.log('Available buckets:', buckets);
     
+    // Use lowercase for case-insensitive comparison
+    const lowercaseBuckets = buckets.map(b => b.toLowerCase());
     const bucketStatus = {
-      professionals: bucketNames.includes('professionals'),
-      articles: bucketNames.includes('articles'),
-      images: bucketNames.includes('images')
+      professionals: lowercaseBuckets.includes('professionals'),
+      articles: lowercaseBuckets.includes('articles'),
+      images: lowercaseBuckets.includes('images')
     };
     
     return {

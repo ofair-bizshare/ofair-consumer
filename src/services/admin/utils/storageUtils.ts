@@ -35,7 +35,12 @@ export const createBucketIfNotExists = async (bucketName: string, isPublic: bool
     console.log(`Checking if bucket '${bucketName}' exists...`);
     const buckets = await listBuckets();
     
-    if (!buckets.includes(bucketName)) {
+    // Case-insensitive check for existing bucket
+    const bucketExists = buckets.some(name => 
+      name.toLowerCase() === bucketName.toLowerCase()
+    );
+    
+    if (!bucketExists) {
       console.log(`Creating bucket '${bucketName}'...`);
       const { error } = await supabase.storage.createBucket(bucketName, {
         public: isPublic,
@@ -43,6 +48,11 @@ export const createBucketIfNotExists = async (bucketName: string, isPublic: bool
       });
       
       if (error) {
+        if (error.message.includes('already exists')) {
+          console.log(`Bucket '${bucketName}' already exists (name collision)`);
+          return true;
+        }
+        
         console.error(`Error creating '${bucketName}' bucket:`, error);
         return false;
       }
@@ -69,21 +79,31 @@ export const createBuckets = async (): Promise<boolean> => {
     const requiredBuckets = ['professionals', 'articles', 'images'];
     const existingBuckets = await listBuckets();
     
+    // Convert to lowercase for case-insensitive comparison
+    const lowerCaseBuckets = existingBuckets.map(name => name.toLowerCase());
+    
     for (const bucketName of requiredBuckets) {
-      if (!existingBuckets.includes(bucketName)) {
+      if (!lowerCaseBuckets.includes(bucketName.toLowerCase())) {
         console.log(`Creating bucket '${bucketName}'...`);
-        const { error } = await supabase.storage.createBucket(bucketName, {
-          public: true, // Make buckets public by default
-          fileSizeLimit: 10 * 1024 * 1024 // 10 MB file size limit
-        });
         
-        if (error) {
-          console.error(`Error creating '${bucketName}' bucket:`, error);
-        } else {
-          console.log(`Bucket '${bucketName}' created successfully`);
+        try {
+          const { error } = await supabase.storage.createBucket(bucketName, {
+            public: true, // Make buckets public by default
+            fileSizeLimit: 10 * 1024 * 1024 // 10 MB file size limit
+          });
           
-          // Note: Removed the RPC call that was causing an error as it's not needed
-          // Storage buckets should be public by default if created with public: true
+          if (error) {
+            if (error.message.includes('already exists')) {
+              console.log(`Bucket '${bucketName}' already exists (name collision)`);
+              continue;
+            }
+            
+            console.error(`Error creating '${bucketName}' bucket:`, error);
+          } else {
+            console.log(`Bucket '${bucketName}' created successfully`);
+          }
+        } catch (bucketError) {
+          console.error(`Exception creating bucket '${bucketName}':`, bucketError);
         }
       } else {
         console.log(`Bucket '${bucketName}' already exists`);
@@ -104,9 +124,21 @@ export const createBuckets = async (): Promise<boolean> => {
 export const initializeStorageBuckets = async (): Promise<boolean> => {
   try {
     console.log('Initializing storage buckets...');
-    const result = await createBuckets();
-    console.log('Storage buckets initialization result:', result);
-    return result;
+    // Retry up to 3 times in case of transient errors
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        console.log(`Storage initialization attempt ${attempt}...`);
+        const result = await createBuckets();
+        console.log('Storage buckets initialization result:', result);
+        return result;
+      } catch (attemptError) {
+        console.error(`Storage init attempt ${attempt} failed:`, attemptError);
+        if (attempt === 3) throw attemptError;
+        // Wait a short time before retrying
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+    return false;
   } catch (error) {
     console.error('Error initializing storage buckets:', error);
     return false;
@@ -142,6 +174,38 @@ export const getSignedUrl = async (bucket: string, path: string): Promise<string
     return data.signedUrl;
   } catch (error) {
     console.error('Error in getSignedUrl:', error);
+    return null;
+  }
+};
+
+/**
+ * Find a bucket by partial name (case-insensitive)
+ * @param {string} bucketName - The partial name to search for
+ * @returns {Promise<string | null>} - The found bucket name or null
+ */
+export const findBucketByName = async (bucketName: string): Promise<string | null> => {
+  try {
+    const buckets = await listBuckets();
+    
+    // Try exact match first
+    const exactMatch = buckets.find(name => name === bucketName);
+    if (exactMatch) return exactMatch;
+    
+    // Try case insensitive match
+    const caseInsensitiveMatch = buckets.find(
+      name => name.toLowerCase() === bucketName.toLowerCase()
+    );
+    if (caseInsensitiveMatch) return caseInsensitiveMatch;
+    
+    // Try partial match
+    const partialMatch = buckets.find(
+      name => name.toLowerCase().includes(bucketName.toLowerCase())
+    );
+    if (partialMatch) return partialMatch;
+    
+    return null;
+  } catch (error) {
+    console.error('Error finding bucket:', error);
     return null;
   }
 };

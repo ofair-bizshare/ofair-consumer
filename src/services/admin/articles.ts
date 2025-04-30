@@ -1,155 +1,153 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { v4 as uuidv4 } from 'uuid';
+import { formatError } from '@/utils/errorUtils';
+import { createBucketIfNotExists, findBucketByName } from './utils/storageUtils';
 import { ArticleInterface } from '@/types/dashboard';
-import { createBucketIfNotExists } from './utils/storageUtils';
 
 /**
- * Create a new article
- * @param article The article to create
- * @returns The created article or null if there was an error
+ * Creates a new article
+ * @param {object} articleData - Article data
+ * @returns {Promise<ArticleInterface | null>} - Created article
  */
-export const createArticle = async (article: Omit<ArticleInterface, 'id' | 'created_at'>): Promise<ArticleInterface | null> => {
+export const createArticle = async (articleData: any): Promise<ArticleInterface | null> => {
   try {
+    console.log('Creating article with data:', articleData);
+    
+    // Prepare data for insert
+    const articleToInsert = {
+      ...articleData,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    
+    // Insert the article
     const { data, error } = await supabase
       .from('articles')
-      .insert({
-        title: article.title,
-        content: article.content,
-        summary: article.summary,
-        author: article.author,
-        image: article.image,
-        published: article.published === undefined ? true : article.published,
-        category: article.category || 'general'
-      })
-      .select();
-
+      .insert(articleToInsert)
+      .select()
+      .single();
+      
     if (error) {
+      console.error('Error creating article:', error);
       throw error;
     }
-
-    return data?.[0] || null;
+    
+    console.log('Article created successfully:', data);
+    return data;
   } catch (error) {
-    console.error('Error creating article:', error);
-    throw error;
+    console.error('Error in createArticle:', error);
+    throw new Error(formatError(error, 'Failed to create article'));
   }
 };
 
 /**
- * Update an existing article
- * @param id The ID of the article to update
- * @param article The updated article data
- * @returns The updated article or null if there was an error
+ * Updates an article
+ * @param {string} id - Article ID
+ * @param {object} articleData - Article data to update
+ * @returns {Promise<ArticleInterface | null>} - Updated article
  */
-export const updateArticle = async (id: string, article: Partial<ArticleInterface>): Promise<ArticleInterface | null> => {
+export const updateArticle = async (id: string, articleData: any): Promise<ArticleInterface | null> => {
   try {
+    console.log(`Updating article ${id} with data:`, articleData);
+    
+    // Prepare data for update
+    const articleToUpdate = {
+      ...articleData,
+      updated_at: new Date().toISOString(),
+    };
+    
+    // Update the article
     const { data, error } = await supabase
       .from('articles')
-      .update({
-        title: article.title,
-        content: article.content,
-        summary: article.summary,
-        author: article.author,
-        image: article.image,
-        published: article.published,
-        category: article.category,
-        updated_at: new Date().toISOString()
-      })
+      .update(articleToUpdate)
       .eq('id', id)
-      .select();
-
+      .select()
+      .single();
+      
     if (error) {
+      console.error('Error updating article:', error);
       throw error;
     }
-
-    return data?.[0] || null;
+    
+    console.log('Article updated successfully:', data);
+    return data;
   } catch (error) {
-    console.error('Error updating article:', error);
-    throw error;
+    console.error('Error in updateArticle:', error);
+    throw new Error(formatError(error, 'Failed to update article'));
   }
 };
 
 /**
- * Upload an article image to storage
- * @param file The image file to upload
- * @returns The public URL of the uploaded image or null if there was an error
- */
-export const uploadArticleImage = async (file: File): Promise<string | null> => {
-  try {
-    // Ensure the articles bucket exists
-    await createBucketIfNotExists('articles', true);
-    
-    const fileExt = file.name.split('.').pop();
-    const fileName = `article-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-
-    console.log(`Attempting to upload article image ${fileName}...`);
-    
-    // Try uploading to the articles bucket
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('articles')
-      .upload(`images/${fileName}`, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
-      
-    if (uploadError) {
-      console.error('Error uploading to articles bucket:', uploadError);
-      
-      // Ensure the images bucket exists as fallback
-      await createBucketIfNotExists('images', true);
-      
-      // Try uploading to the images bucket as fallback
-      const { data: fallbackData, error: fallbackError } = await supabase.storage
-        .from('images')
-        .upload(`articles/${fileName}`, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-        
-      if (fallbackError) {
-        console.error('Error uploading to images bucket:', fallbackError);
-        return null;
-      }
-      
-      const { data: fallbackUrl } = supabase.storage
-        .from('images')
-        .getPublicUrl(`articles/${fileName}`);
-      
-      console.log(`Article image uploaded to images bucket: ${fallbackUrl.publicUrl}`);
-      return fallbackUrl.publicUrl;
-    }
-    
-    // Get the public URL from the articles bucket
-    const { data: publicUrl } = supabase.storage
-      .from('articles')
-      .getPublicUrl(`images/${fileName}`);
-    
-    console.log(`Article image uploaded to articles bucket: ${publicUrl.publicUrl}`);
-    return publicUrl.publicUrl;
-  } catch (error) {
-    console.error('Error uploading article image:', error);
-    return null;
-  }
-};
-
-/**
- * Delete an article
- * @param id The ID of the article to delete
- * @returns True if successful, false otherwise
+ * Deletes an article
+ * @param {string} id - Article ID
+ * @returns {Promise<boolean>} - Whether deletion was successful
  */
 export const deleteArticle = async (id: string): Promise<boolean> => {
   try {
+    console.log(`Deleting article ${id}`);
+    
     const { error } = await supabase
       .from('articles')
       .delete()
       .eq('id', id);
-
+      
     if (error) {
+      console.error('Error deleting article:', error);
       throw error;
     }
-
+    
+    console.log('Article deleted successfully');
     return true;
   } catch (error) {
-    console.error('Error deleting article:', error);
-    return false;
+    console.error('Error in deleteArticle:', error);
+    throw new Error(formatError(error, 'Failed to delete article'));
+  }
+};
+
+/**
+ * Uploads an article image and returns the URL
+ * @param {File} imageFile - Image file to upload
+ * @returns {Promise<string>} - URL of the uploaded image
+ */
+export const uploadArticleImage = async (imageFile: File): Promise<string> => {
+  try {
+    console.log('Uploading article image', imageFile.name);
+    
+    // First ensure the bucket exists
+    await createBucketIfNotExists('articles', true);
+    
+    // Generate a unique file name to avoid conflicts
+    const fileExt = imageFile.name.split('.').pop();
+    const fileName = `${uuidv4()}.${fileExt}`;
+    const filePath = `cover/${fileName}`;
+    
+    // Try to find the bucket with case-insensitive matching
+    const bucketName = await findBucketByName('articles') || 'articles';
+    console.log(`Using bucket: ${bucketName} for article image upload`);
+    
+    // Upload the file
+    const { error: uploadError, data } = await supabase.storage
+      .from(bucketName)
+      .upload(filePath, imageFile, {
+        cacheControl: '3600',
+        upsert: true,
+      });
+      
+    if (uploadError) {
+      console.error('Error uploading image:', uploadError);
+      throw uploadError;
+    }
+    
+    // Get the public URL
+    const { data: urlData } = supabase.storage
+      .from(bucketName)
+      .getPublicUrl(filePath);
+      
+    console.log('Image uploaded successfully:', urlData.publicUrl);
+    return urlData.publicUrl;
+  } catch (error) {
+    console.error('Error in uploadArticleImage:', error);
+    throw new Error(formatError(error, 'Failed to upload image'));
   }
 };
