@@ -1,8 +1,10 @@
+
 import React, { useState, useCallback } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useToast } from '@/hooks/use-toast';
 import { getProfessionals } from '@/services/professionals';
 import { createProfessional, updateProfessional, deleteProfessional, uploadProfessionalImage } from '@/services/admin/professionals';
+import { listBuckets, initializeStorageBuckets } from '@/services/admin/utils/storageUtils';
 import { ProfessionalInterface } from '@/services/professionals/types'; // Import from services/professionals/types
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -24,13 +26,47 @@ const ProfessionalsManager = () => {
   const [error, setError] = useState<string | null>(null);
   const [editingProfessional, setEditingProfessional] = useState<ProfessionalInterface | null>(null);
   const [activeTab, setActiveTab] = useState<string>('list');
+  const [bucketStatus, setBucketStatus] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
+
+  // Initialize storage buckets on component mount
+  React.useEffect(() => {
+    const initStorage = async () => {
+      try {
+        const buckets = await listBuckets();
+        console.log('Available storage buckets:', buckets);
+        
+        const hasProfessionals = buckets.includes('professionals');
+        const hasArticles = buckets.includes('articles');
+        const hasImages = buckets.includes('images');
+        
+        setBucketStatus({
+          professionals: hasProfessionals,
+          articles: hasArticles,
+          images: hasImages
+        });
+        
+        if (!hasProfessionals || !hasArticles || !hasImages) {
+          console.log('Some required buckets are missing, initializing...');
+          await initializeStorageBuckets();
+          const updatedBuckets = await listBuckets();
+          console.log('Updated storage buckets:', updatedBuckets);
+        }
+      } catch (error) {
+        console.error('Error checking storage buckets:', error);
+      }
+    };
+    
+    initStorage();
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
+      console.log('Fetching professionals data...');
       const data = await getProfessionals();
+      console.log('Professionals data fetched:', data.length);
       setProfessionals(data);
     } catch (error) {
       console.error('Error fetching professionals:', error);
@@ -59,7 +95,7 @@ const ProfessionalsManager = () => {
       
       let imageUrl = editingProfessional?.image || 'https://via.placeholder.com/150';
       if (imageFile) {
-        console.log('Uploading professional image');
+        console.log('Uploading professional image...');
         const uploadedUrl = await uploadProfessionalImage(imageFile);
         console.log('Image upload result:', uploadedUrl);
         if (uploadedUrl) {
@@ -79,10 +115,10 @@ const ProfessionalsManager = () => {
         rating: data.rating,
         image: imageUrl,
         image_url: imageUrl, // Add image_url for compatibility
-        company_name: data.company_name,
-        work_hours: data.work_hours,
+        company_name: data.company_name || '',
+        work_hours: data.work_hours || '',
         certifications: data.certifications?.split(',').map(s => s.trim()) || [],
-        experience_years: data.experience_years,
+        experience_years: data.experience_years || 0,
         reviews_count: editingProfessional?.reviews_count || 0,
         created_at: editingProfessional?.created_at || new Date().toISOString(),
         specialty: data.specialties.split(',')[0]?.trim() || '' // Use first specialty
@@ -150,11 +186,13 @@ const ProfessionalsManager = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      console.log('Image file selected:', file.name);
       setImageFile(file);
     }
   };
   
   const handleEditProfessional = (professional: ProfessionalInterface) => {
+    console.log('Edit professional:', professional.id);
     setEditingProfessional(professional);
     setDialogOpen(true);
   };
@@ -162,6 +200,7 @@ const ProfessionalsManager = () => {
   const handleDeleteProfessional = async (id: string) => {
     if (window.confirm('האם אתה בטוח שברצונך למחוק את בעל המקצוע?')) {
       try {
+        console.log('Deleting professional:', id);
         const result = await deleteProfessional(id);
         if (result) {
           toast({
@@ -196,7 +235,7 @@ const ProfessionalsManager = () => {
   return (
     <AdminLayout>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">נ��הול בעלי מקצוע</h1>
+        <h1 className="text-3xl font-bold">ניהול בעלי מקצוע</h1>
         
         <div className="flex items-center gap-2">
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -227,6 +266,14 @@ const ProfessionalsManager = () => {
           </Dialog>
         </div>
       </div>
+      
+      {Object.keys(bucketStatus).length > 0 && !bucketStatus.professionals && (
+        <Alert variant="warning" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>חסרות תיקיות אחסון</AlertTitle>
+          <AlertDescription>תיקיית אחסון 'professionals' חסרה. מערכת תנסה ליצור אותה אוטומטית.</AlertDescription>
+        </Alert>
+      )}
       
       {error && (
         <Alert variant="destructive" className="mb-4">

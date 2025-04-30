@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ProfessionalInterface } from '@/services/professionals/types';
 import { getProfessionalFromData } from '../professionals/professionalUtils';
+import { createBucketIfNotExists } from './utils/storageUtils';
 
 /**
  * Creates a new professional
@@ -62,9 +63,14 @@ export const createProfessional = async (professional: Omit<ProfessionalInterfac
  */
 export const uploadProfessionalImage = async (file: File): Promise<string | null> => {
   try {
+    // Ensure the professionals bucket exists
+    await createBucketIfNotExists('professionals', true);
+    
     console.log('Uploading professional image:', file.name);
     const fileExt = file.name.split('.').pop();
     const fileName = `professional-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+    
+    console.log(`Attempting to upload professional image ${fileName}...`);
     
     // Try uploading to the professionals bucket
     const { data: uploadData, error: uploadError } = await supabase.storage
@@ -76,6 +82,9 @@ export const uploadProfessionalImage = async (file: File): Promise<string | null
       
     if (uploadError) {
       console.error(`Error uploading to professionals bucket:`, uploadError);
+      
+      // Ensure the images bucket exists
+      await createBucketIfNotExists('images', true);
       
       // Try uploading to the images bucket as fallback
       const { data: fallbackData, error: fallbackError } = await supabase.storage
@@ -94,6 +103,7 @@ export const uploadProfessionalImage = async (file: File): Promise<string | null
         .from('images')
         .getPublicUrl(`professionals/${fileName}`);
       
+      console.log(`Professional image uploaded to images bucket: ${fallbackUrl.publicUrl}`);
       return fallbackUrl.publicUrl;
     }
     
@@ -102,6 +112,7 @@ export const uploadProfessionalImage = async (file: File): Promise<string | null
       .from('professionals')
       .getPublicUrl(`images/${fileName}`);
     
+    console.log(`Professional image uploaded to professionals bucket: ${publicURL.publicUrl}`);
     return publicURL.publicUrl;
   } catch (error) {
     console.error('Error uploading professional image:', error);

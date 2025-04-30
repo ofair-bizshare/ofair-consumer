@@ -15,4 +15,6 @@ export const fetchUserMessages = getMessages;
 export const fetchAllUsers = getAllUsers;
 export const sendUserMessage = sendMessage;
 
-// Re-export any other admin services here as they're added
+// Export storage-related functions for convenience
+export { uploadArticleImage } from './articles';
+export { uploadProfessionalImage } from './professionals';

@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { ArticleInterface } from '@/types/dashboard';
+import { createBucketIfNotExists } from './utils/storageUtils';
 
 /**
  * Create a new article
@@ -74,9 +75,14 @@ export const updateArticle = async (id: string, article: Partial<ArticleInterfac
  */
 export const uploadArticleImage = async (file: File): Promise<string | null> => {
   try {
+    // Ensure the articles bucket exists
+    await createBucketIfNotExists('articles', true);
+    
     const fileExt = file.name.split('.').pop();
     const fileName = `article-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
 
+    console.log(`Attempting to upload article image ${fileName}...`);
+    
     // Try uploading to the articles bucket
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('articles')
@@ -87,6 +93,9 @@ export const uploadArticleImage = async (file: File): Promise<string | null> => 
       
     if (uploadError) {
       console.error('Error uploading to articles bucket:', uploadError);
+      
+      // Ensure the images bucket exists as fallback
+      await createBucketIfNotExists('images', true);
       
       // Try uploading to the images bucket as fallback
       const { data: fallbackData, error: fallbackError } = await supabase.storage
@@ -105,6 +114,7 @@ export const uploadArticleImage = async (file: File): Promise<string | null> => 
         .from('images')
         .getPublicUrl(`articles/${fileName}`);
       
+      console.log(`Article image uploaded to images bucket: ${fallbackUrl.publicUrl}`);
       return fallbackUrl.publicUrl;
     }
     
@@ -113,6 +123,7 @@ export const uploadArticleImage = async (file: File): Promise<string | null> => 
       .from('articles')
       .getPublicUrl(`images/${fileName}`);
     
+    console.log(`Article image uploaded to articles bucket: ${publicUrl.publicUrl}`);
     return publicUrl.publicUrl;
   } catch (error) {
     console.error('Error uploading article image:', error);

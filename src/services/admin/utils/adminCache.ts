@@ -1,98 +1,60 @@
 
-interface AdminCacheEntry {
+/**
+ * Simple cache for admin status checks to reduce RPC calls
+ */
+
+interface AdminStatusCache {
   isAdmin: boolean;
   timestamp: number;
 }
 
-const ADMIN_CACHE_KEY = 'admin_status_cache';
-const CACHE_TTL = 30 * 60 * 1000; // 30 minutes in milliseconds
+const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes in milliseconds
+const adminStatusCache: Record<string, AdminStatusCache> = {};
 
 /**
- * Get cached admin status for a user
- * @param userId User ID to check
- * @returns Admin status if found and not expired, null otherwise
+ * Get the cached admin status for a user
+ * @param userId The user ID to check
+ * @returns The cached admin status or null if not cached or expired
  */
-export const getCachedAdminStatus = (userId: string): AdminCacheEntry | null => {
-  try {
-    const cacheJson = localStorage.getItem(ADMIN_CACHE_KEY);
-    if (!cacheJson) {
-      return null;
-    }
-    
-    const cache: Record<string, AdminCacheEntry> = JSON.parse(cacheJson);
-    const entry = cache[userId];
-    
-    if (!entry) {
-      return null;
-    }
-    
-    // Check if the cache entry has expired
-    const now = Date.now();
-    if (now - entry.timestamp > CACHE_TTL) {
-      // Entry expired, remove it
-      delete cache[userId];
-      localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(cache));
-      return null;
-    }
-    
-    return entry;
-  } catch (error) {
-    console.error('Error getting cached admin status:', error);
-    clearAllAdminCache();
+export const getCachedAdminStatus = (userId: string): AdminStatusCache | null => {
+  const cached = adminStatusCache[userId];
+  if (!cached) return null;
+  
+  // Check if the cache has expired
+  const now = Date.now();
+  if (now - cached.timestamp > CACHE_EXPIRY) {
+    delete adminStatusCache[userId];
     return null;
   }
+  
+  return cached;
 };
 
 /**
- * Set cached admin status for a user
- * @param userId User ID to cache status for
+ * Set the cached admin status for a user
+ * @param userId The user ID to cache
  * @param isAdmin Whether the user is an admin
  */
 export const setCachedAdminStatus = (userId: string, isAdmin: boolean): void => {
-  try {
-    const cacheJson = localStorage.getItem(ADMIN_CACHE_KEY);
-    const cache: Record<string, AdminCacheEntry> = cacheJson ? JSON.parse(cacheJson) : {};
-    
-    cache[userId] = {
-      isAdmin,
-      timestamp: Date.now()
-    };
-    
-    localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(cache));
-  } catch (error) {
-    console.error('Error setting cached admin status:', error);
-  }
+  adminStatusCache[userId] = {
+    isAdmin,
+    timestamp: Date.now()
+  };
 };
 
 /**
- * Clear cached admin status for a user
- * @param userId User ID to clear cache for
+ * Clear the cached admin status for a user
+ * @param userId The user ID to clear
  */
 export const clearAdminCache = (userId: string): void => {
-  try {
-    const cacheJson = localStorage.getItem(ADMIN_CACHE_KEY);
-    if (!cacheJson) {
-      return;
-    }
-    
-    const cache: Record<string, AdminCacheEntry> = JSON.parse(cacheJson);
-    
-    if (cache[userId]) {
-      delete cache[userId];
-      localStorage.setItem(ADMIN_CACHE_KEY, JSON.stringify(cache));
-    }
-  } catch (error) {
-    console.error('Error clearing admin cache:', error);
-  }
+  delete adminStatusCache[userId];
 };
 
 /**
- * Clear all admin cache entries
+ * Clear all admin status caches
  */
 export const clearAllAdminCache = (): void => {
-  try {
-    localStorage.removeItem(ADMIN_CACHE_KEY);
-  } catch (error) {
-    console.error('Error clearing all admin cache:', error);
-  }
+  Object.keys(adminStatusCache).forEach(key => {
+    delete adminStatusCache[key];
+  });
 };

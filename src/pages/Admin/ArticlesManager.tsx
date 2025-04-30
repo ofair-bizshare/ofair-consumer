@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useToast } from '@/hooks/use-toast';
-import { createArticle, updateArticle, uploadArticleImage } from '@/services/admin';
+import { createArticle, updateArticle, uploadArticleImage } from '@/services/admin/articles';
+import { initializeStorageBuckets, listBuckets } from '@/services/admin/utils/storageUtils';
 import ArticlesTable from '@/components/admin/articles/ArticlesTable';
 import ArticlesEmptyState from '@/components/admin/articles/ArticlesEmptyState';
 import ArticlesLoading from '@/components/admin/articles/ArticlesLoading';
@@ -26,7 +27,38 @@ const ArticlesManager = () => {
   const [submitting, setSubmitting] = useState(false);
   const [editingArticle, setEditingArticle] = useState<ArticleInterface | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [bucketStatus, setBucketStatus] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
+
+  // Initialize storage buckets on component mount
+  useEffect(() => {
+    const initStorage = async () => {
+      try {
+        console.log('Checking storage buckets for articles...');
+        const buckets = await listBuckets();
+        console.log('Available storage buckets:', buckets);
+        
+        const hasArticles = buckets.includes('articles');
+        const hasImages = buckets.includes('images');
+        
+        setBucketStatus({
+          articles: hasArticles,
+          images: hasImages
+        });
+        
+        if (!hasArticles || !hasImages) {
+          console.log('Some required buckets are missing, initializing...');
+          await initializeStorageBuckets();
+          const updatedBuckets = await listBuckets();
+          console.log('Updated storage buckets:', updatedBuckets);
+        }
+      } catch (error) {
+        console.error('Error checking storage buckets:', error);
+      }
+    };
+    
+    initStorage();
+  }, []);
 
   const fetchArticles = async () => {
     try {
@@ -76,7 +108,6 @@ const ArticlesManager = () => {
     applyFilters(articles, value);
   };
 
-  // Get image for specific category
   const getCategoryImage = async (category: string, index: number): Promise<string> => {
     // Define relevant images for each category
     const categoryImages = {
@@ -140,6 +171,7 @@ const ArticlesManager = () => {
       setLoading(true);
       
       const sampleArticles = [];
+      console.log('Creating sample articles...');
       
       // Generate 2 articles for each category
       for (const category of articleCategoryOptions) {
@@ -205,6 +237,7 @@ const ArticlesManager = () => {
       }
 
       // Add the sample articles to the database
+      console.log(`Created ${sampleArticles.length} sample articles, adding to database...`);
       for (const article of sampleArticles) {
         await createArticle(article);
       }
@@ -243,11 +276,14 @@ const ArticlesManager = () => {
     try {
       setSubmitting(true);
       setError(null);
+      console.log('Creating new article:', articleData);
       
       let imageUrl = undefined;
       if (imageFile) {
         try {
+          console.log('Uploading article image...');
           imageUrl = await uploadArticleImage(imageFile);
+          console.log('Uploaded article image URL:', imageUrl);
         } catch (uploadError) {
           console.error('Error uploading article image:', uploadError);
           toast({
@@ -265,6 +301,7 @@ const ArticlesManager = () => {
         });
         
         if (article) {
+          console.log('Article created successfully:', article);
           toast({
             title: 'מאמר נוצר בהצלחה',
             description: 'המאמר נוסף למערכת בהצלחה',
@@ -298,11 +335,14 @@ const ArticlesManager = () => {
     try {
       setSubmitting(true);
       setError(null);
+      console.log('Updating article:', editingArticle.id);
       
       let imageUrl = editingArticle.image;
       if (imageFile) {
         try {
+          console.log('Uploading new article image...');
           const uploadedUrl = await uploadArticleImage(imageFile);
+          console.log('Uploaded article image URL:', uploadedUrl);
           if (uploadedUrl) {
             imageUrl = uploadedUrl;
           }
@@ -323,6 +363,7 @@ const ArticlesManager = () => {
         });
         
         if (updatedArticle) {
+          console.log('Article updated successfully:', updatedArticle);
           toast({
             title: 'מאמר עודכן בהצלחה',
             description: 'המאמר עודכן במערכת בהצלחה',
@@ -395,6 +436,14 @@ const ArticlesManager = () => {
           הוסף מאמר
         </Button>
       </div>
+      
+      {Object.keys(bucketStatus).length > 0 && !bucketStatus.articles && (
+        <Alert variant="warning" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>חסרות תיקיות אחסון</AlertTitle>
+          <AlertDescription>תיקיית אחסון 'articles' חסרה. מערכת תנסה ליצור אותה אוטומטית.</AlertDescription>
+        </Alert>
+      )}
       
       <div className="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center">
         <div className="flex items-center">
