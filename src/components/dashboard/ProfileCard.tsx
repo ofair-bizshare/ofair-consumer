@@ -6,7 +6,6 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface ProfileCardProps {
   isAdmin: boolean;
@@ -102,25 +101,21 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ isAdmin }) => {
   };
 
   return (
-    <div className="glass-card p-4 sm:p-6 mb-8">
-      <div className="flex flex-col sm:flex-row items-center sm:items-start sm:justify-between">
-        <div className="flex flex-col sm:flex-row items-center mb-4 sm:mb-0">
-          <div className="relative mb-4 sm:mb-0 sm:ml-6">
-            <div className="w-20 h-20 sm:w-16 sm:h-16">
-              <Avatar className="w-full h-full">
-                {profileImage ? (
-                  <AvatarImage 
-                    src={profileImage} 
-                    alt="תמונת פרופיל" 
-                    className="object-cover"
-                  />
-                ) : (
-                  <AvatarFallback className="bg-blue-100 text-blue-700">
-                    <UserCircle className="w-10 h-10" />
-                  </AvatarFallback>
-                )}
-              </Avatar>
-            </div>
+    <div className="glass-card p-6 mb-8">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center">
+          <div className="relative ml-6">
+            {profileImage ? (
+              <img 
+                src={profileImage} 
+                alt="תמונת פרופיל" 
+                className="w-16 h-16 rounded-full object-cover border-2 border-blue-100"
+              />
+            ) : (
+              <div className="bg-blue-100 rounded-full p-3 w-16 h-16 flex items-center justify-center">
+                <UserCircle size={36} className="text-blue-700" />
+              </div>
+            )}
             <div className="absolute bottom-0 right-0">
               <label htmlFor="profile-upload" className="cursor-pointer">
                 <div className="bg-blue-500 rounded-full p-1 text-white hover:bg-blue-600 transition-colors">
@@ -137,12 +132,12 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ isAdmin }) => {
               </label>
             </div>
           </div>
-          <div className="text-center sm:text-right">
+          <div className="ml-4">
             <h2 className="text-xl font-semibold">ברוך הבא, {profile?.name || user?.user_metadata?.name || user?.email}!</h2>
             <p className="text-gray-600">שמחים לראות אותך שוב</p>
           </div>
         </div>
-        <div className="flex flex-col items-center sm:items-end gap-3">
+        <div className="flex flex-col items-end gap-3">
           <div className="flex items-center bg-gradient-to-r from-teal-500 to-blue-600 text-white px-4 py-2 rounded-lg">
             <Gift className="ml-2 h-5 w-5" aria-hidden="true" />
             <div>
