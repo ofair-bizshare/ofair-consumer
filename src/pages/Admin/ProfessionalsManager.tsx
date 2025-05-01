@@ -323,7 +323,7 @@ const ProfessionalsManager = () => {
       </div>
       
       {Object.keys(bucketStatus).length > 0 && !bucketStatus.professionals && (
-        <Alert variant="destructive" className="mb-4">
+        <Alert variant="warning" className="mb-4">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>חסרות תיקיות אחסון</AlertTitle>
           <AlertDescription>תיקיית אחסון 'professionals' חסרה. מערכת תנסה ליצור אותה אוטומטית.</AlertDescription>
