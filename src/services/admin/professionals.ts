@@ -16,13 +16,19 @@ export const createProfessional = async (professionalData: any): Promise<Profess
     console.log('Creating professional with data:', professionalData);
     
     // Ensure image field is properly set
-    // If image_url exists but image doesn't, copy the value
     if (professionalData.image_url && !professionalData.image) {
       professionalData.image = professionalData.image_url;
     }
-    // If image exists but image_url doesn't, copy the value
     if (professionalData.image && !professionalData.image_url) {
       professionalData.image_url = professionalData.image;
+    }
+    
+    // Ensure phone number field consistency
+    if (professionalData.phoneNumber && !professionalData.phone_number) {
+      professionalData.phone_number = professionalData.phoneNumber;
+    }
+    if (professionalData.phone_number && !professionalData.phoneNumber) {
+      professionalData.phoneNumber = professionalData.phone_number;
     }
     
     // Prepare data for insert
@@ -34,6 +40,8 @@ export const createProfessional = async (professionalData: any): Promise<Profess
       is_verified: false,
       status: 'active',
     };
+    
+    console.log('Professional data to insert:', professionalToInsert);
     
     // Insert the professional
     const { data, error } = await supabase
@@ -73,11 +81,21 @@ export const updateProfessional = async (id: string, professionalData: any): Pro
       professionalData.image_url = professionalData.image;
     }
     
+    // Ensure phone number field consistency
+    if (professionalData.phoneNumber && !professionalData.phone_number) {
+      professionalData.phone_number = professionalData.phoneNumber;
+    }
+    if (professionalData.phone_number && !professionalData.phoneNumber) {
+      professionalData.phoneNumber = professionalData.phone_number;
+    }
+    
     // Prepare data for update
     const professionalToUpdate = {
       ...professionalData,
       updated_at: new Date().toISOString(),
     };
+    
+    console.log('Professional data to update:', professionalToUpdate);
     
     // Update the professional
     const { data, error } = await supabase
@@ -138,7 +156,11 @@ export const uploadProfessionalImage = async (imageFile: File): Promise<string> 
     
     // First ensure the bucket exists
     const bucketCreated = await createBucketIfNotExists('professionals', true);
-    console.log('Bucket creation status:', bucketCreated);
+    console.log('Professionals bucket creation status:', bucketCreated);
+    
+    if (!bucketCreated) {
+      console.warn('Professionals bucket might not exist or could not be created. Trying to find it...');
+    }
     
     // Generate a unique file name to avoid conflicts
     const fileExt = imageFile.name.split('.').pop();
@@ -149,7 +171,22 @@ export const uploadProfessionalImage = async (imageFile: File): Promise<string> 
     const bucketName = await findBucketByName('professionals') || 'professionals';
     console.log(`Using bucket: ${bucketName} for professional image upload`);
     
+    // Log bucket info for debugging
+    try {
+      const { data: bucketInfo, error: bucketError } = await supabase.storage
+        .getBucket(bucketName);
+        
+      if (bucketError) {
+        console.error('Error getting bucket info:', bucketError);
+      } else {
+        console.log('Bucket info:', bucketInfo);
+      }
+    } catch (bucketCheckError) {
+      console.error('Error checking bucket:', bucketCheckError);
+    }
+    
     // Upload the file
+    console.log(`Uploading file to ${bucketName}/${filePath}`);
     const { error: uploadError, data } = await supabase.storage
       .from(bucketName)
       .upload(filePath, imageFile, {
@@ -167,6 +204,10 @@ export const uploadProfessionalImage = async (imageFile: File): Promise<string> 
       .from(bucketName)
       .getPublicUrl(filePath);
       
+    if (!urlData || !urlData.publicUrl) {
+      throw new Error('Failed to get public URL for uploaded image');
+    }
+    
     console.log('Image uploaded successfully:', urlData.publicUrl);
     return urlData.publicUrl;
   } catch (error) {

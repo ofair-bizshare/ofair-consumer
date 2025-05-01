@@ -3,6 +3,7 @@ import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Upload, X } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface ImageUploaderProps {
   onChange: (file: File | null) => void;
@@ -12,18 +13,66 @@ interface ImageUploaderProps {
 const ImageUploader: React.FC<ImageUploaderProps> = ({ onChange, initialImage }) => {
   const [preview, setPreview] = useState<string | null>(initialImage || null);
   const [isDragging, setIsDragging] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    onChange(file);
-
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    try {
+      setUploadError(null);
+      const file = e.target.files?.[0] || null;
+      
+      if (file) {
+        console.log('Selected file:', file.name, 'Size:', (file.size / 1024).toFixed(2), 'KB');
+        
+        // Check file size (limit to 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+          setUploadError('The file is too large. Maximum size is 10MB.');
+          toast({
+            title: "קובץ גדול מדי",
+            description: "הקובץ גדול מדי. הגודל המקסימלי הוא 10MB",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        // Check file type
+        if (!file.type.startsWith('image/')) {
+          setUploadError('Please select an image file (PNG, JPG, WEBP).');
+          toast({
+            title: "סוג קובץ לא תקין",
+            description: "נא לבחור קובץ תמונה (PNG, JPG, WEBP)",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        onChange(file);
+        
+        const reader = new FileReader();
+        reader.onload = () => {
+          setPreview(reader.result as string);
+        };
+        reader.onerror = () => {
+          setUploadError('Error reading file.');
+          toast({
+            title: "שגיאה בקריאת הקובץ",
+            description: "אירעה שגיאה בקריאת הקובץ",
+            variant: "destructive"
+          });
+        };
+        reader.readAsDataURL(file);
+      } else {
+        onChange(null);
+      }
+    } catch (error) {
+      console.error('Error handling file change:', error);
+      setUploadError('Unexpected error handling file.');
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בלתי צפויה",
+        variant: "destructive"
+      });
     }
   };
 
@@ -40,16 +89,62 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onChange, initialImage })
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
+    setUploadError(null);
     
-    const file = e.dataTransfer.files?.[0] || null;
-    onChange(file);
-    
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    try {
+      const file = e.dataTransfer.files?.[0] || null;
+      
+      if (file) {
+        console.log('Dropped file:', file.name, 'Size:', (file.size / 1024).toFixed(2), 'KB');
+        
+        // Check file size (limit to 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+          setUploadError('The file is too large. Maximum size is 10MB.');
+          toast({
+            title: "קובץ גדול מדי",
+            description: "הקובץ גדול מדי. הגודל המקסימלי הוא 10MB",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        // Check file type
+        if (!file.type.startsWith('image/')) {
+          setUploadError('Please select an image file (PNG, JPG, WEBP).');
+          toast({
+            title: "סוג קובץ לא תקין",
+            description: "נא לבחור קובץ תמונה (PNG, JPG, WEBP)",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        onChange(file);
+        
+        const reader = new FileReader();
+        reader.onload = () => {
+          setPreview(reader.result as string);
+        };
+        reader.onerror = () => {
+          setUploadError('Error reading file.');
+          toast({
+            title: "שגיאה בקריאת הקובץ",
+            description: "אירעה שגיאה בקריאת הקובץ",
+            variant: "destructive"
+          });
+        };
+        reader.readAsDataURL(file);
+      } else {
+        onChange(null);
+      }
+    } catch (error) {
+      console.error('Error handling dropped file:', error);
+      setUploadError('Unexpected error handling file.');
+      toast({
+        title: "שגיאה",
+        description: "אירעה שגיאה בלתי צפויה",
+        variant: "destructive"
+      });
     }
   };
 
@@ -59,6 +154,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onChange, initialImage })
 
   const handleRemoveImage = () => {
     setPreview(null);
+    setUploadError(null);
     onChange(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -85,7 +181,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onChange, initialImage })
 
       <Card
         className={`border-2 border-dashed ${
-          isDragging ? 'border-primary' : 'border-border'
+          isDragging ? 'border-primary' : uploadError ? 'border-red-500' : 'border-border'
         } rounded-lg cursor-pointer`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -99,6 +195,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onChange, initialImage })
                 src={preview}
                 alt="תצוגה מקדימה של התמונה"
                 className="w-full h-48 object-cover rounded-md"
+                onError={() => {
+                  console.error('Error loading image preview');
+                  setUploadError('Error loading image preview.');
+                  setPreview(null);
+                }}
               />
             </div>
           ) : (
@@ -113,6 +214,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onChange, initialImage })
                 PNG, JPG או WEBP עד 10MB
               </div>
             </div>
+          )}
+          {uploadError && (
+            <div className="mt-2 text-sm text-red-500">{uploadError}</div>
           )}
           <input
             type="file"

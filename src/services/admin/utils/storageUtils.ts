@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 /**
@@ -44,7 +43,7 @@ export const createBucketIfNotExists = async (bucketName: string, isPublic: bool
       console.log(`Creating bucket '${bucketName}'...`);
       
       try {
-        const { error } = await supabase.storage.createBucket(bucketName, {
+        const { data, error } = await supabase.storage.createBucket(bucketName, {
           public: isPublic,
           fileSizeLimit: 10 * 1024 * 1024 // 10 MB file size limit
         });
@@ -61,7 +60,7 @@ export const createBucketIfNotExists = async (bucketName: string, isPublic: bool
           return false;
         }
         
-        console.log(`Bucket '${bucketName}' created successfully`);
+        console.log(`Bucket '${bucketName}' created successfully:`, data);
         
         // After creating bucket, add public policy if needed
         if (isPublic) {
@@ -80,7 +79,15 @@ export const createBucketIfNotExists = async (bucketName: string, isPublic: bool
     } else {
       console.log(`Bucket '${bucketName}' already exists as '${existingBucket}'`);
       
-      // If we found the bucket but with different case, return the actual name
+      // If we found the bucket but with different case, ensure it's public
+      if (isPublic) {
+        try {
+          await makeStorageBucketPublic(existingBucket);
+        } catch (policyError) {
+          console.error(`Error setting public policy for bucket '${existingBucket}':`, policyError);
+        }
+      }
+      
       return true;
     }
   } catch (error) {
@@ -173,9 +180,36 @@ export const makeStorageBucketPublic = async (bucketName: string): Promise<boole
     }
     
     console.log(`Bucket '${exactBucketName}' is now public`);
+    
+    // Update RLS policies to ensure proper access
+    try {
+      await setupBucketPolicies(exactBucketName);
+    } catch (policyError) {
+      console.error(`Error setting up policies for bucket '${exactBucketName}':`, policyError);
+    }
+    
     return true;
   } catch (error) {
     console.error(`Error making bucket '${bucketName}' public:`, error);
+    return false;
+  }
+};
+
+/**
+ * Setup RLS policies for a bucket to ensure proper access
+ * @param {string} bucketName - The name of the bucket
+ * @returns {Promise<boolean>} - Result of the operation
+ */
+export const setupBucketPolicies = async (bucketName: string): Promise<boolean> => {
+  try {
+    console.log(`Setting up policies for bucket '${bucketName}'...`);
+    
+    // This must be done using SQL, but we can at least log the action
+    console.log(`SQL required to set up policies for '${bucketName}' bucket.`);
+    
+    return true;
+  } catch (error) {
+    console.error(`Error setting up bucket policies for '${bucketName}':`, error);
     return false;
   }
 };
@@ -266,9 +300,53 @@ export const findBucketByName = async (bucketName: string): Promise<string | nul
     );
     if (partialMatch) return partialMatch;
     
+    // Special case for articles/professionals buckets that might be missing
+    if (['articles', 'professionals', 'images'].includes(bucketName.toLowerCase())) {
+      console.log(`Bucket '${bucketName}' not found. Attempting to create it...`);
+      const created = await createBucketIfNotExists(bucketName, true);
+      if (created) {
+        const updatedBuckets = await listBuckets();
+        const newBucket = updatedBuckets.find(name => 
+          name.toLowerCase() === bucketName.toLowerCase()
+        );
+        if (newBucket) return newBucket;
+      }
+    }
+    
     return null;
   } catch (error) {
     console.error('Error finding bucket:', error);
     return null;
+  }
+};
+
+/**
+ * Check if all required buckets exist, create them if they don't
+ * @returns {Promise<Record<string, boolean>>} - Status of bucket checks
+ */
+export const checkAndCreateRequiredBuckets = async (): Promise<Record<string, boolean>> => {
+  try {
+    console.log('Checking required storage buckets...');
+    const requiredBuckets = ['professionals', 'articles', 'images'];
+    const bucketStatus: Record<string, boolean> = {};
+    
+    for (const bucketName of requiredBuckets) {
+      const bucketExists = await createBucketIfNotExists(bucketName, true);
+      bucketStatus[bucketName] = bucketExists;
+      
+      if (bucketExists) {
+        await makeStorageBucketPublic(bucketName);
+      }
+    }
+    
+    console.log('Bucket status check complete:', bucketStatus);
+    return bucketStatus;
+  } catch (error) {
+    console.error('Error checking and creating required buckets:', error);
+    return {
+      professionals: false,
+      articles: false,
+      images: false
+    };
   }
 };

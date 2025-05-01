@@ -9,6 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { ProfessionalInterface } from '@/services/professionals/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
+import { AlertCircle } from 'lucide-react';
 
 // Form validation schema
 const professionalFormSchema = z.object({
@@ -16,7 +18,7 @@ const professionalFormSchema = z.object({
   profession: z.string().min(2, { message: 'מקצוע חייב להכיל לפחות 2 תווים' }),
   location: z.string().min(2, { message: 'מיקום חייב להכיל לפחות 2 תווים' }),
   specialties: z.string().min(2, { message: 'התמחויות חייבות להכיל לפחות 2 תווים' }),
-  phoneNumber: z.string().min(9, { message: 'מספר טלפון חייב להכיל לפחות 9 תווים' }),
+  phone_number: z.string().min(9, { message: 'מספר טלפון חייב להכיל לפחות 9 תווים' }),
   about: z.string().min(20, { message: 'תיאור חייב להכיל לפחות 20 תווים' }),
   rating: z.number().min(0).max(5),
   company_name: z.string().optional(),
@@ -42,6 +44,9 @@ const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
   onCancel,
   onImageChange 
 }) => {
+  const [formError, setFormError] = useState<string | null>(null);
+  const { toast } = useToast();
+  
   const form = useForm<ProfessionalFormValues>({
     resolver: zodResolver(professionalFormSchema),
     defaultValues: {
@@ -49,7 +54,7 @@ const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
       profession: '',
       location: '',
       specialties: '',
-      phoneNumber: '',
+      phone_number: '',
       about: '',
       rating: 5,
       company_name: '',
@@ -62,26 +67,41 @@ const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
   // Update form when professional changes
   useEffect(() => {
     if (professional) {
-      form.reset({
-        name: professional.name,
-        profession: professional.profession,
-        location: professional.location,
-        specialties: professional.specialties?.join(', ') || '',
-        phoneNumber: professional.phoneNumber || professional.phone_number || professional.phone || '',
-        about: professional.about || professional.bio || '',
-        rating: professional.rating || 5,
-        company_name: professional.company_name || '',
-        work_hours: professional.work_hours || professional.working_hours || 'ימים א-ה: 8:00-18:00, יום ו: 8:00-13:00',
-        certifications: professional.certifications?.join(', ') || 'מוסמך מקצועי, בעל רישיון',
-        experience_years: professional.experience_years || 5
-      });
+      console.log('Setting professional form with data:', professional);
+      
+      try {
+        form.reset({
+          name: professional.name,
+          profession: professional.profession,
+          location: professional.location,
+          specialties: Array.isArray(professional.specialties) ? 
+            professional.specialties.join(', ') : 
+            professional.specialties || '',
+          phone_number: professional.phone_number || professional.phoneNumber || professional.phone || '',
+          about: professional.about || professional.bio || '',
+          rating: professional.rating || 5,
+          company_name: professional.company_name || '',
+          work_hours: professional.work_hours || professional.working_hours || 'ימים א-ה: 8:00-18:00, יום ו: 8:00-13:00',
+          certifications: Array.isArray(professional.certifications) ? 
+            professional.certifications.join(', ') : 
+            professional.certifications || 'מוסמך מקצועי, בעל רישיון',
+          experience_years: professional.experience_years || 5
+        });
+      } catch (error) {
+        console.error('Error setting professional form values:', error);
+        toast({
+          title: "שגיאה בטעינת נתונים",
+          description: "אירעה שגיאה בטעינת נתוני בעל המקצוע",
+          variant: "destructive"
+        });
+      }
     } else {
       form.reset({
         name: '',
         profession: '',
         location: '',
         specialties: '',
-        phoneNumber: '',
+        phone_number: '',
         about: '',
         rating: 5,
         company_name: '',
@@ -90,13 +110,36 @@ const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
         experience_years: 5
       });
     }
-  }, [professional, form]);
+  }, [professional, form, toast]);
+
+  const handleFormSubmit = async (data: ProfessionalFormValues) => {
+    try {
+      setFormError(null);
+      console.log('Submitting professional form with data:', data);
+      await onSubmit(data);
+    } catch (error: any) {
+      console.error('Error submitting professional form:', error);
+      setFormError(error.message || 'אירעה שגיאה בשליחת הטופס');
+      toast({
+        title: "שגיאה בשליחת טופס",
+        description: error.message || "אירעה שגיאה בלתי צפויה",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <ScrollArea className="max-h-[calc(90vh-120px)]">
       <div className="p-4">
+        {formError && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-800 flex items-center">
+            <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+            <span>{formError}</span>
+          </div>
+        )}
+        
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -179,7 +222,7 @@ const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
               
               <FormField
                 control={form.control}
-                name="phoneNumber"
+                name="phone_number"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>טלפון</FormLabel>
@@ -274,6 +317,20 @@ const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
                 />
               </FormControl>
               <FormMessage />
+              {professional?.image && (
+                <div className="mt-2">
+                  <p className="text-xs text-gray-500 mb-1">תמונה נוכחית:</p>
+                  <img 
+                    src={professional.image} 
+                    alt={professional.name} 
+                    className="h-20 w-20 object-cover rounded-md" 
+                    onError={(e) => {
+                      // Fallback if image fails to load
+                      (e.target as HTMLImageElement).src = 'https://via.placeholder.com/150';
+                    }}
+                  />
+                </div>
+              )}
             </FormItem>
             
             <FormField

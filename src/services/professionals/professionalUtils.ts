@@ -31,7 +31,7 @@ export const getProfessionalFromData = (data: any): ProfessionalInterface => {
     Math.floor(Math.random() * 10) + 5); // Fallback to random value between 5-15 years
 
   // Ensure the phone number is properly formatted  
-  const phoneNumber = formatPhoneNumber(data.phone_number || data.phone || '');
+  const phoneNumber = formatPhoneNumber(data.phone_number || data.phoneNumber || data.phone || '');
   
   // Ensure review count is always populated
   const reviewCount = data.reviews_count || data.review_count || 0;
@@ -43,7 +43,7 @@ export const getProfessionalFromData = (data: any): ProfessionalInterface => {
   const image = data.image_url || data.image || 'https://via.placeholder.com/150';
   
   // Ensure specialties is always populated with an array
-  const specialties = data.specialties || 
+  const specialties = Array.isArray(data.specialties) ? data.specialties : 
                      (data.specialty ? [data.specialty] : []).filter(Boolean) || 
                      [data.profession].filter(Boolean) || 
                      ['לא צוין'];
@@ -66,18 +66,18 @@ export const getProfessionalFromData = (data: any): ProfessionalInterface => {
     phoneNumber: phoneNumber,
     phone_number: phoneNumber,
     email: data.email,
-    bio: data.bio || data.about,
-    about: data.bio || data.about,
+    bio: data.bio || data.about || '',
+    about: data.bio || data.about || '',
     created_at: data.created_at || new Date().toISOString(),
     city: data.city || data.location || 'לא צוין',
     specialty: data.specialty || data.profession || 'לא צוין',
-    area: data.area || data.areas,
-    areas: data.area || data.areas,
+    area: data.area || data.areas || data.location,
+    areas: data.area || data.areas || data.location,
     category: data.category,
     // Additional fields 
-    company_name: data.company_name,
+    company_name: data.company_name || '',
     work_hours: data.work_hours || data.working_hours || 'ימים א-ה: 8:00-18:00, יום ו: 8:00-13:00',
-    working_hours: data.work_hours || data.working_hours,
+    working_hours: data.work_hours || data.working_hours || 'ימים א-ה: 8:00-18:00, יום ו: 8:00-13:00',
     certifications: data.certifications || ['מוסמך מקצועי', 'בעל רישיון'],
     experience_years: experienceYears,
     is_verified: data.verified || data.is_verified || false

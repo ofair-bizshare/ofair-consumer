@@ -33,7 +33,9 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
   defaultValues
 }) => {
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(defaultValues?.image || null);
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    defaultValues?.image || defaultValues?.image_url || null
+  );
   const [formError, setFormError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const { toast } = useToast();
@@ -69,7 +71,12 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
         published: defaultValues.published,
         category: defaultValues.category || ''
       });
-      setImagePreview(defaultValues.image || null);
+      
+      // Set image preview from either image or image_url field
+      setImagePreview(defaultValues.image || defaultValues.image_url || null);
+      
+      console.log('Image preview set to:', 
+        defaultValues.image || defaultValues.image_url || 'null');
     }
   }, [defaultValues, form]);
 
@@ -80,7 +87,7 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
       console.log('Article form submission starting:', data);
       
       if (onSubmit) {
-        console.log('Using provided onSubmit handler');
+        console.log('Using provided onSubmit handler with imageFile:', !!imageFile);
         await onSubmit(data, imageFile);
         return;
       }
@@ -108,15 +115,25 @@ const ArticleForm: React.FC<ArticleFormProps> = ({
   };
 
   const handleImageChange = (file: File | null) => {
+    console.log('Image file changed:', file?.name || 'No file');
     setImageFile(file);
     
     // Create preview for the selected image
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
+        const result = e.target?.result as string;
+        console.log('Image preview created');
+        setImagePreview(result);
+      };
+      reader.onerror = (e) => {
+        console.error('Error creating image preview:', e);
       };
       reader.readAsDataURL(file);
+    } else if (file === null) {
+      // If the file was explicitly set to null (image removed)
+      console.log('Image removed');
+      setImagePreview(null);
     }
   };
 

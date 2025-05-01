@@ -1,11 +1,10 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useToast } from '@/hooks/use-toast';
-import { getProfessionals } from '@/services/professionals';
 import { createProfessional, updateProfessional, deleteProfessional, uploadProfessionalImage } from '@/services/admin/professionals';
-import { listBuckets, initializeStorageBuckets } from '@/services/admin/utils/storageUtils';
-import { ProfessionalInterface } from '@/services/professionals/types'; // Import from services/professionals/types
+import { checkAndCreateRequiredBuckets, listBuckets } from '@/services/admin/utils/storageUtils';
+import { ProfessionalInterface } from '@/services/professionals/types';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, AlertCircle, FileSpreadsheet, Star } from 'lucide-react';
@@ -32,9 +31,10 @@ const ProfessionalsManager = () => {
   const { toast } = useToast();
 
   // Initialize storage buckets on component mount
-  React.useEffect(() => {
+  useEffect(() => {
     const initStorage = async () => {
       try {
+        console.log('Checking storage buckets for professionals...');
         const buckets = await listBuckets();
         console.log('Available storage buckets:', buckets);
         
@@ -53,9 +53,9 @@ const ProfessionalsManager = () => {
         
         if (!hasProfessionals || !hasArticles || !hasImages) {
           console.log('Some required buckets are missing, initializing...');
-          await initializeStorageBuckets();
-          const updatedBuckets = await listBuckets();
-          console.log('Updated storage buckets:', updatedBuckets);
+          const bucketStatus = await checkAndCreateRequiredBuckets();
+          console.log('Storage buckets status:', bucketStatus);
+          setBucketStatus(bucketStatus);
         }
       } catch (error) {
         console.error('Error checking storage buckets:', error);
@@ -100,7 +100,7 @@ const ProfessionalsManager = () => {
     }
   }, [toast]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     fetchData();
   }, [fetchData]);
 
@@ -112,7 +112,8 @@ const ProfessionalsManager = () => {
       // Log the beginning of the submission process
       console.log('Starting professional submission process', { isEditing: !!editingProfessional, data });
       
-      let imageUrl = editingProfessional?.image || 'https://via.placeholder.com/150';
+      let imageUrl = editingProfessional?.image || editingProfessional?.image_url || 'https://via.placeholder.com/150';
+      
       if (imageFile) {
         console.log('Uploading professional image...');
         try {
@@ -123,9 +124,18 @@ const ProfessionalsManager = () => {
           }
         } catch (imageError) {
           console.error('Error uploading image:', imageError);
+          toast({
+            title: "שגיאה בהעלאת תמונה",
+            description: "המשך בתהליך עם תמונה קודמת או תמונת ברירת מחדל",
+            variant: "warning"
+          });
           // Continue with the default image if upload fails
         }
       }
+      
+      // Convert specialties and certifications from comma-separated strings to arrays
+      const specialtiesArray = data.specialties.split(',').map(s => s.trim());
+      const certificationsArray = data.certifications ? data.certifications.split(',').map(s => s.trim()) : [];
       
       // Prepare professional data with all required fields
       const professional = {
@@ -133,20 +143,20 @@ const ProfessionalsManager = () => {
         profession: data.profession,
         location: data.location,
         city: data.location, // Explicitly set city to location
-        specialties: data.specialties.split(',').map(s => s.trim()),
-        phoneNumber: data.phoneNumber,
-        phone_number: data.phoneNumber, // Add both field names for compatibility
+        specialties: specialtiesArray,
+        phone_number: data.phone_number,
+        phoneNumber: data.phone_number, // Add both field names for compatibility
         about: data.about,
         rating: data.rating,
         image: imageUrl,
         image_url: imageUrl, // Add image_url for compatibility
         company_name: data.company_name || '',
         work_hours: data.work_hours || '',
-        certifications: data.certifications?.split(',').map(s => s.trim()) || [],
+        certifications: certificationsArray,
         experience_years: data.experience_years || 0,
         reviews_count: editingProfessional?.reviews_count || 0,
         created_at: editingProfessional?.created_at || new Date().toISOString(),
-        specialty: data.specialties.split(',')[0]?.trim() || '' // Use first specialty
+        specialty: specialtiesArray[0] || '' // Use first specialty
       };
       
       console.log('Professional data prepared:', professional);
@@ -212,6 +222,27 @@ const ProfessionalsManager = () => {
     const file = e.target.files?.[0];
     if (file) {
       console.log('Image file selected:', file.name);
+      
+      // Check file size (limit to 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast({
+          title: "קובץ גדול מדי",
+          description: "גודל הקובץ חייב להיות עד 10MB",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "סוג קובץ לא תקין",
+          description: "נא לבחור קובץ תמונה (PNG, JPG, WEBP)",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       setImageFile(file);
     }
   };
@@ -342,7 +373,7 @@ const ProfessionalsManager = () => {
               <li>name* - שם בעל המקצוע</li>
               <li>profession* - תחום מקצועי</li>
               <li>location* - אזור עבודה</li>
-              <li>phoneNumber* - מספר טלפון</li>
+              <li>phone_number* - מספר טלפון</li>
               <li>specialties - התמחויות (מופרדות בפסיקים)</li>
               <li>about - תיאור</li>
               <li>rating - דירוג (מספר בין 0-5)</li>
