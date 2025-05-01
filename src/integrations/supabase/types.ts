@@ -292,6 +292,7 @@ export type Database = {
           experience_years: number | null
           id: string
           image: string | null
+          image_url: string | null
           is_verified: boolean | null
           location: string
           name: string
@@ -317,6 +318,7 @@ export type Database = {
           experience_years?: number | null
           id?: string
           image?: string | null
+          image_url?: string | null
           is_verified?: boolean | null
           location: string
           name: string
@@ -342,6 +344,7 @@ export type Database = {
           experience_years?: number | null
           id?: string
           image?: string | null
+          image_url?: string | null
           is_verified?: boolean | null
           location?: string
           name?: string
