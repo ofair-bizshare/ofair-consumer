@@ -287,3 +287,6 @@ export const findBucketByName = async (bucketName: string): Promise<string | nul
     return null;
   }
 };
+
+// Re-export the getBucketName function from bucketNameUtils for convenience
+export { getBucketName } from './bucketNameUtils';

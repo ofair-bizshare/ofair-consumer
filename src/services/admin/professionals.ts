@@ -3,7 +3,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { formatError } from '@/utils/errorUtils';
 import { ProfessionalInterface } from '@/services/professionals/types';
 import { getProfessionalFromData } from '../professionals/professionalUtils';
-import { createBucketIfNotExists, findBucketByName, getBucketName } from './utils/storageUtils';
+import { createBucketIfNotExists, findBucketByName } from './utils/storageUtils';
+import { getBucketName } from './utils/bucketNameUtils';
 
 /**
  * Creates a new professional
