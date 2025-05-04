@@ -4,9 +4,9 @@
  * This helps handle cases where the bucket names might be different or have been renamed
  */
 export const BUCKET_NAMES: Record<string, string> = {
-  'professionals': 'professionals',  // Will be created if doesn't exist
-  'articles': 'articles',            // Will be created if doesn't exist
-  'images': 'images',                // Will be created if doesn't exist
+  'professionals': 'Professionals Images',  // Map internal 'professionals' key to actual 'Professionals Images' bucket
+  'articles': 'Articles Images',            // Map internal 'articles' key to actual 'Articles Images' bucket
+  'images': 'Public Images',                // Will be created if doesn't exist
 };
 
 /**

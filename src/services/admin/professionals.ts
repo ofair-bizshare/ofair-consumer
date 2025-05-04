@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { formatError } from '@/utils/errorUtils';
@@ -30,7 +31,7 @@ export const createProfessional = async (professionalData: any): Promise<Profess
       ...professionalData,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      review_count: 0,
+      review_count: 0,  // Changed from reviews_count to review_count
       is_verified: false,
       status: 'active',
     };
@@ -236,7 +237,7 @@ export const uploadProfessionalsFromExcel = async (professionals: any[]): Promis
               [professional.certifications]) : 
             [],
           experience_years: professional.experience_years || 0,
-          reviews_count: 0,
+          review_count: 0, // Changed from reviews_count to review_count
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           status: 'active',

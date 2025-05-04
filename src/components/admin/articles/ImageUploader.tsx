@@ -2,29 +2,47 @@
 import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface ImageUploaderProps {
   onChange: (file: File | null) => void;
   initialImage?: string | null;
+  error?: string | null;
 }
 
-const ImageUploader: React.FC<ImageUploaderProps> = ({ onChange, initialImage }) => {
+const ImageUploader: React.FC<ImageUploaderProps> = ({ onChange, initialImage, error }) => {
   const [preview, setPreview] = useState<string | null>(initialImage || null);
   const [isDragging, setIsDragging] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(error || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
-    onChange(file);
-
+    setFileError(null);
+    
     if (file) {
+      // Validate file size (10MB max)
+      if (file.size > 10 * 1024 * 1024) {
+        setFileError('גודל הקובץ חורג מ-10MB המותרים');
+        return;
+      }
+      
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        setFileError('סוג הקובץ אינו נתמך. אנא העלה תמונה בפורמט PNG, JPG או WEBP');
+        return;
+      }
+      
       const reader = new FileReader();
       reader.onload = () => {
         setPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
+    
+    onChange(file);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -40,16 +58,31 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onChange, initialImage })
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
+    setFileError(null);
     
     const file = e.dataTransfer.files?.[0] || null;
-    onChange(file);
-    
     if (file) {
+      // Validate file size (10MB max)
+      if (file.size > 10 * 1024 * 1024) {
+        setFileError('גודל הקובץ חורג מ-10MB המותרים');
+        return;
+      }
+      
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        setFileError('סוג הקובץ אינו נתמך. אנא העלה תמונה בפורמט PNG, JPG או WEBP');
+        return;
+      }
+      
       const reader = new FileReader();
       reader.onload = () => {
         setPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+      onChange(file);
+    } else {
+      onChange(null);
     }
   };
 
@@ -59,6 +92,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onChange, initialImage })
 
   const handleRemoveImage = () => {
     setPreview(null);
+    setFileError(null);
     onChange(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -83,9 +117,16 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onChange, initialImage })
         )}
       </div>
 
+      {fileError && (
+        <Alert variant="destructive" className="mb-2">
+          <AlertCircle className="h-4 w-4 ml-2" />
+          <AlertDescription>{fileError}</AlertDescription>
+        </Alert>
+      )}
+
       <Card
         className={`border-2 border-dashed ${
-          isDragging ? 'border-primary' : 'border-border'
+          isDragging ? 'border-primary' : fileError ? 'border-destructive' : 'border-border'
         } rounded-lg cursor-pointer`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
