@@ -14,14 +14,6 @@ export const createArticle = async (articleData: any): Promise<ArticleInterface 
   try {
     console.log('Creating article with data:', articleData);
     
-    // Ensure image field exists
-    if (articleData.image_url && !articleData.image) {
-      articleData.image = articleData.image_url;
-    }
-    if (articleData.image && !articleData.image_url) {
-      articleData.image_url = articleData.image;
-    }
-    
     // Prepare data for insert
     const articleToInsert = {
       ...articleData,
@@ -58,14 +50,6 @@ export const createArticle = async (articleData: any): Promise<ArticleInterface 
 export const updateArticle = async (id: string, articleData: any): Promise<ArticleInterface | null> => {
   try {
     console.log(`Updating article ${id} with data:`, articleData);
-
-    // Ensure image fields are in sync
-    if (articleData.image_url && !articleData.image) {
-      articleData.image = articleData.image_url;
-    }
-    if (articleData.image && !articleData.image_url) {
-      articleData.image_url = articleData.image;
-    }
     
     // Prepare data for update
     const articleToUpdate = {
@@ -131,12 +115,7 @@ export const uploadArticleImage = async (imageFile: File): Promise<string> => {
     console.log('Uploading article image', imageFile.name);
     
     // First ensure the bucket exists
-    const bucketCreated = await createBucketIfNotExists('articles', true);
-    console.log('Articles bucket creation status:', bucketCreated);
-    
-    if (!bucketCreated) {
-      console.warn('Articles bucket might not exist or could not be created. Trying to find it...');
-    }
+    await createBucketIfNotExists('articles', true);
     
     // Generate a unique file name to avoid conflicts
     const fileExt = imageFile.name.split('.').pop();
@@ -147,22 +126,7 @@ export const uploadArticleImage = async (imageFile: File): Promise<string> => {
     const bucketName = await findBucketByName('articles') || 'articles';
     console.log(`Using bucket: ${bucketName} for article image upload`);
     
-    // Log bucket info for debugging
-    try {
-      const { data: bucketInfo, error: bucketError } = await supabase.storage
-        .getBucket(bucketName);
-        
-      if (bucketError) {
-        console.error('Error getting bucket info:', bucketError);
-      } else {
-        console.log('Bucket info:', bucketInfo);
-      }
-    } catch (bucketCheckError) {
-      console.error('Error checking bucket:', bucketCheckError);
-    }
-    
     // Upload the file
-    console.log(`Uploading file to ${bucketName}/${filePath}`);
     const { error: uploadError, data } = await supabase.storage
       .from(bucketName)
       .upload(filePath, imageFile, {
@@ -179,10 +143,6 @@ export const uploadArticleImage = async (imageFile: File): Promise<string> => {
     const { data: urlData } = supabase.storage
       .from(bucketName)
       .getPublicUrl(filePath);
-    
-    if (!urlData || !urlData.publicUrl) {
-      throw new Error('Failed to get public URL for uploaded image');
-    }
       
     console.log('Image uploaded successfully:', urlData.publicUrl);
     return urlData.publicUrl;

@@ -78,7 +78,6 @@ export interface ArticleInterface {
   content: string;
   summary?: string;
   image?: string;
-  image_url?: string;
   author?: string;
   created_at: string;
   updated_at?: string;
