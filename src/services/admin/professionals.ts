@@ -1,10 +1,9 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { formatError } from '@/utils/errorUtils';
 import { ProfessionalInterface } from '@/services/professionals/types';
 import { getProfessionalFromData } from '../professionals/professionalUtils';
-import { createBucketIfNotExists, findBucketByName } from './utils/storageUtils';
+import { createBucketIfNotExists, findBucketByName, getBucketName } from './utils/storageUtils';
 
 /**
  * Creates a new professional
@@ -136,8 +135,10 @@ export const uploadProfessionalImage = async (imageFile: File): Promise<string> 
   try {
     console.log('Uploading professional image', imageFile.name);
     
+    const bucketKey = 'professionals';
+    
     // First ensure the bucket exists
-    const bucketCreated = await createBucketIfNotExists('professionals', true);
+    const bucketCreated = await createBucketIfNotExists(bucketKey, true);
     console.log('Bucket creation status:', bucketCreated);
     
     // Generate a unique file name to avoid conflicts
@@ -145,8 +146,8 @@ export const uploadProfessionalImage = async (imageFile: File): Promise<string> 
     const fileName = `${uuidv4()}.${fileExt}`;
     const filePath = `profile/${fileName}`;
     
-    // Try to find the bucket with case-insensitive matching
-    const bucketName = await findBucketByName('professionals') || 'professionals';
+    // Get the actual bucket name (handles different naming conventions)
+    const bucketName = await findBucketByName(bucketKey) || getBucketName(bucketKey);
     console.log(`Using bucket: ${bucketName} for professional image upload`);
     
     // Upload the file

@@ -1,5 +1,5 @@
-
 import { supabase } from '@/integrations/supabase/client';
+import { getBucketName, BUCKET_NAMES } from './bucketNameUtils';
 
 /**
  * Lists existing buckets in storage
@@ -96,7 +96,7 @@ export const createBucketIfNotExists = async (bucketName: string, isPublic: bool
 export const createBuckets = async (): Promise<boolean> => {
   try {
     console.log('Creating necessary storage buckets...');
-    const requiredBuckets = ['professionals', 'articles', 'images'];
+    const requiredBuckets = Object.values(BUCKET_NAMES);
     const existingBuckets = await listBuckets();
     
     // Convert to lowercase for case-insensitive comparison
@@ -260,11 +260,26 @@ export const findBucketByName = async (bucketName: string): Promise<string | nul
     );
     if (caseInsensitiveMatch) return caseInsensitiveMatch;
     
-    // Try partial match
+    // Try mapping match from our known mappings
+    const mappedBucketName = getBucketName(bucketName);
+    if (mappedBucketName !== bucketName) {
+      const mappedMatch = buckets.find(
+        name => name.toLowerCase() === mappedBucketName.toLowerCase()
+      );
+      if (mappedMatch) return mappedMatch;
+    }
+    
+    // Try partial match (only if the above methods fail)
     const partialMatch = buckets.find(
       name => name.toLowerCase().includes(bucketName.toLowerCase())
     );
     if (partialMatch) return partialMatch;
+    
+    // If we still don't have a match, return the mapped name as a fallback
+    // This will be used to create the bucket
+    if (mappedBucketName !== bucketName) {
+      return mappedBucketName;
+    }
     
     return null;
   } catch (error) {

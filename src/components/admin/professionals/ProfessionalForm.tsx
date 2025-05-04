@@ -62,12 +62,15 @@ const ProfessionalForm: React.FC<ProfessionalFormProps> = ({
   // Update form when professional changes
   useEffect(() => {
     if (professional) {
+      // Log the professional data to see what fields are available
+      console.log('Professional data for form:', professional);
+      
       form.reset({
         name: professional.name,
         profession: professional.profession,
         location: professional.location,
         specialties: professional.specialties?.join(', ') || '',
-        phoneNumber: professional.phoneNumber || professional.phone_number || professional.phone || '',
+        phoneNumber: professional.phone_number || professional.phoneNumber || professional.phone || '',
         about: professional.about || professional.bio || '',
         rating: professional.rating || 5,
         company_name: professional.company_name || '',

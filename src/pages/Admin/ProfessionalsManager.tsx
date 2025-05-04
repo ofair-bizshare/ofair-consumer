@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +17,7 @@ import { getProfessionalFromData } from '@/services/professionals/professionalUt
 import ProfessionalForm, { ProfessionalFormValues } from '@/components/admin/professionals/ProfessionalForm';
 import ProfessionalsList from '@/components/admin/professionals/ProfessionalsList';
 import ProfessionalsExcelUploader from '@/components/admin/professionals/ProfessionalsExcelUploader';
+import StorageInitializer from '@/components/admin/storage/StorageInitializer';
 
 const ProfessionalsManager = () => {
   const [professionals, setProfessionals] = useState<ProfessionalInterface[]>([]);
@@ -32,39 +32,6 @@ const ProfessionalsManager = () => {
   const { toast } = useToast();
 
   // Initialize storage buckets on component mount
-  React.useEffect(() => {
-    const initStorage = async () => {
-      try {
-        const buckets = await listBuckets();
-        console.log('Available storage buckets:', buckets);
-        
-        const hasProfessionals = buckets.some(bucket => 
-          bucket.toLowerCase() === 'professionals');
-        const hasArticles = buckets.some(bucket => 
-          bucket.toLowerCase() === 'articles');
-        const hasImages = buckets.some(bucket => 
-          bucket.toLowerCase() === 'images');
-        
-        setBucketStatus({
-          professionals: hasProfessionals,
-          articles: hasArticles,
-          images: hasImages
-        });
-        
-        if (!hasProfessionals || !hasArticles || !hasImages) {
-          console.log('Some required buckets are missing, initializing...');
-          await initializeStorageBuckets();
-          const updatedBuckets = await listBuckets();
-          console.log('Updated storage buckets:', updatedBuckets);
-        }
-      } catch (error) {
-        console.error('Error checking storage buckets:', error);
-      }
-    };
-    
-    initStorage();
-  }, []);
-
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
@@ -134,8 +101,7 @@ const ProfessionalsManager = () => {
         location: data.location,
         city: data.location, // Explicitly set city to location
         specialties: data.specialties.split(',').map(s => s.trim()),
-        phoneNumber: data.phoneNumber,
-        phone_number: data.phoneNumber, // Add both field names for compatibility
+        phone_number: data.phoneNumber, // Use phone_number instead of phoneNumber
         about: data.about,
         rating: data.rating,
         image: imageUrl,
@@ -292,13 +258,14 @@ const ProfessionalsManager = () => {
         </div>
       </div>
       
-      {Object.keys(bucketStatus).length > 0 && !bucketStatus.professionals && (
-        <Alert variant="warning" className="mb-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>חסרות תיקיות אחסון</AlertTitle>
-          <AlertDescription>תיקיית אחסון 'professionals' חסרה. מערכת תנסה ליצור אותה אוטומטית.</AlertDescription>
-        </Alert>
-      )}
+      <StorageInitializer 
+        requiredBuckets={['professionals']}
+        onStatusChange={(status) => {
+          setBucketStatus({
+            professionals: status.missingBuckets.indexOf('professionals') === -1
+          });
+        }}
+      />
       
       {error && (
         <Alert variant="destructive" className="mb-4">

@@ -1,9 +1,9 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { formatError } from '@/utils/errorUtils';
 import { createBucketIfNotExists, findBucketByName } from './utils/storageUtils';
 import { ArticleInterface } from '@/types/dashboard';
+import { getBucketName } from './utils/bucketNameUtils';
 
 /**
  * Creates a new article
@@ -114,16 +114,18 @@ export const uploadArticleImage = async (imageFile: File): Promise<string> => {
   try {
     console.log('Uploading article image', imageFile.name);
     
+    const bucketKey = 'articles';
+    
     // First ensure the bucket exists
-    await createBucketIfNotExists('articles', true);
+    await createBucketIfNotExists(bucketKey, true);
     
     // Generate a unique file name to avoid conflicts
     const fileExt = imageFile.name.split('.').pop();
     const fileName = `${uuidv4()}.${fileExt}`;
     const filePath = `cover/${fileName}`;
     
-    // Try to find the bucket with case-insensitive matching
-    const bucketName = await findBucketByName('articles') || 'articles';
+    // Get the actual bucket name (handles different naming conventions)
+    const bucketName = await findBucketByName(bucketKey) || getBucketName(bucketKey);
     console.log(`Using bucket: ${bucketName} for article image upload`);
     
     // Upload the file

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { articleCategoryOptions } from '@/components/admin/articles/articleSchema';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import StorageInitializer from '@/components/admin/storage/StorageInitializer';
 
 const ArticlesManager = () => {
   const [articles, setArticles] = useState<ArticleInterface[]>([]);
@@ -33,32 +33,7 @@ const ArticlesManager = () => {
 
   // Initialize storage buckets on component mount
   useEffect(() => {
-    const initStorage = async () => {
-      try {
-        console.log('Checking storage buckets for articles...');
-        const buckets = await listBuckets();
-        console.log('Available storage buckets:', buckets);
-        
-        const hasArticles = buckets.includes('articles');
-        const hasImages = buckets.includes('images');
-        
-        setBucketStatus({
-          articles: hasArticles,
-          images: hasImages
-        });
-        
-        if (!hasArticles || !hasImages) {
-          console.log('Some required buckets are missing, initializing...');
-          await initializeStorageBuckets();
-          const updatedBuckets = await listBuckets();
-          console.log('Updated storage buckets:', updatedBuckets);
-        }
-      } catch (error) {
-        console.error('Error checking storage buckets:', error);
-      }
-    };
-    
-    initStorage();
+    fetchArticles();
   }, []);
 
   const fetchArticles = async () => {
@@ -264,10 +239,6 @@ const ArticlesManager = () => {
     }
   };
 
-  useEffect(() => {
-    fetchArticles();
-  }, []);
-
   // After fetching articles, create sample articles if needed
   useEffect(() => {
     if (!loading && articles.length === 0) {
@@ -440,11 +411,20 @@ const ArticlesManager = () => {
         </Button>
       </div>
       
-      {Object.keys(bucketStatus).length > 0 && !bucketStatus.articles && (
-        <Alert variant="warning" className="mb-4">
+      <StorageInitializer 
+        requiredBuckets={['articles']}
+        onStatusChange={(status) => {
+          setBucketStatus({
+            articles: status.missingBuckets.indexOf('articles') === -1
+          });
+        }}
+      />
+      
+      {error && (
+        <Alert variant="destructive" className="mb-4">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>חסרות תיקיות אחסון</AlertTitle>
-          <AlertDescription>תיקיית אחסון 'articles' חסרה. מערכת תנסה ליצור אותה אוטומטית.</AlertDescription>
+          <AlertTitle>שגיאה</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
       
@@ -467,14 +447,6 @@ const ArticlesManager = () => {
           </SelectContent>
         </Select>
       </div>
-      
-      {error && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>שגיאה</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
       
       {loading ? (
         <ArticlesLoading />
