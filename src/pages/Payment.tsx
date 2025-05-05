@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -9,9 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { CreditCard, Lock, CheckCircle } from 'lucide-react';
+import { CreditCard, Lock, CheckCircle, Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/providers/AuthProvider';
+import { updateRequestStatus } from '@/services/requests';
 
 const Payment = () => {
   const { quoteId } = useParams<{ quoteId: string }>();
@@ -138,21 +138,42 @@ const Payment = () => {
     
     setLoading(true);
     
-    // Simulate payment processing
-    setTimeout(() => {
+    try {
+      // Update the request status to waiting_for_rating
+      await updateRequestStatus(quoteDetails.request_id, 'waiting_for_rating');
+      
+      // Simulate payment processing
+      setTimeout(() => {
+        setLoading(false);
+        setSuccess(true);
+        
+        toast({
+          title: "התשלום התקבל בהצלחה",
+          description: "הזמנתך אושרה ובעל המקצוע יצור איתך קשר בקרוב",
+          variant: "default",
+        });
+      }, 2000);
+    } catch (error) {
+      console.error("Error updating request status:", error);
       setLoading(false);
-      setSuccess(true);
       
       toast({
-        title: "התשלום התקבל בהצלחה",
-        description: "הזמנתך אושרה ובעל המקצוע יצור איתך קשר בקרוב",
-        variant: "default",
+        title: "שגיאה בעדכון סטטוס הבקשה",
+        description: "אירעה שגיאה בעדכון סטטוס הבקשה. אנא נסה שוב.",
+        variant: "destructive",
       });
-    }, 2000);
+    }
   };
   
   const handleBackToDashboard = () => {
     navigate('/dashboard');
+  };
+  
+  // Generate review link
+  const getReviewLink = () => {
+    if (!quoteDetails) return '#';
+    const phone = quoteDetails.professional_phone || '';
+    return `https://review.ofair.co.il/${phone.replace(/[^0-9]/g, '')}`;
   };
   
   if (success) {
@@ -176,9 +197,22 @@ const Payment = () => {
               <p className="text-gray-600 mb-4">
                 קבלה נשלחה לכתובת האימייל שלך
               </p>
-              <p className="text-gray-600 mb-2">
+              <p className="text-gray-600 mb-4">
                 בעל המקצוע יעודכן על התשלום ויצור איתך קשר בקרוב
               </p>
+              
+              <div className="my-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                <p className="text-amber-800 mb-3 text-sm">
+                  אנא דרג את החוויה שלך עם {quoteDetails?.professional_name} כדי לסייע למשתמשים אחרים
+                </p>
+                <Button 
+                  className="bg-amber-500 hover:bg-amber-600 text-white"
+                  onClick={() => window.open(getReviewLink(), '_blank')}
+                >
+                  <Star className="h-4 w-4 ml-1" />
+                  דרג את בעל המקצוע
+                </Button>
+              </div>
             </CardContent>
             
             <CardFooter className="flex justify-center">

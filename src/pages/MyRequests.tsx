@@ -21,6 +21,7 @@ const MyRequests = () => {
 
   // Filter requests by status
   const activeRequests = requests.filter(req => req.status === 'active');
+  const waitingForRatingRequests = requests.filter(req => req.status === 'waiting_for_rating');
   const completedRequests = requests.filter(req => req.status === 'completed');
   const expiredOrCanceledRequests = requests.filter(req => 
     req.status === 'expired' || req.status === 'canceled'
@@ -57,13 +58,16 @@ const MyRequests = () => {
             <Tabs defaultValue="active" className="w-full">
               <TabsList className="w-full max-w-md mb-6">
                 <TabsTrigger value="active" className="flex-1 data-[state=active]:bg-green-50 data-[state=active]:text-green-700">
-                  פניות פעילות ({activeRequests.length})
+                  פעילות ({activeRequests.length})
+                </TabsTrigger>
+                <TabsTrigger value="waiting" className="flex-1 data-[state=active]:bg-amber-50 data-[state=active]:text-amber-700">
+                  ממתינות לדירוג ({waitingForRatingRequests.length})
                 </TabsTrigger>
                 <TabsTrigger value="completed" className="flex-1 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
-                  פניות שהושלמו ({completedRequests.length})
+                  הושלמו ({completedRequests.length})
                 </TabsTrigger>
-                <TabsTrigger value="expired" className="flex-1 data-[state=active]:bg-amber-50 data-[state=active]:text-amber-700">
-                  פניות שפגו/בוטלו ({expiredOrCanceledRequests.length})
+                <TabsTrigger value="expired" className="flex-1 data-[state=active]:bg-gray-50 data-[state=active]:text-gray-700">
+                  בוטלו/פגו ({expiredOrCanceledRequests.length})
                 </TabsTrigger>
               </TabsList>
               
@@ -74,6 +78,16 @@ const MyRequests = () => {
                   onCancelRequest={handleCancelRequest}
                   onCreateRequest={() => setIsRequestDialogOpen(true)}
                   emptyText="אין לך כרגע פניות פעילות"
+                />
+              </TabsContent>
+              
+              <TabsContent value="waiting" className="mt-0">
+                <RequestsTabContent 
+                  requests={waitingForRatingRequests} 
+                  onViewRequest={handleViewRequest}
+                  onDeleteRequest={handleDeleteRequest}
+                  onCreateRequest={() => setIsRequestDialogOpen(true)}
+                  emptyText="אין לך כרגע פניות ממתינות לדירוג"
                 />
               </TabsContent>
               

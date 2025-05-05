@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Clock, CheckCircle, AlertCircle, Star } from 'lucide-react';
 import { RequestInterface, QuoteInterface } from '@/types/dashboard';
 import QuotesList from './QuotesList';
 
@@ -20,6 +20,17 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
   onRejectQuote, 
   onViewProfile 
 }) => {
+  // Find the accepted quote (if any)
+  const acceptedQuote = quotes.find(q => q.status === 'accepted');
+  
+  // Generate review link with professional phone number
+  const getReviewLink = () => {
+    if (!acceptedQuote) return '#';
+    const phone = acceptedQuote.professional.phoneNumber || 
+                  acceptedQuote.professional.phone || '';
+    return `https://review.ofair.co.il/${phone.replace(/[^0-9]/g, '')}`;
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="glass-card p-6">
@@ -34,6 +45,11 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
                 <Clock className="h-4 w-4 ml-1" />
                 פעיל
               </>
+            ) : request.status === 'waiting_for_rating' ? (
+              <>
+                <Star className="h-4 w-4 ml-1" />
+                ממתין לדירוג
+              </>
             ) : (
               <>
                 <CheckCircle className="h-4 w-4 ml-1" />
@@ -46,6 +62,22 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
         <p className="text-gray-700 mb-4">
           {request.description}
         </p>
+        
+        {/* Show review button when status is waiting_for_rating */}
+        {request.status === 'waiting_for_rating' && acceptedQuote && (
+          <div className="my-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+            <p className="text-amber-800 mb-3 text-sm">
+              אנא דרג את החוויה שלך עם {acceptedQuote.professional.name} כדי לסייע למשתמשים אחרים
+            </p>
+            <Button 
+              className="bg-amber-500 hover:bg-amber-600 text-white"
+              onClick={() => window.open(getReviewLink(), '_blank')}
+            >
+              <Star className="h-4 w-4 ml-1" />
+              דרג את בעל המקצוע
+            </Button>
+          </div>
+        )}
         
         <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
           <p className="text-gray-500 text-sm">

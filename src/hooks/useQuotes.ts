@@ -5,6 +5,7 @@ import { fetchQuotesForRequest, updateQuoteStatus } from '@/services/quotes';
 import { QuoteInterface } from '@/types/dashboard';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/providers/AuthProvider';
+import { updateRequestStatus } from '@/services/requests';
 
 export const useQuotes = (selectedRequestId: string | null) => {
   const [quotes, setQuotes] = useState<QuoteInterface[]>([]);
@@ -54,6 +55,9 @@ export const useQuotes = (selectedRequestId: string | null) => {
       });
       return;
     }
+    
+    // Update the request status to "waiting_for_rating"
+    await updateRequestStatus(acceptedQuote.requestId, 'waiting_for_rating');
     
     // Update local state - mark this quote as accepted and others for this request as rejected
     setQuotes(prevQuotes => 

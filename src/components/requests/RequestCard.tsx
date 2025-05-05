@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, CheckCircle, AlertCircle, X, ExternalLink } from 'lucide-react';
+import { Clock, CheckCircle, AlertCircle, X, ExternalLink, Star } from 'lucide-react';
 import { RequestInterface } from '@/types/dashboard';
 import { Badge } from '@/components/ui/badge';
 
@@ -23,6 +23,8 @@ export const getStatusBadge = (status: string) => {
       return <Badge className="bg-amber-500">פגה תוקף</Badge>;
     case 'canceled':
       return <Badge className="bg-red-500">בוטלה</Badge>;
+    case 'waiting_for_rating':
+      return <Badge className="bg-amber-400">ממתין לדירוג</Badge>;
     default:
       return <Badge>לא ידוע</Badge>;
   }
@@ -38,6 +40,8 @@ export const getStatusIcon = (status: string) => {
       return <AlertCircle className="h-5 w-5 text-amber-500" />;
     case 'canceled':
       return <X className="h-5 w-5 text-red-500" />;
+    case 'waiting_for_rating':
+      return <Star className="h-5 w-5 text-amber-400" />;
     default:
       return null;
   }
@@ -55,6 +59,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
         request.status === 'active' ? 'border-green-500' : 
         request.status === 'completed' ? 'border-blue-500' : 
         request.status === 'expired' ? 'border-amber-500' : 
+        request.status === 'waiting_for_rating' ? 'border-amber-400' :
         'border-red-500'
       } h-full`}>
         <CardContent className="p-0">
@@ -93,7 +98,7 @@ const RequestCard: React.FC<RequestCardProps> = ({
                 </Button>
               )}
               
-              {(request.status === 'completed' || request.status === 'expired' || request.status === 'canceled') && onDelete && (
+              {(request.status === 'completed' || request.status === 'expired' || request.status === 'canceled' || request.status === 'waiting_for_rating') && onDelete && (
                 <Button 
                   variant="outline" 
                   className="text-red-600 border-red-300 hover:bg-red-50"
