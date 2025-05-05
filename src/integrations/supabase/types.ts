@@ -289,7 +289,8 @@ export type Database = {
           company_name: string | null
           created_at: string | null
           email: string | null
-          experience_years: number | null
+          experience_range: string | null
+          experience_years: string | null
           id: string
           image: string | null
           image_url: string | null
@@ -315,7 +316,8 @@ export type Database = {
           company_name?: string | null
           created_at?: string | null
           email?: string | null
-          experience_years?: number | null
+          experience_range?: string | null
+          experience_years?: string | null
           id?: string
           image?: string | null
           image_url?: string | null
@@ -341,7 +343,8 @@ export type Database = {
           company_name?: string | null
           created_at?: string | null
           email?: string | null
-          experience_years?: number | null
+          experience_range?: string | null
+          experience_years?: string | null
           id?: string
           image?: string | null
           image_url?: string | null

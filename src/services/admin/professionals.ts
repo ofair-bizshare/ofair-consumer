@@ -31,7 +31,7 @@ export const createProfessional = async (professionalData: any): Promise<Profess
       ...professionalData,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      review_count: 0,  // Changed from reviews_count to review_count
+      review_count: 0,  // Use review_count (singular) not reviews_count (plural)
       is_verified: false,
       status: 'active',
     };
@@ -237,7 +237,7 @@ export const uploadProfessionalsFromExcel = async (professionals: any[]): Promis
               [professional.certifications]) : 
             [],
           experience_years: professional.experience_years || 0,
-          review_count: 0, // Changed from reviews_count to review_count
+          review_count: 0, // Use review_count (singular) consistently
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           status: 'active',

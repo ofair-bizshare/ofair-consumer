@@ -40,9 +40,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onChange, initialImage, e
         setPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+      onChange(file);
+    } else {
+      onChange(null);
     }
-    
-    onChange(file);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
