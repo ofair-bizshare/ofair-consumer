@@ -76,7 +76,7 @@ const Search = () => {
         <div className="container mx-auto px-6">
           <SearchHeader displayProfessionName={displayProfessionName} />
           
-          <div className="mb-8 animate-fade-in-up">
+          <div className="mb-8 animate-fade-in-up sticky top-28 z-10 bg-gray-50 pt-4 pb-6 px-4 -mx-4 shadow-sm rounded-b-lg">
             <DynamicProfessionalSearch 
               onSearch={handleSearch} 
               initialProfession={selectedCategory === 'all' ? '' : selectedCategory}

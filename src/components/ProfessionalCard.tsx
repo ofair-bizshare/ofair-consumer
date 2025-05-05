@@ -39,6 +39,7 @@ const ProfessionalCard: React.FC<ProfessionalCardProps> = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [imgError, setImgError] = useState(false);
   
   const handlePhoneClick = () => {
     if (!user) {
@@ -59,13 +60,32 @@ const ProfessionalCard: React.FC<ProfessionalCardProps> = ({
       }
     });
   };
+
+  const handleImageError = () => {
+    setImgError(true);
+  };
+
+  // Use a better fallback image with appropriate size
+  const imageUrl = imgError 
+    ? 'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?auto=format&fit=crop&q=80&w=800&h=450' 
+    : image;
   
   return (
     <>
       <div className="glass-card group hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
         <div className="relative overflow-hidden rounded-t-xl h-48">
-          <img src={image} alt={name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-          {verified}
+          <img 
+            src={imageUrl} 
+            alt={name} 
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+            onError={handleImageError}
+            loading="lazy"
+          />
+          {verified && (
+            <div className="absolute top-3 left-3 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+              מאומת ✓
+            </div>
+          )}
         </div>
         
         <div className="p-5">

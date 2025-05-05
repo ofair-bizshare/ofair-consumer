@@ -34,8 +34,28 @@ const useSearchProfessionals = () => {
       try {
         setLoading(true);
         const data = await getProfessionals();
-        setAllProfessionals(data);
-        setProfessionals(data);
+        
+        // Ensure we have valid data
+        if (!data || data.length === 0) {
+          throw new Error('לא נמצאו בעלי מקצוע');
+        }
+        
+        // Make sure each professional has the required fields
+        const validatedData = data.map(prof => ({
+          ...prof,
+          id: prof.id || `prof-${Math.random().toString(36).substr(2, 9)}`,
+          name: prof.name || 'בעל מקצוע',
+          profession: prof.profession || prof.category || 'כללי',
+          rating: prof.rating || 5,
+          reviewCount: prof.reviewCount || 0,
+          location: prof.location || prof.area || 'ארצי',
+          image: prof.image || 'https://images.unsplash.com/photo-1514539079130-25950c84af65?auto=format&fit=crop&q=80&w=800&h=450',
+          specialties: prof.specialties || [],
+          verified: prof.verified || false
+        }));
+        
+        setAllProfessionals(validatedData);
+        setProfessionals(validatedData);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching professionals:', err);

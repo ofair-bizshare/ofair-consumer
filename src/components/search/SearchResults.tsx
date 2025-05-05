@@ -52,7 +52,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               rating={professional.rating}
               reviewCount={professional.reviewCount}
               location={professional.location}
-              image={professional.image || 'https://via.placeholder.com/200?text=No+Image'}
+              image={professional.image || 'https://images.unsplash.com/photo-1514539079130-25950c84af65?auto=format&fit=crop&q=80&w=800&h=450'}
               specialties={professional.specialties || []}
               phoneNumber={professional.phone || professional.phoneNumber}
               verified={professional.verified}
