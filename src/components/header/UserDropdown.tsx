@@ -29,9 +29,9 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
         // Try to fetch real notifications from database
         const { data, error } = await supabase
           .from('notifications')
-          .select('id, read')
-          .eq('user_id', user.id)
-          .eq('read', false);
+          .select('id, is_read')
+          .eq('professional_id', user.id)
+          .eq('is_read', false);
         
         if (error) {
           console.error('Error fetching notifications:', error);
@@ -48,23 +48,27 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
     fetchNotifications();
     
     // Set up realtime subscription for notifications if needed
+    let notificationsChannel: RealtimeChannel | null = null;
+    
     if (user) {
-      const notificationsChannel = supabase
+      notificationsChannel = supabase
         .channel('notifications-changes')
         .on('postgres_changes', {
           event: '*',
           schema: 'public',
           table: 'notifications',
-          filter: `user_id=eq.${user.id}`
+          filter: `professional_id=eq.${user.id}`
         }, () => {
           fetchNotifications();
         })
         .subscribe();
-        
-      return () => {
-        supabase.removeChannel(notificationsChannel);
-      };
     }
+        
+    return () => {
+      if (notificationsChannel) {
+        supabase.removeChannel(notificationsChannel);
+      }
+    };
   }, [user]);
 
   const handleNotificationsClick = () => {
