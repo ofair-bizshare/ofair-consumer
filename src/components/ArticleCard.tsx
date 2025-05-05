@@ -50,21 +50,23 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
     setImgError(true);
   };
 
+  // Use a better fallback image and ensure consistent image quality
   const imageUrl = imgError 
-    ? 'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?auto=format&fit=crop&q=80' 
+    ? 'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?auto=format&fit=crop&q=80&w=800&h=450' 
     : image;
 
   return (
-    <div className="glass-card overflow-hidden group h-full flex flex-col">
+    <div className="glass-card overflow-hidden group h-full flex flex-col shadow-md hover:shadow-lg transition-all duration-300">
       <div className="relative h-48 overflow-hidden">
         <img 
           src={imageUrl} 
           alt={title} 
           className="w-full h-full transition-transform duration-500 group-hover:scale-105 object-cover" 
           onError={handleImageError}
+          loading="lazy"
         />
         {categoryLabel && (
-          <div className="absolute top-3 right-3 bg-teal-500 text-white text-xs px-2 py-1 rounded-full">
+          <div className="absolute top-3 right-3 bg-gradient-to-r from-teal-500 to-teal-400 text-white text-xs px-3 py-1.5 rounded-full shadow-sm">
             {categoryLabel}
           </div>
         )}
