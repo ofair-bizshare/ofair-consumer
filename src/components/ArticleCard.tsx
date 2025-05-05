@@ -20,7 +20,15 @@ const getCategoryLabel = (categoryValue: string): string => {
     'home-improvement': 'שיפוץ הבית',
     'diy': 'עשה זאת בעצמך',
     'tips': 'טיפים',
-    'guides': 'מדריכים'
+    'guides': 'מדריכים',
+    'electrician': 'חשמלאי',
+    'plumber': 'אינסטלטור',
+    'carpenter': 'נגר',
+    'painter': 'צבע',
+    'gardener': 'גנן',
+    'renovation': 'שיפוצניק',
+    'locksmith': 'מנעולן',
+    'air-conditioning': 'מיזוג אוויר'
   };
   
   return categories[categoryValue] || 'מאמר';
@@ -36,11 +44,25 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
   author
 }) => {
   const categoryLabel = category ? getCategoryLabel(category) : 'מאמר';
+  const [imgError, setImgError] = React.useState(false);
+
+  const handleImageError = () => {
+    setImgError(true);
+  };
+
+  const imageUrl = imgError 
+    ? 'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?auto=format&fit=crop&q=80' 
+    : image;
 
   return (
-    <div className="glass-card overflow-hidden group">
-      <div className="relative overflow-hidden h-48">
-        <img src={image} alt={title} className="w-full h-full transition-transform duration-500 group-hover:scale-105 object-cover" />
+    <div className="glass-card overflow-hidden group h-full flex flex-col">
+      <div className="relative h-48 overflow-hidden">
+        <img 
+          src={imageUrl} 
+          alt={title} 
+          className="w-full h-full transition-transform duration-500 group-hover:scale-105 object-cover" 
+          onError={handleImageError}
+        />
         {categoryLabel && (
           <div className="absolute top-3 right-3 bg-teal-500 text-white text-xs px-2 py-1 rounded-full">
             {categoryLabel}
@@ -48,7 +70,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
         )}
       </div>
       
-      <div className="p-5">
+      <div className="p-5 flex-grow flex flex-col">
         <div className="flex items-center justify-between text-gray-500 text-xs mb-2">
           <div className="flex items-center">
             <Calendar size={14} className="ml-1" />
@@ -65,7 +87,7 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
           {summary}
         </p>
         
-        <Link to={`/articles/${id}`} className="text-teal-500 font-medium text-sm hover:text-teal-600 inline-flex items-center">
+        <Link to={`/articles/${id}`} className="mt-auto text-teal-500 font-medium text-sm hover:text-teal-600 inline-flex items-center">
           קרא עוד
           <span className="mr-1 transform group-hover:translate-x-1 transition-transform">←</span>
         </Link>

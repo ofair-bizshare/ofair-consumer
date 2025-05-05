@@ -170,24 +170,29 @@ const Articles = () => {
             </div>
           </div>
           
-          <Card className="p-1 mb-8 bg-white shadow-sm">
+          {/* Enhanced filter tabs design */}
+          <div className="mb-8 bg-white shadow-sm rounded-lg overflow-hidden">
             <Tabs defaultValue="all" value={activeTab} onValueChange={handleTabChange} className="w-full">
-              <TabsList className="flex w-full justify-start mb-2 p-1 bg-gray-50 overflow-x-auto">
-                {categories.map((category) => (
-                  <TabsTrigger 
-                    key={category.value} 
-                    value={category.value}
-                    className="data-[state=active]:bg-white data-[state=active]:text-[#00D09E] data-[state=active]:shadow-sm rounded-md px-4 py-2"
-                  >
-                    <span className="flex items-center">
-                      <span className="ml-1">{category.label}</span>
-                      {category.icon}
-                    </span>
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+              <div className="border-b border-gray-100">
+                <div className="max-w-full overflow-x-auto scrollbar-hide py-1">
+                  <TabsList className="flex w-max px-2 bg-transparent">
+                    {categories.map((category) => (
+                      <TabsTrigger 
+                        key={category.value} 
+                        value={category.value}
+                        className="data-[state=active]:bg-[#00D09E] data-[state=active]:text-white px-4 py-2.5 mx-0.5 rounded-md transition-colors"
+                      >
+                        <span className="flex items-center">
+                          <span className="ml-1.5">{category.label}</span>
+                          {category.icon}
+                        </span>
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </div>
+              </div>
             </Tabs>
-          </Card>
+          </div>
           
           {isLoading ? (
             <div className="flex justify-center py-12">
