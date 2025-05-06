@@ -2,11 +2,12 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Star, MessageSquare, Eye, CheckCircle } from 'lucide-react';
+import { Star, MessageSquare, CheckCircle, User } from 'lucide-react';
 import { QuoteInterface } from '@/types/dashboard';
 import QuoteDetailDialog from './QuoteDetailDialog';
 import QuoteCancelDialog from './QuoteCancelDialog';
 import PhoneRevealButton from '@/components/PhoneRevealButton';
+import Image from 'next/image';
 
 interface QuoteCardProps {
   quote: QuoteInterface;
@@ -25,6 +26,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
 }) => {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [isContactActive, setIsContactActive] = useState(false);
+  const [imageError, setImageError] = useState(false);
   
   const handleAcceptClick = () => {
     if (quote.status === 'accepted') {
@@ -43,19 +45,44 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     setIsContactActive(!isContactActive);
   };
   
+  const professionalImage = quote.professional.image || quote.professional.image_url;
+  
   return (
-    <Card className="overflow-hidden mb-8">
+    <Card className="overflow-hidden mb-8 shadow-md hover:shadow-lg transition-shadow">
       <CardContent className="p-0">
         <div className="p-5 border-b border-gray-100">
           <div className="flex justify-between items-start mb-4">
-            <div>
-              <h3 className="text-lg font-semibold">{quote.professional.name}</h3>
-              <p className="text-gray-500 text-sm">{quote.professional.profession}</p>
+            <div className="flex items-center">
+              <div className="w-14 h-14 overflow-hidden rounded-full bg-gray-100 mr-3 flex-shrink-0 border border-gray-200">
+                {!imageError && professionalImage ? (
+                  <img 
+                    src={professionalImage} 
+                    alt={quote.professional.name}
+                    className="w-full h-full object-cover"
+                    onError={() => setImageError(true)}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                    <User className="text-gray-400 w-7 h-7" />
+                  </div>
+                )}
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold flex items-center">
+                  {quote.professional.name}
+                  {quote.professional.is_verified && (
+                    <span className="mr-1 bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded-full">
+                      מאומת ✓
+                    </span>
+                  )}
+                </h3>
+                <p className="text-gray-500 text-sm">{quote.professional.profession}</p>
+              </div>
             </div>
             <div className="flex items-center space-x-1">
-              <span className="text-sm font-medium">{quote.professional.rating}</span>
+              <span className="text-sm font-medium">{quote.professional.rating || "0"}</span>
               <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              <span className="text-xs text-gray-500">({quote.professional.reviewCount})</span>
+              <span className="text-xs text-gray-500">({quote.professional.reviewCount || "0"})</span>
             </div>
           </div>
           
@@ -66,9 +93,22 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
             </div>
             <div>
               <p className="text-sm text-gray-500 mb-1">זמן משוער</p>
-              <p className="font-semibold">{quote.estimatedTime}</p>
+              <p className="font-semibold">{quote.estimatedTime || "לא צוין"}</p>
             </div>
           </div>
+          
+          {quote.sampleImageUrl && (
+            <div className="mb-3">
+              <img 
+                src={quote.sampleImageUrl}
+                alt="תמונת דוגמה" 
+                className="w-full max-h-48 object-cover rounded-md border border-gray-200"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            </div>
+          )}
           
           <div className="mb-3">
             <p className="text-gray-700">

@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { fetchQuotesForRequest, updateQuoteStatus } from '@/services/quotes';
 import { QuoteInterface } from '@/types/dashboard';
@@ -14,24 +13,31 @@ export const useQuotes = (selectedRequestId: string | null) => {
   const { toast } = useToast();
   const { user } = useAuth();
 
+  const fetchQuotes = useCallback(async (requestId: string) => {
+    try {
+      console.log("Fetching quotes for request:", requestId);
+      const requestQuotes = await fetchQuotesForRequest(requestId);
+      console.log("Fetched quotes:", requestQuotes);
+      
+      setQuotes(prevQuotes => {
+        // Keep quotes for other requests and add the new ones
+        const otherQuotes = prevQuotes.filter(q => q.requestId !== requestId);
+        return [...otherQuotes, ...requestQuotes];
+      });
+    } catch (error) {
+      console.error("Error fetching quotes:", error);
+    }
+  }, []);
+
   useEffect(() => {
     if (!selectedRequestId) return;
-
-    const fetchQuotes = async () => {
-      try {
-        const requestQuotes = await fetchQuotesForRequest(selectedRequestId);
-        setQuotes(prevQuotes => {
-          // Keep quotes for other requests and add the new ones
-          const otherQuotes = prevQuotes.filter(q => q.requestId !== selectedRequestId);
-          return [...otherQuotes, ...requestQuotes];
-        });
-      } catch (error) {
-        console.error("Error fetching quotes:", error);
-      }
-    };
-
-    fetchQuotes();
-  }, [selectedRequestId]);
+    fetchQuotes(selectedRequestId);
+  }, [selectedRequestId, fetchQuotes]);
+  
+  const refreshQuotes = useCallback((requestId: string) => {
+    if (!requestId) return;
+    fetchQuotes(requestId);
+  }, [fetchQuotes]);
 
   const handleAcceptQuote = async (quoteId: string) => {
     // Store the quote ID and show payment preference dialog
@@ -132,7 +138,7 @@ export const useQuotes = (selectedRequestId: string | null) => {
           variant: "default",
         });
         
-        // Navigate to payment page (placeholder)
+        // Navigate to payment page
         window.location.href = `/payment/${quoteId}`;
         return;
       }
@@ -223,6 +229,7 @@ export const useQuotes = (selectedRequestId: string | null) => {
     showPaymentDialog,
     selectedQuoteId,
     processQuoteAcceptance,
-    closePaymentDialog
+    closePaymentDialog,
+    refreshQuotes
   };
 };

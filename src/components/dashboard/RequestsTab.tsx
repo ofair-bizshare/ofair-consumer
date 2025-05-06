@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/providers/AuthProvider';
 import RequestsList from './RequestsList';
@@ -8,6 +9,8 @@ import EmptyRequestState from './EmptyRequestState';
 import { useRequests } from '@/hooks/useRequests';
 import { useQuotes } from '@/hooks/useQuotes';
 import PaymentMethodDialog from './quotes/PaymentMethodDialog';
+import { Button } from '@/components/ui/button';
+import { PlusCircle } from 'lucide-react';
 
 const RequestsTab: React.FC = () => {
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
@@ -16,11 +19,17 @@ const RequestsTab: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   
-  const { requests, isLoading } = useRequests();
+  const { 
+    requests, 
+    isLoading,
+    refreshRequests
+  } = useRequests();
+  
   const { 
     quotes, 
     handleAcceptQuote, 
-    handleRejectQuote, 
+    handleRejectQuote,
+    refreshQuotes,
     showPaymentDialog,
     selectedQuoteId,
     processQuoteAcceptance,
@@ -48,6 +57,13 @@ const RequestsTab: React.FC = () => {
       closePaymentDialog();
     }
   };
+  
+  const handleRefresh = useCallback(() => {
+    refreshRequests();
+    if (selectedRequestId) {
+      refreshQuotes(selectedRequestId);
+    }
+  }, [refreshRequests, refreshQuotes, selectedRequestId]);
 
   return (
     <div className="flex flex-col-reverse lg:flex-row gap-8" dir="rtl">
@@ -55,9 +71,18 @@ const RequestsTab: React.FC = () => {
         <div className="mb-6 flex justify-between items-center">
           <h2 className="text-xl font-semibold text-blue-700">הבקשות שלי</h2>
           
+          <Button 
+            className="bg-[#00D09E] hover:bg-[#00C090] text-white flex items-center gap-1"
+            onClick={() => setIsRequestDialogOpen(true)}
+          >
+            <PlusCircle size={16} />
+            בקשה חדשה
+          </Button>
+          
           <RequestDialog 
             isOpen={isRequestDialogOpen} 
             onOpenChange={setIsRequestDialogOpen} 
+            onRequestCreated={handleRefresh}
           />
         </div>
         
@@ -69,6 +94,7 @@ const RequestsTab: React.FC = () => {
           <RequestsList 
             requests={requests} 
             onSelect={setSelectedRequestId}
+            selectedRequestId={selectedRequestId}
           />
         )}
       </div>
@@ -81,6 +107,7 @@ const RequestsTab: React.FC = () => {
             onAcceptQuote={handleAcceptQuote}
             onRejectQuote={handleRejectQuote}
             onViewProfile={handleViewProfile}
+            onRefresh={() => refreshQuotes(selectedRequest.id)}
           />
         ) : (
           <EmptyRequestState 

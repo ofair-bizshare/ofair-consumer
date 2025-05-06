@@ -1,41 +1,56 @@
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/providers/AuthProvider';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect, useCallback } from 'react';
 import { fetchUserRequests } from '@/services/requests';
+import { countQuotesForRequest } from '@/services/quotes';
 import { RequestInterface } from '@/types/dashboard';
+import { useAuth } from '@/providers/AuthProvider';
 
 export const useRequests = () => {
   const [requests, setRequests] = useState<RequestInterface[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
-  const { toast } = useToast();
 
-  useEffect(() => {
-    if (!user) return;
-
-    const loadData = async () => {
+  const fetchRequests = useCallback(async () => {
+    try {
       setIsLoading(true);
-      try {
-        console.log("Fetching requests for user:", user.id);
-        
-        // Fetch requests from the database
-        const userRequests = await fetchUserRequests();
-        setRequests(userRequests);
-      } catch (error) {
-        console.error("Error loading requests:", error);
-        toast({
-          title: "שגיאה בטעינת הבקשות",
-          description: "לא ניתן לטעון את הבקשות שלך כרגע. נסה שוב מאוחר יותר.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      const userRequests = await fetchUserRequests();
+      
+      // Fetch quotes count for each request
+      const requestsWithQuotesCount = await Promise.all(
+        userRequests.map(async (request) => {
+          try {
+            const quotesCount = await countQuotesForRequest(request.id);
+            return { ...request, quotesCount };
+          } catch (error) {
+            console.error(`Error fetching quotes count for request ${request.id}:`, error);
+            return { ...request, quotesCount: 0 };
+          }
+        })
+      );
+      
+      setRequests(requestsWithQuotesCount);
+    } catch (error) {
+      console.error("Error fetching requests:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+  
+  // Initial fetch
+  useEffect(() => {
+    if (user) {
+      fetchRequests();
+    }
+  }, [user, fetchRequests]);
+  
+  // Refresh function
+  const refreshRequests = useCallback(() => {
+    fetchRequests();
+  }, [fetchRequests]);
 
-    loadData();
-  }, [user, toast]);
-
-  return { requests, setRequests, isLoading };
+  return { 
+    requests, 
+    isLoading,
+    refreshRequests
+  };
 };

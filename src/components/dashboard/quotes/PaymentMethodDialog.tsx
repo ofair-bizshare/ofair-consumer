@@ -26,37 +26,37 @@ const PaymentMethodDialog: React.FC<PaymentMethodDialogProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md" dir="rtl">
-        <DialogHeader>
-          <DialogTitle className="text-center">בחר אמצעי תשלום</DialogTitle>
-          <DialogDescription className="text-center">
-            הצעה התקבלה! בחר כיצד תרצה לשלם סך {quotePrice}
+      <DialogContent className="sm:max-w-[450px] p-6" dir="rtl">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-xl font-semibold text-center">בחר אמצעי תשלום</DialogTitle>
+          <DialogDescription className="text-center text-base mt-2">
+            הצעה התקבלה! בחר כיצד תרצה לשלם סך {quotePrice} ₪
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid grid-cols-2 gap-4 py-6">
+        <div className="grid grid-cols-2 gap-6 py-8">
           <Button
             variant="outline"
-            className="flex flex-col items-center gap-2 py-6 hover:bg-blue-50 border-blue-200"
+            className="flex flex-col items-center gap-3 py-8 hover:bg-blue-50 border-blue-200"
             onClick={() => onSelectPaymentMethod('cash')}
           >
-            <Banknote className="h-10 w-10 text-green-600" />
-            <span className="font-medium">במזומן</span>
-            <span className="text-xs text-gray-500">תשלום ישיר לבעל המקצוע</span>
+            <Banknote className="h-12 w-12 text-green-600" />
+            <span className="font-medium text-lg">במזומן</span>
+            <span className="text-sm text-gray-500">תשלום ישיר לבעל המקצוע</span>
           </Button>
           
           <Button
             variant="outline"
-            className="flex flex-col items-center gap-2 py-6 hover:bg-blue-50 border-blue-200"
+            className="flex flex-col items-center gap-3 py-8 hover:bg-blue-50 border-blue-200"
             onClick={() => onSelectPaymentMethod('credit')}
           >
-            <CreditCard className="h-10 w-10 text-blue-600" />
-            <span className="font-medium">אשראי</span>
-            <span className="text-xs text-gray-500">תשלום מאובטח דרך האתר</span>
+            <CreditCard className="h-12 w-12 text-blue-600" />
+            <span className="font-medium text-lg">אשראי</span>
+            <span className="text-sm text-gray-500">תשלום מאובטח דרך האתר</span>
           </Button>
         </div>
         
-        <DialogFooter className="sm:justify-center">
+        <DialogFooter className="sm:justify-center pt-2">
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { QuoteInterface } from '@/types/dashboard';
 import { getProfessional } from '@/services/professionals';
@@ -22,6 +23,8 @@ export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInt
       return [];
     }
     
+    console.log('Raw quotes data:', data);
+    
     // Fetch professional details for each quote
     const quotes = await Promise.all(
       data.map(async (quote: any) => {
@@ -39,7 +42,8 @@ export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInt
             price: quote.price,
             estimatedTime: quote.estimated_time || '',
             description: quote.description,
-            status: quote.status
+            status: quote.status,
+            sampleImageUrl: quote.sample_image_url || null
           };
         } catch (err) {
           console.error(`Error processing quote:`, err);
@@ -49,7 +53,9 @@ export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInt
     );
     
     // Filter out any null quotes (where professional wasn't found)
-    return quotes.filter(quote => quote !== null) as QuoteInterface[];
+    const validQuotes = quotes.filter(quote => quote !== null) as QuoteInterface[];
+    console.log('Processed quotes:', validQuotes);
+    return validQuotes;
   } catch (error) {
     console.error('Error fetching quotes for request:', error);
     return [];
@@ -63,6 +69,7 @@ export const createQuote = async (quoteData: {
   price: string;
   estimatedTime?: string;
   description: string;
+  sampleImageUrl?: string;
 }): Promise<string | null> => {
   try {
     // We need to use "as any" to bypass TypeScript's type checking
@@ -74,6 +81,7 @@ export const createQuote = async (quoteData: {
         price: quoteData.price,
         estimated_time: quoteData.estimatedTime || null,
         description: quoteData.description,
+        sample_image_url: quoteData.sampleImageUrl || null,
         status: 'pending'
       })
       .select('id')

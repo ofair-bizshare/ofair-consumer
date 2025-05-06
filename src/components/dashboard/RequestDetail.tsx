@@ -1,9 +1,11 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Clock, CheckCircle, AlertCircle, Star } from 'lucide-react';
+import { Clock, CheckCircle, AlertCircle, Star, Trash2 } from 'lucide-react';
 import { RequestInterface, QuoteInterface } from '@/types/dashboard';
 import QuotesList from './QuotesList';
+import { useToast } from '@/hooks/use-toast';
+import { deleteRequest } from '@/services/requests';
 
 interface RequestDetailProps {
   request: RequestInterface;
@@ -11,6 +13,7 @@ interface RequestDetailProps {
   onAcceptQuote: (quoteId: string) => void;
   onRejectQuote: (quoteId: string) => void;
   onViewProfile: (professionalId: string) => void;
+  onRefresh?: () => void;
 }
 
 const RequestDetail: React.FC<RequestDetailProps> = ({ 
@@ -18,8 +21,11 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
   quotes, 
   onAcceptQuote, 
   onRejectQuote, 
-  onViewProfile 
+  onViewProfile,
+  onRefresh
 }) => {
+  const { toast } = useToast();
+  
   // Find the accepted quote (if any)
   const acceptedQuote = quotes.find(q => q.status === 'accepted');
   
@@ -28,7 +34,41 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
     if (!acceptedQuote) return '#';
     const phone = acceptedQuote.professional.phoneNumber || 
                   acceptedQuote.professional.phone || '';
+    // Use the sanitized phone number in the link
     return `https://review.ofair.co.il/${phone.replace(/[^0-9]/g, '')}`;
+  };
+  
+  const handleDeleteRequest = async () => {
+    if (!request.id) return;
+    
+    try {
+      const success = await deleteRequest(request.id);
+      
+      if (success) {
+        toast({
+          title: "הבקשה נמחקה",
+          description: "הבקשה נמחקה בהצלחה מהמערכת",
+          variant: "default",
+        });
+        
+        if (onRefresh) {
+          onRefresh();
+        }
+      } else {
+        toast({
+          title: "שגיאה במחיקת הבקשה",
+          description: "אירעה שגיאה במחיקת הבקשה, אנא נסה שוב",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting request:", error);
+      toast({
+        title: "שגיאה במחיקת הבקשה",
+        description: "אירעה שגיאה במחיקת הבקשה, אנא נסה שוב",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -71,7 +111,18 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
             </p>
             <Button 
               className="bg-amber-500 hover:bg-amber-600 text-white"
-              onClick={() => window.open(getReviewLink(), '_blank')}
+              onClick={() => {
+                const reviewUrl = getReviewLink();
+                if (reviewUrl !== '#') {
+                  window.open(reviewUrl, '_blank');
+                } else {
+                  toast({
+                    title: "לא ניתן לפתוח דף דירוג",
+                    description: "מספר הטלפון של בעל המקצוע אינו זמין",
+                    variant: "destructive",
+                  });
+                }
+              }}
             >
               <Star className="h-4 w-4 ml-1" />
               דרג את בעל המקצוע
@@ -86,14 +137,16 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
           <Button 
             variant="outline" 
             size="sm"
-            className="text-red-500 border-red-200 hover:bg-red-50"
+            className="text-red-500 border-red-200 hover:bg-red-50 flex items-center gap-1"
+            onClick={handleDeleteRequest}
           >
+            <Trash2 className="h-4 w-4" />
             מחק בקשה
           </Button>
         </div>
       </div>
       
-      {quotes.length > 0 ? (
+      {quotes && quotes.length > 0 ? (
         <div>
           <h3 className="text-xl font-semibold mb-4">הצעות מחיר שהתקבלו</h3>
           <QuotesList 
@@ -104,20 +157,24 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
           />
         </div>
       ) : (
-        <NoQuotesMessage />
+        <NoQuotesMessage onRefresh={onRefresh} />
       )}
     </div>
   );
 };
 
-const NoQuotesMessage = () => (
+const NoQuotesMessage = ({ onRefresh }: { onRefresh?: () => void }) => (
   <div className="text-center py-12 glass-card">
     <AlertCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
     <h3 className="text-xl font-semibold text-gray-700 mb-2">אין הצעות מחיר עדיין</h3>
     <p className="text-gray-500 mb-4">
       עדיין לא התקבלו הצעות מחיר לבקשה זו. בדרך כלל לוקח 24-48 שעות לקבלת הצעות.
     </p>
-    <Button variant="outline" className="border-[#00D09E] text-[#00D09E] hover:bg-[#00D09E]/10">
+    <Button 
+      variant="outline" 
+      className="border-[#00D09E] text-[#00D09E] hover:bg-[#00D09E]/10"
+      onClick={onRefresh}
+    >
       רענן
     </Button>
   </div>
