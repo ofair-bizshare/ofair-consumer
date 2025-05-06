@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { RequestInterface } from '@/types/dashboard';
 
@@ -130,10 +129,11 @@ export const getRequestById = async (id: string): Promise<RequestInterface | nul
 // Update request status
 export const updateRequestStatus = async (id: string, status: string): Promise<boolean> => {
   try {
+    console.log(`Updating request ${id} status to ${status}`);
     // We need to use "as any" to bypass TypeScript's type checking
     const { error } = await supabase
       .from('requests' as any)
-      .update({ status, updated_at: new Date() })
+      .update({ status, updated_at: new Date().toISOString() })
       .eq('id', id);
       
     if (error) {
@@ -141,6 +141,7 @@ export const updateRequestStatus = async (id: string, status: string): Promise<b
       return false;
     }
     
+    console.log(`Request ${id} status updated to ${status} successfully`);
     return true;
   } catch (error) {
     console.error('Error updating request status:', error);

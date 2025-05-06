@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { fetchQuotesForRequest, updateQuoteStatus } from '@/services/quotes';
@@ -40,6 +41,19 @@ export const useQuotes = (selectedRequestId: string | null) => {
   }, [fetchQuotes]);
 
   const handleAcceptQuote = async (quoteId: string) => {
+    // Get the quote that's being considered
+    const quote = quotes.find(q => q.id === quoteId);
+    
+    // If the quote is already accepted, don't show the payment dialog again
+    if (quote?.status === 'accepted') {
+      toast({
+        title: "הצעה זו כבר אושרה",
+        description: "הצעת המחיר הזו כבר אושרה בעבר.",
+        variant: "default",
+      });
+      return;
+    }
+    
     // Store the quote ID and show payment preference dialog
     setSelectedQuoteId(quoteId);
     setShowPaymentDialog(true);
@@ -115,7 +129,7 @@ export const useQuotes = (selectedRequestId: string | null) => {
         user_id: user.id,
         professional_id: acceptedQuote.professional.id,
         professional_name: acceptedQuote.professional.name,
-        phone_number: acceptedQuote.professional.phoneNumber || "050-1234567",
+        phone_number: acceptedQuote.professional.phoneNumber || acceptedQuote.professional.phone || "050-1234567",
         date: new Date().toISOString(),
         status: "accepted_quote",
         profession: acceptedQuote.professional.profession,

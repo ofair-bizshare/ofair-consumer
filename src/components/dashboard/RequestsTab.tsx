@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/providers/AuthProvider';
@@ -38,6 +37,13 @@ const RequestsTab: React.FC = () => {
   
   const selectedRequest = requests.find(r => r.id === selectedRequestId);
   const selectedQuote = selectedQuoteId ? quotes.find(q => q.id === selectedQuoteId) : null;
+
+  // After a component refresh, automatically refresh quotes to ensure we have the latest status
+  useEffect(() => {
+    if (selectedRequestId) {
+      refreshQuotes(selectedRequestId);
+    }
+  }, [selectedRequestId, refreshQuotes]);
 
   useEffect(() => {
     if (selectedRequestId && selectedRequestRef.current) {
