@@ -1,5 +1,6 @@
 
 
+
 // Request status types
 export type RequestStatus = 'active' | 'completed' | 'expired' | 'canceled' | 'waiting_for_rating';
 
@@ -18,6 +19,7 @@ export interface ProfessionalInterface {
   rating?: number;
   reviewCount?: number;
   is_verified?: boolean;
+  verified?: boolean; // Added this property as it's being used in SearchResults.tsx
   about?: string;
   location?: string;
   specialties?: string[];
@@ -84,6 +86,11 @@ export interface ArticleInterface {
   updated_at?: string;
   published: boolean;
   category?: string;
+  // Adding missing properties used in ArticleDetail.tsx
+  excerpt?: string;
+  date?: string;
+  categoryLabel?: string;
+  readTime?: string;
 }
 
 // User Profile interface
@@ -119,3 +126,4 @@ export interface UserMessageInterface {
   created_at: string;
   updated_at: string;
 }
+

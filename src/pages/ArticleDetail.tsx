@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -114,9 +115,9 @@ const ArticleDetail = () => {
       <main className="flex-grow pt-24 pb-12">
         <Helmet>
           <title>{`${article.title} | oFair`}</title>
-          <meta name="description" content={article.excerpt} />
+          <meta name="description" content={article.summary || article.excerpt || ''} />
           <meta property="og:title" content={article.title} />
-          <meta property="og:description" content={article.excerpt} />
+          <meta property="og:description" content={article.summary || article.excerpt || ''} />
           <meta property="og:image" content={article.image || ''} />
         </Helmet>
 
@@ -135,12 +136,12 @@ const ArticleDetail = () => {
             <div className="flex flex-wrap items-center text-gray-500 text-sm gap-4 mb-4">
               <div className="flex items-center">
                 <Calendar className="h-4 w-4 ml-1" />
-                <span>{article.date}</span>
+                <span>{article.date || new Date(article.created_at).toLocaleDateString('he-IL')}</span>
               </div>
-              {article.categoryLabel && (
+              {article.category && (
                 <div className="flex items-center">
                   <Tag className="h-4 w-4 ml-1" />
-                  <span>{article.categoryLabel}</span>
+                  <span>{article.categoryLabel || article.category}</span>
                 </div>
               )}
               {article.author && (
@@ -151,7 +152,7 @@ const ArticleDetail = () => {
               )}
               <div className="flex items-center">
                 <Clock className="h-4 w-4 ml-1" />
-                <span>זמן קריאה: {article.readTime}</span>
+                <span>זמן קריאה: {article.readTime || '3 דקות'}</span>
               </div>
             </div>
           </div>

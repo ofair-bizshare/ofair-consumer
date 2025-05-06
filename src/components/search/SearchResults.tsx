@@ -55,8 +55,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               image={professional.image || 'https://images.unsplash.com/photo-1514539079130-25950c84af65?auto=format&fit=crop&q=80&w=800&h=450'}
               specialties={professional.specialties || []}
               phoneNumber={professional.phone || professional.phoneNumber}
-              verified={professional.verified}
-              onPhoneReveal={() => handlePhoneReveal(professional.name)}
+              verified={professional.verified || professional.is_verified}
             />
           ))}
         </div>
