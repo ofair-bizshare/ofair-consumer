@@ -64,15 +64,15 @@ export const useReferrals = (userId: string | undefined) => {
 
   // Function to merge local and remote referrals
   const mergeReferrals = useCallback((remoteReferrals: ReferralInterface[], localReferrals: ReferralInterface[]) => {
-    // Create a map of existing remote referrals by professionalId
-    const remoteMap = new Map(remoteReferrals.map(r => [r.professionalId, r]));
+    // Create a map of existing remote referrals by professional_id
+    const remoteMap = new Map(remoteReferrals.map(r => [r.professional_id, r]));
     
     // Add local-only referrals to the result
     const mergedReferrals = [...remoteReferrals];
     
     for (const localRef of localReferrals) {
       // If this professional isn't in the remote data, add the local entry
-      if (!remoteMap.has(localRef.professionalId)) {
+      if (!remoteMap.has(localRef.professional_id)) {
         mergedReferrals.push(localRef);
       }
     }
@@ -117,13 +117,13 @@ export const useReferrals = (userId: string | undefined) => {
             const formattedReferrals: ReferralInterface[] = data.map(item => ({
               id: item.id,
               user_id: item.user_id,
-              professionalId: item.professional_id,
-              professionalName: item.professional_name,
-              phoneNumber: item.phone_number,
+              professional_id: item.professional_id,
+              professional_name: item.professional_name,
+              phone_number: item.phone_number,
               date: item.date ? new Date(item.date).toLocaleDateString('he-IL') : 'תאריך לא ידוע',
               status: item.status || 'new',
               profession: item.profession || 'בעל מקצוע',
-              completedWork: item.completed_work || false
+              completed_work: item.completed_work || false
             }));
             
             // Save all remote referrals to local storage as backup
@@ -243,15 +243,15 @@ export const useReferrals = (userId: string | undefined) => {
     if (!userId) return null;
     
     // Check if the professional ID is in UUID format, if not, convert it
-    const professionalId = isValidUUID(referral.professionalId) 
-      ? referral.professionalId 
-      : ensureUUID(referral.professionalId);
+    const professional_id = isValidUUID(referral.professional_id!) 
+      ? referral.professional_id 
+      : ensureUUID(referral.professional_id!);
     
     const newReferral: ReferralInterface = {
       id: `local-${Date.now()}`,
       date: new Date().toLocaleDateString('he-IL'),
       ...referral,
-      professionalId
+      professional_id
     };
     
     // Update local state
@@ -260,18 +260,18 @@ export const useReferrals = (userId: string | undefined) => {
     // Save to localStorage
     saveLocalReferral(newReferral);
     
-    // Try to save to Supabase only if professionalId is a valid UUID
-    if (isValidUUID(professionalId)) {
+    // Try to save to Supabase only if professional_id is a valid UUID
+    if (isValidUUID(professional_id!)) {
       try {
         const dbReferral = {
           user_id: userId,
-          professional_id: professionalId,
-          professional_name: referral.professionalName,
-          phone_number: referral.phoneNumber,
+          professional_id: professional_id,
+          professional_name: referral.professional_name,
+          phone_number: referral.phone_number,
           date: new Date().toISOString(),
           status: referral.status || "new",
           profession: referral.profession || "בעל מקצוע",
-          completed_work: referral.completedWork || false
+          completed_work: referral.completed_work || false
         };
         
         console.log("Attempting to save referral to database:", dbReferral);
@@ -292,21 +292,21 @@ export const useReferrals = (userId: string | undefined) => {
         console.error('Error preparing referral for database:', error);
       }
     } else {
-      console.log("Skipping database insert for non-UUID professional ID:", referral.professionalId);
+      console.log("Skipping database insert for non-UUID professional ID:", referral.professional_id);
     }
     
     return newReferral;
   };
 
-  const checkExistingReferral = async (professionalId: string): Promise<boolean> => {
+  const checkExistingReferral = async (professional_id: string): Promise<boolean> => {
     if (!userId) return false;
     
-    console.log("Checking existing referral for user:", userId, "and professional:", professionalId);
+    console.log("Checking existing referral for user:", userId, "and professional:", professional_id);
     
     try {
       // First check locally
       const localReferrals = loadLocalReferrals();
-      const existingLocalReferral = localReferrals.find(r => r.professionalId === professionalId);
+      const existingLocalReferral = localReferrals.find(r => r.professional_id === professional_id);
       
       if (existingLocalReferral) {
         console.log("Found existing local referral:", existingLocalReferral);
@@ -314,9 +314,9 @@ export const useReferrals = (userId: string | undefined) => {
       }
       
       // Convert to UUID format if needed
-      const formattedProfessionalId = isValidUUID(professionalId) 
-        ? professionalId 
-        : ensureUUID(professionalId);
+      const formattedProfessionalId = isValidUUID(professional_id) 
+        ? professional_id 
+        : ensureUUID(professional_id);
       
       // Then check in database
       try {

@@ -1,4 +1,5 @@
 
+
 // Request status types
 export type RequestStatus = 'active' | 'completed' | 'expired' | 'canceled' | 'waiting_for_rating';
 
@@ -67,4 +68,54 @@ export interface ReferralInterface {
   date: string;
   status?: string;
   completed_work?: boolean;
+  professional_id?: string;
+  user_id?: string;
+}
+
+// Article interface
+export interface ArticleInterface {
+  id: string;
+  title: string;
+  content: string;
+  summary?: string;
+  author?: string;
+  image?: string;
+  created_at: string;
+  updated_at?: string;
+  published: boolean;
+  category?: string;
+}
+
+// User Profile interface
+export interface UserProfileInterface {
+  id: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  profile_image?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Admin User interface
+export interface AdminUserInterface {
+  id: string;
+  user_id: string;
+  is_super_admin: boolean;
+  created_at: string;
+  updated_at?: string;
+}
+
+// User Message interface
+export interface UserMessageInterface {
+  id: string;
+  sender_id: string;
+  recipient_id?: string;
+  recipient_email?: string;
+  subject: string;
+  content: string;
+  read: boolean;
+  created_at: string;
+  updated_at: string;
 }

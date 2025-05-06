@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,6 @@ import { QuoteInterface } from '@/types/dashboard';
 import QuoteDetailDialog from './QuoteDetailDialog';
 import QuoteCancelDialog from './QuoteCancelDialog';
 import PhoneRevealButton from '@/components/PhoneRevealButton';
-import Image from 'next/image';
 
 interface QuoteCardProps {
   quote: QuoteInterface;

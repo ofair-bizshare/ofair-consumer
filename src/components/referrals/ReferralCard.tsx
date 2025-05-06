@@ -17,7 +17,7 @@ const ReferralCard: React.FC<ReferralCardProps> = ({ referral, onMarkContacted }
         <div className="p-5">
           <div className="flex justify-between items-start mb-3">
             <div>
-              <h3 className="text-lg font-semibold">{referral.professionalName}</h3>
+              <h3 className="text-lg font-semibold">{referral.professional_name}</h3>
               <p className="text-gray-500 text-sm">{referral.profession || "בעל מקצוע"}</p>
             </div>
             <div className="flex items-center text-sm">
@@ -32,7 +32,7 @@ const ReferralCard: React.FC<ReferralCardProps> = ({ referral, onMarkContacted }
           <div className="text-gray-700 mb-3">
             <div className="flex items-center mb-1">
               <Phone className="h-4 w-4 text-[#00D09E] ml-2" />
-              <p className="font-medium">{referral.phoneNumber}</p>
+              <p className="font-medium">{referral.phone_number}</p>
             </div>
             <p className="text-sm text-gray-500">{referral.date}</p>
           </div>
@@ -42,7 +42,7 @@ const ReferralCard: React.FC<ReferralCardProps> = ({ referral, onMarkContacted }
               variant="outline" 
               size="sm" 
               className="text-blue-700 border-blue-200 hover:bg-blue-50" 
-              onClick={() => window.open(`/professional/${referral.professionalId}`, '_blank')}
+              onClick={() => window.open(`/professional/${referral.professional_id}`, '_blank')}
             >
               <Eye size={16} className="ml-1" />
               צפה בפרופיל
@@ -52,7 +52,7 @@ const ReferralCard: React.FC<ReferralCardProps> = ({ referral, onMarkContacted }
               <Button 
                 size="sm" 
                 className="bg-[#00D09E] hover:bg-[#00C090]" 
-                onClick={() => onMarkContacted(referral.id!)}
+                onClick={() => onMarkContacted(referral.id)}
               >
                 סמן כנוצר קשר
               </Button>

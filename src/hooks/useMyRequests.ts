@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/providers/AuthProvider';
 import { fetchUserRequests, updateRequestStatus, deleteRequest } from '@/services/requests';
-import { RequestInterface } from '@/types/dashboard';
+import { RequestInterface, RequestStatus } from '@/types/dashboard';
 import { countQuotesForRequest } from '@/services/quotes';
 
 export const useMyRequests = () => {
@@ -38,7 +38,7 @@ export const useMyRequests = () => {
           return {
             ...request,
             quotesCount: count
-          };
+          } as RequestInterface;
         })
       );
       
@@ -58,7 +58,7 @@ export const useMyRequests = () => {
   const handleCancelRequest = async (id: string) => {
     if (window.confirm('האם אתה בטוח שברצונך לבטל את הבקשה?')) {
       // Update status in the database
-      const success = await updateRequestStatus(id, 'canceled');
+      const success = await updateRequestStatus(id, 'canceled' as RequestStatus);
       
       if (!success) {
         toast({
@@ -71,7 +71,7 @@ export const useMyRequests = () => {
       
       // Update local state
       const updatedRequests = requests.map(req => 
-        req.id === id ? {...req, status: 'canceled'} : req
+        req.id === id ? {...req, status: 'canceled' as RequestStatus} : req
       );
       
       setRequests(updatedRequests);
