@@ -151,7 +151,7 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
             id: acceptedQuote.professional.id,
             name: acceptedQuote.professional.name,
             phone: acceptedQuote.professional.phoneNumber || acceptedQuote.professional.phone || '',
-            companyName: acceptedQuote.professional.companyName
+            companyName: acceptedQuote.professional.company_name || ''  // Changed from companyName to company_name
           }}
           requestId={request.id}
           onRatingComplete={onRefresh}

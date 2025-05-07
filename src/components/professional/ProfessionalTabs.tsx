@@ -12,7 +12,8 @@ interface Project {
   location: string;
 }
 
-interface Review {
+// Renamed to TabReview to avoid name conflict
+interface TabReview {
   id: number;
   author: string;
   rating: number;
@@ -22,10 +23,15 @@ interface Review {
 
 interface ProfessionalTabsProps {
   projects: Project[];
-  reviews: Review[];
+  reviews: TabReview[];
+  professional?: { // Added professional prop to pass to the reviews component
+    id: string;
+    phone?: string;
+    phoneNumber?: string;
+  };
 }
 
-const ProfessionalTabs: React.FC<ProfessionalTabsProps> = ({ projects, reviews }) => {
+const ProfessionalTabs: React.FC<ProfessionalTabsProps> = ({ projects, reviews, professional }) => {
   return (
     <Tabs defaultValue="projects" className="w-full mb-6">
       <TabsList className="w-full bg-blue-50">
@@ -38,7 +44,17 @@ const ProfessionalTabs: React.FC<ProfessionalTabsProps> = ({ projects, reviews }
       </TabsContent>
       
       <TabsContent value="reviews" className="mt-4">
-        <ProfessionalReviews reviews={reviews} />
+        <ProfessionalReviews 
+          reviews={reviews.map(review => ({
+            // Convert from TabReview to the format expected by ProfessionalReviews
+            id: String(review.id), // Convert number id to string
+            author: review.author,
+            rating: review.rating,
+            date: review.date, 
+            comment: review.comment
+          }))}
+          professional={professional || { id: '' }}
+        />
       </TabsContent>
     </Tabs>
   );

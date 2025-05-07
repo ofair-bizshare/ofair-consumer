@@ -40,6 +40,11 @@ const ProfessionalProfileContent: React.FC<ProfessionalProfileContentProps> = ({
           <ProfessionalTabs 
             projects={professional.projects} 
             reviews={professional.reviews} 
+            professional={{
+              id: professional.id,
+              phone: professional.contactInfo?.phone,
+              phoneNumber: professional.contactInfo?.phone
+            }}
           />
         </div>
       </div>

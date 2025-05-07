@@ -1,6 +1,3 @@
-
-
-
 // Request status types
 export type RequestStatus = 'active' | 'completed' | 'expired' | 'canceled' | 'waiting_for_rating';
 
@@ -23,6 +20,8 @@ export interface ProfessionalInterface {
   about?: string;
   location?: string;
   specialties?: string[];
+  company_name?: string; // Added company_name field
+  companyName?: string; // Added companyName for backward compatibility
 }
 
 // Quote interface
@@ -126,4 +125,3 @@ export interface UserMessageInterface {
   created_at: string;
   updated_at: string;
 }
-
