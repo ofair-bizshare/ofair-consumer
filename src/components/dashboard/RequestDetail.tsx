@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Clock, CheckCircle, AlertCircle, Star, Trash2 } from 'lucide-react';
 import { RequestInterface, QuoteInterface } from '@/types/dashboard';
 import QuotesList from './QuotesList';
 import { useToast } from '@/hooks/use-toast';
 import { deleteRequest } from '@/services/requests';
+import ProfessionalRatingDialog from './rating/ProfessionalRatingDialog';
 
 interface RequestDetailProps {
   request: RequestInterface;
@@ -25,18 +26,10 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
   onRefresh
 }) => {
   const { toast } = useToast();
+  const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
   
   // Find the accepted quote (if any)
   const acceptedQuote = quotes.find(q => q.status === 'accepted');
-  
-  // Generate review link with professional phone number
-  const getReviewLink = () => {
-    if (!acceptedQuote) return '#';
-    const phone = acceptedQuote.professional.phoneNumber || 
-                  acceptedQuote.professional.phone || '';
-    // Use the sanitized phone number in the link
-    return `https://review.ofair.co.il/${phone.replace(/[^0-9]/g, '')}`;
-  };
   
   const handleDeleteRequest = async () => {
     if (!request.id) return;
@@ -103,7 +96,7 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
           {request.description}
         </p>
         
-        {/* Show review button when status is waiting_for_rating */}
+        {/* Show rating button when status is waiting_for_rating */}
         {request.status === 'waiting_for_rating' && acceptedQuote && (
           <div className="my-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
             <p className="text-amber-800 mb-3 text-sm">
@@ -111,18 +104,7 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
             </p>
             <Button 
               className="bg-amber-500 hover:bg-amber-600 text-white"
-              onClick={() => {
-                const reviewUrl = getReviewLink();
-                if (reviewUrl !== '#') {
-                  window.open(reviewUrl, '_blank');
-                } else {
-                  toast({
-                    title: "לא ניתן לפתוח דף דירוג",
-                    description: "מספר הטלפון של בעל המקצוע אינו זמין",
-                    variant: "destructive",
-                  });
-                }
-              }}
+              onClick={() => setIsRatingDialogOpen(true)}
             >
               <Star className="h-4 w-4 ml-1" />
               דרג את בעל המקצוע
@@ -158,6 +140,22 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
         </div>
       ) : (
         <NoQuotesMessage onRefresh={onRefresh} />
+      )}
+      
+      {/* Professional Rating Dialog */}
+      {acceptedQuote && (
+        <ProfessionalRatingDialog
+          open={isRatingDialogOpen}
+          onOpenChange={setIsRatingDialogOpen}
+          professional={{
+            id: acceptedQuote.professional.id,
+            name: acceptedQuote.professional.name,
+            phone: acceptedQuote.professional.phoneNumber || acceptedQuote.professional.phone || '',
+            companyName: acceptedQuote.professional.companyName
+          }}
+          requestId={request.id}
+          onRatingComplete={onRefresh}
+        />
       )}
     </div>
   );
