@@ -6,6 +6,7 @@ import { getProfessional } from '@/services/professionals';
 // Fetch quotes for a specific request
 export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInterface[]> => {
   try {
+    console.log(`Fetching quotes for request: ${requestId}`);
     // We need to use "as any" to bypass TypeScript's type checking for tables that aren't in the generated types
     const { data, error } = await supabase
       .from('quotes' as any)
@@ -23,7 +24,7 @@ export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInt
       return [];
     }
     
-    console.log('Raw quotes data:', data);
+    console.log(`Found ${data.length} quotes for request ${requestId}`);
     
     // Fetch professional details for each quote
     const quotes = await Promise.all(
@@ -72,6 +73,7 @@ export const createQuote = async (quoteData: {
   sampleImageUrl?: string;
 }): Promise<string | null> => {
   try {
+    console.log('Creating new quote:', quoteData);
     // We need to use "as any" to bypass TypeScript's type checking
     const { data, error } = await supabase
       .from('quotes' as any)
@@ -82,7 +84,9 @@ export const createQuote = async (quoteData: {
         estimated_time: quoteData.estimatedTime || null,
         description: quoteData.description,
         sample_image_url: quoteData.sampleImageUrl || null,
-        status: 'pending'
+        status: 'pending',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
       .select('id')
       .single();
@@ -105,18 +109,24 @@ export const createQuote = async (quoteData: {
 export const updateQuoteStatus = async (id: string, status: string): Promise<boolean> => {
   try {
     console.log(`Updating quote ${id} status to ${status}`);
+    const timestamp = new Date().toISOString();
+    
     // We need to use "as any" to bypass TypeScript's type checking
-    const { error } = await supabase
+    const { error, data } = await supabase
       .from('quotes' as any)
-      .update({ status, updated_at: new Date().toISOString() })
-      .eq('id', id);
+      .update({ 
+        status, 
+        updated_at: timestamp 
+      })
+      .eq('id', id)
+      .select();
       
     if (error) {
       console.error('Error updating quote status:', error);
       return false;
     }
     
-    console.log(`Quote ${id} status updated to ${status} successfully`);
+    console.log(`Quote ${id} status updated to ${status} successfully:`, data);
     return true;
   } catch (error) {
     console.error('Error updating quote status:', error);

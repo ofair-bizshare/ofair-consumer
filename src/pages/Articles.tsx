@@ -12,6 +12,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { useDebounce } from '@/hooks/useDebounce';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const Articles = () => {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -171,34 +172,36 @@ const Articles = () => {
             </div>
           </div>
           
-          {/* Redesigned filter tabs */}
+          {/* Improved filter tabs with ScrollArea */}
           <div className="mb-8">
-            <div className="rounded-xl shadow-md bg-white overflow-hidden">
-              <div className="overflow-x-auto scrollbar-hide py-2 border-b border-gray-100">
-                <ToggleGroup 
-                  type="single" 
-                  value={activeTab}
-                  onValueChange={(value) => value && handleTabChange(value)}
-                  className="flex w-max px-4 py-2 gap-1"
-                >
-                  {categories.map((category) => (
-                    <ToggleGroupItem 
-                      key={category.value} 
-                      value={category.value}
-                      className={`transition-all flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium ${
-                        activeTab === category.value ? 
-                        'bg-gradient-to-r from-teal-500 to-teal-400 text-white shadow-sm' : 
-                        'text-gray-700 hover:bg-gray-100'
-                      }`}
-                      aria-label={category.label}
-                    >
-                      {category.icon}
-                      <span>{category.label}</span>
-                    </ToggleGroupItem>
-                  ))}
-                </ToggleGroup>
-              </div>
-            </div>
+            <Card className="rounded-xl shadow-md overflow-hidden border-0">
+              <ScrollArea className="w-full py-2 border-b border-gray-100">
+                <div className="min-w-full px-4 py-2">
+                  <ToggleGroup 
+                    type="single" 
+                    value={activeTab}
+                    onValueChange={(value) => value && handleTabChange(value)}
+                    className="flex gap-2 min-w-max"
+                  >
+                    {categories.map((category) => (
+                      <ToggleGroupItem 
+                        key={category.value} 
+                        value={category.value}
+                        className={`transition-all flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap ${
+                          activeTab === category.value ? 
+                          'bg-gradient-to-r from-teal-500 to-teal-400 text-white shadow-sm' : 
+                          'text-gray-700 hover:bg-gray-100'
+                        }`}
+                        aria-label={category.label}
+                      >
+                        {category.icon}
+                        <span>{category.label}</span>
+                      </ToggleGroupItem>
+                    ))}
+                  </ToggleGroup>
+                </div>
+              </ScrollArea>
+            </Card>
           </div>
           
           {isLoading ? (

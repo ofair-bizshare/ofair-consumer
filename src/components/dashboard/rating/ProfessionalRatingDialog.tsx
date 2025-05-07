@@ -7,6 +7,7 @@ import { Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/providers/AuthProvider';
 import { updateRequestStatus } from '@/services/requests';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ProfessionalRatingDialogProps {
   open: boolean;
@@ -208,111 +209,113 @@ const ProfessionalRatingDialog: React.FC<ProfessionalRatingDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] p-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-2 sticky top-0 bg-white z-10">
           <DialogTitle className="text-center text-xl mb-2">
             דרג את {professional.name}
           </DialogTitle>
-          <p className="text-center text-gray-600 mb-4">
+          <p className="text-center text-gray-600">
             הדירוג שלך יעזור ללקוחות אחרים לבחור את בעל המקצוע המתאים
           </p>
         </DialogHeader>
         
-        <div className="space-y-6">
-          {/* Personal Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                שם מלא*
-              </label>
-              <input
-                type="text"
-                className="w-full px-3 py-2 border rounded-md"
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
-                required
-              />
+        <ScrollArea className="max-h-[60vh] px-6">
+          <div className="space-y-6 py-4">
+            {/* Personal Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  שם מלא*
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border rounded-md"
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  טלפון*
+                </label>
+                <input
+                  type="tel"
+                  className="w-full px-3 py-2 border rounded-md"
+                  value={userPhone}
+                  onChange={(e) => setUserPhone(e.target.value)}
+                  required
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                טלפון*
-              </label>
-              <input
-                type="tel"
-                className="w-full px-3 py-2 border rounded-md"
-                value={userPhone}
-                onChange={(e) => setUserPhone(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-          
-          {/* Rating Criteria */}
-          <div className="space-y-4">
-            {ratingCriteria.map((criterion) => (
-              <div key={criterion.id} className="bg-gray-50 p-4 rounded-md">
-                <div className="flex justify-between items-center mb-2">
-                  <div className="flex items-center">
-                    <span className="ml-2 text-lg">{criterion.icon}</span>
-                    <label className="text-sm font-medium">{criterion.name}</label>
+            
+            {/* Rating Criteria */}
+            <div className="space-y-4">
+              {ratingCriteria.map((criterion) => (
+                <div key={criterion.id} className="bg-gray-50 p-4 rounded-md">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center">
+                      <span className="ml-2 text-lg">{criterion.icon}</span>
+                      <label className="text-sm font-medium">{criterion.name}</label>
+                    </div>
+                    <span className="text-xs text-gray-500">
+                      (משקל: {criterion.weight})
+                    </span>
                   </div>
-                  <span className="text-xs text-gray-500">
-                    (משקל: {criterion.weight})
-                  </span>
+                  <div className="flex justify-center space-x-reverse space-x-1">
+                    {[5, 4, 3, 2, 1].map((rating) => (
+                      <button
+                        key={rating}
+                        type="button"
+                        className="p-1 rounded-full focus:outline-none"
+                        onClick={() => handleRatingChange(criterion.id, rating)}
+                      >
+                        <Star
+                          className={`h-8 w-8 ${
+                            ratings[criterion.id] >= rating
+                              ? 'fill-yellow-400 text-yellow-400'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex justify-center space-x-reverse space-x-1">
-                  {[5, 4, 3, 2, 1].map((rating) => (
-                    <button
-                      key={rating}
-                      type="button"
-                      className="p-1 rounded-full focus:outline-none"
-                      onClick={() => handleRatingChange(criterion.id, rating)}
-                    >
-                      <Star
-                        className={`h-8 w-8 ${
-                          ratings[criterion.id] >= rating
-                            ? 'fill-yellow-400 text-yellow-400'
-                            : 'text-gray-300'
-                        }`}
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          {/* Text Recommendation */}
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              המלצה במילים שלך (אופציונלי)
-            </label>
-            <textarea
-              className="w-full px-3 py-2 border rounded-md h-24"
-              value={textRecommendation}
-              onChange={(e) => setTextRecommendation(e.target.value)}
-              placeholder="שתף את החוויה שלך עם בעל המקצוע..."
-            />
-          </div>
-          
-          {/* Weighted Average Display */}
-          {Object.keys(ratings).length > 0 && (
-            <div className="bg-blue-50 border border-blue-200 p-4 rounded-md">
-              <div className="text-center">
-                <p className="text-sm text-blue-700 mb-1">דירוג משוקלל</p>
-                <div className="flex justify-center items-center">
-                  <span className="text-2xl font-bold text-blue-800">
-                    {calculateWeightedAverage(ratings)}
-                  </span>
-                  <span className="text-blue-700 mx-1">/</span>
-                  <span className="text-blue-700">5</span>
-                </div>
-              </div>
+              ))}
             </div>
-          )}
-        </div>
+            
+            {/* Text Recommendation */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                המלצה במילים שלך (אופציונלי)
+              </label>
+              <textarea
+                className="w-full px-3 py-2 border rounded-md h-24"
+                value={textRecommendation}
+                onChange={(e) => setTextRecommendation(e.target.value)}
+                placeholder="שתף את החוויה שלך עם בעל המקצוע..."
+              />
+            </div>
+            
+            {/* Weighted Average Display */}
+            {Object.keys(ratings).length > 0 && (
+              <div className="bg-blue-50 border border-blue-200 p-4 rounded-md">
+                <div className="text-center">
+                  <p className="text-sm text-blue-700 mb-1">דירוג משוקלל</p>
+                  <div className="flex justify-center items-center">
+                    <span className="text-2xl font-bold text-blue-800">
+                      {calculateWeightedAverage(ratings)}
+                    </span>
+                    <span className="text-blue-700 mx-1">/</span>
+                    <span className="text-blue-700">5</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
         
-        <DialogFooter className="flex justify-between pt-4">
+        <DialogFooter className="flex justify-between p-6 border-t border-gray-100 sticky bottom-0 bg-white z-10">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}

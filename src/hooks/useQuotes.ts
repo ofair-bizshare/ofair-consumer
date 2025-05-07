@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { fetchQuotesForRequest, updateQuoteStatus } from '@/services/quotes';
@@ -30,19 +29,23 @@ export const useQuotes = (selectedRequestId: string | null) => {
     }
   }, []);
 
+  // Load quotes when selectedRequestId changes
   useEffect(() => {
     if (!selectedRequestId) return;
+    console.log("Selected request ID changed, fetching quotes:", selectedRequestId);
     fetchQuotes(selectedRequestId);
   }, [selectedRequestId, fetchQuotes]);
   
   const refreshQuotes = useCallback((requestId: string) => {
     if (!requestId) return;
+    console.log("Manually refreshing quotes for request:", requestId);
     fetchQuotes(requestId);
   }, [fetchQuotes]);
 
   const handleAcceptQuote = async (quoteId: string) => {
     // Get the quote that's being considered
     const quote = quotes.find(q => q.id === quoteId);
+    console.log("Handling accept quote:", quoteId, quote);
     
     // If the quote is already accepted, don't show the payment dialog again
     if (quote?.status === 'accepted') {
@@ -62,45 +65,60 @@ export const useQuotes = (selectedRequestId: string | null) => {
   const processQuoteAcceptance = async (quoteId: string, paymentMethod: 'cash' | 'credit') => {
     // Find the quote that's being accepted
     const acceptedQuote = quotes.find(q => q.id === quoteId);
-    if (!acceptedQuote || !user) return;
-    
-    // Update the quote status in the database
-    const success = await updateQuoteStatus(quoteId, 'accepted');
-    
-    if (!success) {
-      toast({
-        title: "שגיאה בקבלת ההצעה",
-        description: "אירעה שגיאה בקבלת ההצעה. אנא נסה שוב.",
-        variant: "destructive",
-      });
+    if (!acceptedQuote || !user) {
+      console.error("Cannot process quote acceptance: quote or user not found");
       return;
     }
     
-    // Update the request status to "waiting_for_rating"
-    await updateRequestStatus(acceptedQuote.requestId, 'waiting_for_rating');
+    console.log("Processing quote acceptance:", quoteId, "Payment method:", paymentMethod);
     
-    // Update local state - mark this quote as accepted and others for this request as rejected
-    setQuotes(prevQuotes => 
-      prevQuotes.map(quote => {
-        // The accepted quote
-        if (quote.id === quoteId) {
-          return { ...quote, status: 'accepted' };
-        }
-        // Other quotes for the same request should be rejected
-        else if (quote.requestId === acceptedQuote.requestId && quote.status === 'pending') {
-          // Update their status in the database
-          updateQuoteStatus(quote.id, 'rejected').catch(error => {
-            console.error("Error updating quote status:", error);
-          });
-          return { ...quote, status: 'rejected' };
-        }
-        // All other quotes remain unchanged
-        return quote;
-      })
-    );
-    
-    // Save the accepted quote to the database
     try {
+      // Start a transaction by updating multiple related records
+      
+      // 1. Update the quote status in the database
+      console.log("Updating quote status to 'accepted'");
+      const success = await updateQuoteStatus(quoteId, 'accepted');
+      
+      if (!success) {
+        toast({
+          title: "שגיאה בקבלת ההצעה",
+          description: "אירעה שגיאה בקבלת ההצעה. אנא נסה שוב.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // 2. Update the request status to "waiting_for_rating"
+      console.log("Updating request status to 'waiting_for_rating'");
+      const requestUpdateSuccess = await updateRequestStatus(acceptedQuote.requestId, 'waiting_for_rating');
+      
+      if (!requestUpdateSuccess) {
+        console.error("Failed to update request status");
+      }
+      
+      // 3. Update local state - mark this quote as accepted and others for this request as rejected
+      console.log("Updating local quotes state");
+      setQuotes(prevQuotes => 
+        prevQuotes.map(quote => {
+          // The accepted quote
+          if (quote.id === quoteId) {
+            return { ...quote, status: 'accepted' };
+          }
+          // Other quotes for the same request should be rejected
+          else if (quote.requestId === acceptedQuote.requestId && quote.status === 'pending') {
+            // Update their status in the database
+            updateQuoteStatus(quote.id, 'rejected').catch(error => {
+              console.error("Error updating quote status:", error);
+            });
+            return { ...quote, status: 'rejected' };
+          }
+          // All other quotes remain unchanged
+          return quote;
+        })
+      );
+      
+      // 4. Save the accepted quote to the database
+      console.log("Saving quote acceptance to database");
       const acceptedQuoteData = {
         user_id: user.id,
         quote_id: quoteId,
@@ -111,19 +129,24 @@ export const useQuotes = (selectedRequestId: string | null) => {
         date: new Date().toISOString(),
         status: 'accepted',
         description: acceptedQuote.description,
-        payment_method: paymentMethod
+        payment_method: paymentMethod,
+        created_at: new Date().toISOString() // Explicitly set created_at
       };
       
-      const { error } = await supabase
+      const { error: acceptError } = await supabase
         .from('accepted_quotes')
         .upsert(acceptedQuoteData, {
           onConflict: 'quote_id',
           ignoreDuplicates: false
         });
         
-      if (error) throw error;
+      if (acceptError) {
+        console.error("Error saving accepted quote:", acceptError);
+        throw acceptError;
+      }
       
-      // Also save phone reveal in referrals automatically
+      // 5. Also save phone reveal in referrals automatically
+      console.log("Saving referral record");
       const referral = {
         id: crypto.randomUUID(),
         user_id: user.id,
@@ -140,12 +163,13 @@ export const useQuotes = (selectedRequestId: string | null) => {
         .from('referrals')
         .insert(referral);
       
-      if (referralError) console.error("Error saving referral:", referralError);
+      if (referralError) {
+        console.error("Error saving referral:", referralError);
+      }
       
       // If payment method is credit card, redirect to payment page
       if (paymentMethod === 'credit') {
         // Here you would normally redirect to a payment page
-        // For now we'll just show a toast
         toast({
           title: "הועברת לעמוד תשלום",
           description: "עמוד התשלום ייפתח בקרוב...",
@@ -157,20 +181,33 @@ export const useQuotes = (selectedRequestId: string | null) => {
         return;
       }
       
+      toast({
+        title: "הצעה התקבלה",
+        description: "הודעה נשלחה לבעל המקצוע. הוא יצור איתך קשר בהקדם.",
+        variant: "default",
+      });
+      
+      // Refresh quotes after acceptance is complete
+      refreshQuotes(acceptedQuote.requestId);
+      
     } catch (error) {
-      console.error("Error saving accepted quote:", error);
+      console.error("Error in quote acceptance process:", error);
+      toast({
+        title: "שגיאה בתהליך קבלת ההצעה",
+        description: "אירעה שגיאה בתהליך. אנא נסה שוב מאוחר יותר.",
+        variant: "destructive",
+      });
     }
-    
-    toast({
-      title: "הצעה התקבלה",
-      description: "הודעה נשלחה לבעל המקצוע. הוא יצור איתך קשר בהקדם.",
-      variant: "default",
-    });
   };
 
   const handleRejectQuote = async (quoteId: string) => {
     const rejectedQuote = quotes.find(q => q.id === quoteId);
-    if (!rejectedQuote) return;
+    if (!rejectedQuote) {
+      console.error("Cannot reject quote: quote not found");
+      return;
+    }
+    
+    console.log("Handling reject quote:", quoteId);
     
     // Update quote status in the database
     const success = await updateQuoteStatus(quoteId, 'rejected');
@@ -186,6 +223,8 @@ export const useQuotes = (selectedRequestId: string | null) => {
     
     // If this is canceling an accepted quote
     if (rejectedQuote.status === 'accepted') {
+      console.log("Canceling previously accepted quote");
+      
       // Reset all quotes for this request to pending in the database
       const quotesToUpdate = quotes.filter(q => 
         q.requestId === rejectedQuote.requestId && q.id !== quoteId
@@ -213,6 +252,12 @@ export const useQuotes = (selectedRequestId: string | null) => {
         description: "אפשר לבחור הצעה אחרת כעת.",
         variant: "default",
       });
+      
+      // Also update the request status back to active
+      updateRequestStatus(rejectedQuote.requestId, 'active').catch(error => {
+        console.error("Error updating request status:", error);
+      });
+      
     } else {
       // Normal rejection of a quote - just update local state
       setQuotes(prevQuotes => 
@@ -229,6 +274,9 @@ export const useQuotes = (selectedRequestId: string | null) => {
         variant: "default",
       });
     }
+    
+    // Refresh quotes after rejection is complete
+    refreshQuotes(rejectedQuote.requestId);
   };
 
   const closePaymentDialog = () => {

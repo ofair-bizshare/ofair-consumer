@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/providers/AuthProvider';
@@ -38,13 +39,15 @@ const RequestsTab: React.FC = () => {
   const selectedRequest = requests.find(r => r.id === selectedRequestId);
   const selectedQuote = selectedQuoteId ? quotes.find(q => q.id === selectedQuoteId) : null;
 
-  // After a component refresh, automatically refresh quotes to ensure we have the latest status
+  // After a component refresh or when selected request changes, automatically refresh quotes
   useEffect(() => {
     if (selectedRequestId) {
+      console.log("Auto-refreshing quotes for newly selected request:", selectedRequestId);
       refreshQuotes(selectedRequestId);
     }
   }, [selectedRequestId, refreshQuotes]);
 
+  // Scroll to the selected request when it changes
   useEffect(() => {
     if (selectedRequestId && selectedRequestRef.current) {
       setTimeout(() => {
@@ -53,17 +56,27 @@ const RequestsTab: React.FC = () => {
     }
   }, [selectedRequestId]);
 
+  // Handle view professional profile
   const handleViewProfile = (professionalId: string) => {
     window.open(`/professional/${professionalId}`, '_blank');
   };
   
+  // Handle payment method selection
   const handleSelectPaymentMethod = (method: 'cash' | 'credit') => {
     if (selectedQuoteId) {
       processQuoteAcceptance(selectedQuoteId, method);
       closePaymentDialog();
+      
+      // Refresh quotes after accepting to ensure UI is up to date
+      if (selectedRequestId) {
+        setTimeout(() => {
+          refreshQuotes(selectedRequestId);
+        }, 1000); // Short delay to allow database to update
+      }
     }
   };
   
+  // Handle refresh button click
   const handleRefresh = useCallback(() => {
     refreshRequests();
     if (selectedRequestId) {
@@ -99,7 +112,11 @@ const RequestsTab: React.FC = () => {
         ) : (
           <RequestsList 
             requests={requests} 
-            onSelect={setSelectedRequestId}
+            onSelect={(id) => {
+              setSelectedRequestId(id);
+              // Auto refresh quotes when selecting a new request
+              if (id) refreshQuotes(id);
+            }}
             selectedRequestId={selectedRequestId}
           />
         )}
@@ -113,7 +130,12 @@ const RequestsTab: React.FC = () => {
             onAcceptQuote={handleAcceptQuote}
             onRejectQuote={handleRejectQuote}
             onViewProfile={handleViewProfile}
-            onRefresh={() => refreshQuotes(selectedRequest.id)}
+            onRefresh={() => {
+              if (selectedRequestId) {
+                console.log("Manual refresh of quotes triggered");
+                refreshQuotes(selectedRequestId);
+              }
+            }}
           />
         ) : (
           <EmptyRequestState 
