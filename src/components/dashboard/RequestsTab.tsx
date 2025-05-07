@@ -39,6 +39,18 @@ const RequestsTab: React.FC = () => {
   const selectedRequest = requests.find(r => r.id === selectedRequestId);
   const selectedQuote = selectedQuoteId ? quotes.find(q => q.id === selectedQuoteId) : null;
 
+  // Initial data load when component mounts
+  useEffect(() => {
+    const initialLoad = async () => {
+      await refreshRequests();
+      if (selectedRequestId) {
+        refreshQuotes(selectedRequestId);
+      }
+    };
+    
+    initialLoad();
+  }, []);
+
   // After a component refresh or when selected request changes, automatically refresh quotes
   useEffect(() => {
     if (selectedRequestId) {
@@ -70,6 +82,7 @@ const RequestsTab: React.FC = () => {
       // Refresh quotes after accepting to ensure UI is up to date
       if (selectedRequestId) {
         setTimeout(() => {
+          console.log("Refreshing quotes after payment method selection");
           refreshQuotes(selectedRequestId);
         }, 1000); // Short delay to allow database to update
       }

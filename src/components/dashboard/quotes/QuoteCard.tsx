@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,9 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [isContactActive, setIsContactActive] = useState(false);
   const [imageError, setImageError] = useState(false);
+  
+  // Ensure the price is properly formatted as a string
+  const formattedPrice = typeof quote.price === 'string' ? quote.price : String(quote.price);
   
   const handleAcceptClick = () => {
     if (quote.status === 'accepted') {
@@ -87,7 +91,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <div>
               <p className="text-sm text-gray-500 mb-1">מחיר מוצע</p>
-              <p className="font-semibold text-blue-700">{quote.price} ₪</p>
+              <p className="font-semibold text-blue-700">{formattedPrice} ₪</p>
             </div>
             <div>
               <p className="text-sm text-gray-500 mb-1">זמן משוער</p>

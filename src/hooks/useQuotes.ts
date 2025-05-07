@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { fetchQuotesForRequest, updateQuoteStatus } from '@/services/quotes';
@@ -71,6 +72,8 @@ export const useQuotes = (selectedRequestId: string | null) => {
     }
     
     console.log("Processing quote acceptance:", quoteId, "Payment method:", paymentMethod);
+    console.log("Quote details:", acceptedQuote);
+    console.log("Quote price:", acceptedQuote.price);
     
     try {
       // Start a transaction by updating multiple related records
@@ -119,19 +122,29 @@ export const useQuotes = (selectedRequestId: string | null) => {
       
       // 4. Save the accepted quote to the database
       console.log("Saving quote acceptance to database");
+      
+      // Ensure price is properly formatted as a string
+      const quotePrice = typeof acceptedQuote.price === 'string' 
+        ? acceptedQuote.price 
+        : String(acceptedQuote.price);
+      
+      console.log("Formatted quote price for storage:", quotePrice);
+      
       const acceptedQuoteData = {
         user_id: user.id,
         quote_id: quoteId,
         request_id: acceptedQuote.requestId,
         professional_id: acceptedQuote.professional.id,
         professional_name: acceptedQuote.professional.name,
-        price: acceptedQuote.price,
+        price: quotePrice, // Ensure price is stored as a string
         date: new Date().toISOString(),
         status: 'accepted',
         description: acceptedQuote.description,
         payment_method: paymentMethod,
         created_at: new Date().toISOString() // Explicitly set created_at
       };
+      
+      console.log("Accepted quote data being saved:", acceptedQuoteData);
       
       const { error: acceptError } = await supabase
         .from('accepted_quotes')
@@ -177,7 +190,7 @@ export const useQuotes = (selectedRequestId: string | null) => {
         });
         
         // Navigate to payment page
-        window.location.href = `/payment/${quoteId}`;
+        window.location.href = `/payment/${quoteId}?price=${encodeURIComponent(quotePrice)}`;
         return;
       }
       
@@ -188,7 +201,11 @@ export const useQuotes = (selectedRequestId: string | null) => {
       });
       
       // Refresh quotes after acceptance is complete
-      refreshQuotes(acceptedQuote.requestId);
+      if (selectedRequestId) {
+        setTimeout(() => {
+          refreshQuotes(selectedRequestId);
+        }, 500);
+      }
       
     } catch (error) {
       console.error("Error in quote acceptance process:", error);

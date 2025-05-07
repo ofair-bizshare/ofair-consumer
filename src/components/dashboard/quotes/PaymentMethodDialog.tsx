@@ -1,13 +1,6 @@
 
 import React from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { CreditCard, Banknote } from 'lucide-react';
 
@@ -15,51 +8,59 @@ interface PaymentMethodDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelectPaymentMethod: (method: 'cash' | 'credit') => void;
-  quotePrice: string;
+  quotePrice?: string;
 }
 
 const PaymentMethodDialog: React.FC<PaymentMethodDialogProps> = ({
   open,
   onOpenChange,
   onSelectPaymentMethod,
-  quotePrice
+  quotePrice = "0"
 }) => {
+  // Ensure the price is properly formatted as a string
+  const formattedPrice = typeof quotePrice === 'string' ? quotePrice : String(quotePrice);
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[450px] p-6" dir="rtl">
-        <DialogHeader className="pb-2">
-          <DialogTitle className="text-xl font-semibold text-center">בחר אמצעי תשלום</DialogTitle>
-          <DialogDescription className="text-center text-base mt-2">
-            הצעה התקבלה! בחר כיצד תרצה לשלם סך {quotePrice} ₪
-          </DialogDescription>
+      <DialogContent className="sm:max-w-[425px]" dir="rtl">
+        <DialogHeader>
+          <DialogTitle>בחר אמצעי תשלום</DialogTitle>
         </DialogHeader>
-        
-        <div className="grid grid-cols-2 gap-6 py-8">
-          <Button
-            variant="outline"
-            className="flex flex-col items-center gap-3 py-8 hover:bg-blue-50 border-blue-200"
-            onClick={() => onSelectPaymentMethod('cash')}
-          >
-            <Banknote className="h-12 w-12 text-green-600" />
-            <span className="font-medium text-lg">במזומן</span>
-            <span className="text-sm text-gray-500">תשלום ישיר לבעל המקצוע</span>
-          </Button>
+        <div className="grid gap-4 py-4">
+          <p className="text-gray-700">יש לבחור אמצעי תשלום להזמנה בסך {formattedPrice} ₪</p>
           
-          <Button
-            variant="outline"
-            className="flex flex-col items-center gap-3 py-8 hover:bg-blue-50 border-blue-200"
-            onClick={() => onSelectPaymentMethod('credit')}
-          >
-            <CreditCard className="h-12 w-12 text-blue-600" />
-            <span className="font-medium text-lg">אשראי</span>
-            <span className="text-sm text-gray-500">תשלום מאובטח דרך האתר</span>
-          </Button>
+          <div className="grid grid-cols-1 gap-3 pt-2">
+            <Button 
+              variant="outline"
+              className="flex justify-center items-center gap-2 h-20 border-2 hover:bg-gray-50"
+              onClick={() => onSelectPaymentMethod('credit')}
+            >
+              <CreditCard className="w-6 h-6" />
+              <div className="text-right">
+                <p className="font-semibold">תשלום בכרטיס אשראי</p>
+                <p className="text-xs text-gray-500">תשלום מאובטח באתר</p>
+              </div>
+            </Button>
+            
+            <Button 
+              variant="outline"
+              className="flex justify-center items-center gap-2 h-20 border-2 hover:bg-gray-50"  
+              onClick={() => onSelectPaymentMethod('cash')}
+            >
+              <Banknote className="w-6 h-6" />
+              <div className="text-right">
+                <p className="font-semibold">תשלום במזומן</p>
+                <p className="text-xs text-gray-500">תשלום לבעל המקצוע בסיום העבודה</p>
+              </div>
+            </Button>
+          </div>
         </div>
         
-        <DialogFooter className="sm:justify-center pt-2">
-          <Button
-            variant="ghost"
+        <DialogFooter>
+          <Button 
+            variant="outline"
             onClick={() => onOpenChange(false)}
+            className="w-full"
           >
             ביטול
           </Button>

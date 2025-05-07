@@ -36,11 +36,14 @@ export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInt
             return null;
           }
           
+          // Ensure price is always a string
+          const price = typeof quote.price === 'string' ? quote.price : String(quote.price);
+          
           return {
             id: quote.id,
             requestId: quote.request_id,
             professional,
-            price: quote.price,
+            price: price, // Ensure price is a string
             estimatedTime: quote.estimated_time || '',
             description: quote.description,
             status: quote.status,
@@ -74,13 +77,17 @@ export const createQuote = async (quoteData: {
 }): Promise<string | null> => {
   try {
     console.log('Creating new quote:', quoteData);
+    
+    // Ensure price is always stored as a string
+    const price = typeof quoteData.price === 'string' ? quoteData.price : String(quoteData.price);
+    
     // We need to use "as any" to bypass TypeScript's type checking
     const { data, error } = await supabase
       .from('quotes' as any)
       .insert({
         request_id: quoteData.requestId,
         professional_id: quoteData.professionalId,
-        price: quoteData.price,
+        price: price, // Store as string
         estimated_time: quoteData.estimatedTime || null,
         description: quoteData.description,
         sample_image_url: quoteData.sampleImageUrl || null,
