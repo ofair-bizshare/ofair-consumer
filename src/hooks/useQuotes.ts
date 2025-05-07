@@ -73,7 +73,18 @@ export const useQuotes = (selectedRequestId: string | null) => {
     
     console.log("Processing quote acceptance:", quoteId, "Payment method:", paymentMethod);
     console.log("Quote details:", acceptedQuote);
-    console.log("Quote price:", acceptedQuote.price);
+    
+    // Ensure price is properly formatted as a string with a default value
+    let quotePrice = "";
+    if (typeof acceptedQuote.price === 'string' && acceptedQuote.price.length > 0) {
+      quotePrice = acceptedQuote.price;
+    } else if (typeof acceptedQuote.price === 'number') {
+      quotePrice = String(acceptedQuote.price);
+    } else {
+      quotePrice = "0"; // Default price if empty
+    }
+    
+    console.log("Quote price:", quotePrice);
     
     try {
       // Start a transaction by updating multiple related records
@@ -123,11 +134,6 @@ export const useQuotes = (selectedRequestId: string | null) => {
       // 4. Save the accepted quote to the database
       console.log("Saving quote acceptance to database");
       
-      // Ensure price is properly formatted as a string
-      const quotePrice = typeof acceptedQuote.price === 'string' 
-        ? acceptedQuote.price 
-        : String(acceptedQuote.price);
-      
       console.log("Formatted quote price for storage:", quotePrice);
       
       const acceptedQuoteData = {
@@ -136,7 +142,7 @@ export const useQuotes = (selectedRequestId: string | null) => {
         request_id: acceptedQuote.requestId,
         professional_id: acceptedQuote.professional.id,
         professional_name: acceptedQuote.professional.name,
-        price: quotePrice, // Ensure price is stored as a string
+        price: quotePrice, // Ensure price is stored as a string with a value
         date: new Date().toISOString(),
         status: 'accepted',
         description: acceptedQuote.description,
@@ -203,6 +209,7 @@ export const useQuotes = (selectedRequestId: string | null) => {
       // Refresh quotes after acceptance is complete
       if (selectedRequestId) {
         setTimeout(() => {
+          console.log("Refreshing quotes after payment method selection");
           refreshQuotes(selectedRequestId);
         }, 500);
       }

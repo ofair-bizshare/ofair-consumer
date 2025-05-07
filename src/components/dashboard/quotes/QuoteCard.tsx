@@ -27,8 +27,12 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   const [isContactActive, setIsContactActive] = useState(false);
   const [imageError, setImageError] = useState(false);
   
-  // Ensure the price is properly formatted as a string
-  const formattedPrice = typeof quote.price === 'string' ? quote.price : String(quote.price);
+  // Ensure the price is properly formatted as a string with a default value
+  const formattedPrice = typeof quote.price === 'string' && quote.price.length > 0
+    ? quote.price
+    : typeof quote.price === 'number'
+      ? String(quote.price)
+      : "0";
   
   const handleAcceptClick = () => {
     if (quote.status === 'accepted') {

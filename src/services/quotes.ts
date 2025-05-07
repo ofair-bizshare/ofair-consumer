@@ -36,8 +36,14 @@ export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInt
             return null;
           }
           
-          // Ensure price is always a string
-          const price = typeof quote.price === 'string' ? quote.price : String(quote.price);
+          // Ensure price is always a string with a default value if empty
+          const price = typeof quote.price === 'string' && quote.price.length > 0 
+            ? quote.price 
+            : typeof quote.price === 'number' 
+              ? String(quote.price) 
+              : "0";
+          
+          console.log(`Quote ${quote.id} price (after format): ${price}`);
           
           return {
             id: quote.id,
@@ -78,8 +84,12 @@ export const createQuote = async (quoteData: {
   try {
     console.log('Creating new quote:', quoteData);
     
-    // Ensure price is always stored as a string
-    const price = typeof quoteData.price === 'string' ? quoteData.price : String(quoteData.price);
+    // Ensure price is always stored as a string with a default value
+    const price = typeof quoteData.price === 'string' && quoteData.price.length > 0
+      ? quoteData.price 
+      : "0";
+    
+    console.log('Formatted price for storage:', price);
     
     // We need to use "as any" to bypass TypeScript's type checking
     const { data, error } = await supabase

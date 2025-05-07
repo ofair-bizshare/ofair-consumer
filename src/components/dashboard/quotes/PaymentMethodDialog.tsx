@@ -17,8 +17,12 @@ const PaymentMethodDialog: React.FC<PaymentMethodDialogProps> = ({
   onSelectPaymentMethod,
   quotePrice = "0"
 }) => {
-  // Ensure the price is properly formatted as a string
-  const formattedPrice = typeof quotePrice === 'string' ? quotePrice : String(quotePrice);
+  // Ensure the price is properly formatted as a string with a default value
+  const formattedPrice = typeof quotePrice === 'string' && quotePrice.length > 0
+    ? quotePrice
+    : typeof quotePrice === 'number'
+      ? String(quotePrice)
+      : "0";
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
