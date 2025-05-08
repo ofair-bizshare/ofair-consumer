@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, LogOut, Settings, Inbox, UserCircle, Bell } from 'lucide-react';
@@ -117,7 +116,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56" dir="rtl">
+      <DropdownMenuContent align="end" className="w-56 text-right">
         <DropdownMenuItem onClick={() => navigate('/dashboard')}>
           <User className="ml-2 h-4 w-4" />
           <span>אזור אישי</span>
