@@ -15,6 +15,7 @@ export type Database = {
           date: string
           description: string
           id: string
+          payment_method: string | null
           price: string
           professional_id: string
           professional_name: string
@@ -28,6 +29,7 @@ export type Database = {
           date: string
           description: string
           id?: string
+          payment_method?: string | null
           price: string
           professional_id: string
           professional_name: string
@@ -41,6 +43,7 @@ export type Database = {
           date?: string
           description?: string
           id?: string
+          payment_method?: string | null
           price?: string
           professional_id?: string
           professional_name?: string

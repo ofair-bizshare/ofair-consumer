@@ -78,28 +78,28 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
   if (isMobile) {
     return <div className="space-y-2">
         <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/dashboard')}>
-          <User className="mr-2 h-4 w-4" />
+          <User className="ml-2 h-4 w-4" />
           <span>אזור אישי</span>
         </Button>
         <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/referrals')}>
-          <Inbox className="mr-2 h-4 w-4" />
+          <Inbox className="ml-2 h-4 w-4" />
           <span>הפניות שלי</span>
         </Button>
         <Button variant="outline" className="w-full justify-start relative" onClick={handleNotificationsClick}>
-          <Bell className="mr-2 h-4 w-4" />
+          <Bell className="ml-2 h-4 w-4" />
           <span>התראות</span>
           {notificationsCount > 0 && (
-            <span className="absolute top-1 right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+            <span className="absolute top-1 left-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
               {notificationsCount}
             </span>
           )}
         </Button>
         <Button variant="outline" className="w-full justify-start" onClick={() => navigate('/settings')}>
-          <Settings className="mr-2 h-4 w-4" />
+          <Settings className="ml-2 h-4 w-4" />
           <span>הגדרות</span>
         </Button>
         <Button variant="outline" className="w-full justify-start text-red-600" onClick={onLogout}>
-          <LogOut className="mr-2 h-4 w-4" />
+          <LogOut className="ml-2 h-4 w-4" />
           <span>יציאה</span>
         </Button>
       </div>;
@@ -111,37 +111,37 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
           <UserCircle size={18} />
           <span>פרופיל</span>
           {notificationsCount > 0 && (
-            <span className="absolute top-0 right-0 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+            <span className="absolute top-0 left-0 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
               {notificationsCount}
             </span>
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="w-56" dir="rtl">
         <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-          <User className="mr-2 h-4 w-4" />
+          <User className="ml-2 h-4 w-4" />
           <span>אזור אישי</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate('/referrals')}>
-          <Inbox className="mr-2 h-4 w-4" />
+          <Inbox className="ml-2 h-4 w-4" />
           <span>הפניות שלי</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleNotificationsClick} className="relative">
-          <Bell className="mr-2 h-4 w-4" />
+          <Bell className="ml-2 h-4 w-4" />
           <span>התראות</span>
           {notificationsCount > 0 && (
-            <span className="ml-auto bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+            <span className="mr-auto bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
               {notificationsCount}
             </span>
           )}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => navigate('/settings')}>
-          <Settings className="mr-2 h-4 w-4" />
+          <Settings className="ml-2 h-4 w-4" />
           <span>הגדרות</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onLogout}>
-          <LogOut className="mr-2 h-4 w-4" />
+          <LogOut className="ml-2 h-4 w-4" />
           <span>יציאה</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
