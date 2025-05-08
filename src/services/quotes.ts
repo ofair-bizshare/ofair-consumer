@@ -1,3 +1,3 @@
 
 // This file now exports functionality from the new modular structure
-export * from './quotes';
+export * from './quotes/index';
