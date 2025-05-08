@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Clock, CheckCircle, AlertCircle, Star, Trash2 } from 'lucide-react';
@@ -135,7 +134,8 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
             quotes={quotes} 
             onAcceptQuote={onAcceptQuote} 
             onRejectQuote={onRejectQuote} 
-            onViewProfile={onViewProfile} 
+            onViewProfile={onViewProfile}
+            requestStatus={request.status} // Pass request status to QuotesList
           />
         </div>
       ) : (

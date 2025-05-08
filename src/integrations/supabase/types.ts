@@ -305,6 +305,7 @@ export type Database = {
           image_url: string | null
           is_verified: boolean | null
           location: string
+          marketing_consent: boolean | null
           name: string
           phone_number: string | null
           profession: string
@@ -332,6 +333,7 @@ export type Database = {
           image_url?: string | null
           is_verified?: boolean | null
           location: string
+          marketing_consent?: boolean | null
           name: string
           phone_number?: string | null
           profession: string
@@ -359,6 +361,7 @@ export type Database = {
           image_url?: string | null
           is_verified?: boolean | null
           location?: string
+          marketing_consent?: boolean | null
           name?: string
           phone_number?: string | null
           profession?: string

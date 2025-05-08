@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/providers/AuthProvider';
 import { fetchUserRequests, updateRequestStatus, deleteRequest } from '@/services/requests';
 import { RequestInterface, RequestStatus } from '@/types/dashboard';
-import { countQuotesForRequest } from '@/services/quotes';
+import { countQuotesForRequest } from '@/services/quotes/quoteFetching';
 
 export const useMyRequests = () => {
   const [requests, setRequests] = useState<RequestInterface[]>([]);
@@ -42,7 +42,32 @@ export const useMyRequests = () => {
         })
       );
       
-      setRequests(requestsWithCounts);
+      // Sort requests - active first, then waiting_for_rating, then completed/expired/canceled
+      const sortedRequests = requestsWithCounts.sort((a, b) => {
+        // Priority order: active > waiting_for_rating > other statuses
+        const statusPriority: Record<string, number> = {
+          'active': 3,
+          'waiting_for_rating': 2,
+          'completed': 1,
+          'expired': 0,
+          'canceled': 0
+        };
+        
+        const priorityA = statusPriority[a.status] || 0;
+        const priorityB = statusPriority[b.status] || 0;
+        
+        // Compare by priority, then by date (newest first)
+        if (priorityA !== priorityB) {
+          return priorityB - priorityA;
+        }
+        
+        // For same status, sort by date (newest first)
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return dateB - dateA;
+      });
+      
+      setRequests(sortedRequests);
     } catch (error) {
       console.error('Error loading requests:', error);
       toast({

@@ -14,6 +14,7 @@ interface QuoteCardProps {
   onRejectQuote: (quoteId: string) => void;
   onViewProfile: (professionalId: string) => void;
   hasAcceptedQuote: boolean;
+  requestStatus?: string; // Add request status prop
 }
 
 const QuoteCard: React.FC<QuoteCardProps> = ({ 
@@ -21,7 +22,8 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   onAcceptQuote, 
   onRejectQuote, 
   onViewProfile,
-  hasAcceptedQuote
+  hasAcceptedQuote,
+  requestStatus = 'active' // Default to active
 }) => {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [isContactActive, setIsContactActive] = useState(false);
@@ -53,8 +55,13 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   
   const professionalImage = quote.professional.image || quote.professional.image_url;
   
+  // Determine if this card should be interactive based on status
+  const isRequestCompleted = requestStatus === 'completed';
+  const isAcceptedQuote = quote.status === 'accepted';
+  const isInteractive = !isRequestCompleted || isAcceptedQuote;
+  
   return (
-    <Card className="overflow-hidden mb-8 shadow-md hover:shadow-lg transition-shadow">
+    <Card className={`overflow-hidden mb-8 shadow-md hover:shadow-lg transition-shadow ${isRequestCompleted && !isAcceptedQuote ? 'opacity-60' : ''}`}>
       <CardContent className="p-0">
         <div className="p-5 border-b border-gray-100">
           <div className="flex justify-between items-start mb-4">
@@ -127,7 +134,11 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
               <CheckCircle className="h-5 w-5 text-green-500 ml-2" />
               <div>
                 <p className="font-semibold text-green-700">הצעה זו התקבלה</p>
-                <p className="text-sm text-green-600">בעל המקצוע קיבל הודעה על כך</p>
+                {isRequestCompleted ? (
+                  <p className="text-sm text-green-600">העבודה הושלמה ודורגה</p>
+                ) : (
+                  <p className="text-sm text-green-600">בעל המקצוע קיבל הודעה על כך</p>
+                )}
               </div>
             </div>
           )}
@@ -145,15 +156,17 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
         
         <div className="p-4 flex flex-wrap justify-between items-center gap-2 bg-gray-50">
           <div className="flex space-x-2 space-x-reverse">
-            <Button 
-              variant={isContactActive ? "default" : "outline"}
-              size="sm"
-              className={`space-x-1 space-x-reverse ${isContactActive ? 'bg-blue-600' : 'border-gray-300'}`}
-              onClick={handleContactClick}
-            >
-              <MessageSquare size={16} />
-              <span>{isContactActive ? 'חזור' : 'שלח הודעה'}</span>
-            </Button>
+            {isInteractive && (
+              <Button 
+                variant={isContactActive ? "default" : "outline"}
+                size="sm"
+                className={`space-x-1 space-x-reverse ${isContactActive ? 'bg-blue-600' : 'border-gray-300'}`}
+                onClick={handleContactClick}
+              >
+                <MessageSquare size={16} />
+                <span>{isContactActive ? 'חזור' : 'שלח הודעה'}</span>
+              </Button>
+            )}
             
             <QuoteDetailDialog 
               professional={quote.professional}
@@ -162,41 +175,45 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
           </div>
           
           <div className="flex space-x-2 space-x-reverse">
-            {quote.status === 'accepted' ? (
-              <QuoteCancelDialog 
-                open={showCancelConfirm} 
-                onOpenChange={setShowCancelConfirm}
-                onConfirm={handleCancelAccept}
-              />
+            {isInteractive ? (
+              quote.status === 'accepted' ? (
+                <QuoteCancelDialog 
+                  open={showCancelConfirm} 
+                  onOpenChange={setShowCancelConfirm}
+                  onConfirm={handleCancelAccept}
+                />
+              ) : (
+                <>
+                  {!hasAcceptedQuote && quote.status !== 'rejected' && !isRequestCompleted && (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="border-red-500 text-red-500 hover:bg-red-50"
+                        onClick={() => onRejectQuote(quote.id)}
+                      >
+                        דחה הצעה
+                      </Button>
+                      
+                      <Button 
+                        size="sm"
+                        className="bg-teal-500 hover:bg-teal-600"
+                        onClick={handleAcceptClick}
+                      >
+                        קבל הצעה
+                      </Button>
+                    </>
+                  )}
+                  {quote.status === 'rejected' && (
+                    <span className="text-sm text-gray-500">הצעה נדחתה</span>
+                  )}
+                  {hasAcceptedQuote && quote.status === 'pending' && (
+                    <span className="text-sm text-gray-500">הצעה אחרת התקבלה</span>
+                  )}
+                </>
+              )
             ) : (
-              <>
-                {!hasAcceptedQuote && quote.status !== 'rejected' && (
-                  <>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="border-red-500 text-red-500 hover:bg-red-50"
-                      onClick={() => onRejectQuote(quote.id)}
-                    >
-                      דחה הצעה
-                    </Button>
-                    
-                    <Button 
-                      size="sm"
-                      className="bg-teal-500 hover:bg-teal-600"
-                      onClick={handleAcceptClick}
-                    >
-                      קבל הצעה
-                    </Button>
-                  </>
-                )}
-                {quote.status === 'rejected' && (
-                  <span className="text-sm text-gray-500">הצעה נדחתה</span>
-                )}
-                {hasAcceptedQuote && quote.status === 'pending' && (
-                  <span className="text-sm text-gray-500">הצעה אחרת התקבלה</span>
-                )}
-              </>
+              <span className="text-sm text-gray-500">העבודה הושלמה</span>
             )}
           </div>
         </div>
