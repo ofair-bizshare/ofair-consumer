@@ -8,7 +8,7 @@ interface QuotesListProps {
   onAcceptQuote: (quoteId: string) => void;
   onRejectQuote: (quoteId: string) => void;
   onViewProfile: (professionalId: string) => void;
-  requestStatus?: string; // Add request status prop
+  requestStatus?: string;
 }
 
 const QuotesList: React.FC<QuotesListProps> = ({ 
@@ -16,17 +16,20 @@ const QuotesList: React.FC<QuotesListProps> = ({
   onAcceptQuote, 
   onRejectQuote, 
   onViewProfile,
-  requestStatus = 'active' // Default to active
+  requestStatus = 'active'
 }) => {
   const hasAcceptedQuote = quotes.some(quote => quote.status === 'accepted');
   
-  // For completed or waiting for rating requests, show the accepted quote
-  // For other statuses (active) show all quotes
-  const displayQuotes = quotes;
+  // Sort quotes to show accepted quotes first
+  const sortedQuotes = [...quotes].sort((a, b) => {
+    if (a.status === 'accepted') return -1;
+    if (b.status === 'accepted') return 1;
+    return 0;
+  });
   
   return (
     <div className="space-y-4">
-      {displayQuotes.map(quote => (
+      {sortedQuotes.map(quote => (
         <QuoteCard 
           key={quote.id} 
           quote={quote} 
@@ -34,7 +37,7 @@ const QuotesList: React.FC<QuotesListProps> = ({
           onRejectQuote={onRejectQuote}
           onViewProfile={onViewProfile}
           hasAcceptedQuote={hasAcceptedQuote}
-          requestStatus={requestStatus} // Pass request status to QuoteCard
+          requestStatus={requestStatus}
         />
       ))}
     </div>
