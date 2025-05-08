@@ -33,7 +33,8 @@ const RequestsTab: React.FC = () => {
     showPaymentDialog,
     selectedQuoteId,
     processQuoteAcceptance,
-    closePaymentDialog
+    closePaymentDialog,
+    isProcessing
   } = useQuotes(selectedRequestId);
   
   const selectedRequest = requests.find(r => r.id === selectedRequestId);
@@ -77,7 +78,14 @@ const RequestsTab: React.FC = () => {
   const handleSelectPaymentMethod = (method: 'cash' | 'credit') => {
     if (selectedQuoteId) {
       processQuoteAcceptance(selectedQuoteId, method);
-      closePaymentDialog();
+      
+      // Only close the dialog after processing if it's cash payment
+      // For credit card payment, the redirect will happen
+      if (method === 'cash') {
+        setTimeout(() => {
+          closePaymentDialog();
+        }, 1000);
+      }
       
       // Refresh quotes after accepting to ensure UI is up to date
       if (selectedRequestId) {
@@ -167,6 +175,7 @@ const RequestsTab: React.FC = () => {
           onOpenChange={closePaymentDialog}
           onSelectPaymentMethod={handleSelectPaymentMethod}
           quotePrice={selectedQuote.price}
+          isProcessing={isProcessing}
         />
       )}
     </div>

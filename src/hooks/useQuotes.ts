@@ -12,6 +12,7 @@ export const useQuotes = (selectedRequestId: string | null) => {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
   const [lastAcceptedQuoteId, setLastAcceptedQuoteId] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -34,8 +35,13 @@ export const useQuotes = (selectedRequestId: string | null) => {
       }
     } catch (error) {
       console.error("Error fetching quotes:", error);
+      toast({
+        title: "שגיאה בטעינת הצעות מחיר",
+        description: "אירעה שגיאה בטעינת הצעות המחיר, אנא נסה שוב",
+        variant: "destructive",
+      });
     }
-  }, []);
+  }, [toast]);
 
   // Load quotes when selectedRequestId changes
   useEffect(() => {
@@ -50,16 +56,85 @@ export const useQuotes = (selectedRequestId: string | null) => {
     fetchQuotes(requestId);
   }, [fetchQuotes]);
 
+  // Check if a quote is already accepted for this request
+  const checkIfAcceptedQuoteExists = useCallback(async (requestId: string, quoteId: string): Promise<boolean> => {
+    try {
+      // First check if the quote itself is already accepted
+      const { data: acceptedData, error: acceptedError } = await supabase
+        .from('accepted_quotes')
+        .select('*')
+        .eq('quote_id', quoteId)
+        .single();
+
+      if (acceptedData) {
+        console.log("This quote is already accepted in the database:", acceptedData);
+        return true;
+      }
+      
+      // Then check if any quote for this request is accepted
+      const { data: requestAcceptedData, error: requestAcceptedError } = await supabase
+        .from('accepted_quotes')
+        .select('*')
+        .eq('request_id', requestId);
+        
+      if (requestAcceptedData && requestAcceptedData.length > 0) {
+        console.log("Another quote for this request is already accepted:", requestAcceptedData);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error("Error checking for existing accepted quote:", error);
+      return false;
+    }
+  }, []);
+
   const handleAcceptQuote = async (quoteId: string) => {
     // Get the quote that's being considered
     const quote = quotes.find(q => q.id === quoteId);
     console.log("Handling accept quote:", quoteId, quote);
     
+    if (!quote) {
+      console.error("Quote not found:", quoteId);
+      toast({
+        title: "שגיאה",
+        description: "הצעת המחיר לא נמצאה במערכת",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // If the quote is already accepted, don't show the payment dialog again
-    if (quote?.status === 'accepted') {
+    if (quote.status === 'accepted') {
       toast({
         title: "הצעה זו כבר אושרה",
         description: "הצעת המחיר הזו כבר אושרה בעבר.",
+        variant: "default",
+      });
+      return;
+    }
+
+    // Check if any quote for this request is already accepted in the database
+    const requestId = quote.requestId;
+    const existingAcceptedQuote = await checkIfAcceptedQuoteExists(requestId, quoteId);
+    
+    if (existingAcceptedQuote) {
+      // Update local state to reflect the database state
+      setQuotes(prevQuotes => 
+        prevQuotes.map(q => {
+          if (q.id === quoteId) {
+            return { ...q, status: 'accepted' };
+          }
+          return q;
+        })
+      );
+      
+      // Update the last accepted quote ID
+      setLastAcceptedQuoteId(quoteId);
+      
+      toast({
+        title: "הצעה זו כבר אושרה",
+        description: "הצעת המחיר הזו כבר אושרה במערכת.",
         variant: "default",
       });
       return;
@@ -71,10 +146,18 @@ export const useQuotes = (selectedRequestId: string | null) => {
   };
   
   const processQuoteAcceptance = async (quoteId: string, paymentMethod: 'cash' | 'credit') => {
+    if (isProcessing) {
+      console.log("Already processing a quote, please wait");
+      return;
+    }
+
+    setIsProcessing(true);
+
     // Find the quote that's being accepted
     const acceptedQuote = quotes.find(q => q.id === quoteId);
     if (!acceptedQuote || !user) {
       console.error("Cannot process quote acceptance: quote or user not found");
+      setIsProcessing(false);
       return;
     }
     
@@ -94,9 +177,32 @@ export const useQuotes = (selectedRequestId: string | null) => {
     console.log("Quote price:", quotePrice);
     
     try {
-      // Start a transaction by updating multiple related records
+      // 1. Check if this quote is already accepted in the database
+      const isAlreadyAccepted = await checkIfAcceptedQuoteExists(acceptedQuote.requestId, quoteId);
       
-      // 1. Update the quote status in the database
+      if (isAlreadyAccepted) {
+        console.log("Quote already accepted in database, skipping database operations");
+        
+        // Just update local state
+        setQuotes(prevQuotes => 
+          prevQuotes.map(quote => 
+            quote.id === quoteId ? { ...quote, status: 'accepted' } : quote
+          )
+        );
+        
+        setLastAcceptedQuoteId(quoteId);
+        
+        toast({
+          title: "הצעה התקבלה",
+          description: "הצעת המחיר כבר אושרה במערכת",
+          variant: "default",
+        });
+        
+        setIsProcessing(false);
+        return;
+      }
+      
+      // 2. Update the quote status in the database to 'accepted'
       console.log("Updating quote status to 'accepted'");
       const success = await updateQuoteStatus(quoteId, 'accepted');
       
@@ -106,13 +212,14 @@ export const useQuotes = (selectedRequestId: string | null) => {
           description: "אירעה שגיאה בקבלת ההצעה. אנא נסה שוב.",
           variant: "destructive",
         });
+        setIsProcessing(false);
         return;
       }
 
       // Store the accepted quote ID for persistent state
       setLastAcceptedQuoteId(quoteId);
       
-      // 2. Update the request status to "waiting_for_rating"
+      // 3. Update the request status to "waiting_for_rating"
       console.log("Updating request status to 'waiting_for_rating'");
       const requestUpdateSuccess = await updateRequestStatus(acceptedQuote.requestId, 'waiting_for_rating');
       
@@ -120,7 +227,7 @@ export const useQuotes = (selectedRequestId: string | null) => {
         console.error("Failed to update request status");
       }
       
-      // 3. Update local state - mark this quote as accepted and others for this request as rejected
+      // 4. Update local state - mark this quote as accepted and others for this request as rejected
       console.log("Updating local quotes state");
       setQuotes(prevQuotes => 
         prevQuotes.map(quote => {
@@ -141,7 +248,7 @@ export const useQuotes = (selectedRequestId: string | null) => {
         })
       );
       
-      // 4. Save the accepted quote to the database
+      // 5. Save the accepted quote to the database
       console.log("Saving quote acceptance to database");
       
       console.log("Formatted quote price for storage:", quotePrice);
@@ -163,52 +270,88 @@ export const useQuotes = (selectedRequestId: string | null) => {
       console.log("Accepted quote data being saved:", acceptedQuoteData);
       
       try {
-        // Try to insert first, then update if insert fails
-        const { error: insertError } = await supabase
+        // Check if record exists first
+        const { data: existingRecord, error: checkError } = await supabase
           .from('accepted_quotes')
-          .insert(acceptedQuoteData);
+          .select('*')
+          .eq('quote_id', quoteId)
+          .single();
           
-        if (insertError) {
-          console.log("Insert failed, trying upsert instead:", insertError);
-          // If insert fails, try upsert
-          const { error: upsertError } = await supabase
+        if (existingRecord) {
+          console.log("Record already exists, updating:", existingRecord);
+          
+          // Update the existing record
+          const { error: updateError } = await supabase
             .from('accepted_quotes')
-            .upsert(acceptedQuoteData, {
-              onConflict: 'quote_id',
-              ignoreDuplicates: false
-            });
+            .update({
+              status: 'accepted',
+              payment_method: paymentMethod,
+              updated_at: new Date().toISOString()
+            })
+            .eq('quote_id', quoteId);
             
-          if (upsertError) {
-            console.error("Error saving accepted quote:", upsertError);
-            // Don't throw here, continue with the workflow
+          if (updateError) {
+            console.error("Error updating accepted quote:", updateError);
+          }
+        } else {
+          // Create a new record
+          const { error: insertError } = await supabase
+            .from('accepted_quotes')
+            .insert(acceptedQuoteData);
+            
+          if (insertError) {
+            console.log("Insert failed, trying upsert instead:", insertError);
+            // If insert fails, try upsert with the new RLS policy
+            const { error: upsertError } = await supabase
+              .from('accepted_quotes')
+              .upsert(acceptedQuoteData, {
+                onConflict: 'quote_id',
+                ignoreDuplicates: false
+              });
+              
+            if (upsertError) {
+              console.error("Error saving accepted quote:", upsertError);
+            }
           }
         }
       } catch (dbError) {
         console.error("Database error:", dbError);
-        // Don't throw here, continue with the workflow
       }
       
-      // 5. Also save phone reveal in referrals automatically
+      // 6. Also save phone reveal in referrals automatically
       console.log("Saving referral record");
       try {
-        const referral = {
-          id: crypto.randomUUID(),
-          user_id: user.id,
-          professional_id: acceptedQuote.professional.id,
-          professional_name: acceptedQuote.professional.name,
-          phone_number: acceptedQuote.professional.phoneNumber || acceptedQuote.professional.phone || "050-1234567",
-          date: new Date().toISOString(),
-          status: "accepted_quote",
-          profession: acceptedQuote.professional.profession,
-          completed_work: false
-        };
-        
-        const { error: referralError } = await supabase
+        // Check if referral already exists
+        const { data: existingReferral } = await supabase
           .from('referrals')
-          .insert(referral);
-        
-        if (referralError) {
-          console.error("Error saving referral:", referralError);
+          .select('*')
+          .eq('professional_id', acceptedQuote.professional.id)
+          .eq('user_id', user.id)
+          .eq('status', 'accepted_quote')
+          .single();
+          
+        if (existingReferral) {
+          console.log("Referral already exists:", existingReferral);
+        } else {
+          const referral = {
+            id: crypto.randomUUID(),
+            user_id: user.id,
+            professional_id: acceptedQuote.professional.id,
+            professional_name: acceptedQuote.professional.name,
+            phone_number: acceptedQuote.professional.phoneNumber || acceptedQuote.professional.phone || "050-1234567",
+            date: new Date().toISOString(),
+            status: "accepted_quote",
+            profession: acceptedQuote.professional.profession,
+            completed_work: false
+          };
+          
+          const { error: referralError } = await supabase
+            .from('referrals')
+            .insert(referral);
+          
+          if (referralError) {
+            console.error("Error saving referral:", referralError);
+          }
         }
       } catch (refError) {
         console.error("Error creating referral:", refError);
@@ -249,13 +392,23 @@ export const useQuotes = (selectedRequestId: string | null) => {
         description: "אירעה שגיאה בתהליך. אנא נסה שוב מאוחר יותר.",
         variant: "destructive",
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handleRejectQuote = async (quoteId: string) => {
+    if (isProcessing) {
+      console.log("Already processing a quote, please wait");
+      return;
+    }
+    
+    setIsProcessing(true);
+    
     const rejectedQuote = quotes.find(q => q.id === quoteId);
     if (!rejectedQuote) {
       console.error("Cannot reject quote: quote not found");
+      setIsProcessing(false);
       return;
     }
     
@@ -270,6 +423,7 @@ export const useQuotes = (selectedRequestId: string | null) => {
         description: "אירעה שגיאה בדחיית ההצעה. אנא נסה שוב.",
         variant: "destructive",
       });
+      setIsProcessing(false);
       return;
     }
     
@@ -310,6 +464,20 @@ export const useQuotes = (selectedRequestId: string | null) => {
         variant: "default",
       });
       
+      // Also delete the record from accepted_quotes table
+      try {
+        const { error: deleteError } = await supabase
+          .from('accepted_quotes')
+          .delete()
+          .eq('quote_id', quoteId);
+        
+        if (deleteError) {
+          console.error("Error deleting accepted quote record:", deleteError);
+        }
+      } catch (deleteError) {
+        console.error("Error deleting accepted quote record:", deleteError);
+      }
+      
       // Also update the request status back to active
       updateRequestStatus(rejectedQuote.requestId, 'active').catch(error => {
         console.error("Error updating request status:", error);
@@ -334,6 +502,7 @@ export const useQuotes = (selectedRequestId: string | null) => {
     
     // Refresh quotes after rejection is complete
     refreshQuotes(rejectedQuote.requestId);
+    setIsProcessing(false);
   };
 
   const closePaymentDialog = () => {
@@ -349,7 +518,7 @@ export const useQuotes = (selectedRequestId: string | null) => {
     selectedQuoteId,
     processQuoteAcceptance,
     closePaymentDialog,
-    refreshQuotes
+    refreshQuotes,
+    isProcessing
   };
 };
-
