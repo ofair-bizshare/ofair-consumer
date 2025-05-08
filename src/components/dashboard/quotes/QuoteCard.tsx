@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Star, MessageSquare, CheckCircle, User } from 'lucide-react';
@@ -56,11 +57,28 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   
   // Determine if this card should be interactive based on status
   const isRequestCompleted = requestStatus === 'completed';
+  const isWaitingForRating = requestStatus === 'waiting_for_rating';
   const isAcceptedQuote = quote.status === 'accepted';
-  const isInteractive = !isRequestCompleted || isAcceptedQuote;
   
+  // Card is interactive if:
+  // 1. Request is not completed OR
+  // 2. This is the accepted quote OR
+  // 3. Request is waiting for rating and this is the accepted quote
+  const isInteractive = 
+    !isRequestCompleted || 
+    (isAcceptedQuote) || 
+    (isWaitingForRating && isAcceptedQuote);
+  
+  // Should show action buttons (accept/reject) only if:
+  // 1. Request is active (not completed, not waiting for rating) AND
+  // 2. No quote has been accepted OR this is the accepted quote (for cancellation)
+  const showActionButtons = 
+    !isRequestCompleted && 
+    !isWaitingForRating && 
+    (!hasAcceptedQuote || isAcceptedQuote);
+
   return (
-    <Card className={`overflow-hidden mb-8 shadow-md hover:shadow-lg transition-shadow ${isRequestCompleted && !isAcceptedQuote ? 'opacity-60' : ''}`}>
+    <Card className={`overflow-hidden mb-8 shadow-md hover:shadow-lg transition-shadow ${!isInteractive ? 'opacity-60' : ''}`}>
       <CardContent className="p-0">
         <div className="p-5 border-b border-gray-100">
           <div className="flex justify-between items-start mb-4">
@@ -135,6 +153,8 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
                 <p className="font-semibold text-green-700">הצעה זו התקבלה</p>
                 {isRequestCompleted ? (
                   <p className="text-sm text-green-600">העבודה הושלמה ודורגה</p>
+                ) : isWaitingForRating ? (
+                  <p className="text-sm text-green-600">נא לדרג את בעל המקצוע</p>
                 ) : (
                   <p className="text-sm text-green-600">בעל המקצוע קיבל הודעה על כך</p>
                 )}
@@ -174,7 +194,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
           </div>
           
           <div className="flex space-x-2 space-x-reverse">
-            {isInteractive ? (
+            {showActionButtons ? (
               quote.status === 'accepted' ? (
                 <QuoteCancelDialog 
                   open={showCancelConfirm} 
@@ -183,7 +203,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
                 />
               ) : (
                 <>
-                  {!hasAcceptedQuote && quote.status !== 'rejected' && !isRequestCompleted && (
+                  {!hasAcceptedQuote && quote.status !== 'rejected' && (
                     <>
                       <Button 
                         variant="outline" 
@@ -212,7 +232,15 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
                 </>
               )
             ) : (
-              <span className="text-sm text-gray-500">העבודה הושלמה</span>
+              isAcceptedQuote ? (
+                isRequestCompleted ? (
+                  <span className="text-sm text-gray-500">העבודה הושלמה</span>
+                ) : (
+                  <span className="text-sm text-green-500">ממתין לדירוג</span>
+                )
+              ) : (
+                <span className="text-sm text-gray-500">לא זמין</span>
+              )
             )}
           </div>
         </div>

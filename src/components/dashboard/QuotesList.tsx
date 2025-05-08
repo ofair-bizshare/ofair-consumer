@@ -20,9 +20,9 @@ const QuotesList: React.FC<QuotesListProps> = ({
 }) => {
   const hasAcceptedQuote = quotes.some(quote => quote.status === 'accepted');
   
-  // If request is completed, only show the accepted quote
-  // For all other statuses (active, waiting_for_rating, etc.) show all quotes
-  const displayQuotes = requestStatus === 'completed' 
+  // If request is completed or waiting for rating, only show the accepted quote
+  // For other statuses (active) show all quotes
+  const displayQuotes = (requestStatus === 'completed' || requestStatus === 'waiting_for_rating')
     ? quotes.filter(quote => quote.status === 'accepted')
     : quotes;
   

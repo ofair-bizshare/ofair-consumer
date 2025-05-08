@@ -31,32 +31,54 @@ export const useQuotes = (selectedRequestId: string | null) => {
   }, [selectedRequestId]);
   
   // Function to refresh quotes
-  const refreshQuotes = useCallback((requestId: string) => {
+  const refreshQuotes = useCallback(async (requestId: string) => {
     if (!requestId) return;
     console.log("Manually refreshing quotes for request:", requestId);
     
-    fetchQuotesForRequest(requestId)
-      .then(requestQuotes => {
-        setQuotes(prevQuotes => {
-          // Keep quotes for other requests and add the new ones
-          const otherQuotes = prevQuotes.filter(q => q.requestId !== requestId);
-          return [...otherQuotes, ...requestQuotes];
-        });
-        
-        // Check if there's an accepted quote and store its ID
-        const acceptedQuote = requestQuotes.find(q => q.status === 'accepted');
-        if (acceptedQuote) {
-          setLastAcceptedQuoteId(acceptedQuote.id);
+    try {
+      // Fetch quotes from database
+      const requestQuotes = await fetchQuotesForRequest(requestId);
+      
+      // Check for an accepted quote in the fetched quotes
+      const acceptedQuote = requestQuotes.find(q => q.status === 'accepted');
+      
+      // If there's an accepted quote, store its ID
+      if (acceptedQuote) {
+        setLastAcceptedQuoteId(acceptedQuote.id);
+      } else {
+        // If there's no accepted quote in the fetched quotes,
+        // check if there's one in the database through accepted_quotes table
+        for (const quote of requestQuotes) {
+          const isAccepted = await checkIfAcceptedQuoteExists(requestId, quote.id);
+          if (isAccepted) {
+            // Update local state to reflect this quote is accepted
+            console.log(`Quote ${quote.id} is marked as accepted in database but not in quotes table`);
+            
+            // Update the quote status in the database to match
+            await updateQuoteStatus(quote.id, 'accepted');
+            
+            // Set this as the accepted quote ID
+            setLastAcceptedQuoteId(quote.id);
+            
+            // Break since we found the accepted quote
+            break;
+          }
         }
-      })
-      .catch(error => {
-        console.error("Error fetching quotes:", error);
-        toast({
-          title: "שגיאה בטעינת הצעות מחיר",
-          description: "אירעה שגיאה בטעינת הצעות המחיר, אנא נסה שוב",
-          variant: "destructive",
-        });
+      }
+
+      setQuotes(prevQuotes => {
+        // Keep quotes for other requests and add the new ones
+        const otherQuotes = prevQuotes.filter(q => q.requestId !== requestId);
+        return [...otherQuotes, ...requestQuotes];
       });
+    } catch (error) {
+      console.error("Error fetching quotes:", error);
+      toast({
+        title: "שגיאה בטעינת הצעות מחיר",
+        description: "אירעה שגיאה בטעינת הצעות המחיר, אנא נסה שוב",
+        variant: "destructive",
+      });
+    }
   }, [toast]);
 
   // Handle accepting a quote
