@@ -26,11 +26,11 @@ const PaymentMethodDialog: React.FC<PaymentMethodDialogProps> = ({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]" dir="rtl">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>בחר אמצעי תשלום</DialogTitle>
+          <DialogTitle className="text-right">בחר אמצעי תשלום</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-4 py-4 text-right" dir="rtl">
           <p className="text-gray-700">יש לבחור אמצעי תשלום להזמנה בסך {formattedPrice} ₪</p>
           
           <div className="grid grid-cols-1 gap-3 pt-2">

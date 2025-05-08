@@ -11,6 +11,7 @@ export const useQuotes = (selectedRequestId: string | null) => {
   const [quotes, setQuotes] = useState<QuoteInterface[]>([]);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
+  const [lastAcceptedQuoteId, setLastAcceptedQuoteId] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -25,6 +26,12 @@ export const useQuotes = (selectedRequestId: string | null) => {
         const otherQuotes = prevQuotes.filter(q => q.requestId !== requestId);
         return [...otherQuotes, ...requestQuotes];
       });
+      
+      // Check if there's an accepted quote and store its ID
+      const acceptedQuote = requestQuotes.find(q => q.status === 'accepted');
+      if (acceptedQuote) {
+        setLastAcceptedQuoteId(acceptedQuote.id);
+      }
     } catch (error) {
       console.error("Error fetching quotes:", error);
     }
@@ -101,6 +108,9 @@ export const useQuotes = (selectedRequestId: string | null) => {
         });
         return;
       }
+
+      // Store the accepted quote ID for persistent state
+      setLastAcceptedQuoteId(quoteId);
       
       // 2. Update the request status to "waiting_for_rating"
       console.log("Updating request status to 'waiting_for_rating'");
@@ -248,6 +258,11 @@ export const useQuotes = (selectedRequestId: string | null) => {
     // If this is canceling an accepted quote
     if (rejectedQuote.status === 'accepted') {
       console.log("Canceling previously accepted quote");
+      
+      // Clear the last accepted quote ID
+      if (lastAcceptedQuoteId === quoteId) {
+        setLastAcceptedQuoteId(null);
+      }
       
       // Reset all quotes for this request to pending in the database
       const quotesToUpdate = quotes.filter(q => 
