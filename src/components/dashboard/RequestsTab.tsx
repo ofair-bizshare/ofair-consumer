@@ -7,7 +7,7 @@ import RequestDetail from './RequestDetail';
 import RequestDialog from './RequestDialog';
 import EmptyRequestState from './EmptyRequestState';
 import { useRequests } from '@/hooks/useRequests';
-import { useQuotes } from '@/hooks/useQuotes';
+import { useQuotes } from '@/hooks/useQuotes'; // Import path remains the same
 import PaymentMethodDialog from './quotes/PaymentMethodDialog';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
