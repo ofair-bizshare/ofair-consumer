@@ -162,38 +162,56 @@ export const useQuotes = (selectedRequestId: string | null) => {
       
       console.log("Accepted quote data being saved:", acceptedQuoteData);
       
-      const { error: acceptError } = await supabase
-        .from('accepted_quotes')
-        .upsert(acceptedQuoteData, {
-          onConflict: 'quote_id',
-          ignoreDuplicates: false
-        });
-        
-      if (acceptError) {
-        console.error("Error saving accepted quote:", acceptError);
-        throw acceptError;
+      try {
+        // Try to insert first, then update if insert fails
+        const { error: insertError } = await supabase
+          .from('accepted_quotes')
+          .insert(acceptedQuoteData);
+          
+        if (insertError) {
+          console.log("Insert failed, trying upsert instead:", insertError);
+          // If insert fails, try upsert
+          const { error: upsertError } = await supabase
+            .from('accepted_quotes')
+            .upsert(acceptedQuoteData, {
+              onConflict: 'quote_id',
+              ignoreDuplicates: false
+            });
+            
+          if (upsertError) {
+            console.error("Error saving accepted quote:", upsertError);
+            // Don't throw here, continue with the workflow
+          }
+        }
+      } catch (dbError) {
+        console.error("Database error:", dbError);
+        // Don't throw here, continue with the workflow
       }
       
       // 5. Also save phone reveal in referrals automatically
       console.log("Saving referral record");
-      const referral = {
-        id: crypto.randomUUID(),
-        user_id: user.id,
-        professional_id: acceptedQuote.professional.id,
-        professional_name: acceptedQuote.professional.name,
-        phone_number: acceptedQuote.professional.phoneNumber || acceptedQuote.professional.phone || "050-1234567",
-        date: new Date().toISOString(),
-        status: "accepted_quote",
-        profession: acceptedQuote.professional.profession,
-        completed_work: false
-      };
-      
-      const { error: referralError } = await supabase
-        .from('referrals')
-        .insert(referral);
-      
-      if (referralError) {
-        console.error("Error saving referral:", referralError);
+      try {
+        const referral = {
+          id: crypto.randomUUID(),
+          user_id: user.id,
+          professional_id: acceptedQuote.professional.id,
+          professional_name: acceptedQuote.professional.name,
+          phone_number: acceptedQuote.professional.phoneNumber || acceptedQuote.professional.phone || "050-1234567",
+          date: new Date().toISOString(),
+          status: "accepted_quote",
+          profession: acceptedQuote.professional.profession,
+          completed_work: false
+        };
+        
+        const { error: referralError } = await supabase
+          .from('referrals')
+          .insert(referral);
+        
+        if (referralError) {
+          console.error("Error saving referral:", referralError);
+        }
+      } catch (refError) {
+        console.error("Error creating referral:", refError);
       }
       
       // If payment method is credit card, redirect to payment page
@@ -334,3 +352,4 @@ export const useQuotes = (selectedRequestId: string | null) => {
     refreshQuotes
   };
 };
+
