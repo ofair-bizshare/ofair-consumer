@@ -48,7 +48,7 @@ export const useMyRequests = () => {
         const statusPriority: Record<string, number> = {
           'active': 3,
           'waiting_for_rating': 2,
-          'completed': 1,
+          'completed': 0, // Lower priority for completed requests (will appear at the bottom)
           'expired': 0,
           'canceled': 0
         };
