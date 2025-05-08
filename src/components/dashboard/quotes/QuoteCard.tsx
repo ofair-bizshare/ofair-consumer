@@ -55,30 +55,34 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   
   const professionalImage = quote.professional.image || quote.professional.image_url;
   
-  // Determine if this card should be interactive based on status
+  // Determine if this quote should be displayed with full interactivity
   const isRequestCompleted = requestStatus === 'completed';
   const isWaitingForRating = requestStatus === 'waiting_for_rating';
   const isAcceptedQuote = quote.status === 'accepted';
   
-  // Card is interactive if:
-  // 1. Request is not completed OR
-  // 2. This is the accepted quote OR
-  // 3. Request is waiting for rating and this is the accepted quote
-  const isInteractive = 
-    !isRequestCompleted || 
+  // Only show non-accepted quotes if the request is active
+  // When request is completed or waiting for rating, ONLY show accepted quotes
+  const shouldDisplayQuote = 
+    requestStatus === 'active' || 
     (isAcceptedQuote) || 
-    (isWaitingForRating && isAcceptedQuote);
+    quote.status === 'pending';
+    
+  // Card is interactive if request is not completed or this is the accepted quote
+  const isInteractive = !isRequestCompleted || isAcceptedQuote;
   
-  // Should show action buttons (accept/reject) only if:
-  // 1. Request is active (not completed, not waiting for rating) AND
-  // 2. No quote has been accepted OR this is the accepted quote (for cancellation)
+  // Should show action buttons only if request is active and no quote has been accepted
+  // OR if this is the accepted quote (for cancellation)
   const showActionButtons = 
-    !isRequestCompleted && 
-    !isWaitingForRating && 
+    requestStatus === 'active' && 
     (!hasAcceptedQuote || isAcceptedQuote);
 
+  // Don't render the card at all if it shouldn't be displayed
+  if (!shouldDisplayQuote && requestStatus !== 'active') {
+    return null;
+  }
+
   return (
-    <Card className={`overflow-hidden mb-8 shadow-md hover:shadow-lg transition-shadow ${!isInteractive ? 'opacity-60' : ''}`}>
+    <Card className={`overflow-hidden mb-8 shadow-md hover:shadow-lg transition-shadow ${!isInteractive ? 'opacity-70' : ''}`}>
       <CardContent className="p-0">
         <div className="p-5 border-b border-gray-100">
           <div className="flex justify-between items-start mb-4">
@@ -234,7 +238,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
             ) : (
               isAcceptedQuote ? (
                 isRequestCompleted ? (
-                  <span className="text-sm text-gray-500">העבודה הושלמה</span>
+                  <span className="text-sm text-green-500">העבודה הושלמה</span>
                 ) : (
                   <span className="text-sm text-green-500">ממתין לדירוג</span>
                 )
