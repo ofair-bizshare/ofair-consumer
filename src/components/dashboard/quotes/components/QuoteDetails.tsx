@@ -1,58 +1,54 @@
 
 import React from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface QuoteDetailsProps {
-  price: string | number;
-  estimatedTime?: string;
-  sampleImageUrl?: string | null;
+  price: string;
+  estimatedTime: string;
   description: string;
+  sampleImageUrl?: string;
 }
 
-const QuoteDetails: React.FC<QuoteDetailsProps> = ({ 
-  price, 
-  estimatedTime, 
-  sampleImageUrl, 
-  description 
+const QuoteDetails: React.FC<QuoteDetailsProps> = ({
+  price,
+  estimatedTime,
+  description,
+  sampleImageUrl
 }) => {
-  // Ensure the price is properly formatted as a string with a default value
-  const formattedPrice = typeof price === 'string' && price.length > 0
-    ? price
-    : typeof price === 'number'
-      ? String(price)
-      : "0";
-      
+  const isMobile = useIsMobile();
+  
   return (
-    <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-        <div>
-          <p className="text-sm text-gray-500 mb-1">מחיר מוצע</p>
-          <p className="font-semibold text-blue-700">{formattedPrice} ₪</p>
+    <div className="mt-4 space-y-2">
+      <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'space-x-6 space-x-reverse'}`}>
+        <div className="flex items-center">
+          <span className="font-semibold ml-2">מחיר:</span>
+          <span className="text-blue-600 font-medium">₪{price}</span>
         </div>
-        <div>
-          <p className="text-sm text-gray-500 mb-1">זמן משוער</p>
-          <p className="font-semibold">{estimatedTime || "לא צוין"}</p>
-        </div>
+        
+        {estimatedTime && (
+          <div className="flex items-center">
+            <span className="font-semibold ml-2">זמן משוער:</span>
+            <span>{estimatedTime}</span>
+          </div>
+        )}
       </div>
       
-      {sampleImageUrl && (
-        <div className="mb-3">
-          <img 
-            src={sampleImageUrl}
-            alt="תמונת דוגמה" 
-            className="w-full max-h-48 object-cover rounded-md border border-gray-200"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-            }}
-          />
+      {description && (
+        <div className="mt-2">
+          <p className="text-gray-700 text-sm line-clamp-3">{description}</p>
         </div>
       )}
       
-      <div className="mb-3">
-        <p className="text-gray-700">
-          {description}
-        </p>
-      </div>
-    </>
+      {sampleImageUrl && (
+        <div className="mt-3">
+          <img 
+            src={sampleImageUrl} 
+            alt="דוגמת עבודה" 
+            className="rounded-md max-h-24 object-cover" 
+          />
+        </div>
+      )}
+    </div>
   );
 };
 

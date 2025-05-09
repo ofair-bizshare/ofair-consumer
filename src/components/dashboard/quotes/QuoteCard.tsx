@@ -7,6 +7,7 @@ import ProfessionalInfo from './components/ProfessionalInfo';
 import QuoteDetails from './components/QuoteDetails';
 import AcceptedQuoteStatus from './components/AcceptedQuoteStatus';
 import QuoteActionButtons from './components/QuoteActionButtons';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface QuoteCardProps {
   quote: QuoteInterface;
@@ -27,6 +28,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
 }) => {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [isContactActive, setIsContactActive] = useState(false);
+  const isMobile = useIsMobile();
   
   const handleContactClick = () => {
     setIsContactActive(!isContactActive);
@@ -60,9 +62,9 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   }
 
   return (
-    <Card className={`overflow-hidden mb-8 shadow-md hover:shadow-lg transition-shadow ${!isInteractive ? 'opacity-70' : ''}`}>
+    <Card className={`overflow-hidden mb-4 shadow-md hover:shadow-lg transition-shadow ${!isInteractive ? 'opacity-70' : ''}`}>
       <CardContent className="p-0">
-        <div className="p-5 border-b border-gray-100">
+        <div className={`p-4 ${isMobile ? 'space-y-4' : 'p-5'} border-b border-gray-100`}>
           <ProfessionalInfo professional={quote.professional} />
           
           <QuoteDetails 

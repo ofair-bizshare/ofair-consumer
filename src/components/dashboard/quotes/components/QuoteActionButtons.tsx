@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { MessageSquare } from 'lucide-react';
 import QuoteDetailDialog from '../QuoteDetailDialog';
 import QuoteCancelDialog from '../QuoteCancelDialog';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface QuoteActionButtonsProps {
   requestStatus: string;
@@ -42,9 +43,11 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
   setShowCancelConfirm,
   professional
 }) => {
+  const isMobile = useIsMobile();
+
   return (
-    <div className="p-4 flex flex-wrap justify-between items-center gap-2 bg-gray-50">
-      <div className="flex space-x-2 space-x-reverse">
+    <div className={`p-3 ${isMobile ? 'flex flex-col gap-2' : 'flex flex-wrap justify-between items-center gap-2'} bg-gray-50`}>
+      <div className={`${isMobile ? 'flex justify-between w-full' : 'flex space-x-2 space-x-reverse'}`}>
         {isInteractive && (
           <Button 
             variant={isContactActive ? "default" : "outline"}
@@ -63,21 +66,21 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
         />
       </div>
       
-      <div className="flex space-x-2 space-x-reverse">
+      <div className={`${isMobile ? 'w-full' : 'flex space-x-2 space-x-reverse'}`}>
         {showActionButtons ? (
           // For accepted quotes
           quoteStatus === 'accepted' ? (
             <Button 
               size="sm" 
               variant="outline"
-              className="border-red-500 text-red-500 hover:bg-red-50"
+              className="border-red-500 text-red-500 hover:bg-red-50 w-full md:w-auto"
               onClick={() => setShowCancelConfirm(true)}
             >
               בטל קבלת הצעה
             </Button>
           ) : (
             // For non-accepted quotes in active requests
-            <>
+            <div className={`${isMobile ? 'flex flex-col space-y-2' : 'flex space-x-2 space-x-reverse'}`}>
               {!hasAcceptedQuote && quoteStatus !== 'rejected' && (
                 <>
                   <Button 
@@ -99,28 +102,28 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
                 </>
               )}
               {quoteStatus === 'rejected' && (
-                <span className="text-sm text-gray-500">הצעה נדחתה</span>
+                <span className={`text-sm text-gray-500 ${isMobile ? 'text-center mt-2' : ''}`}>הצעה נדחתה</span>
               )}
               {hasAcceptedQuote && quoteStatus === 'pending' && (
-                <span className="text-sm text-gray-500">הצעה אחרת התקבלה</span>
+                <span className={`text-sm text-gray-500 ${isMobile ? 'text-center mt-2' : ''}`}>הצעה אחרת התקבלה</span>
               )}
-            </>
+            </div>
           )
         ) : (
           // Show status messages for non-interactive quotes
           isAcceptedQuote ? (
             requestStatus === 'completed' ? (
-              <span className="text-sm text-green-500">העבודה הושלמה</span>
+              <span className={`text-sm text-green-500 ${isMobile ? 'text-center w-full' : ''}`}>העבודה הושלמה</span>
             ) : requestStatus === 'waiting_for_rating' ? (
-              <span className="text-sm text-amber-500 font-medium">ממתין לדירוג</span>
+              <span className={`text-sm text-amber-500 font-medium ${isMobile ? 'text-center w-full' : ''}`}>ממתין לדירוג</span>
             ) : (
-              <span className="text-sm text-green-500">הצעה התקבלה</span>
+              <span className={`text-sm text-green-500 ${isMobile ? 'text-center w-full' : ''}`}>הצעה התקבלה</span>
             )
           ) : (
             quoteStatus === 'rejected' ? (
-              <span className="text-sm text-red-500">הצעה נדחתה</span>
+              <span className={`text-sm text-red-500 ${isMobile ? 'text-center w-full' : ''}`}>הצעה נדחתה</span>
             ) : (
-              <span className="text-sm text-gray-500">לא זמין</span>
+              <span className={`text-sm text-gray-500 ${isMobile ? 'text-center w-full' : ''}`}>לא זמין</span>
             )
           )
         )}
