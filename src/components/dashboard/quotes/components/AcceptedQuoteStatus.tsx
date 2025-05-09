@@ -19,7 +19,7 @@ const AcceptedQuoteStatus: React.FC<AcceptedQuoteStatusProps> = ({
         {isCompleted ? (
           <p className="text-sm text-green-600">העבודה הושלמה ודורגה</p>
         ) : isWaitingForRating ? (
-          <p className="text-sm text-green-600">נא לדרג את בעל המקצוע</p>
+          <p className="text-sm text-amber-600">נא לדרג את בעל המקצוע</p>
         ) : (
           <p className="text-sm text-green-600">בעל המקצוע קיבל הודעה על כך</p>
         )}
