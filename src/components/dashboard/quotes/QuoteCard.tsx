@@ -28,14 +28,6 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [isContactActive, setIsContactActive] = useState(false);
   
-  const handleAcceptClick = () => {
-    if (quote.status === 'accepted') {
-      setShowCancelConfirm(true);
-    } else {
-      onAcceptQuote(quote.id);
-    }
-  };
-
   const handleContactClick = () => {
     setIsContactActive(!isContactActive);
   };
@@ -58,8 +50,9 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   // Show action buttons for active requests with no accepted quote yet
   // OR for the accepted quote in active or waiting_for_rating status (for cancellation)
   const showActionButtons = 
-    (requestStatus === 'active' || (requestStatus === 'waiting_for_rating' && isAcceptedQuote)) && 
-    (!hasAcceptedQuote || isAcceptedQuote);
+    (requestStatus === 'active') && 
+    (!hasAcceptedQuote || isAcceptedQuote) || 
+    (isWaitingForRating && isAcceptedQuote);
 
   // Don't render the card at all if it shouldn't be displayed
   if (!shouldDisplayQuote && requestStatus !== 'active') {
@@ -109,7 +102,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
           isAcceptedQuote={isAcceptedQuote}
           onContactClick={handleContactClick}
           onViewProfile={onViewProfile}
-          onAcceptQuote={handleAcceptClick}
+          onAcceptQuote={onAcceptQuote}
           onRejectQuote={onRejectQuote}
           showCancelConfirm={showCancelConfirm}
           setShowCancelConfirm={setShowCancelConfirm}

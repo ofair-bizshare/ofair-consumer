@@ -27,12 +27,20 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
 }) => {
   const { toast } = useToast();
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Find the accepted quote (if any)
   const acceptedQuote = quotes.find(q => q.status === 'accepted');
   
   const handleDeleteRequest = async () => {
     if (!request.id) return;
+    
+    // Confirm deletion with the user
+    if (!window.confirm('האם אתה בטוח שברצונך למחוק את הבקשה?')) {
+      return;
+    }
+    
+    setIsDeleting(true);
     
     try {
       const success = await deleteRequest(request.id);
@@ -47,6 +55,9 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
         if (onRefresh) {
           onRefresh();
         }
+        
+        // Redirect to dashboard after deletion
+        window.location.href = "/dashboard";
       } else {
         toast({
           title: "שגיאה במחיקת הבקשה",
@@ -61,6 +72,8 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
         description: "אירעה שגיאה במחיקת הבקשה, אנא נסה שוב",
         variant: "destructive",
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -121,8 +134,13 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
             size="sm"
             className="text-red-500 border-red-200 hover:bg-red-50 flex items-center gap-1"
             onClick={handleDeleteRequest}
+            disabled={isDeleting}
           >
-            <Trash2 className="h-4 w-4" />
+            {isDeleting ? (
+              <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-red-500 animate-spin mr-1" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
             מחק בקשה
           </Button>
         </div>
