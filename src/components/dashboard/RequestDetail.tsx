@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Clock, CheckCircle, AlertCircle, Star, Trash2 } from 'lucide-react';
@@ -151,7 +152,7 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
             id: acceptedQuote.professional.id,
             name: acceptedQuote.professional.name,
             phone: acceptedQuote.professional.phoneNumber || acceptedQuote.professional.phone || '',
-            companyName: acceptedQuote.professional.company_name || ''  // Changed from companyName to company_name
+            companyName: acceptedQuote.professional.company_name || acceptedQuote.professional.companyName || ''
           }}
           requestId={request.id}
           onRatingComplete={onRefresh}

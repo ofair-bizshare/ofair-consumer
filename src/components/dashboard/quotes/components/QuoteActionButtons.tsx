@@ -105,8 +105,10 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
           isAcceptedQuote ? (
             requestStatus === 'completed' ? (
               <span className="text-sm text-green-500">העבודה הושלמה</span>
+            ) : requestStatus === 'waiting_for_rating' ? (
+              <span className="text-sm text-amber-500">ממתין לדירוג</span>
             ) : (
-              <span className="text-sm text-green-500">ממתין לדירוג</span>
+              <span className="text-sm text-green-500">הצעה התקבלה</span>
             )
           ) : (
             <span className="text-sm text-gray-500">לא זמין</span>
