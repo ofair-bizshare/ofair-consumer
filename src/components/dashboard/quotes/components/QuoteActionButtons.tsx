@@ -65,13 +65,16 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
       
       <div className="flex space-x-2 space-x-reverse">
         {showActionButtons ? (
-          // Show cancel dialog for accepted quotes regardless of request status
+          // For accepted quotes
           quoteStatus === 'accepted' ? (
-            <QuoteCancelDialog 
-              open={showCancelConfirm} 
-              onOpenChange={setShowCancelConfirm}
-              onConfirm={() => onRejectQuote(quoteId)}
-            />
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="border-red-500 text-red-500 hover:bg-red-50"
+              onClick={() => setShowCancelConfirm(true)}
+            >
+              בטל קבלת הצעה
+            </Button>
           ) : (
             // For non-accepted quotes in active requests
             <>
@@ -118,6 +121,13 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
           )
         )}
       </div>
+
+      {/* Always include the dialog but only show it when showCancelConfirm is true */}
+      <QuoteCancelDialog 
+        open={showCancelConfirm} 
+        onOpenChange={setShowCancelConfirm}
+        onConfirm={() => onRejectQuote(quoteId)}
+      />
     </div>
   );
 };
