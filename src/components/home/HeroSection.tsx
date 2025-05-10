@@ -18,16 +18,16 @@ const HeroSection: React.FC<HeroSectionProps> = ({
   const isMobile = useIsMobile();
   
   return (
-    <section className="relative pt-20 pb-16 md:pt-32 md:pb-24 overflow-hidden">
+    <section className="relative pt-20 pb-16 md:pt-32 md:pb-24 overflow-hidden w-full">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-teal-50 z-[-1]"></div>
       <div className="absolute inset-0 z-[-1] opacity-50 bg-[url('https://images.unsplash.com/photo-1612968953208-56c5052b9ec4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80')] bg-cover bg-center"></div>
       <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-[-1]"></div>
       
       <div className="container mx-auto px-4">
-        <div className="flex flex-col lg:flex-row items-start lg:items-start gap-6 lg:gap-8">
+        <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6 lg:gap-8 w-full">
           {/* Left side - Text content */}
-          <div className="w-full lg:w-1/2 animate-fade-in-up relative z-10">
-            <div className="text-base font-semibold text-[#00D09E] mb-3 flex items-center">
+          <div className="w-full lg:w-1/2 animate-fade-in-up relative z-10 text-right lg:text-right">
+            <div className="text-base font-semibold text-[#00D09E] mb-3 flex items-center justify-end lg:justify-start">
               <ThumbsUp className="w-5 h-5 inline-block ml-2" />
               oFair - הפתרון המושלם לבעלי בתים
             </div>
@@ -37,7 +37,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
               המושלם לכל עבודה
             </h1>
             <p className="text-base lg:text-lg text-gray-700 mb-6">פלטפורמה חינמית המחברת בין בעלי בתים לבעלי מקצוע מובילים בתחומם. קבלו הצעות מחיר וזמינות ללא התחייבות ובחרו את המקצוען הנכון עבורכם בקלות וביעילות.</p>
-            <div className="flex flex-wrap gap-3 mb-8 lg:mb-0">
+            <div className="flex flex-wrap gap-3 mb-8 lg:mb-0 justify-center lg:justify-start">
               <Button size={isMobile ? "default" : "lg"} className="bg-[#00D09E] hover:bg-[#00C090] text-white button-transition flex items-center gap-1 shadow-md" onClick={scrollToRequestForm}>
                 <FileText size={isMobile ? 16 : 20} />
                 <span className="text-sm md:text-base">שליחת פנייה לבעלי מקצוע</span>
@@ -50,7 +50,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
               </Link>
             </div>
             {/* Add new cashback benefit info */}
-            <div className="mt-6 p-3 md:p-4 bg-blue-50 border-2 border-blue-200 rounded-lg shadow-sm">
+            <div className="mt-6 p-3 md:p-4 bg-blue-50 border-2 border-blue-200 rounded-lg shadow-sm w-full">
               <div className="flex items-start">
                 <Gift className="h-5 w-5 md:h-6 md:w-6 text-[#00D09E] mt-1 ml-2 flex-shrink-0" />
                 <div>
@@ -70,7 +70,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
             <div className="absolute -top-12 -right-12 w-24 h-24 bg-gradient-to-br from-blue-400 to-teal-300 rounded-full blur-xl opacity-30 hidden lg:block"></div>
             <div className="absolute -bottom-8 -left-8 w-20 h-20 bg-gradient-to-br from-yellow-400 to-amber-300 rounded-full blur-lg opacity-30 hidden lg:block"></div>
             
-            <div id="request-form" className="relative">
+            <div id="request-form" className="relative w-full">
               <div className="absolute -top-4 -left-4 w-8 h-8 bg-[#00D09E] rounded-full opacity-80 animate-pulse hidden md:block"></div>
               <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-blue-500 rounded-full opacity-70 animate-pulse hidden md:block"></div>
               <RequestForm />
