@@ -62,9 +62,9 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   }
 
   return (
-    <Card className={`overflow-hidden mb-4 shadow-md hover:shadow-lg transition-shadow ${!isInteractive ? 'opacity-70' : ''}`}>
+    <Card className={`overflow-hidden mb-3 shadow-md transition-shadow ${!isInteractive ? 'opacity-70' : ''}`}>
       <CardContent className="p-0">
-        <div className={`p-4 ${isMobile ? 'space-y-4' : 'p-5'} border-b border-gray-100`}>
+        <div className={`p-3 ${isMobile ? 'space-y-3' : 'p-4'} border-b border-gray-100`}>
           <ProfessionalInfo professional={quote.professional} />
           
           <QuoteDetails 
@@ -81,7 +81,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
             />
           )}
           
-          <div className="mt-4">
+          <div className="mt-3">
             <PhoneRevealButton 
               phoneNumber={quote.professional.phoneNumber || "050-1234567"}
               professionalName={quote.professional.name}

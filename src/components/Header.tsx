@@ -56,15 +56,15 @@ const Header = () => {
   };
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-md py-3' : 'bg-transparent py-5'}`}>
-      <div className="container mx-auto flex items-center justify-between px-[32px]">
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-md py-2' : 'bg-transparent py-3'}`}>
+      <div className="container mx-auto flex items-center justify-between px-4 sm:px-6">
         <Link to="/" className="flex items-center">
-          <img alt="Ofair Logo" src="/lovable-uploads/52b937d1-acd7-4831-b19e-79a55a774829.png" className="h-7 animate-fade-in object-contain" />
+          <img alt="Ofair Logo" src="/lovable-uploads/52b937d1-acd7-4831-b19e-79a55a774829.png" className="h-6 sm:h-7 animate-fade-in object-contain" />
         </Link>
 
         <DesktopNav onSendRequest={handleSendRequest} />
 
-        <div className="flex items-center gap-4 animate-fade-in">
+        <div className="flex items-center gap-2 sm:gap-4 animate-fade-in">
           <a 
             href="https://biz.ofair.co.il" 
             target="_blank" 
@@ -87,7 +87,11 @@ const Header = () => {
             </Button>
           )}
 
-          <button className="md:hidden text-gray-800" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
+          <button 
+            className="md:hidden text-gray-800 p-1" 
+            onClick={() => setIsMenuOpen(!isMenuOpen)} 
+            aria-label="Toggle menu"
+          >
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>

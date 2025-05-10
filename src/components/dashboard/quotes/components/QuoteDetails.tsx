@@ -18,8 +18,8 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   const isMobile = useIsMobile();
   
   return (
-    <div className="mt-4 space-y-2">
-      <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'space-x-6 space-x-reverse'}`}>
+    <div className="mt-3 space-y-2">
+      <div className={`flex ${isMobile ? 'flex-col space-y-1' : 'flex-row space-x-6 space-x-reverse'}`}>
         <div className="flex items-center">
           <span className="font-semibold ml-2">מחיר:</span>
           <span className="text-blue-600 font-medium">₪{price}</span>
@@ -34,17 +34,17 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
       </div>
       
       {description && (
-        <div className="mt-2">
+        <div className="mt-1">
           <p className="text-gray-700 text-sm line-clamp-3">{description}</p>
         </div>
       )}
       
       {sampleImageUrl && (
-        <div className="mt-3">
+        <div className="mt-2">
           <img 
             src={sampleImageUrl} 
             alt="דוגמת עבודה" 
-            className="rounded-md max-h-24 object-cover" 
+            className="rounded-md max-h-20 object-cover" 
           />
         </div>
       )}

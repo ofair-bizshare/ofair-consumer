@@ -46,16 +46,16 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
   const isMobile = useIsMobile();
 
   return (
-    <div className={`p-3 ${isMobile ? 'flex flex-col gap-2' : 'flex flex-wrap justify-between items-center gap-2'} bg-gray-50`}>
+    <div className={`p-2 ${isMobile ? 'flex flex-col gap-2' : 'flex justify-between items-center gap-2'} bg-gray-50`}>
       <div className={`${isMobile ? 'flex justify-between w-full' : 'flex space-x-2 space-x-reverse'}`}>
         {isInteractive && (
           <Button 
             variant={isContactActive ? "default" : "outline"}
             size="sm"
-            className={`space-x-1 space-x-reverse ${isContactActive ? 'bg-blue-600' : 'border-gray-300'}`}
+            className={`space-x-1 space-x-reverse text-xs ${isContactActive ? 'bg-blue-600' : 'border-gray-300'}`}
             onClick={onContactClick}
           >
-            <MessageSquare size={16} />
+            <MessageSquare size={14} />
             <span>{isContactActive ? 'חזור' : 'שלח הודעה'}</span>
           </Button>
         )}
@@ -66,27 +66,27 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
         />
       </div>
       
-      <div className={`${isMobile ? 'w-full' : 'flex space-x-2 space-x-reverse'}`}>
+      <div className={`${isMobile ? 'w-full flex justify-center' : 'flex space-x-2 space-x-reverse'}`}>
         {showActionButtons ? (
           // For accepted quotes
           quoteStatus === 'accepted' ? (
             <Button 
               size="sm" 
               variant="outline"
-              className="border-red-500 text-red-500 hover:bg-red-50 w-full md:w-auto"
+              className="border-red-500 text-red-500 hover:bg-red-50 text-xs"
               onClick={() => setShowCancelConfirm(true)}
             >
               בטל קבלת הצעה
             </Button>
           ) : (
             // For non-accepted quotes in active requests
-            <div className={`${isMobile ? 'flex flex-col space-y-2' : 'flex space-x-2 space-x-reverse'}`}>
+            <div className={`${isMobile ? 'flex justify-center space-x-2 space-x-reverse w-full' : 'flex space-x-2 space-x-reverse'}`}>
               {!hasAcceptedQuote && quoteStatus !== 'rejected' && (
                 <>
                   <Button 
                     variant="outline" 
                     size="sm"
-                    className="border-red-500 text-red-500 hover:bg-red-50"
+                    className="border-red-500 text-red-500 hover:bg-red-50 text-xs"
                     onClick={() => onRejectQuote(quoteId)}
                   >
                     דחה הצעה
@@ -94,7 +94,7 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
                   
                   <Button 
                     size="sm"
-                    className="bg-teal-500 hover:bg-teal-600"
+                    className="bg-teal-500 hover:bg-teal-600 text-xs"
                     onClick={() => onAcceptQuote(quoteId)}
                   >
                     קבל הצעה
@@ -102,10 +102,10 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
                 </>
               )}
               {quoteStatus === 'rejected' && (
-                <span className={`text-sm text-gray-500 ${isMobile ? 'text-center mt-2' : ''}`}>הצעה נדחתה</span>
+                <span className="text-xs text-gray-500">הצעה נדחתה</span>
               )}
               {hasAcceptedQuote && quoteStatus === 'pending' && (
-                <span className={`text-sm text-gray-500 ${isMobile ? 'text-center mt-2' : ''}`}>הצעה אחרת התקבלה</span>
+                <span className="text-xs text-gray-500">הצעה אחרת התקבלה</span>
               )}
             </div>
           )
@@ -113,17 +113,17 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
           // Show status messages for non-interactive quotes
           isAcceptedQuote ? (
             requestStatus === 'completed' ? (
-              <span className={`text-sm text-green-500 ${isMobile ? 'text-center w-full' : ''}`}>העבודה הושלמה</span>
+              <span className="text-xs text-green-500 text-center">העבודה הושלמה</span>
             ) : requestStatus === 'waiting_for_rating' ? (
-              <span className={`text-sm text-amber-500 font-medium ${isMobile ? 'text-center w-full' : ''}`}>ממתין לדירוג</span>
+              <span className="text-xs text-amber-500 font-medium text-center">ממתין לדירוג</span>
             ) : (
-              <span className={`text-sm text-green-500 ${isMobile ? 'text-center w-full' : ''}`}>הצעה התקבלה</span>
+              <span className="text-xs text-green-500 text-center">הצעה התקבלה</span>
             )
           ) : (
             quoteStatus === 'rejected' ? (
-              <span className={`text-sm text-red-500 ${isMobile ? 'text-center w-full' : ''}`}>הצעה נדחתה</span>
+              <span className="text-xs text-red-500 text-center">הצעה נדחתה</span>
             ) : (
-              <span className={`text-sm text-gray-500 ${isMobile ? 'text-center w-full' : ''}`}>לא זמין</span>
+              <span className="text-xs text-gray-500 text-center">לא זמין</span>
             )
           )
         )}
