@@ -30,14 +30,20 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
   React.useEffect(() => {
     const getNotifications = async () => {
       if (isLoggedIn) {
-        const notifications = await fetchUserNotifications();
-        const unreadCount = notifications.filter(n => !n.isRead).length;
-        setNotificationCount(unreadCount);
+        try {
+          const notifications = await fetchUserNotifications();
+          const unreadCount = notifications.filter(n => !n.isRead).length;
+          setNotificationCount(unreadCount);
+        } catch (error) {
+          console.error("Failed to fetch notifications:", error);
+        }
       }
     };
     
-    getNotifications();
-  }, [isLoggedIn]);
+    if (isOpen && isLoggedIn) {
+      getNotifications();
+    }
+  }, [isLoggedIn, isOpen]);
   
   if (!isOpen) {
     return null;
@@ -53,7 +59,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
   };
 
   return (
-    <div className="fixed top-[46px] sm:top-[53px] inset-x-0 bg-white shadow-lg z-50 overflow-y-auto max-h-[85vh] border-t border-gray-100">
+    <div className="fixed inset-x-0 top-[60px] bg-white shadow-lg z-40 overflow-y-auto max-h-[80vh] border-t border-gray-100">
       <div className="px-4 py-3">
         <div className="flex flex-col space-y-3">
           <button

@@ -36,13 +36,13 @@ const RequestDialog: React.FC<RequestDialogProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="sm:max-w-[600px] max-h-[90vh] p-0 overflow-hidden" 
+        className="sm:max-w-[600px] max-h-[90vh] p-0 overflow-hidden w-[95%] mx-auto" 
         dir="rtl"
       >
         <DialogHeader className="p-4 pb-0">
           <DialogTitle className="text-xl">יצירת בקשה חדשה</DialogTitle>
         </DialogHeader>
-        <ScrollArea className={`${isMobile ? 'h-[60vh]' : 'h-[70vh]'} w-full`}>
+        <ScrollArea className={`${isMobile ? 'h-[50vh]' : 'h-[65vh]'} w-full`}>
           <div className="p-4">
             <RequestForm onSuccess={handleSuccess} />
           </div>

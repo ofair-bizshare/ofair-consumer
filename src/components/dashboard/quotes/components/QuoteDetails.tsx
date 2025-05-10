@@ -18,24 +18,24 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   const isMobile = useIsMobile();
   
   return (
-    <div className="mt-3 space-y-2">
-      <div className={`flex ${isMobile ? 'flex-col space-y-1' : 'flex-row space-x-6 space-x-reverse'}`}>
+    <div className="mt-2 space-y-2">
+      <div className={`flex ${isMobile ? 'flex-col gap-1' : 'flex-row gap-6 space-x-reverse'}`}>
         <div className="flex items-center">
-          <span className="font-semibold ml-2">מחיר:</span>
-          <span className="text-blue-600 font-medium">₪{price}</span>
+          <span className="font-semibold ml-2 text-sm">מחיר:</span>
+          <span className="text-blue-600 font-medium text-sm">₪{price}</span>
         </div>
         
         {estimatedTime && (
           <div className="flex items-center">
-            <span className="font-semibold ml-2">זמן משוער:</span>
-            <span>{estimatedTime}</span>
+            <span className="font-semibold ml-2 text-sm">זמן משוער:</span>
+            <span className="text-sm">{estimatedTime}</span>
           </div>
         )}
       </div>
       
       {description && (
         <div className="mt-1">
-          <p className="text-gray-700 text-sm line-clamp-3">{description}</p>
+          <p className="text-gray-700 text-xs line-clamp-3">{description}</p>
         </div>
       )}
       
@@ -44,7 +44,7 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
           <img 
             src={sampleImageUrl} 
             alt="דוגמת עבודה" 
-            className="rounded-md max-h-20 object-cover" 
+            className="rounded-md max-h-16 object-cover" 
           />
         </div>
       )}

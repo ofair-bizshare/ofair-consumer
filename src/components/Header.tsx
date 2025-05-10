@@ -23,6 +23,11 @@ const Header = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Close menu when route changes
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
+
   const handleLoginClick = () => {
     navigate('/login');
   };
@@ -88,9 +93,10 @@ const Header = () => {
           )}
 
           <button 
-            className="md:hidden text-gray-800 p-1" 
+            className="md:hidden text-gray-800 p-1 z-50" 
             onClick={() => setIsMenuOpen(!isMenuOpen)} 
             aria-label="Toggle menu"
+            aria-expanded={isMenuOpen}
           >
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
