@@ -59,12 +59,12 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
   };
 
   return (
-    <div className="fixed inset-x-0 top-[60px] bg-white shadow-lg z-40 overflow-y-auto max-h-[80vh] border-t border-gray-100">
-      <div className="px-4 py-3">
-        <div className="flex flex-col space-y-3">
+    <div className="fixed inset-x-0 top-[60px] bg-white shadow-lg z-40 overflow-y-auto max-h-[80vh] border-t border-gray-100 w-full">
+      <div className="px-4 py-3 w-full">
+        <div className="flex flex-col space-y-3 w-full">
           <button
             onClick={() => { onSendRequest(); onClose(); }}
-            className="flex items-center justify-between py-2.5 border-b border-gray-100"
+            className="flex items-center justify-between py-2.5 border-b border-gray-100 w-full"
           >
             <span className="text-[#00d09e] font-medium">שליחת בקשה</span>
             <Send size={16} className="text-[#00d09e]" />
@@ -72,7 +72,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
           
           <Link 
             to="/search" 
-            className="flex items-center justify-between py-2.5 border-b border-gray-100"
+            className="flex items-center justify-between py-2.5 border-b border-gray-100 w-full"
             onClick={handleItemClick}
           >
             <span className="text-sm">חיפוש בעלי מקצוע</span>
@@ -81,7 +81,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
           
           <Link 
             to="/articles" 
-            className="flex items-center justify-between py-2.5 border-b border-gray-100"
+            className="flex items-center justify-between py-2.5 border-b border-gray-100 w-full"
             onClick={handleItemClick}
           >
             <span className="text-sm">טיפים ומאמרים</span>
@@ -90,7 +90,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
           
           <Link 
             to="/contact" 
-            className="flex items-center justify-between py-2.5 border-b border-gray-100"
+            className="flex items-center justify-between py-2.5 border-b border-gray-100 w-full"
             onClick={handleItemClick}
           >
             <span className="text-sm">צור קשר</span>
@@ -99,7 +99,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
           
           <Link 
             to="/about" 
-            className="flex items-center justify-between py-2.5 border-b border-gray-100"
+            className="flex items-center justify-between py-2.5 border-b border-gray-100 w-full"
             onClick={handleItemClick}
           >
             <span className="text-sm">אודות</span>
@@ -107,11 +107,11 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
           </Link>
           
           {isLoggedIn ? (
-            <div className="mt-1 mb-1">
+            <div className="mt-1 mb-1 w-full">
               <div className="text-teal-600 text-center mb-2 text-xs">בעל מקצוע? הצטרף עכשיו</div>
               
               <Card 
-                className="flex items-center justify-between px-3 py-2 rounded-md mb-2 shadow-sm border-gray-200"
+                className="flex items-center justify-between px-3 py-2 rounded-md mb-2 shadow-sm border-gray-200 w-full"
                 onClick={() => { navigate('/dashboard'); onClose(); }}
               >
                 <span className="text-xs">אזור אישי</span>
@@ -119,7 +119,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
               </Card>
               
               <Card 
-                className="flex items-center justify-between px-3 py-2 rounded-md mb-2 shadow-sm border-gray-200"
+                className="flex items-center justify-between px-3 py-2 rounded-md mb-2 shadow-sm border-gray-200 w-full"
                 onClick={() => { navigate('/referrals'); onClose(); }}
               >
                 <span className="text-xs">הפניות שלי</span>
@@ -127,7 +127,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
               </Card>
               
               <Card 
-                className="flex items-center justify-between px-3 py-2 rounded-md mb-2 shadow-sm border-gray-200 relative"
+                className="flex items-center justify-between px-3 py-2 rounded-md mb-2 shadow-sm border-gray-200 relative w-full"
                 onClick={handleNotificationsClick}
               >
                 <span className="text-xs">התראות</span>
@@ -142,7 +142,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
               </Card>
               
               <Card 
-                className="flex items-center justify-between px-3 py-2 rounded-md mb-3 shadow-sm border-gray-200"
+                className="flex items-center justify-between px-3 py-2 rounded-md mb-3 shadow-sm border-gray-200 w-full"
                 onClick={() => { navigate('/dashboard/settings'); onClose(); }}
               >
                 <span className="text-xs">הגדרות</span>
@@ -150,7 +150,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
               </Card>
               
               <Card 
-                className="flex items-center justify-between px-3 py-2 rounded-md shadow-sm border-gray-200 mb-2 text-red-600"
+                className="flex items-center justify-between px-3 py-2 rounded-md shadow-sm border-gray-200 mb-2 text-red-600 w-full"
                 onClick={() => { onLogout(); onClose(); }}
               >
                 <span className="text-red-600 text-xs">יציאה</span>
@@ -160,7 +160,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
           ) : (
             <Link 
               to="/login" 
-              className="flex items-center justify-between py-2.5"
+              className="flex items-center justify-between py-2.5 w-full"
               onClick={handleItemClick}
             >
               <span className="text-sm">כניסה / הרשמה</span>
@@ -172,7 +172,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
             href="https://biz.ofair.co.il" 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="mt-2 block text-center text-xs text-teal-600 px-4 py-2 border border-teal-200 rounded-md bg-teal-50"
+            className="mt-2 block text-center text-xs text-teal-600 px-4 py-2 border border-teal-200 rounded-md bg-teal-50 w-full"
             onClick={handleItemClick}
           >
             בעל מקצוע? הצטרף לפלטפורמה

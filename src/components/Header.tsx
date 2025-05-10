@@ -7,6 +7,7 @@ import UserDropdown from './header/UserDropdown';
 import MobileMenu from './header/MobileMenu';
 import DesktopNav from './header/DesktopNav';
 import { useAuth } from '@/providers/AuthProvider';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -14,6 +15,7 @@ const Header = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -62,7 +64,7 @@ const Header = () => {
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-md py-2' : 'bg-transparent py-3'}`}>
-      <div className="container mx-auto flex items-center justify-between px-4 sm:px-6">
+      <div className="container mx-auto flex items-center justify-between px-4">
         <Link to="/" className="flex items-center">
           <img alt="Ofair Logo" src="/lovable-uploads/52b937d1-acd7-4831-b19e-79a55a774829.png" className="h-6 sm:h-7 animate-fade-in object-contain" />
         </Link>

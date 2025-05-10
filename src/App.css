@@ -64,8 +64,30 @@
   
   /* Better spacing for mobile content */
   .container {
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Fix text alignment on mobile */
+  h1, h2, h3, p {
+    width: 100% !important;
+    max-width: 100% !important;
+    word-wrap: break-word !important;
+  }
+  
+  /* Ensure buttons are sized properly */
+  button, .button {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  /* Fix stretching of images and absolute positioned elements */
+  img, .absolute {
+    max-width: 100% !important;
   }
 }
 
@@ -82,4 +104,17 @@ button, a {
 /* Fix for dialog scrolling */
 .dialog-content .scrollbar {
   -webkit-overflow-scrolling: touch;
+}
+
+/* Fix for mobile RTL layout specifically */
+@media (max-width: 768px) {
+  [dir="rtl"] .container {
+    padding-right: 0.75rem !important;
+    padding-left: 0.75rem !important;
+  }
+  
+  /* Fix for button spacing in RTL */
+  [dir="rtl"] .flex-wrap {
+    margin-right: 0 !important;
+  }
 }
