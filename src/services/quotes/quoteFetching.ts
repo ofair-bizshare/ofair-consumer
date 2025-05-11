@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { QuoteInterface } from '@/types/dashboard';
+import { QuoteInterface, QuoteStatus } from '@/types/dashboard';
 
 // Fetch quotes for a specific request
 export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInterface[]> => {
@@ -54,7 +54,7 @@ export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInt
               description: quote.description,
               estimatedTime: quote.estimated_time,
               sampleImageUrl: quote.sample_image_url,
-              status: quote.status,
+              status: quote.status as QuoteStatus, // Add explicit type cast here
               createdAt: quote.created_at,
               requestId,
               professional: {
@@ -73,7 +73,7 @@ export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInt
             description: quote.description,
             estimatedTime: quote.estimated_time,
             sampleImageUrl: quote.sample_image_url,
-            status: quote.status,
+            status: quote.status as QuoteStatus, // Add explicit type cast here
             createdAt: quote.created_at,
             requestId,
             professional: {
@@ -98,7 +98,7 @@ export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInt
             description: quote.description,
             estimatedTime: quote.estimated_time,
             sampleImageUrl: quote.sample_image_url,
-            status: quote.status,
+            status: quote.status as QuoteStatus, // Add explicit type cast here
             createdAt: quote.created_at,
             requestId,
             professional: {
@@ -137,19 +137,4 @@ export const countQuotesForRequest = async (requestId: string): Promise<number> 
     console.error('Error in countQuotesForRequest:', error);
     return 0;
   }
-};
-
-// Format price for display and processing
-export const formatPrice = (price: string): string => {
-  if (!price) return '0';
-  
-  // Remove any non-numeric characters except decimals
-  const numericPrice = price.replace(/[^\d.]/g, '');
-  
-  // If there's no valid price, return '0'
-  if (!numericPrice || isNaN(parseFloat(numericPrice))) {
-    return '0';
-  }
-  
-  return numericPrice;
 };
