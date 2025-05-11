@@ -2,13 +2,15 @@
 import { supabase } from '@/integrations/supabase/client';
 import { QuoteInterface, QuoteStatus } from '@/types/dashboard';
 
-// Fetch quotes for a specific request
+/**
+ * Fetches all quotes for a specific request
+ */
 export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInterface[]> => {
-  console.log(`Fetching quotes for request: ${requestId}`);
-  
   try {
-    // Fetch quotes from the database
-    const { data, error } = await supabase
+    console.log("Fetching quotes for request:", requestId);
+    
+    // Fetch quotes for the request, including professional info
+    const { data: quotes, error } = await supabase
       .from('quotes')
       .select(`
         id,
@@ -18,123 +20,107 @@ export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInt
         sample_image_url,
         status,
         created_at,
-        professional_id
+        request_id,
+        professional_id,
+        professionals (
+          id, 
+          name, 
+          phone_number,
+          profession,
+          image_url,
+          rating,
+          review_count,
+          is_verified,
+          company_name
+        )
       `)
       .eq('request_id', requestId);
     
     if (error) {
-      console.error('Error fetching quotes:', error);
-      throw error;
-    }
-    
-    if (!data || data.length === 0) {
-      console.log('No quotes found for this request');
+      console.error("Error fetching quotes:", error);
       return [];
     }
     
-    console.log(`Found ${data.length} quotes for request ${requestId}`);
+    console.log(`Found ${quotes?.length || 0} quotes for request ${requestId}`);
     
-    // For each quote, fetch the professional details
-    const quotesWithProfessionals = await Promise.all(
-      data.map(async (quote) => {
-        try {
-          // Fetch professional details
-          const { data: professionalData, error: professionalError } = await supabase
-            .from('professionals')
-            .select('*')
-            .eq('id', quote.professional_id)
-            .single();
-          
-          if (professionalError) {
-            console.error('Error fetching professional:', professionalError);
-            // Return a quote with minimal professional info
-            return {
-              id: quote.id,
-              price: quote.price,
-              description: quote.description,
-              estimatedTime: quote.estimated_time,
-              sampleImageUrl: quote.sample_image_url,
-              status: quote.status as QuoteStatus, // Add explicit type cast here
-              createdAt: quote.created_at,
-              requestId,
-              professional: {
-                id: quote.professional_id,
-                name: 'Unknown Professional',
-                phoneNumber: '',
-                profession: '',
-              }
-            };
-          }
-          
-          // Return a complete quote with professional details
-          return {
-            id: quote.id,
-            price: quote.price,
-            description: quote.description,
-            estimatedTime: quote.estimated_time,
-            sampleImageUrl: quote.sample_image_url,
-            status: quote.status as QuoteStatus, // Add explicit type cast here
-            createdAt: quote.created_at,
-            requestId,
-            professional: {
-              id: professionalData.id,
-              name: professionalData.name || 'Unknown',
-              phoneNumber: professionalData.phone_number || '',
-              phone: professionalData.phone_number || '',
-              profession: professionalData.profession || '',
-              location: professionalData.location || '',
-              company_name: professionalData.company_name || '',
-              companyName: professionalData.company_name || '',
-              image: professionalData.image || '',
-              about: professionalData.about || '',
-            }
-          };
-        } catch (err) {
-          console.error('Error processing quote:', err);
-          // Return a quote with minimal professional info as a fallback
-          return {
-            id: quote.id,
-            price: quote.price,
-            description: quote.description,
-            estimatedTime: quote.estimated_time,
-            sampleImageUrl: quote.sample_image_url,
-            status: quote.status as QuoteStatus, // Add explicit type cast here
-            createdAt: quote.created_at,
-            requestId,
-            professional: {
-              id: quote.professional_id,
-              name: 'Unknown Professional',
-              phoneNumber: '',
-              profession: '',
-            }
-          };
+    if (!quotes || quotes.length === 0) {
+      return [];
+    }
+
+    // Check for any accepted quotes in accepted_quotes table
+    const { data: acceptedQuotes, error: acceptedQuotesError } = await supabase
+      .from('accepted_quotes')
+      .select('*')
+      .eq('request_id', requestId);
+    
+    if (acceptedQuotesError) {
+      console.error("Error checking accepted quotes:", acceptedQuotesError);
+    }
+    
+    if (acceptedQuotes && acceptedQuotes.length > 0) {
+      console.log("This quote is already accepted in the database:", acceptedQuotes[0]);
+    }
+    
+    // Map database results to QuoteInterface
+    const formattedQuotes = quotes.map(quote => {
+      const professional = quote.professionals;
+      
+      return {
+        id: quote.id,
+        price: quote.price,
+        description: quote.description,
+        estimatedTime: quote.estimated_time || '',
+        sampleImageUrl: quote.sample_image_url,
+        status: quote.status as QuoteStatus, // Cast to correct type
+        createdAt: quote.created_at,
+        requestId: quote.request_id,
+        professional: {
+          id: professional.id,
+          name: professional.name,
+          phoneNumber: professional.phone_number,
+          profession: professional.profession,
+          image: professional.image_url,
+          image_url: professional.image_url,
+          rating: professional.rating,
+          reviewCount: professional.review_count,
+          is_verified: professional.is_verified,
+          verified: professional.is_verified,
+          company_name: professional.company_name || '',
         }
-      })
-    );
+      };
+    }) as QuoteInterface[]; // Cast the entire array to ensure type safety
     
-    return quotesWithProfessionals;
+    return formattedQuotes;
   } catch (error) {
-    console.error('Error in fetchQuotesForRequest:', error);
+    console.error("Error in fetchQuotesForRequest:", error);
     return [];
   }
 };
 
-// Count quotes for a specific request
-export const countQuotesForRequest = async (requestId: string): Promise<number> => {
-  try {
-    const { count, error } = await supabase
-      .from('quotes')
-      .select('id', { count: 'exact', head: true })
-      .eq('request_id', requestId);
-    
-    if (error) {
-      console.error('Error counting quotes:', error);
-      return 0;
-    }
-    
-    return count || 0;
-  } catch (error) {
-    console.error('Error in countQuotesForRequest:', error);
-    return 0;
+/**
+ * Format price to ensure it's in the correct format
+ */
+export const formatQuotePrice = (price: string | number): string => {
+  if (typeof price === 'number') {
+    return price.toString();
   }
+  
+  // Handle different price formats
+  if (!price || price === "" || price === "0") {
+    return "0";
+  }
+  
+  // Clean the price string
+  let cleanPrice = price
+    .toString()
+    .replace(/[^\d.,]/g, '') // Remove non-digit characters except . and ,
+    .replace(/,/g, '.');     // Replace commas with dots
+  
+  // Handle multiple decimal points
+  const parts = cleanPrice.split('.');
+  if (parts.length > 2) {
+    cleanPrice = parts[0] + '.' + parts.slice(1).join('');
+  }
+  
+  return cleanPrice;
 };

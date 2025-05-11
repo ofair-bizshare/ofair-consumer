@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { QuoteInterface } from '@/types/dashboard';
@@ -376,10 +377,12 @@ export const useQuotes = (selectedRequestId: string | null) => {
         console.log("Quotes to update to pending:", quotesToUpdate);
         
         try {
-          const updateResults = await Promise.all(
-            quotesToUpdate.map(quote => updateQuoteStatus(quote.id, 'pending'))
-          );
-          console.log("Update other quotes to pending results:", updateResults);
+          if (quotesToUpdate && quotesToUpdate.length > 0) {
+            const updateResults = await Promise.all(
+              quotesToUpdate.map(quote => updateQuoteStatus(quote.id, 'pending'))
+            );
+            console.log("Update other quotes to pending results:", updateResults);
+          }
         } catch (error) {
           console.error("Error updating quote statuses:", error);
         }

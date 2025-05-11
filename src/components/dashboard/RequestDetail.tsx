@@ -88,6 +88,11 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
     setIsRatingDialogOpen(true);
   };
 
+  // Early return if request is undefined
+  if (!request) {
+    return <div className="text-gray-500 text-center py-4">Loading request details...</div>;
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="glass-card p-6">
