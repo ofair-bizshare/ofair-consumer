@@ -50,9 +50,9 @@ const ArticleCard: React.FC<ArticleCardProps> = ({
     setImgError(true);
   };
 
-  // Use a better fallback image and ensure consistent image quality
-  const imageUrl = imgError 
-    ? 'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?auto=format&fit=crop&q=80&w=800&h=450' 
+  // Use a reliable local placeholder image or a reliable external source
+  const imageUrl = imgError || !image || image.includes('via.placeholder.com')
+    ? '/placeholder.svg'
     : image;
 
   return (
