@@ -163,3 +163,39 @@ body {
   overflow-x: hidden;
   width: 100%;
 }
+
+/* Fix the horizontal scrolling issue */
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
+}
+
+/* Fix for absolute positioned elements causing overflow */
+.absolute, .fixed {
+  max-width: 100vw;
+  box-sizing: border-box;
+}
+
+/* Fix for any container that might cause overflow */
+.container, section, div {
+  max-width: 100vw;
+  box-sizing: border-box;
+}
+
+/* Ensure all content stays within viewport */
+#root > * {
+  max-width: 100vw;
+  box-sizing: border-box;
+}
+
+/* Force all sections to stay within bounds */
+section {
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
