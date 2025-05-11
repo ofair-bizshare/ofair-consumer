@@ -19,7 +19,7 @@ interface RequestDetailProps {
 
 const RequestDetail: React.FC<RequestDetailProps> = ({ 
   request, 
-  quotes, 
+  quotes = [], // Add a default empty array to prevent undefined issues
   onAcceptQuote, 
   onRejectQuote, 
   onViewProfile,
@@ -32,8 +32,8 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
   console.log("RequestDetail rendered with request:", request);
   console.log("RequestDetail rendered with quotes:", quotes);
   
-  // Find the accepted quote (if any)
-  const acceptedQuote = quotes.find(q => q.status === 'accepted');
+  // Find the accepted quote (if any), make sure quotes is not undefined before finding
+  const acceptedQuote = quotes && quotes.length > 0 ? quotes.find(q => q.status === 'accepted') : undefined;
   console.log("Found accepted quote:", acceptedQuote);
   
   const handleDeleteRequest = async () => {
@@ -138,7 +138,7 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
         
         <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
           <p className="text-gray-500 text-sm">
-            הצעות מחיר: <span className="font-medium text-blue-700">{quotes.length}</span>
+            הצעות מחיר: <span className="font-medium text-blue-700">{quotes ? quotes.length : 0}</span>
           </p>
           <Button 
             variant="outline" 

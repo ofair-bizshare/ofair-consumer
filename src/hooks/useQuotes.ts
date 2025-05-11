@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { QuoteInterface } from '@/types/dashboard';
@@ -40,6 +39,12 @@ export const useQuotes = (selectedRequestId: string | null) => {
       // Fetch quotes from database
       const requestQuotes = await fetchQuotesForRequest(requestId);
       
+      if (!requestQuotes) {
+        console.error("Failed to fetch quotes or received null/undefined");
+        setQuotes([]);
+        return;
+      }
+      
       // Check for an accepted quote in the fetched quotes
       const acceptedQuote = requestQuotes.find(q => q.status === 'accepted');
       
@@ -78,6 +83,12 @@ export const useQuotes = (selectedRequestId: string | null) => {
         title: "שגיאה בטעינת הצעות מחיר",
         description: "אירעה שגיאה בטעינת הצעות המחיר, אנא נסה שוב",
         variant: "destructive",
+      });
+      
+      // Set to empty array to prevent undefined issues
+      setQuotes(prevQuotes => {
+        // Keep quotes for other requests
+        return prevQuotes.filter(q => q.requestId !== requestId);
       });
     }
   }, [toast]);
@@ -448,7 +459,7 @@ export const useQuotes = (selectedRequestId: string | null) => {
   };
 
   return { 
-    quotes: quotes.filter(q => q.requestId === selectedRequestId), 
+    quotes: selectedRequestId ? quotes.filter(q => q.requestId === selectedRequestId) : [], 
     handleAcceptQuote, 
     handleRejectQuote,
     showPaymentDialog,

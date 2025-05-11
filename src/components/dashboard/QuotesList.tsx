@@ -12,12 +12,17 @@ interface QuotesListProps {
 }
 
 const QuotesList: React.FC<QuotesListProps> = ({ 
-  quotes, 
+  quotes = [], // Add default empty array
   onAcceptQuote, 
   onRejectQuote, 
   onViewProfile,
   requestStatus = 'active'
 }) => {
+  // Check if quotes is undefined or empty
+  if (!quotes || quotes.length === 0) {
+    return <div className="text-gray-500 text-center py-4">No quotes available.</div>;
+  }
+  
   const hasAcceptedQuote = quotes.some(quote => quote.status === 'accepted');
   
   // Sort quotes to show accepted quotes first
