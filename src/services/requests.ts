@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { RequestInterface } from '@/types/dashboard';
 
@@ -6,7 +7,7 @@ export const fetchUserRequests = async (): Promise<RequestInterface[]> => {
   try {
     // We need to use "as any" to bypass TypeScript's type checking
     const { data, error } = await supabase
-      .from('requests' as any)
+      .from('requests')
       .select('*')
       .order('created_at', { ascending: false });
       
@@ -60,7 +61,7 @@ export const createRequest = async (requestData: {
 
     // We need to use "as any" to bypass TypeScript's type checking
     const { data, error } = await supabase
-      .from('requests' as any)
+      .from('requests')
       .insert({
         title: requestData.title,
         description: requestData.description,
@@ -91,7 +92,7 @@ export const getRequestById = async (id: string): Promise<RequestInterface | nul
   try {
     // We need to use "as any" to bypass TypeScript's type checking
     const { data, error } = await supabase
-      .from('requests' as any)
+      .from('requests')
       .select('*')
       .eq('id', id)
       .maybeSingle();
@@ -132,7 +133,7 @@ export const updateRequestStatus = async (id: string, status: string): Promise<b
     console.log(`Updating request ${id} status to ${status}`);
     // We need to use "as any" to bypass TypeScript's type checking
     const { error } = await supabase
-      .from('requests' as any)
+      .from('requests')
       .update({ status, updated_at: new Date().toISOString() })
       .eq('id', id);
       
@@ -152,17 +153,57 @@ export const updateRequestStatus = async (id: string, status: string): Promise<b
 // Delete a request
 export const deleteRequest = async (id: string): Promise<boolean> => {
   try {
-    // We need to use "as any" to bypass TypeScript's type checking
-    const { error } = await supabase
-      .from('requests' as any)
+    console.log(`Attempting to delete request with ID: ${id}`);
+    
+    // First, delete associated quotes from accepted_quotes table
+    try {
+      const { error: acceptedQuotesError } = await supabase
+        .from('accepted_quotes')
+        .delete()
+        .eq('request_id', id);
+        
+      if (acceptedQuotesError) {
+        console.error('Error deleting associated accepted quotes:', acceptedQuotesError);
+        // Continue with deletion even if this fails
+      } else {
+        console.log(`Successfully deleted accepted quotes for request ${id}`);
+      }
+    } catch (e) {
+      console.error('Error in deleting associated accepted quotes:', e);
+      // Continue with deletion even if this fails
+    }
+    
+    // Next, delete associated quotes
+    try {
+      const { error: quotesError } = await supabase
+        .from('quotes')
+        .delete()
+        .eq('request_id', id);
+        
+      if (quotesError) {
+        console.error('Error deleting associated quotes:', quotesError);
+        // Continue with deletion even if this fails
+      } else {
+        console.log(`Successfully deleted quotes for request ${id}`);
+      }
+    } catch (e) {
+      console.error('Error in deleting associated quotes:', e);
+      // Continue with deletion even if this fails
+    }
+    
+    // Finally, delete the request itself
+    const { error, data } = await supabase
+      .from('requests')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .select();
       
     if (error) {
       console.error('Error deleting request:', error);
       return false;
     }
     
+    console.log(`Successfully deleted request ${id}:`, data);
     return true;
   } catch (error) {
     console.error('Error deleting request:', error);

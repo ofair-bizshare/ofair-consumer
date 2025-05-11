@@ -113,16 +113,21 @@ export const saveAcceptedQuote = async (
 // Delete an accepted quote record
 export const deleteAcceptedQuote = async (quoteId: string): Promise<boolean> => {
   try {
-    const { error: deleteError } = await supabase
+    // Log the deletion attempt
+    console.log(`Attempting to delete accepted quote record for quote ID: ${quoteId}`);
+    
+    const { error: deleteError, data } = await supabase
       .from('accepted_quotes')
       .delete()
-      .eq('quote_id', quoteId);
+      .eq('quote_id', quoteId)
+      .select();
     
     if (deleteError) {
       console.error("Error deleting accepted quote record:", deleteError);
       return false;
     }
     
+    console.log("Deleted accepted quote record successfully:", data);
     return true;
   } catch (deleteError) {
     console.error("Error deleting accepted quote record:", deleteError);

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { QuoteInterface } from '@/types/dashboard';
@@ -276,7 +277,7 @@ export const useQuotes = (selectedRequestId: string | null) => {
       }
       
       toast({
-        title: "ה��עה התקבלה",
+        title: "הצעה התקבלה",
         description: "הודעה נשלחה לבעל המקצוע. הוא יצור איתך קשר בהקדם.",
         variant: "default",
       });
@@ -310,6 +311,9 @@ export const useQuotes = (selectedRequestId: string | null) => {
     
     setIsProcessing(true);
     
+    // Log the action for debugging
+    console.log(`Starting quote rejection process for quote ID: ${quoteId}`);
+    
     const rejectedQuote = quotes.find(q => q.id === quoteId);
     if (!rejectedQuote) {
       console.error("Cannot reject quote: quote not found");
@@ -318,83 +322,123 @@ export const useQuotes = (selectedRequestId: string | null) => {
     }
     
     console.log("Handling reject quote:", quoteId);
+    console.log("Quote details:", rejectedQuote);
     
-    // Update quote status in the database
-    const success = await updateQuoteStatus(quoteId, 'rejected');
-    
-    if (!success) {
+    try {
+      // If this is canceling an accepted quote
+      if (rejectedQuote.status === 'accepted') {
+        console.log("Canceling previously accepted quote");
+        
+        // Clear the last accepted quote ID
+        if (lastAcceptedQuoteId === quoteId) {
+          setLastAcceptedQuoteId(null);
+        }
+        
+        // First, delete from accepted_quotes table
+        const deleteResult = await deleteAcceptedQuote(quoteId);
+        console.log("Delete from accepted_quotes result:", deleteResult);
+        
+        if (!deleteResult) {
+          console.error("Failed to delete from accepted_quotes table");
+          // Continue anyway as we still want to update the UI
+        }
+        
+        // Update quote status in the database
+        const updateSuccess = await updateQuoteStatus(quoteId, 'rejected');
+        console.log("Update quote status result:", updateSuccess);
+        
+        if (!updateSuccess) {
+          toast({
+            title: "שגיאה בדחיית ההצעה",
+            description: "אירעה שגיאה בדחיית ההצעה. אנא נסה שוב.",
+            variant: "destructive",
+          });
+          setIsProcessing(false);
+          return;
+        }
+        
+        // Reset all quotes for this request to pending in the database
+        const quotesToUpdate = quotes.filter(q => 
+          q.requestId === rejectedQuote.requestId && q.id !== quoteId
+        );
+        
+        console.log("Quotes to update to pending:", quotesToUpdate);
+        
+        try {
+          const updateResults = await Promise.all(
+            quotesToUpdate.map(quote => updateQuoteStatus(quote.id, 'pending'))
+          );
+          console.log("Update other quotes to pending results:", updateResults);
+        } catch (error) {
+          console.error("Error updating quote statuses:", error);
+        }
+        
+        // Reset quotes in local state
+        setQuotes(prevQuotes => 
+          prevQuotes.map(quote => 
+            quote.requestId === rejectedQuote.requestId 
+              ? { ...quote, status: quote.id === quoteId ? 'rejected' : 'pending' } 
+              : quote
+          )
+        );
+        
+        // Update the request status back to active
+        const requestUpdateSuccess = await updateRequestStatus(rejectedQuote.requestId, 'active');
+        console.log("Update request status to active result:", requestUpdateSuccess);
+        
+        toast({
+          title: "קבלת הצעה בוטלה",
+          description: "אפשר לבחור הצעה אחרת כעת.",
+          variant: "default",
+        });
+      } else {
+        // Normal rejection of a quote
+        console.log("Standard quote rejection (not previously accepted)");
+        
+        // Update quote status in the database
+        const updateSuccess = await updateQuoteStatus(quoteId, 'rejected');
+        console.log("Update quote status result:", updateSuccess);
+        
+        if (!updateSuccess) {
+          toast({
+            title: "שגיאה בדחיית ההצעה",
+            description: "אירעה שגיאה בדחיית ההצעה. אנא נסה שוב.",
+            variant: "destructive",
+          });
+          setIsProcessing(false);
+          return;
+        }
+        
+        // Update local state
+        setQuotes(prevQuotes => 
+          prevQuotes.map(quote => 
+            quote.id === quoteId 
+              ? { ...quote, status: 'rejected' } 
+              : quote
+          )
+        );
+        
+        toast({
+          title: "הצעה נדחתה",
+          description: "הודעה נשלחה לבעל המקצוע.",
+          variant: "default",
+        });
+      }
+    } catch (error) {
+      console.error("Error in quote rejection process:", error);
       toast({
-        title: "שגיאה בדחיית ההצעה",
-        description: "אירעה שגיאה בדחיית ההצעה. אנא נסה שוב.",
+        title: "שגיאה בתהליך דחיית ההצעה",
+        description: "אירעה שגיאה בתהליך. אנא נסה שוב מאוחר יותר.",
         variant: "destructive",
       });
+    } finally {
+      // Refresh quotes after rejection is complete
+      if (rejectedQuote.requestId) {
+        console.log("Refreshing quotes after rejection");
+        await refreshQuotes(rejectedQuote.requestId);
+      }
       setIsProcessing(false);
-      return;
     }
-    
-    // If this is canceling an accepted quote
-    if (rejectedQuote.status === 'accepted') {
-      console.log("Canceling previously accepted quote");
-      
-      // Clear the last accepted quote ID
-      if (lastAcceptedQuoteId === quoteId) {
-        setLastAcceptedQuoteId(null);
-      }
-      
-      // Reset all quotes for this request to pending in the database
-      const quotesToUpdate = quotes.filter(q => 
-        q.requestId === rejectedQuote.requestId && q.id !== quoteId
-      );
-      
-      try {
-        await Promise.all(
-          quotesToUpdate.map(quote => updateQuoteStatus(quote.id, 'pending'))
-        );
-      } catch (error) {
-        console.error("Error updating quote statuses:", error);
-      }
-      
-      // Reset quotes in local state
-      setQuotes(prevQuotes => 
-        prevQuotes.map(quote => 
-          quote.requestId === rejectedQuote.requestId 
-            ? { ...quote, status: quote.id === quoteId ? 'rejected' : 'pending' } 
-            : quote
-        )
-      );
-      
-      toast({
-        title: "קבלת הצעה בוטלה",
-        description: "אפשר לבחור הצעה אחרת כעת.",
-        variant: "default",
-      });
-      
-      // Delete the record from accepted_quotes table
-      await deleteAcceptedQuote(quoteId);
-      
-      // Update the request status back to active
-      await updateRequestStatus(rejectedQuote.requestId, 'active');
-      
-    } else {
-      // Normal rejection of a quote - just update local state
-      setQuotes(prevQuotes => 
-        prevQuotes.map(quote => 
-          quote.id === quoteId 
-            ? { ...quote, status: 'rejected' } 
-            : quote
-        )
-      );
-      
-      toast({
-        title: "הצעה נדחתה",
-        description: "הודעה נשלחה לבעל המקצוע.",
-        variant: "default",
-      });
-    }
-    
-    // Refresh quotes after rejection is complete
-    refreshQuotes(rejectedQuote.requestId);
-    setIsProcessing(false);
   };
 
   // Close payment dialog

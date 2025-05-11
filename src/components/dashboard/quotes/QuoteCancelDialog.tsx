@@ -22,17 +22,16 @@ const QuoteCancelDialog: React.FC<QuoteCancelDialogProps> = ({
   onOpenChange,
   onConfirm
 }) => {
+  console.log("QuoteCancelDialog rendered, open:", open);
+  
+  const handleConfirm = () => {
+    console.log("Cancel confirmation clicked");
+    onConfirm();
+    onOpenChange(false);
+  };
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogTrigger asChild>
-        <Button 
-          size="sm" 
-          variant="outline"
-          className="border-red-500 text-red-500 hover:bg-red-50"
-        >
-          בטל קבלת הצעה
-        </Button>
-      </AlertDialogTrigger>
       <AlertDialogContent dir="rtl">
         <AlertDialogTitle>האם אתה בטוח שברצונך לבטל את קבלת ההצעה?</AlertDialogTitle>
         <AlertDialogDescription>
@@ -40,7 +39,7 @@ const QuoteCancelDialog: React.FC<QuoteCancelDialogProps> = ({
         </AlertDialogDescription>
         <div className="flex justify-end gap-3 mt-4">
           <AlertDialogCancel>ביטול</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} className="bg-red-500 hover:bg-red-600">
+          <AlertDialogAction onClick={handleConfirm} className="bg-red-500 hover:bg-red-600">
             כן, בטל את קבלת ההצעה
           </AlertDialogAction>
         </div>

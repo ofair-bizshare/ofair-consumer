@@ -117,6 +117,64 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_payments: {
+        Row: {
+          commission_amount: number
+          created_at: string
+          final_amount: number
+          id: string
+          lead_id: string
+          payment_method: string
+          professional_id: string
+          proposal_id: string
+          share_percentage: number
+        }
+        Insert: {
+          commission_amount?: number
+          created_at?: string
+          final_amount: number
+          id?: string
+          lead_id: string
+          payment_method: string
+          professional_id: string
+          proposal_id: string
+          share_percentage?: number
+        }
+        Update: {
+          commission_amount?: number
+          created_at?: string
+          final_amount?: number
+          id?: string
+          lead_id?: string
+          payment_method?: string
+          professional_id?: string
+          proposal_id?: string
+          share_percentage?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_payments_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_payments_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_payments_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           budget: number | null

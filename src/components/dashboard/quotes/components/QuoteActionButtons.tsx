@@ -44,6 +44,26 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
   professional
 }) => {
   const isMobile = useIsMobile();
+  
+  console.log("QuoteActionButtons props:", {
+    requestStatus,
+    quoteStatus,
+    quoteId,
+    isAcceptedQuote,
+    showActionButtons,
+    hasAcceptedQuote
+  });
+
+  const handleCancelQuoteClick = () => {
+    console.log("Cancel quote button clicked for quote:", quoteId);
+    setShowCancelConfirm(true);
+  };
+  
+  const handleConfirmCancel = () => {
+    console.log("Cancel confirmation confirmed for quote:", quoteId);
+    onRejectQuote(quoteId);
+    setShowCancelConfirm(false);
+  };
 
   return (
     <div className={`p-2 ${isMobile ? 'grid grid-cols-1 gap-2' : 'flex justify-between items-center gap-2'} bg-gray-50`}>
@@ -74,7 +94,7 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
               size="sm" 
               variant="outline"
               className="border-red-500 text-red-500 hover:bg-red-50 text-xs"
-              onClick={() => setShowCancelConfirm(true)}
+              onClick={handleCancelQuoteClick}
             >
               בטל קבלת הצעה
             </Button>
@@ -130,11 +150,11 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
         </div>
       )}
 
-      {/* Always include the dialog but only show it when showCancelConfirm is true */}
+      {/* QuoteCancelDialog - Moved out of conditional to make sure it's always available */}
       <QuoteCancelDialog 
         open={showCancelConfirm} 
         onOpenChange={setShowCancelConfirm}
-        onConfirm={() => onRejectQuote(quoteId)}
+        onConfirm={handleConfirmCancel}
       />
     </div>
   );

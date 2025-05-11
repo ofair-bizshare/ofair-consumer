@@ -63,6 +63,8 @@ const ProfessionalRatingDialog: React.FC<ProfessionalRatingDialogProps> = ({
   const [userName, setUserName] = useState('');
   const [userPhone, setUserPhone] = useState('');
   
+  console.log("ProfessionalRatingDialog rendered with props:", { open, professional, requestId });
+  
   // Get user profile data if available
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -84,8 +86,10 @@ const ProfessionalRatingDialog: React.FC<ProfessionalRatingDialogProps> = ({
       }
     };
     
-    fetchUserProfile();
-  }, [user]);
+    if (open) {
+      fetchUserProfile();
+    }
+  }, [user, open]);
 
   const handleRatingChange = (criterionId: string, value: number) => {
     setRatings(prev => ({
@@ -121,11 +125,14 @@ const ProfessionalRatingDialog: React.FC<ProfessionalRatingDialogProps> = ({
     setIsSubmitting(true);
     
     try {
+      console.log("Submitting rating for professional:", professional);
+      console.log("Rating data:", { ratings, textRecommendation, userName, userPhone });
+      
       // Calculate weighted average
       const weightedAverage = calculateWeightedAverage(ratings);
       
       // Save rating to professional_ratings table
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from('professional_ratings')
         .insert({
           professional_name: professional.name,
@@ -143,6 +150,8 @@ const ProfessionalRatingDialog: React.FC<ProfessionalRatingDialogProps> = ({
           weighted_average: weightedAverage,
           recommendation: textRecommendation || null
         });
+      
+      console.log("Rating submission result:", { error, data });
       
       if (error) {
         throw error;
@@ -180,11 +189,15 @@ const ProfessionalRatingDialog: React.FC<ProfessionalRatingDialogProps> = ({
   // Update professional rating
   const updateProfessionalRating = async (professionalId: string) => {
     try {
+      console.log("Updating professional rating for ID:", professionalId);
+      
       // Get all ratings for this professional
       const { data, error } = await supabase
         .from('professional_ratings')
         .select('weighted_average')
         .eq('professional_phone', professional.phone);
+      
+      console.log("Found ratings:", data);
       
       if (error) throw error;
       
@@ -193,14 +206,19 @@ const ProfessionalRatingDialog: React.FC<ProfessionalRatingDialogProps> = ({
         const totalRating = data.reduce((sum, item) => sum + Number(item.weighted_average), 0);
         const avgRating = parseFloat((totalRating / data.length).toFixed(1));
         
+        console.log("Calculated average rating:", avgRating, "from", data.length, "ratings");
+        
         // Update professional record
-        await supabase
+        const { error: updateError, data: updateData } = await supabase
           .from('professionals')
           .update({ 
             rating: avgRating,
             review_count: data.length
           })
-          .eq('id', professionalId);
+          .eq('id', professionalId)
+          .select();
+          
+        console.log("Professional update result:", { updateError, updateData });
       }
     } catch (err) {
       console.error('Error updating professional rating:', err);

@@ -29,8 +29,12 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
+  console.log("RequestDetail rendered with request:", request);
+  console.log("RequestDetail rendered with quotes:", quotes);
+  
   // Find the accepted quote (if any)
   const acceptedQuote = quotes.find(q => q.status === 'accepted');
+  console.log("Found accepted quote:", acceptedQuote);
   
   const handleDeleteRequest = async () => {
     if (!request.id) return;
@@ -41,9 +45,11 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
     }
     
     setIsDeleting(true);
+    console.log(`Attempting to delete request with ID: ${request.id}`);
     
     try {
       const success = await deleteRequest(request.id);
+      console.log("Delete request result:", success);
       
       if (success) {
         toast({
@@ -75,6 +81,11 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
     } finally {
       setIsDeleting(false);
     }
+  };
+  
+  const handleOpenRatingDialog = () => {
+    console.log("Opening rating dialog for professional:", acceptedQuote?.professional);
+    setIsRatingDialogOpen(true);
   };
 
   return (
@@ -117,7 +128,7 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
             </p>
             <Button 
               className="bg-amber-500 hover:bg-amber-600 text-white"
-              onClick={() => setIsRatingDialogOpen(true)}
+              onClick={handleOpenRatingDialog}
             >
               <Star className="h-4 w-4 ml-1" />
               דרג את בעל המקצוע

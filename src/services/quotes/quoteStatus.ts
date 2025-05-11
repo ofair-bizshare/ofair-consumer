@@ -9,7 +9,7 @@ export const updateQuoteStatus = async (id: string, status: string): Promise<boo
     
     // We need to use "as any" to bypass TypeScript's type checking
     const { error, data } = await supabase
-      .from('quotes' as any)
+      .from('quotes')
       .update({ 
         status, 
         updated_at: timestamp 
@@ -36,7 +36,7 @@ export const updateRequestStatus = async (requestId: string, status: string): Pr
     console.log(`Updating request ${requestId} status to ${status}`);
     // We need to use "as any" to bypass TypeScript's type checking
     const { error } = await supabase
-      .from('requests' as any)
+      .from('requests')
       .update({ status, updated_at: new Date().toISOString() })
       .eq('id', requestId);
       

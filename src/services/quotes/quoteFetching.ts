@@ -1,20 +1,27 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { QuoteInterface } from '@/types/dashboard';
-import { getProfessional } from '@/services/professionals';
-import { formatPrice } from './paymentProcessing';
 
 // Fetch quotes for a specific request
 export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInterface[]> => {
+  console.log(`Fetching quotes for request: ${requestId}`);
+  
   try {
-    console.log(`Fetching quotes for request: ${requestId}`);
-    // We need to use "as any" to bypass TypeScript's type checking for tables that aren't in the generated types
+    // Fetch quotes from the database
     const { data, error } = await supabase
-      .from('quotes' as any)
-      .select('*')
-      .eq('request_id', requestId)
-      .order('created_at', { ascending: false });
-      
+      .from('quotes')
+      .select(`
+        id,
+        price,
+        description,
+        estimated_time,
+        sample_image_url,
+        status,
+        created_at,
+        professional_id
+      `)
+      .eq('request_id', requestId);
+    
     if (error) {
       console.error('Error fetching quotes:', error);
       throw error;
@@ -27,105 +34,99 @@ export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInt
     
     console.log(`Found ${data.length} quotes for request ${requestId}`);
     
-    // Fetch professional details for each quote
-    const quotes = await Promise.all(
-      data.map(async (quote: any) => {
+    // For each quote, fetch the professional details
+    const quotesWithProfessionals = await Promise.all(
+      data.map(async (quote) => {
         try {
-          const professional = await getProfessional(quote.professional_id);
-          if (!professional) {
-            console.error(`Professional not found for ID: ${quote.professional_id}`);
-            return null;
+          // Fetch professional details
+          const { data: professionalData, error: professionalError } = await supabase
+            .from('professionals')
+            .select('*')
+            .eq('id', quote.professional_id)
+            .single();
+          
+          if (professionalError) {
+            console.error('Error fetching professional:', professionalError);
+            // Return a quote with minimal professional info
+            return {
+              id: quote.id,
+              price: quote.price,
+              description: quote.description,
+              estimatedTime: quote.estimated_time,
+              sampleImageUrl: quote.sample_image_url,
+              status: quote.status,
+              createdAt: quote.created_at,
+              requestId,
+              professional: {
+                id: quote.professional_id,
+                name: 'Unknown Professional',
+                phoneNumber: '',
+                profession: '',
+              }
+            };
           }
           
-          // Format price as a string with default value
-          const price = formatPrice(quote.price);
-          
-          console.log(`Quote ${quote.id} price (after format): ${price}`);
-          
+          // Return a complete quote with professional details
           return {
             id: quote.id,
-            requestId: quote.request_id,
-            professional,
-            price: price, // Ensure price is a string
-            estimatedTime: quote.estimated_time || '',
+            price: quote.price,
             description: quote.description,
+            estimatedTime: quote.estimated_time,
+            sampleImageUrl: quote.sample_image_url,
             status: quote.status,
-            sampleImageUrl: quote.sample_image_url || null
+            createdAt: quote.created_at,
+            requestId,
+            professional: {
+              id: professionalData.id,
+              name: professionalData.name || 'Unknown',
+              phoneNumber: professionalData.phone_number || '',
+              phone: professionalData.phone_number || '',
+              profession: professionalData.profession || '',
+              location: professionalData.location || '',
+              company_name: professionalData.company_name || '',
+              companyName: professionalData.company_name || '',
+              image: professionalData.image || '',
+              about: professionalData.about || '',
+            }
           };
         } catch (err) {
-          console.error(`Error processing quote:`, err);
-          return null;
+          console.error('Error processing quote:', err);
+          // Return a quote with minimal professional info as a fallback
+          return {
+            id: quote.id,
+            price: quote.price,
+            description: quote.description,
+            estimatedTime: quote.estimated_time,
+            sampleImageUrl: quote.sample_image_url,
+            status: quote.status,
+            createdAt: quote.created_at,
+            requestId,
+            professional: {
+              id: quote.professional_id,
+              name: 'Unknown Professional',
+              phoneNumber: '',
+              profession: '',
+            }
+          };
         }
       })
     );
     
-    // Filter out any null quotes (where professional wasn't found)
-    const validQuotes = quotes.filter(quote => quote !== null) as QuoteInterface[];
-    console.log('Processed quotes:', validQuotes);
-    return validQuotes;
+    return quotesWithProfessionals;
   } catch (error) {
-    console.error('Error fetching quotes for request:', error);
+    console.error('Error in fetchQuotesForRequest:', error);
     return [];
   }
 };
 
-// Create a new quote
-export const createQuote = async (quoteData: {
-  requestId: string;
-  professionalId: string;
-  price: string;
-  estimatedTime?: string;
-  description: string;
-  sampleImageUrl?: string;
-}): Promise<string | null> => {
-  try {
-    console.log('Creating new quote:', quoteData);
-    
-    // Format price as a string with default value
-    const price = formatPrice(quoteData.price);
-    
-    console.log('Formatted price for storage:', price);
-    
-    // We need to use "as any" to bypass TypeScript's type checking
-    const { data, error } = await supabase
-      .from('quotes' as any)
-      .insert({
-        request_id: quoteData.requestId,
-        professional_id: quoteData.professionalId,
-        price: price, // Store as string
-        estimated_time: quoteData.estimatedTime || null,
-        description: quoteData.description,
-        sample_image_url: quoteData.sampleImageUrl || null,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select('id')
-      .single();
-      
-    if (error) {
-      console.error('Error creating quote:', error);
-      throw error;
-    }
-    
-    console.log('Quote created successfully:', data);
-    // Fix: Add type assertion to ensure data.id is a string
-    return data && 'id' in data ? String(data.id) : null;
-  } catch (error) {
-    console.error('Error creating quote:', error);
-    return null;
-  }
-};
-
-// Count quotes for a request
+// Count quotes for a specific request
 export const countQuotesForRequest = async (requestId: string): Promise<number> => {
   try {
-    // We need to use "as any" to bypass TypeScript's type checking
     const { count, error } = await supabase
-      .from('quotes' as any)
-      .select('*', { count: 'exact', head: true })
+      .from('quotes')
+      .select('id', { count: 'exact', head: true })
       .eq('request_id', requestId);
-      
+    
     if (error) {
       console.error('Error counting quotes:', error);
       return 0;
@@ -133,7 +134,22 @@ export const countQuotesForRequest = async (requestId: string): Promise<number> 
     
     return count || 0;
   } catch (error) {
-    console.error('Error counting quotes:', error);
+    console.error('Error in countQuotesForRequest:', error);
     return 0;
   }
+};
+
+// Format price for display and processing
+export const formatPrice = (price: string): string => {
+  if (!price) return '0';
+  
+  // Remove any non-numeric characters except decimals
+  const numericPrice = price.replace(/[^\d.]/g, '');
+  
+  // If there's no valid price, return '0'
+  if (!numericPrice || isNaN(parseFloat(numericPrice))) {
+    return '0';
+  }
+  
+  return numericPrice;
 };
