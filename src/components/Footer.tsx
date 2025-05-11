@@ -51,7 +51,7 @@ const Footer = () => {
               <li className="text-blue-100">
                 דוא"ל: info@ofair.co.il
               </li>
-              <li className="text-blue-100">טלפון: 050-5524542</li>
+              <li className="text-blue-100">טלפון: 050-5577565</li>
             </ul>
             <div className="mt-6">
               <a href="https://biz.ofair.co.il" target="_blank" rel="noopener noreferrer" className="inline-block bg-teal-500 hover:bg-teal-600 text-white font-medium py-2 px-4 rounded-lg transition-colors" aria-label="דף הצטרפות לבעלי מקצוע">
