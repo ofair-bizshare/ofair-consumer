@@ -45,14 +45,22 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
 }) => {
   const isMobile = useIsMobile();
   
+  // Debug logging
   console.log("QuoteActionButtons props:", {
     requestStatus,
     quoteStatus,
     quoteId,
     isAcceptedQuote,
     showActionButtons,
-    hasAcceptedQuote
+    hasAcceptedQuote,
+    professional: professional ? 'exists' : 'missing'
   });
+
+  // Safety check for required props
+  if (!quoteId || !professionalId || !professional) {
+    console.error("QuoteActionButtons missing required props:", { quoteId, professionalId, professional });
+    return <div className="p-2 bg-gray-50 text-center text-xs text-gray-500">Loading actions...</div>;
+  }
 
   const handleCancelQuoteClick = () => {
     console.log("Cancel quote button clicked for quote:", quoteId);
@@ -80,10 +88,12 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
           </Button>
         )}
         
-        <QuoteDetailDialog 
-          professional={professional}
-          onViewProfile={onViewProfile}
-        />
+        {professional && (
+          <QuoteDetailDialog 
+            professional={professional}
+            onViewProfile={onViewProfile}
+          />
+        )}
       </div>
       
       {showActionButtons ? (
@@ -150,7 +160,7 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
         </div>
       )}
 
-      {/* QuoteCancelDialog - Moved out of conditional to make sure it's always available */}
+      {/* QuoteCancelDialog - Always render but only show when needed */}
       <QuoteCancelDialog 
         open={showCancelConfirm} 
         onOpenChange={setShowCancelConfirm}

@@ -29,15 +29,17 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
+  // Safe logging with null checks
   console.log("RequestDetail rendered with request:", request);
-  console.log("RequestDetail rendered with quotes:", quotes);
+  console.log("RequestDetail rendered with quotes:", quotes || []);
   
-  // Find the accepted quote (if any), make sure quotes is not undefined before finding
-  const acceptedQuote = quotes && quotes.length > 0 ? quotes.find(q => q.status === 'accepted') : undefined;
+  // Find the accepted quote (if any), ensure quotes is an array before finding
+  const safeQuotes = Array.isArray(quotes) ? quotes : [];
+  const acceptedQuote = safeQuotes.length > 0 ? safeQuotes.find(q => q.status === 'accepted') : undefined;
   console.log("Found accepted quote:", acceptedQuote);
   
   const handleDeleteRequest = async () => {
-    if (!request.id) return;
+    if (!request?.id) return;
     
     // Confirm deletion with the user
     if (!window.confirm('האם אתה בטוח שברצונך למחוק את הבקשה?')) {
@@ -84,7 +86,17 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
   };
   
   const handleOpenRatingDialog = () => {
-    console.log("Opening rating dialog for professional:", acceptedQuote?.professional);
+    if (!acceptedQuote?.professional) {
+      console.error("Cannot open rating dialog: professional data is missing");
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לדרג את בעל המקצוע כרגע, אנא נסה שוב מאוחר יותר",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    console.log("Opening rating dialog for professional:", acceptedQuote.professional);
     setIsRatingDialogOpen(true);
   };
 
@@ -126,7 +138,7 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
         </p>
         
         {/* Show rating button when status is waiting_for_rating */}
-        {request.status === 'waiting_for_rating' && acceptedQuote && (
+        {request.status === 'waiting_for_rating' && acceptedQuote && acceptedQuote.professional && (
           <div className="my-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
             <p className="text-amber-800 mb-3 text-sm">
               אנא דרג את החוויה שלך עם {acceptedQuote.professional.name} כדי לסייע למשתמשים אחרים
@@ -143,7 +155,7 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
         
         <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
           <p className="text-gray-500 text-sm">
-            הצעות מחיר: <span className="font-medium text-blue-700">{quotes ? quotes.length : 0}</span>
+            הצעות מחיר: <span className="font-medium text-blue-700">{safeQuotes.length}</span>
           </p>
           <Button 
             variant="outline" 
@@ -162,11 +174,11 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
         </div>
       </div>
       
-      {quotes && quotes.length > 0 ? (
+      {safeQuotes.length > 0 ? (
         <div>
           <h3 className="text-xl font-semibold mb-4">הצעות מחיר שהתקבלו</h3>
           <QuotesList 
-            quotes={quotes} 
+            quotes={safeQuotes} 
             onAcceptQuote={onAcceptQuote} 
             onRejectQuote={onRejectQuote} 
             onViewProfile={onViewProfile}
@@ -177,8 +189,8 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
         <NoQuotesMessage onRefresh={onRefresh} />
       )}
       
-      {/* Professional Rating Dialog */}
-      {acceptedQuote && (
+      {/* Professional Rating Dialog - Only render when we have a valid professional */}
+      {acceptedQuote && acceptedQuote.professional && (
         <ProfessionalRatingDialog
           open={isRatingDialogOpen}
           onOpenChange={setIsRatingDialogOpen}

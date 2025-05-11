@@ -10,11 +10,15 @@ import { useToast } from '@/hooks/use-toast';
 import { fetchArticleById } from '@/services/articles';
 import { ArticleInterface } from '@/types/dashboard';
 
+// Default fallback image from public folder
+const FALLBACK_IMAGE = '/placeholder.svg';
+
 const ArticleDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [article, setArticle] = useState<ArticleInterface | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -39,6 +43,11 @@ const ArticleDetail = () => {
           return;
         }
         
+        // Check and clean up image URL if it's from placeholder.com (which seems to be failing)
+        if (articleData.image && articleData.image.includes('placeholder.com')) {
+          articleData.image = FALLBACK_IMAGE;
+        }
+        
         setArticle(articleData);
       } catch (err) {
         console.error('Error loading article:', err);
@@ -50,6 +59,10 @@ const ArticleDetail = () => {
     
     fetchArticle();
   }, [id]);
+
+  const handleImageError = () => {
+    setImageError(true);
+  };
 
   const handleShareLink = () => {
     navigator.clipboard.writeText(window.location.href)
@@ -157,18 +170,32 @@ const ArticleDetail = () => {
             </div>
           </div>
 
-          {article.image && (
+          {(article.image && !imageError) ? (
             <div className="rounded-xl overflow-hidden mb-8 shadow-lg">
               <img 
                 src={article.image} 
                 alt={article.title} 
                 className="w-full h-auto object-cover"
+                onError={handleImageError}
               />
+            </div>
+          ) : (
+            <div className="rounded-xl overflow-hidden mb-8 bg-gray-100 flex items-center justify-center h-64">
+              <div className="text-center p-6">
+                <div className="text-gray-400 text-4xl mb-2">🖼️</div>
+                <p className="text-gray-500">{article.title}</p>
+              </div>
             </div>
           )}
 
           <div className="prose prose-lg max-w-none mb-10">
-            <div dangerouslySetInnerHTML={{ __html: article.content }} />
+            {article.content ? (
+              <div dangerouslySetInnerHTML={{ __html: article.content }} />
+            ) : (
+              <p className="text-gray-500 text-center py-6">
+                תוכן המאמר אינו זמין כרגע. אנא נסה שוב מאוחר יותר.
+              </p>
+            )}
           </div>
 
           <div className="border-t border-b border-gray-200 py-6 my-8">

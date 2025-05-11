@@ -5,19 +5,19 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ArticleCard from '@/components/ArticleCard';
 
-// Sample data for articles
+// Sample data for articles with local fallback images
 const articles = [{
   id: '1',
   title: '10 טיפים לחיסכון בחשמל בבית',
   summary: 'למדו כיצד לחסוך בהוצאות החשמל באמצעות שינויים קטנים בהרגלי השימוש היומיומיים שלכם.',
-  image: 'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
+  image: '/placeholder.svg', // Use local placeholder from public folder
   date: '10 במאי, 2023',
   category: 'חשמל וחיסכון'
 }, {
   id: '2',
   title: 'מדריך לבחירת קבלן שיפוצים אמין',
   summary: 'כיצד לבחור את הקבלן הנכון לפרויקט השיפוץ שלכם וכיצד להימנע מטעויות נפוצות בתהליך.',
-  image: 'https://images.unsplash.com/photo-1581165825571-4d25acd0e396?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80',
+  image: '/placeholder.svg', // Use local placeholder from public folder
   date: '18 באפריל, 2023',
   category: 'שיפוצים'
 }];
