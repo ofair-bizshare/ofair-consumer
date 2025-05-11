@@ -3,6 +3,30 @@ import { supabase } from '@/integrations/supabase/client';
 import { QuoteInterface, QuoteStatus } from '@/types/dashboard';
 
 /**
+ * Count quotes for a specific request
+ */
+export const countQuotesForRequest = async (requestId: string): Promise<number> => {
+  try {
+    console.log("Counting quotes for request:", requestId);
+    
+    const { count, error } = await supabase
+      .from('quotes')
+      .select('*', { count: 'exact', head: true })
+      .eq('request_id', requestId);
+    
+    if (error) {
+      console.error("Error counting quotes:", error);
+      return 0;
+    }
+    
+    return count || 0;
+  } catch (error) {
+    console.error("Error in countQuotesForRequest:", error);
+    return 0;
+  }
+};
+
+/**
  * Fetches all quotes for a specific request
  */
 export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInterface[]> => {
