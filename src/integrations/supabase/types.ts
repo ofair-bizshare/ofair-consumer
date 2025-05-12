@@ -125,7 +125,7 @@ export type Database = {
           is_super_admin: boolean
           name: string | null
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -134,7 +134,7 @@ export type Database = {
           is_super_admin?: boolean
           name?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -143,7 +143,7 @@ export type Database = {
           is_super_admin?: boolean
           name?: string | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -794,9 +794,22 @@ export type Database = {
         }
         Returns: string
       }
+      add_internal_user_by_email: {
+        Args: {
+          caller_email: string
+          new_user_email: string
+          user_name?: string
+          make_super_admin?: boolean
+        }
+        Returns: Json
+      }
       check_admin_status: {
         Args: { user_id_param: string }
         Returns: boolean
+      }
+      check_internal_email: {
+        Args: { email_param: string }
+        Returns: Json
       }
       check_is_admin_user: {
         Args: { user_id_param: string }

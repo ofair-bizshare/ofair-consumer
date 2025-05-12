@@ -8,8 +8,11 @@ import SearchFilterSidebar from '@/components/search/SearchFilterSidebar';
 import SearchMobileFilters from '@/components/search/SearchMobileFilters';
 import SearchResults from '@/components/search/SearchResults';
 import useSearchProfessionals from '@/hooks/useSearchProfessionals';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Search = () => {
+  const isMobile = useIsMobile();
+  
   const {
     professionals,
     loading,
@@ -73,10 +76,11 @@ const Search = () => {
       <Header />
       
       <main className="flex-grow pt-28 pb-16">
-        <div className="container mx-auto px-6">
+        <div className="container mx-auto px-4 sm:px-6">
           <SearchHeader displayProfessionName={displayProfessionName} />
           
-          <div className="mb-8 animate-fade-in-up sticky top-28 z-10 bg-gray-50 pt-4 pb-6 px-4 -mx-4 shadow-sm rounded-b-lg">
+          {/* Modified search container with better mobile positioning */}
+          <div className={`mb-8 ${isMobile ? 'relative z-20 bg-gray-50 pt-4 pb-6 px-4 -mx-4 shadow-sm rounded-b-lg' : 'sticky top-28 z-30 bg-gray-50 pt-4 pb-6 px-4 -mx-4 shadow-sm rounded-b-lg'}`}>
             <DynamicProfessionalSearch 
               onSearch={handleSearch} 
               initialProfession={selectedCategory === 'all' ? '' : selectedCategory}

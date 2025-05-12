@@ -8,6 +8,7 @@ import QuoteDetails from './components/QuoteDetails';
 import AcceptedQuoteStatus from './components/AcceptedQuoteStatus';
 import QuoteActionButtons from './components/QuoteActionButtons';
 import { useIsMobile } from '@/hooks/use-mobile';
+import ErrorBoundary from '@/components/ui/error-boundary';
 
 interface QuoteCardProps {
   quote: QuoteInterface;
@@ -31,9 +32,15 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   const isMobile = useIsMobile();
   
   // Safety check - if quote is invalid, don't render anything
-  if (!quote || !quote.id || !quote.professional) {
+  if (!quote || !quote.id || !quote.professional || !quote.professional.id) {
     console.error("Invalid quote data:", quote);
-    return null;
+    return (
+      <Card className="overflow-hidden mb-3 shadow-md bg-red-50">
+        <CardContent className="p-4">
+          <div className="text-red-600">הצעת מחיר לא תקינה</div>
+        </CardContent>
+      </Card>
+    );
   }
   
   const handleContactClick = () => {
@@ -67,63 +74,59 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     return null;
   }
 
-  // Ensure professional data exists
-  if (!quote.professional || !quote.professional.id) {
-    console.error("Quote missing professional data:", quote);
-    return null;
-  }
-
   return (
-    <Card className={`overflow-hidden mb-3 shadow-md transition-shadow ${!isInteractive ? 'opacity-70' : ''}`}>
-      <CardContent className="p-0">
-        <div className={`p-2 ${isMobile ? 'space-y-2' : 'p-4'} border-b border-gray-100`}>
-          <ProfessionalInfo professional={quote.professional} />
-          
-          <QuoteDetails 
-            price={quote.price || "0"} 
-            estimatedTime={quote.estimatedTime || ""}
-            sampleImageUrl={quote.sampleImageUrl}
-            description={quote.description || ""}
-          />
-          
-          {isAcceptedQuote && (
-            <AcceptedQuoteStatus 
-              isCompleted={isRequestCompleted} 
-              isWaitingForRating={isWaitingForRating}
+    <ErrorBoundary>
+      <Card className={`overflow-hidden mb-3 shadow-md transition-shadow ${!isInteractive ? 'opacity-70' : ''}`}>
+        <CardContent className="p-0">
+          <div className={`p-2 ${isMobile ? 'space-y-2' : 'p-4'} border-b border-gray-100`}>
+            <ProfessionalInfo professional={quote.professional} />
+            
+            <QuoteDetails 
+              price={quote.price || "0"} 
+              estimatedTime={quote.estimatedTime || ""}
+              sampleImageUrl={quote.sampleImageUrl}
+              description={quote.description || ""}
             />
-          )}
-          
-          <div className={`mt-2 ${isMobile ? 'w-full' : ''}`}>
-            <PhoneRevealButton 
-              phoneNumber={quote.professional.phoneNumber || "050-1234567"}
-              professionalName={quote.professional.name || "בעל מקצוע"}
-              professionalId={quote.professional.id}
-              profession={quote.professional.profession || ""}
-              autoReveal={quote.status === 'accepted'} // Auto reveal for accepted quotes
-            />
+            
+            {isAcceptedQuote && (
+              <AcceptedQuoteStatus 
+                isCompleted={isRequestCompleted} 
+                isWaitingForRating={isWaitingForRating}
+              />
+            )}
+            
+            <div className={`mt-2 ${isMobile ? 'w-full' : ''}`}>
+              <PhoneRevealButton 
+                phoneNumber={quote.professional.phoneNumber || quote.professional.phone || "050-1234567"}
+                professionalName={quote.professional.name || "בעל מקצוע"}
+                professionalId={quote.professional.id}
+                profession={quote.professional.profession || ""}
+                autoReveal={quote.status === 'accepted'} // Auto reveal for accepted quotes
+              />
+            </div>
           </div>
-        </div>
-        
-        <QuoteActionButtons 
-          requestStatus={requestStatus}
-          quoteStatus={quote.status}
-          quoteId={quote.id}
-          professionalId={quote.professional.id}
-          isInteractive={isInteractive}
-          isContactActive={isContactActive}
-          showActionButtons={showActionButtons}
-          hasAcceptedQuote={hasAcceptedQuote}
-          isAcceptedQuote={isAcceptedQuote}
-          onContactClick={handleContactClick}
-          onViewProfile={onViewProfile}
-          onAcceptQuote={onAcceptQuote}
-          onRejectQuote={onRejectQuote}
-          showCancelConfirm={showCancelConfirm}
-          setShowCancelConfirm={setShowCancelConfirm}
-          professional={quote.professional}
-        />
-      </CardContent>
-    </Card>
+          
+          <QuoteActionButtons 
+            requestStatus={requestStatus}
+            quoteStatus={quote.status}
+            quoteId={quote.id}
+            professionalId={quote.professional.id}
+            isInteractive={isInteractive}
+            isContactActive={isContactActive}
+            showActionButtons={showActionButtons}
+            hasAcceptedQuote={hasAcceptedQuote}
+            isAcceptedQuote={isAcceptedQuote}
+            onContactClick={handleContactClick}
+            onViewProfile={onViewProfile}
+            onAcceptQuote={onAcceptQuote}
+            onRejectQuote={onRejectQuote}
+            showCancelConfirm={showCancelConfirm}
+            setShowCancelConfirm={setShowCancelConfirm}
+            professional={quote.professional}
+          />
+        </CardContent>
+      </Card>
+    </ErrorBoundary>
   );
 };
 

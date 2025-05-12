@@ -19,22 +19,22 @@ const QuotesList: React.FC<QuotesListProps> = ({
   onViewProfile,
   requestStatus = 'active'
 }) => {
-  // Ensure quotes is always an array
+  // Ensure quotes is always a valid array
   const safeQuotes = Array.isArray(quotes) ? quotes : [];
   
   // Check if quotes is empty
   if (safeQuotes.length === 0) {
-    return <div className="text-gray-500 text-center py-4">No quotes available.</div>;
+    return <div className="text-gray-500 text-center py-4">אין הצעות מחיר זמינות</div>;
   }
   
   // Make sure we have valid quotes with necessary data
   const validQuotes = safeQuotes.filter(quote => 
-    quote && quote.id && quote.professional
+    quote && quote.id && quote.professional && quote.professional.id
   );
   
   // If no valid quotes after filtering, show message
   if (validQuotes.length === 0) {
-    return <div className="text-gray-500 text-center py-4">Invalid quote data received.</div>;
+    return <div className="text-gray-500 text-center py-4">התקבלו נתוני הצעות לא תקינים</div>;
   }
   
   const hasAcceptedQuote = validQuotes.some(quote => quote?.status === 'accepted');
@@ -50,13 +50,17 @@ const QuotesList: React.FC<QuotesListProps> = ({
     <div className="space-y-4">
       {sortedQuotes.map(quote => {
         // Skip rendering if quote is missing critical data
-        if (!quote || !quote.id || !quote.professional) {
+        if (!quote || !quote.id || !quote.professional || !quote.professional.id) {
           console.warn("Skipping invalid quote in QuotesList:", quote);
           return null;
         }
         
         return (
-          <ErrorBoundary key={quote.id} fallback={<div className="p-3 bg-red-50 rounded-md text-sm">שגיאה בטעינת הצעת המחיר</div>}>
+          <ErrorBoundary key={quote.id} fallback={
+            <div className="p-3 bg-red-50 rounded-md text-sm">
+              שגיאה בטעינת הצעת המחיר
+            </div>
+          }>
             <QuoteCard 
               key={quote.id} 
               quote={quote} 

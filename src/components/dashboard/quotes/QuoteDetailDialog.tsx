@@ -30,6 +30,9 @@ const QuoteDetailDialog: React.FC<QuoteDetailDialogProps> = ({
     navigate(`/professional/${professional.id}`);
   };
 
+  // Ensure professional and specialties exist before rendering them
+  const hasSpecialties = professional && professional.specialties && Array.isArray(professional.specialties) && professional.specialties.length > 0;
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -53,7 +56,14 @@ const QuoteDetailDialog: React.FC<QuoteDetailDialogProps> = ({
           <div className="bg-white rounded-lg shadow-md p-4">
             <div className="flex items-center gap-4 mb-4">
               <div className="h-16 w-16 rounded-full overflow-hidden bg-blue-100">
-                <img src={professional.image} alt={professional.name} className="w-full h-full object-cover" />
+                <img 
+                  src={professional.image} 
+                  alt={professional.name} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f3f4f6'/%3E%3Ctext x='50' y='50' font-size='12' text-anchor='middle' alignment-baseline='middle' font-family='Arial' fill='%23a1a1aa'%3ENo image%3C/text%3E%3C/svg%3E";
+                  }}
+                />
               </div>
               <div>
                 <h3 className="text-xl font-bold">{professional.name}</h3>
@@ -69,11 +79,15 @@ const QuoteDetailDialog: React.FC<QuoteDetailDialogProps> = ({
             <div className="mb-4">
               <h4 className="font-semibold mb-1">התמחויות:</h4>
               <div className="flex flex-wrap gap-2">
-                {professional.specialties.map((specialty, index) => (
-                  <span key={index} className="bg-blue-50 text-blue-800 text-xs px-2 py-1 rounded">
-                    {specialty}
-                  </span>
-                ))}
+                {hasSpecialties ? (
+                  professional.specialties.map((specialty, index) => (
+                    <span key={index} className="bg-blue-50 text-blue-800 text-xs px-2 py-1 rounded">
+                      {specialty}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-gray-500">לא צוינו התמחויות</span>
+                )}
               </div>
             </div>
             
