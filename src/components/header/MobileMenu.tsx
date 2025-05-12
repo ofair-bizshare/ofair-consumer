@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Send, User, Search, Book, Info, LogOut, Phone, Bell, Settings, Inbox, UserCircle } from 'lucide-react';
@@ -143,7 +142,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
               
               <Card 
                 className="flex items-center justify-between px-3 py-2 rounded-md mb-3 shadow-sm border-gray-200 w-full"
-                onClick={() => { navigate('/dashboard/settings'); onClose(); }}
+                onClick={() => { navigate('/settings'); onClose(); }}
               >
                 <span className="text-xs">הגדרות</span>
                 <Settings size={16} className="text-gray-500" />

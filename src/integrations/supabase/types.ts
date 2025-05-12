@@ -117,6 +117,36 @@ export type Database = {
         }
         Relationships: []
       }
+      internal_crm: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          is_super_admin: boolean
+          name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          is_super_admin?: boolean
+          name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          is_super_admin?: boolean
+          name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       lead_payments: {
         Row: {
           commission_amount: number
@@ -756,6 +786,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_internal_user: {
+        Args: {
+          user_email: string
+          user_name?: string
+          make_super_admin?: boolean
+        }
+        Returns: string
+      }
       check_admin_status: {
         Args: { user_id_param: string }
         Returns: boolean
@@ -784,9 +822,17 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: boolean
       }
+      check_user_is_internal_super_admin: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
       check_user_is_super_admin: {
         Args: { user_id_param: string }
         Returns: boolean
+      }
+      create_first_internal_super_admin: {
+        Args: { admin_email: string; admin_name?: string }
+        Returns: string
       }
       create_first_super_admin: {
         Args: { admin_email: string }
@@ -836,6 +882,14 @@ export type Database = {
         Returns: boolean
       }
       is_admin_safe: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_internal_super_admin_check: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_internal_user_check: {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }

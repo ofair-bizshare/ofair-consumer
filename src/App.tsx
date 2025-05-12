@@ -19,7 +19,7 @@ import Privacy from '@/pages/Privacy';
 import Terms from '@/pages/Terms';
 import NotFound from '@/pages/NotFound';
 import AdminLogin from '@/pages/AdminLogin';
-import UserSettings from '@/pages/UserSettings';
+import Settings from '@/pages/Settings'; 
 import MyReferrals from '@/pages/MyReferrals';
 import MyRequests from '@/pages/MyRequests';
 import ReferralsPage from '@/pages/ReferralsPage';
@@ -60,7 +60,7 @@ function App() {
                 <Route path="/referrals" element={<ReferralsPage />} />
                 <Route path="/my-referrals" element={<MyReferrals />} />
                 <Route path="/my-requests" element={<MyRequests />} />
-                <Route path="/settings" element={<UserSettings />} />
+                <Route path="/settings" element={<Settings />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/articles" element={<Articles />} />
