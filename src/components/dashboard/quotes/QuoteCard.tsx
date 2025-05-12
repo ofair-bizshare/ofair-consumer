@@ -30,6 +30,12 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   const [isContactActive, setIsContactActive] = useState(false);
   const isMobile = useIsMobile();
   
+  // Safety check - if quote is invalid, don't render anything
+  if (!quote || !quote.id || !quote.professional) {
+    console.error("Invalid quote data:", quote);
+    return null;
+  }
+  
   const handleContactClick = () => {
     setIsContactActive(!isContactActive);
   };
@@ -61,6 +67,12 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     return null;
   }
 
+  // Ensure professional data exists
+  if (!quote.professional || !quote.professional.id) {
+    console.error("Quote missing professional data:", quote);
+    return null;
+  }
+
   return (
     <Card className={`overflow-hidden mb-3 shadow-md transition-shadow ${!isInteractive ? 'opacity-70' : ''}`}>
       <CardContent className="p-0">
@@ -68,10 +80,10 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
           <ProfessionalInfo professional={quote.professional} />
           
           <QuoteDetails 
-            price={quote.price} 
-            estimatedTime={quote.estimatedTime}
+            price={quote.price || "0"} 
+            estimatedTime={quote.estimatedTime || ""}
             sampleImageUrl={quote.sampleImageUrl}
-            description={quote.description}
+            description={quote.description || ""}
           />
           
           {isAcceptedQuote && (
@@ -84,9 +96,9 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
           <div className={`mt-2 ${isMobile ? 'w-full' : ''}`}>
             <PhoneRevealButton 
               phoneNumber={quote.professional.phoneNumber || "050-1234567"}
-              professionalName={quote.professional.name}
+              professionalName={quote.professional.name || "בעל מקצוע"}
               professionalId={quote.professional.id}
-              profession={quote.professional.profession}
+              profession={quote.professional.profession || ""}
               autoReveal={quote.status === 'accepted'} // Auto reveal for accepted quotes
             />
           </div>

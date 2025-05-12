@@ -45,6 +45,10 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
             src={sampleImageUrl} 
             alt="דוגמת עבודה" 
             className="rounded-md max-h-16 object-cover" 
+            onError={(e) => {
+              // If image fails to load, replace with a default image or hide it
+              e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f3f4f6'/%3E%3Ctext x='50' y='50' font-size='12' text-anchor='middle' alignment-baseline='middle' font-family='Arial' fill='%23a1a1aa'%3ENo image%3C/text%3E%3C/svg%3E";
+            }}
           />
         </div>
       )}
