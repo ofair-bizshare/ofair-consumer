@@ -59,13 +59,8 @@ export const saveAcceptedQuote = async (
   try {
     console.log("Accepted quote data being saved:", acceptedQuoteData);
     
-    // Start a transaction to ensure data consistency
-    const { data: transactionData, error: transactionError } = await supabase.rpc('begin_transaction');
-    
-    if (transactionError) {
-      console.error("Error starting transaction:", transactionError);
-      // Proceed anyway using individual operations
-    }
+    // Remove the transaction start since we don't have a begin_transaction function
+    // We'll handle this with individual operations instead
     
     // Check if record exists first
     const { data: existingRecord, error: checkError } = await supabase
