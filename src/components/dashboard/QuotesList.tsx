@@ -52,9 +52,10 @@ const QuotesList: React.FC<QuotesListProps> = ({
     if (b?.status === 'pending' && a?.status !== 'pending') return 1;
     
     // Everything else by creation date (newer first)
-    // Using created_at from the database instead of createdAt
-    const dateA = new Date(a?.created_at || Date.now()).getTime();
-    const dateB = new Date(b?.created_at || Date.now()).getTime();
+    // Use the timestamp property from quotes
+    const dateA = a && 'created_at' in a ? new Date(a.created_at || Date.now()).getTime() : Date.now();
+    const dateB = b && 'created_at' in b ? new Date(b.created_at || Date.now()).getTime() : Date.now();
+    
     return dateB - dateA;
   });
   
