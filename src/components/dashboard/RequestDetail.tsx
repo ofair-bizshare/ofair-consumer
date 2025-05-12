@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Clock, CheckCircle, AlertCircle, Star, Trash2 } from 'lucide-react';
 import { RequestInterface, QuoteInterface } from '@/types/dashboard';
@@ -29,6 +29,7 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
   const { toast } = useToast();
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const ratingButtonRef = useRef<HTMLDivElement>(null);
   
   // Safe logging with null checks
   console.log("RequestDetail rendered with request:", request);
@@ -47,6 +48,30 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
       // setIsRatingDialogOpen(true);
     }
   }, [request?.status, acceptedQuote, isRatingDialogOpen]);
+
+  // Handle hash changes for the rating section
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === '#rating-section' && ratingButtonRef.current) {
+        console.log("Hash is #rating-section, scrolling to rating button");
+        ratingButtonRef.current.scrollIntoView({ behavior: 'smooth' });
+        
+        // Open the rating dialog after a short delay
+        setTimeout(() => {
+          if (acceptedQuote && acceptedQuote.professional) {
+            console.log("Opening rating dialog via hash change");
+            setIsRatingDialogOpen(true);
+          }
+        }, 500);
+      }
+    };
+
+    // Check on mount and when hash changes
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [acceptedQuote]);
   
   const handleDeleteRequest = async () => {
     if (!request?.id) return;
@@ -152,7 +177,7 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
         
         {/* Show rating button prominently when status is waiting_for_rating */}
         {showRatingPrompt && (
-          <div className="my-4 p-4 bg-amber-50 border border-amber-200 rounded-md">
+          <div className="my-4 p-4 bg-amber-50 border border-amber-200 rounded-md" ref={ratingButtonRef}>
             <div className="flex items-center mb-2">
               <Star className="h-5 w-5 text-amber-500 mr-2" />
               <h3 className="text-amber-800 font-semibold">נדרש דירוג לסיום התהליך</h3>
@@ -163,7 +188,7 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
             <Button 
               className="bg-amber-500 hover:bg-amber-600 text-white w-full md:w-auto"
               onClick={handleOpenRatingDialog}
-              id="rating-section"
+              id="rating-section-button"
             >
               <Star className="h-4 w-4 ml-1" />
               דרג את בעל המקצוע

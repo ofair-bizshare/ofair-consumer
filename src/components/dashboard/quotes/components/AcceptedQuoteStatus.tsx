@@ -15,6 +15,22 @@ const AcceptedQuoteStatus: React.FC<AcceptedQuoteStatusProps> = ({
 }) => {
   const isMobile = useIsMobile();
   
+  // Function to scroll to rating section and open dialog
+  const handleRatingClick = () => {
+    // First scroll to the rating section
+    const ratingSection = document.getElementById('rating-section-button');
+    if (ratingSection) {
+      ratingSection.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // Then programmatically click the rating button after scrolling
+    setTimeout(() => {
+      if (ratingSection) {
+        ratingSection.click();
+      }
+    }, 500);
+  };
+  
   return (
     <div className={`mt-2 rounded-md p-2 flex items-center ${
       isWaitingForRating 
@@ -38,10 +54,14 @@ const AcceptedQuoteStatus: React.FC<AcceptedQuoteStatusProps> = ({
           <div className="flex flex-col mt-1">
             <p className="text-xs text-amber-600 font-medium mb-2">נא לדרג את בעל המקצוע לסיום התהליך</p>
             
-            <a href="#rating-section" className="text-xs bg-amber-500 hover:bg-amber-600 text-white py-1.5 px-3 rounded text-center w-full md:w-auto inline-block">
+            <Button
+              onClick={handleRatingClick}
+              size="sm"
+              className="text-xs bg-amber-500 hover:bg-amber-600 text-white py-1 px-3 rounded inline-block"
+            >
               <Star className="h-3 w-3 inline-block ml-1" />
               דרג עכשיו
-            </a>
+            </Button>
           </div>
         ) : (
           <p className="text-xs text-green-600">בעל המקצוע קיבל הודעה על כך</p>

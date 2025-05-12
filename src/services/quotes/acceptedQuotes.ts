@@ -7,6 +7,8 @@ export const checkIfAcceptedQuoteExists = async (
   quoteId: string
 ): Promise<boolean> => {
   try {
+    console.log(`Checking if quote ${quoteId} for request ${requestId} is accepted...`);
+    
     // First check if the quote itself is already accepted
     const { data: acceptedData, error: acceptedError } = await supabase
       .from('accepted_quotes')
@@ -30,6 +32,7 @@ export const checkIfAcceptedQuoteExists = async (
       return true;
     }
     
+    console.log(`No accepted quotes found for quote ${quoteId} or request ${requestId}`);
     return false;
   } catch (error) {
     console.error("Error checking for existing accepted quote:", error);
@@ -116,6 +119,25 @@ export const deleteAcceptedQuote = async (quoteId: string): Promise<boolean> => 
     // Log the deletion attempt
     console.log(`Attempting to delete accepted quote record for quote ID: ${quoteId}`);
     
+    // First check if the record exists
+    const { data: existingRecord, error: checkError } = await supabase
+      .from('accepted_quotes')
+      .select('*')
+      .eq('quote_id', quoteId);
+    
+    if (checkError) {
+      console.error("Error checking for existing accepted quote:", checkError);
+      return false;
+    }
+    
+    if (!existingRecord || existingRecord.length === 0) {
+      console.log(`No accepted quote record found for quote ID: ${quoteId}`);
+      return true; // Already doesn't exist, so we can consider this a success
+    }
+    
+    console.log(`Found ${existingRecord.length} accepted quote records to delete:`, existingRecord);
+    
+    // Now perform the deletion
     const { error: deleteError, data } = await supabase
       .from('accepted_quotes')
       .delete()
@@ -128,9 +150,57 @@ export const deleteAcceptedQuote = async (quoteId: string): Promise<boolean> => 
     }
     
     console.log("Deleted accepted quote record successfully:", data);
+    
+    // Verify the deletion was successful by checking if the record still exists
+    const { data: verifyData, error: verifyError } = await supabase
+      .from('accepted_quotes')
+      .select('*')
+      .eq('quote_id', quoteId);
+    
+    if (verifyError) {
+      console.error("Error verifying deletion:", verifyError);
+    } else {
+      if (verifyData && verifyData.length > 0) {
+        console.error("Failed to delete accepted quote record - it still exists!", verifyData);
+        return false;
+      } else {
+        console.log("Verified deletion: record no longer exists");
+      }
+    }
+    
     return true;
   } catch (deleteError) {
     console.error("Error deleting accepted quote record:", deleteError);
     return false;
+  }
+};
+
+// Get all accepted quotes for a request
+export const getAcceptedQuoteForRequest = async (requestId: string): Promise<any | null> => {
+  try {
+    console.log(`Getting accepted quote for request ${requestId}`);
+    
+    const { data, error } = await supabase
+      .from('accepted_quotes')
+      .select('*')
+      .eq('request_id', requestId)
+      .single();
+      
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No records found
+        console.log(`No accepted quote found for request ${requestId}`);
+        return null;
+      } else {
+        console.error("Error getting accepted quote for request:", error);
+        throw error;
+      }
+    }
+    
+    console.log(`Found accepted quote for request ${requestId}:`, data);
+    return data;
+  } catch (error) {
+    console.error("Error getting accepted quote for request:", error);
+    return null;
   }
 };

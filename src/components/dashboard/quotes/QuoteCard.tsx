@@ -31,6 +31,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [isContactActive, setIsContactActive] = useState(false);
   const [confirmedAccepted, setConfirmedAccepted] = useState<boolean | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
   const isMobile = useIsMobile();
   
   // Safety check - if quote is invalid, don't render anything
@@ -49,6 +50,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   useEffect(() => {
     const verifyAcceptanceStatus = async () => {
       try {
+        setIsVerifying(true);
         if (!quote.requestId || !quote.id) return;
         
         // Check acceptance status in the database
@@ -63,6 +65,9 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
         setConfirmedAccepted(isAccepted);
       } catch (error) {
         console.error("Error checking quote acceptance status:", error);
+        setConfirmedAccepted(null);
+      } finally {
+        setIsVerifying(false);
       }
     };
     
@@ -96,6 +101,20 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   // Don't render the card at all if it shouldn't be displayed
   if (!shouldDisplayQuote && requestStatus !== 'active') {
     return null;
+  }
+  
+  // Show a loading state while verifying the acceptance status from DB
+  if (isVerifying) {
+    return (
+      <Card className="overflow-hidden mb-3 shadow-md">
+        <CardContent className="p-4">
+          <div className="flex justify-center items-center">
+            <div className="h-5 w-5 border-t-2 border-blue-500 rounded-full animate-spin"></div>
+            <span className="text-gray-500 mr-2">מאמת סטטוס הצעה...</span>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -140,6 +159,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
             showActionButtons={showActionButtons}
             hasAcceptedQuote={hasAcceptedQuote}
             isAcceptedQuote={isAcceptedQuote}
+            dbVerifiedAccepted={confirmedAccepted}
             onContactClick={handleContactClick}
             onViewProfile={onViewProfile}
             onAcceptQuote={onAcceptQuote}

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { RequestInterface } from '@/types/dashboard';
 
@@ -157,41 +156,67 @@ export const deleteRequest = async (id: string): Promise<boolean> => {
     
     // First, delete associated quotes from accepted_quotes table
     try {
-      const { error: acceptedQuotesError } = await supabase
+      console.log(`Deleting accepted quotes for request ${id}`);
+      const { data: acceptedQuotesData, error: acceptedQuotesError } = await supabase
         .from('accepted_quotes')
-        .delete()
+        .select('*')
         .eq('request_id', id);
         
       if (acceptedQuotesError) {
-        console.error('Error deleting associated accepted quotes:', acceptedQuotesError);
-        // Continue with deletion even if this fails
+        console.error('Error finding associated accepted quotes:', acceptedQuotesError);
       } else {
-        console.log(`Successfully deleted accepted quotes for request ${id}`);
+        console.log(`Found ${acceptedQuotesData?.length || 0} accepted quotes to delete`);
+        
+        if (acceptedQuotesData && acceptedQuotesData.length > 0) {
+          const { error: deleteAcceptedQuotesError } = await supabase
+            .from('accepted_quotes')
+            .delete()
+            .eq('request_id', id);
+            
+          if (deleteAcceptedQuotesError) {
+            console.error('Error deleting associated accepted quotes:', deleteAcceptedQuotesError);
+          } else {
+            console.log(`Successfully deleted accepted quotes for request ${id}`);
+          }
+        }
       }
     } catch (e) {
       console.error('Error in deleting associated accepted quotes:', e);
-      // Continue with deletion even if this fails
     }
     
-    // Next, delete associated quotes
+    // Next, get all quotes for this request
     try {
-      const { error: quotesError } = await supabase
+      console.log(`Finding quotes for request ${id}`);
+      const { data: quotesData, error: quotesError } = await supabase
         .from('quotes')
-        .delete()
+        .select('*')
         .eq('request_id', id);
         
       if (quotesError) {
-        console.error('Error deleting associated quotes:', quotesError);
-        // Continue with deletion even if this fails
+        console.error('Error finding associated quotes:', quotesError);
       } else {
-        console.log(`Successfully deleted quotes for request ${id}`);
+        console.log(`Found ${quotesData?.length || 0} quotes to delete`);
+        
+        // Delete all quotes for this request
+        if (quotesData && quotesData.length > 0) {
+          const { error: deleteQuotesError } = await supabase
+            .from('quotes')
+            .delete()
+            .eq('request_id', id);
+            
+          if (deleteQuotesError) {
+            console.error('Error deleting associated quotes:', deleteQuotesError);
+          } else {
+            console.log(`Successfully deleted quotes for request ${id}`);
+          }
+        }
       }
     } catch (e) {
       console.error('Error in deleting associated quotes:', e);
-      // Continue with deletion even if this fails
     }
     
     // Finally, delete the request itself
+    console.log(`Deleting request ${id}`);
     const { error, data } = await supabase
       .from('requests')
       .delete()
@@ -204,6 +229,24 @@ export const deleteRequest = async (id: string): Promise<boolean> => {
     }
     
     console.log(`Successfully deleted request ${id}:`, data);
+    
+    // Verify the request has been deleted
+    const { data: verifyData, error: verifyError } = await supabase
+      .from('requests')
+      .select('*')
+      .eq('id', id);
+      
+    if (verifyError) {
+      console.error('Error verifying request deletion:', verifyError);
+    } else {
+      if (verifyData && verifyData.length > 0) {
+        console.error('Request deletion verification failed - request still exists:', verifyData);
+        return false;
+      } else {
+        console.log('Request deletion verified successfully - request no longer exists');
+      }
+    }
+    
     return true;
   } catch (error) {
     console.error('Error deleting request:', error);

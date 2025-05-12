@@ -16,6 +16,7 @@ interface QuoteActionButtonsProps {
   showActionButtons: boolean;
   hasAcceptedQuote: boolean;
   isAcceptedQuote: boolean;
+  dbVerifiedAccepted?: boolean | null;
   onContactClick: () => void;
   onViewProfile: (professionalId: string) => void;
   onAcceptQuote: (quoteId: string) => void;
@@ -35,6 +36,7 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
   showActionButtons,
   hasAcceptedQuote,
   isAcceptedQuote,
+  dbVerifiedAccepted = null,
   onContactClick,
   onViewProfile,
   onAcceptQuote,
@@ -64,12 +66,22 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
 
   // Improved function to determine if action buttons should be shown
   const shouldShowActions = () => {
-    console.log(`Quote ${quoteId} status check - DB status: ${quoteStatus}, Is accepted in UI: ${isAcceptedQuote}, Request status: ${requestStatus}`);
+    // Debug logging to help track status issues
+    console.log(`Quote ${quoteId} action button check:`, {
+      quoteStatus,
+      isAcceptedQuote,
+      dbVerifiedAccepted,
+      requestStatus,
+      hasAcceptedQuote
+    });
+    
+    // Prioritize database verification when available
+    const actuallyAccepted = dbVerifiedAccepted !== null ? dbVerifiedAccepted : isAcceptedQuote;
     
     // For active requests
     if (requestStatus === 'active') {
       // Always show cancel button for accepted quotes
-      if (isAcceptedQuote || quoteStatus === 'accepted') {
+      if (actuallyAccepted || quoteStatus === 'accepted') {
         return true;
       }
       
@@ -80,7 +92,7 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
     }
     
     // For waiting_for_rating status, show cancel for the accepted quote
-    if (requestStatus === 'waiting_for_rating' && (isAcceptedQuote || quoteStatus === 'accepted')) {
+    if (requestStatus === 'waiting_for_rating' && (actuallyAccepted || quoteStatus === 'accepted')) {
       return true;
     }
     
@@ -89,7 +101,10 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
 
   // Function to determine what status message to show when actions aren't available
   const getStatusMessage = () => {
-    if (isAcceptedQuote || quoteStatus === 'accepted') {
+    // Prioritize database verification when available
+    const actuallyAccepted = dbVerifiedAccepted !== null ? dbVerifiedAccepted : isAcceptedQuote;
+    
+    if (actuallyAccepted || quoteStatus === 'accepted') {
       if (requestStatus === 'completed') {
         return <span className="text-xs text-green-500">העבודה הושלמה</span>;
       } else if (requestStatus === 'waiting_for_rating') {
@@ -102,7 +117,8 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
     } else if (hasAcceptedQuote && quoteStatus === 'pending') {
       return <span className="text-xs text-gray-500">הצעה אחרת התקבלה</span>;
     } else {
-      return <span className="text-xs text-gray-500">לא זמין</span>;
+      // Instead of generic "Not available" message, be more specific
+      return <span className="text-xs text-gray-500">פעולות לא זמינות</span>;
     }
   };
 
@@ -132,7 +148,7 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
       {shouldShowActions() ? (
         <div className={`${isMobile ? 'flex justify-center gap-2 w-full' : 'flex gap-2 space-x-reverse'}`}>
           {/* For accepted quotes */}
-          {(isAcceptedQuote || quoteStatus === 'accepted') ? (
+          {(isAcceptedQuote || quoteStatus === 'accepted' || dbVerifiedAccepted === true) ? (
             <Button 
               size="sm" 
               variant="outline"
