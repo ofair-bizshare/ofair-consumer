@@ -52,11 +52,20 @@ const QuotesList: React.FC<QuotesListProps> = ({
     if (b?.status === 'pending' && a?.status !== 'pending') return 1;
     
     // Everything else by creation date (newer first)
-    // Use the timestamp property from quotes
-    const dateA = a && 'created_at' in a ? new Date(a.created_at || Date.now()).getTime() : Date.now();
-    const dateB = b && 'created_at' in b ? new Date(b.created_at || Date.now()).getTime() : Date.now();
+    // Use the timestamp property from quotes, with safe type handling
+    const getTimestamp = (quote: QuoteInterface | null | undefined) => {
+      if (!quote) return Date.now();
+      
+      // Check if the quote object has created_at property
+      const createdAt = quote as unknown as { created_at?: string | number | Date };
+      if (createdAt && createdAt.created_at) {
+        return new Date(createdAt.created_at).getTime();
+      }
+      
+      return Date.now(); // Fallback
+    };
     
-    return dateB - dateA;
+    return getTimestamp(b) - getTimestamp(a);
   });
   
   return (
