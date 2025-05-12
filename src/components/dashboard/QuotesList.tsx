@@ -37,9 +37,10 @@ const QuotesList: React.FC<QuotesListProps> = ({
     return <div className="text-gray-500 text-center py-4">התקבלו נתוני הצעות לא תקינים</div>;
   }
   
-  // Check if any quote is accepted
+  // Check if any quote is accepted based on its status
   const hasAcceptedQuote = validQuotes.some(quote => quote?.status === 'accepted');
-  console.log("Has accepted quote:", hasAcceptedQuote);
+  console.log("Has accepted quote:", hasAcceptedQuote, "Quotes count:", validQuotes.length);
+  console.log("Quote statuses:", validQuotes.map(q => ({ id: q.id, status: q.status })));
   
   // Sort quotes to show accepted quotes first, then pending, then rejected
   const sortedQuotes = [...validQuotes].sort((a, b) => {
@@ -76,6 +77,8 @@ const QuotesList: React.FC<QuotesListProps> = ({
           console.warn("Skipping invalid quote in QuotesList:", quote);
           return null;
         }
+        
+        console.log(`Rendering quote ${quote.id} with status: ${quote.status}`);
         
         return (
           <ErrorBoundary key={quote.id} fallback={

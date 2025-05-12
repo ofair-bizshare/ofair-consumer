@@ -62,26 +62,48 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
     setShowCancelConfirm(false);
   };
 
-  // Determine if we should show action buttons for this quote based on the current status
+  // Improved function to determine if action buttons should be shown
   const shouldShowActions = () => {
+    console.log(`Quote ${quoteId} status check - DB status: ${quoteStatus}, Is accepted in UI: ${isAcceptedQuote}, Request status: ${requestStatus}`);
+    
     // For active requests
     if (requestStatus === 'active') {
-      // Show cancel button for accepted quotes
-      if (isAcceptedQuote) {
+      // Always show cancel button for accepted quotes
+      if (isAcceptedQuote || quoteStatus === 'accepted') {
         return true;
       }
-      // Show actions for pending quotes if there's no accepted quote yet
+      
+      // For pending quotes, show actions if there's no accepted quote
       if (quoteStatus === 'pending' && !hasAcceptedQuote) {
         return true;
       }
     }
     
-    // For waiting_for_rating status, always show cancel button for the accepted quote
-    if (requestStatus === 'waiting_for_rating' && isAcceptedQuote) {
+    // For waiting_for_rating status, show cancel for the accepted quote
+    if (requestStatus === 'waiting_for_rating' && (isAcceptedQuote || quoteStatus === 'accepted')) {
       return true;
     }
     
     return false;
+  };
+
+  // Function to determine what status message to show when actions aren't available
+  const getStatusMessage = () => {
+    if (isAcceptedQuote || quoteStatus === 'accepted') {
+      if (requestStatus === 'completed') {
+        return <span className="text-xs text-green-500">העבודה הושלמה</span>;
+      } else if (requestStatus === 'waiting_for_rating') {
+        return <span className="text-xs text-amber-500 font-medium">ממתין לדירוג</span>;
+      } else {
+        return <span className="text-xs text-green-500">הצעה התקבלה</span>;
+      }
+    } else if (quoteStatus === 'rejected') {
+      return <span className="text-xs text-red-500">הצעה נדחתה</span>;
+    } else if (hasAcceptedQuote && quoteStatus === 'pending') {
+      return <span className="text-xs text-gray-500">הצעה אחרת התקבלה</span>;
+    } else {
+      return <span className="text-xs text-gray-500">לא זמין</span>;
+    }
   };
 
   return (
@@ -110,7 +132,7 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
       {shouldShowActions() ? (
         <div className={`${isMobile ? 'flex justify-center gap-2 w-full' : 'flex gap-2 space-x-reverse'}`}>
           {/* For accepted quotes */}
-          {isAcceptedQuote ? (
+          {(isAcceptedQuote || quoteStatus === 'accepted') ? (
             <Button 
               size="sm" 
               variant="outline"
@@ -153,21 +175,7 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
         </div>
       ) : (
         <div className="text-center w-full">
-          {isAcceptedQuote ? (
-            requestStatus === 'completed' ? (
-              <span className="text-xs text-green-500">העבודה הושלמה</span>
-            ) : requestStatus === 'waiting_for_rating' ? (
-              <span className="text-xs text-amber-500 font-medium">ממתין לדירוג</span>
-            ) : (
-              <span className="text-xs text-green-500">הצעה התקבלה</span>
-            )
-          ) : (
-            quoteStatus === 'rejected' ? (
-              <span className="text-xs text-red-500">הצעה נדחתה</span>
-            ) : (
-              <span className="text-xs text-gray-500">לא זמין</span>
-            )
-          )}
+          {getStatusMessage()}
         </div>
       )}
 

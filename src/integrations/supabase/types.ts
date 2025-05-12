@@ -506,6 +506,36 @@ export type Database = {
         }
         Relationships: []
       }
+      proposal_reminders: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_scheduled: boolean | null
+          last_reminder: string | null
+          proposal_id: string
+          proposal_type: string
+          reminder_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_scheduled?: boolean | null
+          last_reminder?: string | null
+          proposal_id: string
+          proposal_type: string
+          reminder_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_scheduled?: boolean | null
+          last_reminder?: string | null
+          proposal_id?: string
+          proposal_type?: string
+          reminder_count?: number | null
+        }
+        Relationships: []
+      }
       proposals: {
         Row: {
           created_at: string
@@ -518,6 +548,8 @@ export type Database = {
           price: number
           professional_id: string | null
           sample_image_url: string | null
+          scheduled_date: string | null
+          scheduled_time: string | null
           status: string
         }
         Insert: {
@@ -531,6 +563,8 @@ export type Database = {
           price: number
           professional_id?: string | null
           sample_image_url?: string | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
           status?: string
         }
         Update: {
@@ -544,6 +578,8 @@ export type Database = {
           price?: number
           professional_id?: string | null
           sample_image_url?: string | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
           status?: string
         }
         Relationships: [
@@ -573,6 +609,8 @@ export type Database = {
           professional_id: string
           request_id: string
           sample_image_url: string | null
+          scheduled_date: string | null
+          scheduled_time: string | null
           status: string
           updated_at: string
         }
@@ -585,6 +623,8 @@ export type Database = {
           professional_id: string
           request_id: string
           sample_image_url?: string | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
           status?: string
           updated_at?: string
         }
@@ -597,6 +637,8 @@ export type Database = {
           professional_id?: string
           request_id?: string
           sample_image_url?: string | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
           status?: string
           updated_at?: string
         }

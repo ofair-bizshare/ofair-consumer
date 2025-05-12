@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { QuoteInterface } from '@/types/dashboard';
 import PhoneRevealButton from '@/components/PhoneRevealButton';
@@ -9,6 +9,7 @@ import AcceptedQuoteStatus from './components/AcceptedQuoteStatus';
 import QuoteActionButtons from './components/QuoteActionButtons';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ErrorBoundary from '@/components/ui/error-boundary';
+import { checkIfAcceptedQuoteExists } from '@/services/quotes/acceptedQuotes';
 
 interface QuoteCardProps {
   quote: QuoteInterface;
@@ -29,6 +30,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
 }) => {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [isContactActive, setIsContactActive] = useState(false);
+  const [confirmedAccepted, setConfirmedAccepted] = useState<boolean | null>(null);
   const isMobile = useIsMobile();
   
   // Safety check - if quote is invalid, don't render anything
@@ -43,12 +45,36 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     );
   }
   
+  // Check the actual acceptance status in the database when component mounts
+  useEffect(() => {
+    const verifyAcceptanceStatus = async () => {
+      try {
+        if (!quote.requestId || !quote.id) return;
+        
+        // Check acceptance status in the database
+        const isAccepted = await checkIfAcceptedQuoteExists(quote.requestId, quote.id);
+        console.log(`Quote ${quote.id} acceptance check: DB=${isAccepted}, UI=${quote.status === 'accepted'}`);
+        
+        // If there's a mismatch between UI state and DB state, log it
+        if (isAccepted !== (quote.status === 'accepted')) {
+          console.warn(`Quote ${quote.id} has status mismatch - UI: ${quote.status}, DB: ${isAccepted ? 'accepted' : 'not accepted'}`);
+        }
+        
+        setConfirmedAccepted(isAccepted);
+      } catch (error) {
+        console.error("Error checking quote acceptance status:", error);
+      }
+    };
+    
+    verifyAcceptanceStatus();
+  }, [quote.id, quote.requestId, quote.status]);
+  
   const handleContactClick = () => {
     setIsContactActive(!isContactActive);
   };
   
-  // Determine if this quote is accepted
-  const isAcceptedQuote = quote.status === 'accepted';
+  // Determine if this quote is accepted - check both the quote.status and the database verification
+  const isAcceptedQuote = quote.status === 'accepted' || confirmedAccepted === true;
   
   // Determine if this quote should be displayed with full interactivity
   const isRequestCompleted = requestStatus === 'completed';
