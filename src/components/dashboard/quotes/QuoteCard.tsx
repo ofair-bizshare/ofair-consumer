@@ -47,10 +47,12 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     setIsContactActive(!isContactActive);
   };
   
+  // Determine if this quote is accepted
+  const isAcceptedQuote = quote.status === 'accepted';
+  
   // Determine if this quote should be displayed with full interactivity
   const isRequestCompleted = requestStatus === 'completed';
   const isWaitingForRating = requestStatus === 'waiting_for_rating';
-  const isAcceptedQuote = quote.status === 'accepted';
   
   // Only show non-accepted quotes if the request is active
   // When request is completed or waiting for rating, ONLY show accepted quotes
@@ -62,12 +64,11 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   // Card is interactive if request is not completed or this is the accepted quote
   const isInteractive = !isRequestCompleted || isAcceptedQuote;
   
-  // Show action buttons for active requests with no accepted quote yet
-  // OR for the accepted quote in active or waiting_for_rating status (for cancellation)
+  // Always show action buttons for accepted quotes in active or waiting_for_rating status
+  // For non-accepted quotes, only show actions if the request is active and no quote is accepted yet
   const showActionButtons = 
-    (requestStatus === 'active') && 
-    (!hasAcceptedQuote || isAcceptedQuote) || 
-    (isWaitingForRating && isAcceptedQuote);
+    (isAcceptedQuote && (requestStatus === 'active' || requestStatus === 'waiting_for_rating')) || 
+    (!isAcceptedQuote && !hasAcceptedQuote && requestStatus === 'active');
 
   // Don't render the card at all if it shouldn't be displayed
   if (!shouldDisplayQuote && requestStatus !== 'active') {
@@ -101,7 +102,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
                 professionalName={quote.professional.name || "בעל מקצוע"}
                 professionalId={quote.professional.id}
                 profession={quote.professional.profession || ""}
-                autoReveal={quote.status === 'accepted'} // Auto reveal for accepted quotes
+                autoReveal={isAcceptedQuote} // Auto reveal for accepted quotes
               />
             </div>
           </div>

@@ -45,17 +45,6 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
 }) => {
   const isMobile = useIsMobile();
   
-  // Debug logging
-  console.log("QuoteActionButtons props:", {
-    requestStatus,
-    quoteStatus,
-    quoteId,
-    isAcceptedQuote,
-    showActionButtons,
-    hasAcceptedQuote,
-    professional: professional ? 'exists' : 'missing'
-  });
-
   // Safety check for required props
   if (!quoteId || !professionalId || !professional) {
     console.error("QuoteActionButtons missing required props:", { quoteId, professionalId, professional });
@@ -71,6 +60,21 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
     console.log("Cancel confirmation confirmed for quote:", quoteId);
     onRejectQuote(quoteId);
     setShowCancelConfirm(false);
+  };
+
+  // Determine if we should show action buttons for this quote
+  const showActions = () => {
+    // Always show actions for accepted quotes in active or waiting_for_rating status
+    if (isAcceptedQuote && (requestStatus === 'active' || requestStatus === 'waiting_for_rating')) {
+      return true;
+    }
+    
+    // For non-accepted quotes, only show actions if the request is active and there's no accepted quote yet
+    if (!isAcceptedQuote && requestStatus === 'active' && !hasAcceptedQuote) {
+      return true;
+    }
+    
+    return false;
   };
 
   return (
@@ -96,10 +100,10 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
         )}
       </div>
       
-      {showActionButtons ? (
+      {showActions() ? (
         <div className={`${isMobile ? 'flex justify-center gap-2 w-full' : 'flex gap-2 space-x-reverse'}`}>
           {/* For accepted quotes */}
-          {quoteStatus === 'accepted' ? (
+          {isAcceptedQuote ? (
             <Button 
               size="sm" 
               variant="outline"

@@ -2,6 +2,7 @@
 import React from 'react';
 import { CheckCircle, Star } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
 
 interface AcceptedQuoteStatusProps {
   isCompleted: boolean;
@@ -34,7 +35,15 @@ const AcceptedQuoteStatus: React.FC<AcceptedQuoteStatusProps> = ({
         {isCompleted ? (
           <p className="text-xs text-green-600">העבודה הושלמה ודורגה</p>
         ) : isWaitingForRating ? (
-          <p className="text-xs text-amber-600 font-medium">נא לדרג את בעל המקצוע</p>
+          <div className="flex flex-col mt-1">
+            <p className="text-xs text-amber-600 font-medium mb-1">נא לדרג את בעל המקצוע</p>
+            
+            {/* Inline rating button for more prominence */}
+            <a href="#rating-section" className="text-xs bg-amber-500 hover:bg-amber-600 text-white py-1 px-2 rounded text-center w-full md:w-auto inline-block">
+              <Star className="h-3 w-3 inline-block ml-1" />
+              דרג עכשיו
+            </a>
+          </div>
         ) : (
           <p className="text-xs text-green-600">בעל המקצוע קיבל הודעה על כך</p>
         )}

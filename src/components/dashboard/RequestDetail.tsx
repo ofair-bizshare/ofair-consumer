@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Clock, CheckCircle, AlertCircle, Star, Trash2 } from 'lucide-react';
 import { RequestInterface, QuoteInterface } from '@/types/dashboard';
@@ -38,6 +38,14 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
   const safeQuotes = Array.isArray(quotes) ? quotes : [];
   const acceptedQuote = safeQuotes.length > 0 ? safeQuotes.find(q => q?.status === 'accepted') : undefined;
   console.log("Found accepted quote:", acceptedQuote);
+
+  // Check if it's appropriate to show the rating button
+  useEffect(() => {
+    if (request?.status === 'waiting_for_rating' && acceptedQuote && !isRatingDialogOpen) {
+      // Auto open rating dialog if needed
+      console.log("Status is waiting_for_rating and we have an accepted quote");
+    }
+  }, [request?.status, acceptedQuote]);
   
   const handleDeleteRequest = async () => {
     if (!request?.id) return;
@@ -106,6 +114,9 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
     return <div className="text-gray-500 text-center py-4">Loading request details...</div>;
   }
 
+  // Prepare the rating button prominent display for waiting_for_rating status
+  const showRatingPrompt = request.status === 'waiting_for_rating' && acceptedQuote && acceptedQuote.professional;
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="glass-card p-6">
@@ -138,14 +149,14 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
           {request.description}
         </p>
         
-        {/* Show rating button when status is waiting_for_rating */}
-        {request.status === 'waiting_for_rating' && acceptedQuote && acceptedQuote.professional && (
+        {/* Show rating button prominently when status is waiting_for_rating */}
+        {showRatingPrompt && (
           <div className="my-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
-            <p className="text-amber-800 mb-3 text-sm">
+            <p className="text-amber-800 mb-3 text-sm font-medium">
               אנא דרג את החוויה שלך עם {acceptedQuote.professional.name || "בעל המקצוע"} כדי לסייע למשתמשים אחרים
             </p>
             <Button 
-              className="bg-amber-500 hover:bg-amber-600 text-white"
+              className="bg-amber-500 hover:bg-amber-600 text-white w-full md:w-auto"
               onClick={handleOpenRatingDialog}
             >
               <Star className="h-4 w-4 ml-1" />
@@ -193,7 +204,7 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
       </ErrorBoundary>
       
       {/* Professional Rating Dialog - Only render when we have a valid professional */}
-      {acceptedQuote && acceptedQuote.professional && (
+      {acceptedQuote && acceptedQuote.professional && acceptedQuote.professional.id && (
         <ProfessionalRatingDialog
           open={isRatingDialogOpen}
           onOpenChange={setIsRatingDialogOpen}
