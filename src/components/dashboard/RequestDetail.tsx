@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Clock, CheckCircle, AlertCircle, Star, Trash2 } from 'lucide-react';
@@ -190,7 +189,7 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
               <h3 className="text-amber-800 font-semibold">נדרש דירוג לסיום התהליך</h3>
             </div>
             <p className="text-amber-800 mb-3 text-sm">
-              אנא דרג את החוויה שלך עם {acceptedQuote.professional.name || "בעל המקצוע"} כדי לסייע למשתמשים אחרים ולסיים את תהליך הבקשה
+              אנא דרג את החוויה שלך עם {acceptedQuote?.professional?.name || "בעל המקצוע"} כדי לסייע למשתמשים אחרים ולסיים את תהליך הבקשה
             </p>
             <Button 
               className="bg-amber-500 hover:bg-amber-600 text-white w-full md:w-auto"

@@ -371,7 +371,7 @@ export const useQuotes = (selectedRequestId: string | null) => {
         
         // Reset all quotes for this request to pending in the database
         const quotesToUpdate = quotes.filter(q => 
-          q.requestId === rejectedQuote.requestId && q.id !== quoteId
+          q.requestId === rejectedQuote.requestId && q.id !== quoteId && q.status !== 'accepted'
         );
         
         console.log("Quotes to update to pending:", quotesToUpdate);
