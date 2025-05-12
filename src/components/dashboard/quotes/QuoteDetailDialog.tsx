@@ -34,7 +34,11 @@ const QuoteDetailDialog: React.FC<QuoteDetailDialogProps> = ({
   
   // Handle direct navigation to professional profile
   const handleViewProfile = () => {
-    navigate(`/professional/${professional.id}`);
+    if (professional && professional.id) {
+      navigate(`/professional/${professional.id}`);
+    } else {
+      console.error("Cannot navigate: Missing professional ID");
+    }
   };
 
   // Ensure professional and specialties exist and are valid before rendering them
@@ -68,7 +72,7 @@ const QuoteDetailDialog: React.FC<QuoteDetailDialogProps> = ({
               <div className="flex items-center gap-4 mb-4">
                 <div className="h-16 w-16 rounded-full overflow-hidden bg-blue-100">
                   <img 
-                    src={professional.image || professional.image_url} 
+                    src={professional.image || professional.image_url || "https://via.placeholder.com/150"} 
                     alt={professional.name || 'בעל מקצוע'} 
                     className="w-full h-full object-cover"
                     onError={(e) => {

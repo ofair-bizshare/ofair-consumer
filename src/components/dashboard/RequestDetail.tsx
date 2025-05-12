@@ -39,13 +39,14 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
   const acceptedQuote = safeQuotes.length > 0 ? safeQuotes.find(q => q?.status === 'accepted') : undefined;
   console.log("Found accepted quote:", acceptedQuote);
 
-  // Check if it's appropriate to show the rating button
+  // Auto-open rating dialog if the request is waiting for rating
   useEffect(() => {
     if (request?.status === 'waiting_for_rating' && acceptedQuote && !isRatingDialogOpen) {
-      // Auto open rating dialog if needed
       console.log("Status is waiting_for_rating and we have an accepted quote");
+      // You can uncomment the following line to auto-open the rating dialog
+      // setIsRatingDialogOpen(true);
     }
-  }, [request?.status, acceptedQuote]);
+  }, [request?.status, acceptedQuote, isRatingDialogOpen]);
   
   const handleDeleteRequest = async () => {
     if (!request?.id) return;
@@ -151,13 +152,18 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
         
         {/* Show rating button prominently when status is waiting_for_rating */}
         {showRatingPrompt && (
-          <div className="my-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
-            <p className="text-amber-800 mb-3 text-sm font-medium">
-              אנא דרג את החוויה שלך עם {acceptedQuote.professional.name || "בעל המקצוע"} כדי לסייע למשתמשים אחרים
+          <div className="my-4 p-4 bg-amber-50 border border-amber-200 rounded-md">
+            <div className="flex items-center mb-2">
+              <Star className="h-5 w-5 text-amber-500 mr-2" />
+              <h3 className="text-amber-800 font-semibold">נדרש דירוג לסיום התהליך</h3>
+            </div>
+            <p className="text-amber-800 mb-3 text-sm">
+              אנא דרג את החוויה שלך עם {acceptedQuote.professional.name || "בעל המקצוע"} כדי לסייע למשתמשים אחרים ולסיים את תהליך הבקשה
             </p>
             <Button 
               className="bg-amber-500 hover:bg-amber-600 text-white w-full md:w-auto"
               onClick={handleOpenRatingDialog}
+              id="rating-section"
             >
               <Star className="h-4 w-4 ml-1" />
               דרג את בעל המקצוע

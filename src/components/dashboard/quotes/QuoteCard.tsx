@@ -58,17 +58,14 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   // When request is completed or waiting for rating, ONLY show accepted quotes
   const shouldDisplayQuote = 
     requestStatus === 'active' || 
-    (isAcceptedQuote) || 
+    isAcceptedQuote || 
     quote.status === 'pending';
     
   // Card is interactive if request is not completed or this is the accepted quote
   const isInteractive = !isRequestCompleted || isAcceptedQuote;
   
-  // Always show action buttons for accepted quotes in active or waiting_for_rating status
-  // For non-accepted quotes, only show actions if the request is active and no quote is accepted yet
-  const showActionButtons = 
-    (isAcceptedQuote && (requestStatus === 'active' || requestStatus === 'waiting_for_rating')) || 
-    (!isAcceptedQuote && !hasAcceptedQuote && requestStatus === 'active');
+  // Show action buttons based on status combinations
+  const showActionButtons = requestStatus !== 'completed';
 
   // Don't render the card at all if it shouldn't be displayed
   if (!shouldDisplayQuote && requestStatus !== 'active') {

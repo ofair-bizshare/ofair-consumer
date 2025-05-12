@@ -37,13 +37,23 @@ const QuotesList: React.FC<QuotesListProps> = ({
     return <div className="text-gray-500 text-center py-4">התקבלו נתוני הצעות לא תקינים</div>;
   }
   
+  // Check if any quote is accepted
   const hasAcceptedQuote = validQuotes.some(quote => quote?.status === 'accepted');
+  console.log("Has accepted quote:", hasAcceptedQuote);
   
-  // Sort quotes to show accepted quotes first
+  // Sort quotes to show accepted quotes first, then pending, then rejected
   const sortedQuotes = [...validQuotes].sort((a, b) => {
+    // Accepted quotes first
     if (a?.status === 'accepted') return -1;
     if (b?.status === 'accepted') return 1;
-    return 0;
+    
+    // Then pending quotes
+    if (a?.status === 'pending' && b?.status !== 'pending') return -1;
+    if (b?.status === 'pending' && a?.status !== 'pending') return 1;
+    
+    // Everything else by creation date (newer first)
+    return new Date(b?.createdAt || Date.now()).getTime() - 
+           new Date(a?.createdAt || Date.now()).getTime();
   });
   
   return (

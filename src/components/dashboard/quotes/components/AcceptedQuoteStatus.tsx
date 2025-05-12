@@ -16,15 +16,15 @@ const AcceptedQuoteStatus: React.FC<AcceptedQuoteStatusProps> = ({
   const isMobile = useIsMobile();
   
   return (
-    <div className={`mt-2 rounded-md p-1.5 flex items-center ${
+    <div className={`mt-2 rounded-md p-2 flex items-center ${
       isWaitingForRating 
         ? 'bg-amber-50 border border-amber-200' 
         : 'bg-green-50 border border-green-200'
     }`}>
       {isWaitingForRating ? (
-        <Star className="h-3 w-3 text-amber-500 ml-1 shrink-0" />
+        <Star className="h-4 w-4 text-amber-500 ml-2 shrink-0" />
       ) : (
-        <CheckCircle className="h-3 w-3 text-green-500 ml-1 shrink-0" />
+        <CheckCircle className="h-4 w-4 text-green-500 ml-2 shrink-0" />
       )}
       
       <div className="flex-1">
@@ -36,10 +36,9 @@ const AcceptedQuoteStatus: React.FC<AcceptedQuoteStatusProps> = ({
           <p className="text-xs text-green-600">העבודה הושלמה ודורגה</p>
         ) : isWaitingForRating ? (
           <div className="flex flex-col mt-1">
-            <p className="text-xs text-amber-600 font-medium mb-1">נא לדרג את בעל המקצוע</p>
+            <p className="text-xs text-amber-600 font-medium mb-2">נא לדרג את בעל המקצוע לסיום התהליך</p>
             
-            {/* Inline rating button for more prominence */}
-            <a href="#rating-section" className="text-xs bg-amber-500 hover:bg-amber-600 text-white py-1 px-2 rounded text-center w-full md:w-auto inline-block">
+            <a href="#rating-section" className="text-xs bg-amber-500 hover:bg-amber-600 text-white py-1.5 px-3 rounded text-center w-full md:w-auto inline-block">
               <Star className="h-3 w-3 inline-block ml-1" />
               דרג עכשיו
             </a>

@@ -62,15 +62,22 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
     setShowCancelConfirm(false);
   };
 
-  // Determine if we should show action buttons for this quote
-  const showActions = () => {
-    // Always show actions for accepted quotes in active or waiting_for_rating status
-    if (isAcceptedQuote && (requestStatus === 'active' || requestStatus === 'waiting_for_rating')) {
-      return true;
+  // Determine if we should show action buttons for this quote based on the current status
+  const shouldShowActions = () => {
+    // For active requests
+    if (requestStatus === 'active') {
+      // Show cancel button for accepted quotes
+      if (isAcceptedQuote) {
+        return true;
+      }
+      // Show actions for pending quotes if there's no accepted quote yet
+      if (quoteStatus === 'pending' && !hasAcceptedQuote) {
+        return true;
+      }
     }
     
-    // For non-accepted quotes, only show actions if the request is active and there's no accepted quote yet
-    if (!isAcceptedQuote && requestStatus === 'active' && !hasAcceptedQuote) {
+    // For waiting_for_rating status, always show cancel button for the accepted quote
+    if (requestStatus === 'waiting_for_rating' && isAcceptedQuote) {
       return true;
     }
     
@@ -100,7 +107,7 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
         )}
       </div>
       
-      {showActions() ? (
+      {shouldShowActions() ? (
         <div className={`${isMobile ? 'flex justify-center gap-2 w-full' : 'flex gap-2 space-x-reverse'}`}>
           {/* For accepted quotes */}
           {isAcceptedQuote ? (
@@ -115,7 +122,7 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
           ) : (
             /* For non-accepted quotes in active requests */
             <>
-              {!hasAcceptedQuote && quoteStatus !== 'rejected' && (
+              {!hasAcceptedQuote && quoteStatus !== 'rejected' && requestStatus === 'active' && (
                 <div className="flex gap-2 justify-center w-full">
                   <Button 
                     variant="outline" 
