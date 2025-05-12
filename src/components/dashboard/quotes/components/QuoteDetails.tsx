@@ -17,12 +17,15 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
 }) => {
   const isMobile = useIsMobile();
   
+  // Format price to show properly
+  const formattedPrice = price && price !== "0" && price !== "" ? price : "0";
+  
   return (
     <div className="mt-2 space-y-2">
       <div className={`flex ${isMobile ? 'flex-col gap-1' : 'flex-row gap-6 space-x-reverse'}`}>
         <div className="flex items-center">
           <span className="font-semibold ml-2 text-sm">מחיר:</span>
-          <span className="text-blue-600 font-medium text-sm">₪{price}</span>
+          <span className="text-blue-600 font-medium text-sm">₪{formattedPrice}</span>
         </div>
         
         {estimatedTime && (

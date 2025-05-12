@@ -2,6 +2,7 @@
 import React from 'react';
 import { QuoteInterface } from '@/types/dashboard';
 import QuoteCard from './quotes/QuoteCard';
+import ErrorBoundary from '@/components/ui/error-boundary';
 
 interface QuotesListProps {
   quotes: QuoteInterface[];
@@ -55,15 +56,17 @@ const QuotesList: React.FC<QuotesListProps> = ({
         }
         
         return (
-          <QuoteCard 
-            key={quote.id} 
-            quote={quote} 
-            onAcceptQuote={onAcceptQuote}
-            onRejectQuote={onRejectQuote}
-            onViewProfile={onViewProfile}
-            hasAcceptedQuote={hasAcceptedQuote}
-            requestStatus={requestStatus}
-          />
+          <ErrorBoundary key={quote.id} fallback={<div className="p-3 bg-red-50 rounded-md text-sm">שגיאה בטעינת הצעת המחיר</div>}>
+            <QuoteCard 
+              key={quote.id} 
+              quote={quote} 
+              onAcceptQuote={onAcceptQuote}
+              onRejectQuote={onRejectQuote}
+              onViewProfile={onViewProfile}
+              hasAcceptedQuote={hasAcceptedQuote}
+              requestStatus={requestStatus}
+            />
+          </ErrorBoundary>
         );
       })}
     </div>

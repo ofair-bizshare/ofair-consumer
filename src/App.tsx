@@ -39,54 +39,77 @@ import { AuthProvider } from '@/providers/AuthProvider';
 import ScrollToTop from '@/components/ScrollToTop';
 import { Toaster } from '@/components/ui/toaster';
 import PhoneRequiredDialog from '@/components/auth/PhoneRequiredDialog';
+import ErrorBoundary from '@/components/ui/error-boundary';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1, // Only retry failed queries once
+      refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    },
+  },
+});
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ThemeProvider defaultTheme="light">
-          <HelmetProvider>
-            <BrowserRouter>
-              <ScrollToTop />
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/search" element={<Search />} />
-                <Route path="/professional/:id" element={<ProfessionalProfile />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/referrals" element={<ReferralsPage />} />
-                <Route path="/my-referrals" element={<MyReferrals />} />
-                <Route path="/my-requests" element={<MyRequests />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/articles" element={<Articles />} />
-                <Route path="/articles/:slug" element={<ArticleDetail />} />
-                <Route path="/faq" element={<FAQ />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/terms" element={<Terms />} />
-                
-                {/* Admin Routes */}
-                <Route path="/admin-login" element={<AdminLogin />} />
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/professionals" element={<ProfessionalsManager />} />
-                <Route path="/admin/articles" element={<ArticlesManager />} />
-                <Route path="/admin/messages" element={<MessagesManager />} />
-                <Route path="/admin/settings" element={<AdminSettings />} />
-                
-                {/* 404 */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <PhoneRequiredDialog />
-              <Toaster />
-            </BrowserRouter>
-          </HelmetProvider>
-        </ThemeProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <ErrorBoundary fallback={
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
+        <div className="bg-white shadow-md rounded-lg p-6 max-w-md w-full text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">שגיאה קריטית</h1>
+          <p className="mb-4">אירעה שגיאה בטעינת האפליקציה. אנא רענן את הדף או נסה שוב מאוחר יותר.</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            רענן דף
+          </button>
+        </div>
+      </div>
+    }>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <ThemeProvider defaultTheme="light">
+            <HelmetProvider>
+              <BrowserRouter>
+                <ScrollToTop />
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/search" element={<Search />} />
+                  <Route path="/professional/:id" element={<ProfessionalProfile />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/referrals" element={<ReferralsPage />} />
+                  <Route path="/my-referrals" element={<MyReferrals />} />
+                  <Route path="/my-requests" element={<MyRequests />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/articles" element={<Articles />} />
+                  <Route path="/articles/:slug" element={<ArticleDetail />} />
+                  <Route path="/faq" element={<FAQ />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/terms" element={<Terms />} />
+                  
+                  {/* Admin Routes */}
+                  <Route path="/admin-login" element={<AdminLogin />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/professionals" element={<ProfessionalsManager />} />
+                  <Route path="/admin/articles" element={<ArticlesManager />} />
+                  <Route path="/admin/messages" element={<MessagesManager />} />
+                  <Route path="/admin/settings" element={<AdminSettings />} />
+                  
+                  {/* 404 */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <PhoneRequiredDialog />
+                <Toaster />
+              </BrowserRouter>
+            </HelmetProvider>
+          </ThemeProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

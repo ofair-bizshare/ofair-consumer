@@ -7,6 +7,7 @@ import QuotesList from './QuotesList';
 import { useToast } from '@/hooks/use-toast';
 import { deleteRequest } from '@/services/requests';
 import ProfessionalRatingDialog from './rating/ProfessionalRatingDialog';
+import ErrorBoundary from '@/components/ui/error-boundary';
 
 interface RequestDetailProps {
   request: RequestInterface;
@@ -35,7 +36,7 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
   
   // Find the accepted quote (if any), ensure quotes is an array before finding
   const safeQuotes = Array.isArray(quotes) ? quotes : [];
-  const acceptedQuote = safeQuotes.length > 0 ? safeQuotes.find(q => q.status === 'accepted') : undefined;
+  const acceptedQuote = safeQuotes.length > 0 ? safeQuotes.find(q => q?.status === 'accepted') : undefined;
   console.log("Found accepted quote:", acceptedQuote);
   
   const handleDeleteRequest = async () => {
@@ -141,7 +142,7 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
         {request.status === 'waiting_for_rating' && acceptedQuote && acceptedQuote.professional && (
           <div className="my-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
             <p className="text-amber-800 mb-3 text-sm">
-              אנא דרג את החוויה שלך עם {acceptedQuote.professional.name} כדי לסייע למשתמשים אחרים
+              אנא דרג את החוויה שלך עם {acceptedQuote.professional.name || "בעל המקצוע"} כדי לסייע למשתמשים אחרים
             </p>
             <Button 
               className="bg-amber-500 hover:bg-amber-600 text-white"
@@ -174,20 +175,22 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
         </div>
       </div>
       
-      {safeQuotes.length > 0 ? (
-        <div>
-          <h3 className="text-xl font-semibold mb-4">הצעות מחיר שהתקבלו</h3>
-          <QuotesList 
-            quotes={safeQuotes} 
-            onAcceptQuote={onAcceptQuote} 
-            onRejectQuote={onRejectQuote} 
-            onViewProfile={onViewProfile}
-            requestStatus={request.status} // Pass request status to QuotesList
-          />
-        </div>
-      ) : (
-        <NoQuotesMessage onRefresh={onRefresh} />
-      )}
+      <ErrorBoundary fallback={<div className="p-4 bg-red-50 text-red-700 rounded-md">שגיאה בטעינת הצעות המחיר</div>}>
+        {safeQuotes.length > 0 ? (
+          <div>
+            <h3 className="text-xl font-semibold mb-4">הצעות מחיר שהתקבלו</h3>
+            <QuotesList 
+              quotes={safeQuotes} 
+              onAcceptQuote={onAcceptQuote} 
+              onRejectQuote={onRejectQuote} 
+              onViewProfile={onViewProfile}
+              requestStatus={request.status} // Pass request status to QuotesList
+            />
+          </div>
+        ) : (
+          <NoQuotesMessage onRefresh={onRefresh} />
+        )}
+      </ErrorBoundary>
       
       {/* Professional Rating Dialog - Only render when we have a valid professional */}
       {acceptedQuote && acceptedQuote.professional && (
@@ -196,7 +199,7 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
           onOpenChange={setIsRatingDialogOpen}
           professional={{
             id: acceptedQuote.professional.id,
-            name: acceptedQuote.professional.name,
+            name: acceptedQuote.professional.name || "בעל מקצוע",
             phone: acceptedQuote.professional.phoneNumber || acceptedQuote.professional.phone || '',
             companyName: acceptedQuote.professional.company_name || acceptedQuote.professional.companyName || ''
           }}
