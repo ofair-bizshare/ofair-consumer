@@ -45,7 +45,7 @@ const RequestsTab: React.FC = () => {
     const initialLoad = async () => {
       await refreshRequests();
       if (selectedRequestId) {
-        refreshQuotes(selectedRequestId);
+        await refreshQuotes(selectedRequestId);
       }
     };
     
@@ -56,7 +56,9 @@ const RequestsTab: React.FC = () => {
   useEffect(() => {
     if (selectedRequestId) {
       console.log("Auto-refreshing quotes for newly selected request:", selectedRequestId);
-      refreshQuotes(selectedRequestId);
+      refreshQuotes(selectedRequestId).catch(err => {
+        console.error("Error refreshing quotes:", err);
+      });
     }
   }, [selectedRequestId, refreshQuotes]);
 
@@ -91,17 +93,23 @@ const RequestsTab: React.FC = () => {
       if (selectedRequestId) {
         setTimeout(() => {
           console.log("Refreshing quotes after payment method selection");
-          refreshQuotes(selectedRequestId);
-        }, 1000); // Short delay to allow database to update
+          refreshQuotes(selectedRequestId).catch(err => {
+            console.error("Error refreshing quotes after payment:", err);
+          });
+        }, 1500); // Slightly longer delay to allow database to update
       }
     }
   };
   
   // Handle refresh button click
-  const handleRefresh = useCallback(() => {
-    refreshRequests();
-    if (selectedRequestId) {
-      refreshQuotes(selectedRequestId);
+  const handleRefresh = useCallback(async () => {
+    try {
+      await refreshRequests();
+      if (selectedRequestId) {
+        await refreshQuotes(selectedRequestId);
+      }
+    } catch (error) {
+      console.error("Error during refresh:", error);
     }
   }, [refreshRequests, refreshQuotes, selectedRequestId]);
 
@@ -133,10 +141,16 @@ const RequestsTab: React.FC = () => {
         ) : (
           <RequestsList 
             requests={requests} 
-            onSelect={(id) => {
+            onSelect={async (id) => {
               setSelectedRequestId(id);
               // Auto refresh quotes when selecting a new request
-              if (id) refreshQuotes(id);
+              if (id) {
+                try {
+                  await refreshQuotes(id);
+                } catch (err) {
+                  console.error("Error refreshing quotes on selection:", err);
+                }
+              }
             }}
             selectedRequestId={selectedRequestId}
           />
@@ -151,10 +165,16 @@ const RequestsTab: React.FC = () => {
             onAcceptQuote={handleAcceptQuote}
             onRejectQuote={handleRejectQuote}
             onViewProfile={handleViewProfile}
-            onRefresh={() => {
+            onRefresh={async () => {
               if (selectedRequestId) {
                 console.log("Manual refresh of quotes triggered");
-                refreshQuotes(selectedRequestId);
+                try {
+                  await refreshQuotes(selectedRequestId);
+                  // Also refresh the requests to get updated status
+                  await refreshRequests();
+                } catch (err) {
+                  console.error("Error during manual refresh:", err);
+                }
               }
             }}
           />

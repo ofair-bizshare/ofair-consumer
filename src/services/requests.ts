@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { RequestInterface } from '@/types/dashboard';
 
@@ -149,17 +150,17 @@ export const updateRequestStatus = async (id: string, status: string): Promise<b
   }
 };
 
-// Delete a request
+// Delete a request with improved error handling and verification
 export const deleteRequest = async (id: string): Promise<boolean> => {
   try {
-    console.log(`Attempting to delete request with ID: ${id}`);
+    console.log(`Starting deletion process for request with ID: ${id}`);
     
-    // First, delete associated quotes from accepted_quotes table
+    // Step 1: Delete associated quotes from accepted_quotes table
+    console.log(`Step 1: Deleting accepted quotes for request ${id}`);
     try {
-      console.log(`Deleting accepted quotes for request ${id}`);
       const { data: acceptedQuotesData, error: acceptedQuotesError } = await supabase
         .from('accepted_quotes')
-        .select('*')
+        .select('quote_id')
         .eq('request_id', id);
         
       if (acceptedQuotesError) {
@@ -168,6 +169,12 @@ export const deleteRequest = async (id: string): Promise<boolean> => {
         console.log(`Found ${acceptedQuotesData?.length || 0} accepted quotes to delete`);
         
         if (acceptedQuotesData && acceptedQuotesData.length > 0) {
+          // Log each quote being deleted
+          for (const record of acceptedQuotesData) {
+            console.log(`Deleting accepted quote with quote_id: ${record.quote_id}`);
+          }
+          
+          // Delete all accepted quotes for this request
           const { error: deleteAcceptedQuotesError } = await supabase
             .from('accepted_quotes')
             .delete()
@@ -177,19 +184,34 @@ export const deleteRequest = async (id: string): Promise<boolean> => {
             console.error('Error deleting associated accepted quotes:', deleteAcceptedQuotesError);
           } else {
             console.log(`Successfully deleted accepted quotes for request ${id}`);
+            
+            // Verify deletion of accepted quotes
+            const { data: verifyData, error: verifyError } = await supabase
+              .from('accepted_quotes')
+              .select('*')
+              .eq('request_id', id);
+              
+            if (verifyError) {
+              console.error('Error verifying accepted quotes deletion:', verifyError);
+            } else if (verifyData && verifyData.length > 0) {
+              console.error('Some accepted quotes were not deleted!', verifyData);
+            } else {
+              console.log('Verified: all accepted quotes were deleted successfully');
+            }
           }
         }
       }
     } catch (e) {
       console.error('Error in deleting associated accepted quotes:', e);
+      // Continue with the process despite errors
     }
     
-    // Next, get all quotes for this request
+    // Step 2: Get and delete all quotes for this request
+    console.log(`Step 2: Finding and deleting quotes for request ${id}`);
     try {
-      console.log(`Finding quotes for request ${id}`);
       const { data: quotesData, error: quotesError } = await supabase
         .from('quotes')
-        .select('*')
+        .select('id')
         .eq('request_id', id);
         
       if (quotesError) {
@@ -199,6 +221,11 @@ export const deleteRequest = async (id: string): Promise<boolean> => {
         
         // Delete all quotes for this request
         if (quotesData && quotesData.length > 0) {
+          // Log each quote being deleted
+          for (const quote of quotesData) {
+            console.log(`Deleting quote with ID: ${quote.id}`);
+          }
+          
           const { error: deleteQuotesError } = await supabase
             .from('quotes')
             .delete()
@@ -208,15 +235,30 @@ export const deleteRequest = async (id: string): Promise<boolean> => {
             console.error('Error deleting associated quotes:', deleteQuotesError);
           } else {
             console.log(`Successfully deleted quotes for request ${id}`);
+            
+            // Verify deletion of quotes
+            const { data: verifyData, error: verifyError } = await supabase
+              .from('quotes')
+              .select('*')
+              .eq('request_id', id);
+              
+            if (verifyError) {
+              console.error('Error verifying quotes deletion:', verifyError);
+            } else if (verifyData && verifyData.length > 0) {
+              console.error('Some quotes were not deleted!', verifyData);
+            } else {
+              console.log('Verified: all quotes were deleted successfully');
+            }
           }
         }
       }
     } catch (e) {
       console.error('Error in deleting associated quotes:', e);
+      // Continue with the process despite errors
     }
     
-    // Finally, delete the request itself
-    console.log(`Deleting request ${id}`);
+    // Step 3: Finally, delete the request itself
+    console.log(`Step 3: Deleting request ${id}`);
     const { error, data } = await supabase
       .from('requests')
       .delete()
@@ -230,7 +272,8 @@ export const deleteRequest = async (id: string): Promise<boolean> => {
     
     console.log(`Successfully deleted request ${id}:`, data);
     
-    // Verify the request has been deleted
+    // Step 4: Verify the request has been deleted
+    console.log(`Step 4: Verifying request ${id} was deleted`);
     const { data: verifyData, error: verifyError } = await supabase
       .from('requests')
       .select('*')

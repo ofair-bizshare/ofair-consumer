@@ -29,6 +29,7 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
   const { toast } = useToast();
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedQuoteForRating, setSelectedQuoteForRating] = useState<string | null>(null);
   const ratingButtonRef = useRef<HTMLDivElement>(null);
   
   // Safe logging with null checks
@@ -40,38 +41,37 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
   const acceptedQuote = safeQuotes.length > 0 ? safeQuotes.find(q => q?.status === 'accepted') : undefined;
   console.log("Found accepted quote:", acceptedQuote);
 
-  // Auto-open rating dialog if the request is waiting for rating
+  // Auto-open rating dialog if the request is waiting for rating and URL has hash
   useEffect(() => {
-    if (request?.status === 'waiting_for_rating' && acceptedQuote && !isRatingDialogOpen) {
-      console.log("Status is waiting_for_rating and we have an accepted quote");
-      // You can uncomment the following line to auto-open the rating dialog
-      // setIsRatingDialogOpen(true);
+    if (window.location.hash === '#rating-section' && 
+        request?.status === 'waiting_for_rating' && 
+        acceptedQuote && 
+        !isRatingDialogOpen) {
+      console.log("Auto-opening rating dialog because of #rating-section hash");
+      setIsRatingDialogOpen(true);
+      setSelectedQuoteForRating(acceptedQuote.id);
     }
   }, [request?.status, acceptedQuote, isRatingDialogOpen]);
 
-  // Handle hash changes for the rating section
-  useEffect(() => {
-    const handleHashChange = () => {
-      if (window.location.hash === '#rating-section' && ratingButtonRef.current) {
-        console.log("Hash is #rating-section, scrolling to rating button");
-        ratingButtonRef.current.scrollIntoView({ behavior: 'smooth' });
-        
-        // Open the rating dialog after a short delay
-        setTimeout(() => {
-          if (acceptedQuote && acceptedQuote.professional) {
-            console.log("Opening rating dialog via hash change");
-            setIsRatingDialogOpen(true);
-          }
-        }, 500);
-      }
-    };
-
-    // Check on mount and when hash changes
-    handleHashChange();
-    window.addEventListener('hashchange', handleHashChange);
+  // Handle quote rating click
+  const handleQuoteRatingClick = (quoteId: string) => {
+    console.log(`Opening rating dialog for quote ${quoteId}`);
     
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [acceptedQuote]);
+    // Find the quote data by ID
+    const quoteToRate = safeQuotes.find(q => q.id === quoteId);
+    
+    if (quoteToRate && quoteToRate.professional && quoteToRate.professional.id) {
+      setSelectedQuoteForRating(quoteId);
+      setIsRatingDialogOpen(true);
+    } else {
+      console.error("Cannot open rating dialog: quote or professional data is missing");
+      toast({
+        title: "שגיאה",
+        description: "לא ניתן לדרג את בעל המקצוע כרגע, אנא נסה שוב מאוחר יותר",
+        variant: "destructive",
+      });
+    }
+  };
   
   const handleDeleteRequest = async () => {
     if (!request?.id) return;
@@ -120,6 +120,7 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
     }
   };
   
+  // Handler for the prominent rating button in RequestDetail
   const handleOpenRatingDialog = () => {
     if (!acceptedQuote?.professional) {
       console.error("Cannot open rating dialog: professional data is missing");
@@ -131,7 +132,8 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
       return;
     }
     
-    console.log("Opening rating dialog for professional:", acceptedQuote.professional);
+    console.log("Opening rating dialog from main rating button for professional:", acceptedQuote.professional);
+    setSelectedQuoteForRating(acceptedQuote.id);
     setIsRatingDialogOpen(true);
   };
 
@@ -139,6 +141,11 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
   if (!request) {
     return <div className="text-gray-500 text-center py-4">Loading request details...</div>;
   }
+
+  // Get the currently selected quote for rating (either the explicitly selected one or the accepted quote)
+  const selectedQuoteData = selectedQuoteForRating 
+    ? safeQuotes.find(q => q.id === selectedQuoteForRating) 
+    : acceptedQuote;
 
   // Prepare the rating button prominent display for waiting_for_rating status
   const showRatingPrompt = request.status === 'waiting_for_rating' && acceptedQuote && acceptedQuote.professional;
@@ -227,6 +234,7 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
               onRejectQuote={onRejectQuote} 
               onViewProfile={onViewProfile}
               requestStatus={request.status} // Pass request status to QuotesList
+              onRatingClick={handleQuoteRatingClick} // Pass rating handler to QuotesList
             />
           </div>
         ) : (
@@ -235,18 +243,28 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
       </ErrorBoundary>
       
       {/* Professional Rating Dialog - Only render when we have a valid professional */}
-      {acceptedQuote && acceptedQuote.professional && acceptedQuote.professional.id && (
+      {selectedQuoteData && selectedQuoteData.professional && selectedQuoteData.professional.id && (
         <ProfessionalRatingDialog
           open={isRatingDialogOpen}
-          onOpenChange={setIsRatingDialogOpen}
+          onOpenChange={(isOpen) => {
+            setIsRatingDialogOpen(isOpen);
+            if (!isOpen) {
+              // Reset selected quote when dialog closes
+              setSelectedQuoteForRating(null);
+            }
+          }}
           professional={{
-            id: acceptedQuote.professional.id,
-            name: acceptedQuote.professional.name || "בעל מקצוע",
-            phone: acceptedQuote.professional.phoneNumber || acceptedQuote.professional.phone || '',
-            companyName: acceptedQuote.professional.company_name || acceptedQuote.professional.companyName || ''
+            id: selectedQuoteData.professional.id,
+            name: selectedQuoteData.professional.name || "בעל מקצוע",
+            phone: selectedQuoteData.professional.phoneNumber || selectedQuoteData.professional.phone || '',
+            companyName: selectedQuoteData.professional.company_name || selectedQuoteData.professional.companyName || ''
           }}
           requestId={request.id}
-          onRatingComplete={onRefresh}
+          onRatingComplete={() => {
+            if (onRefresh) {
+              onRefresh();
+            }
+          }}
         />
       )}
     </div>

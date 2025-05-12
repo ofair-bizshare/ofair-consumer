@@ -10,6 +10,7 @@ interface QuotesListProps {
   onRejectQuote: (quoteId: string) => void;
   onViewProfile: (professionalId: string) => void;
   requestStatus?: string;
+  onRatingClick?: (quoteId: string) => void; // Added for rating functionality
 }
 
 const QuotesList: React.FC<QuotesListProps> = ({ 
@@ -17,7 +18,8 @@ const QuotesList: React.FC<QuotesListProps> = ({
   onAcceptQuote, 
   onRejectQuote, 
   onViewProfile,
-  requestStatus = 'active'
+  requestStatus = 'active',
+  onRatingClick
 }) => {
   // Ensure quotes is always a valid array
   const safeQuotes = Array.isArray(quotes) ? quotes : [];
@@ -44,15 +46,18 @@ const QuotesList: React.FC<QuotesListProps> = ({
   
   // Sort quotes to show accepted quotes first, then pending, then rejected
   const sortedQuotes = [...validQuotes].sort((a, b) => {
-    // Accepted quotes first
-    if (a?.status === 'accepted') return -1;
-    if (b?.status === 'accepted') return 1;
+    // Priority order: accepted > pending > other statuses
+    const statusPriority: Record<string, number> = {
+      'accepted': 3,
+      'pending': 2,
+      'rejected': 0, // Lower priority for rejected quotes (will appear at the bottom)
+      'expired': 0
+    };
     
-    // Then pending quotes
-    if (a?.status === 'pending' && b?.status !== 'pending') return -1;
-    if (b?.status === 'pending' && a?.status !== 'pending') return 1;
+    const priorityA = statusPriority[a.status] || 0;
+    const priorityB = statusPriority[b.status] || 0;
     
-    // Everything else by creation date (newer first)
+    // Compare by priority, then by date (newer first)
     // Use the timestamp property from quotes, with safe type handling
     const getTimestamp = (quote: QuoteInterface | null | undefined) => {
       if (!quote) return Date.now();
@@ -65,6 +70,10 @@ const QuotesList: React.FC<QuotesListProps> = ({
       
       return Date.now(); // Fallback
     };
+    
+    if (priorityA !== priorityB) {
+      return priorityB - priorityA;
+    }
     
     return getTimestamp(b) - getTimestamp(a);
   });
@@ -94,6 +103,7 @@ const QuotesList: React.FC<QuotesListProps> = ({
               onViewProfile={onViewProfile}
               hasAcceptedQuote={hasAcceptedQuote}
               requestStatus={requestStatus}
+              onRatingClick={onRatingClick} // Pass rating handler to each QuoteCard
             />
           </ErrorBoundary>
         );

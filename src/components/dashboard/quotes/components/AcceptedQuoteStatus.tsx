@@ -7,28 +7,41 @@ import { Button } from '@/components/ui/button';
 interface AcceptedQuoteStatusProps {
   isCompleted: boolean;
   isWaitingForRating: boolean;
+  onRatingClick?: () => void; // Added callback prop for direct dialog opening
 }
 
 const AcceptedQuoteStatus: React.FC<AcceptedQuoteStatusProps> = ({ 
   isCompleted, 
-  isWaitingForRating 
+  isWaitingForRating,
+  onRatingClick
 }) => {
   const isMobile = useIsMobile();
   
-  // Function to scroll to rating section and open dialog
+  // Improved function to directly trigger the rating dialog
   const handleRatingClick = () => {
-    // First scroll to the rating section
-    const ratingSection = document.getElementById('rating-section-button');
-    if (ratingSection) {
-      ratingSection.scrollIntoView({ behavior: 'smooth' });
-    }
-    
-    // Then programmatically click the rating button after scrolling
-    setTimeout(() => {
+    if (onRatingClick) {
+      // Call the parent-provided callback to open the dialog directly
+      onRatingClick();
+      console.log("Rating button clicked in AcceptedQuoteStatus, triggering parent callback");
+    } else {
+      console.warn("Rating button clicked but no onRatingClick handler was provided");
+      
+      // Fallback method: try to find and scroll to rating section
+      const ratingSection = document.getElementById('rating-section-button');
       if (ratingSection) {
-        ratingSection.click();
+        ratingSection.scrollIntoView({ behavior: 'smooth' });
+        
+        // Programmatically click the rating button after scrolling
+        setTimeout(() => {
+          if (ratingSection) {
+            console.log("Attempting to click rating section button via fallback method");
+            ratingSection.click();
+          }
+        }, 500);
+      } else {
+        console.error("Rating section not found in document");
       }
-    }, 500);
+    }
   };
   
   return (
@@ -58,6 +71,7 @@ const AcceptedQuoteStatus: React.FC<AcceptedQuoteStatusProps> = ({
               onClick={handleRatingClick}
               size="sm"
               className="text-xs bg-amber-500 hover:bg-amber-600 text-white py-1 px-3 rounded inline-block"
+              data-testid="rate-now-button"
             >
               <Star className="h-3 w-3 inline-block ml-1" />
               דרג עכשיו

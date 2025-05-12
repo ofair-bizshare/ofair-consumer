@@ -18,6 +18,7 @@ interface QuoteCardProps {
   onViewProfile: (professionalId: string) => void;
   hasAcceptedQuote: boolean;
   requestStatus?: string;
+  onRatingClick?: (quoteId: string) => void; // Added callback for rating dialog
 }
 
 const QuoteCard: React.FC<QuoteCardProps> = ({ 
@@ -26,7 +27,8 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   onRejectQuote, 
   onViewProfile,
   hasAcceptedQuote,
-  requestStatus = 'active'
+  requestStatus = 'active',
+  onRatingClick
 }) => {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [isContactActive, setIsContactActive] = useState(false);
@@ -45,6 +47,14 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
       </Card>
     );
   }
+  
+  // Handle rating click for this specific quote
+  const handleQuoteRatingClick = () => {
+    console.log(`QuoteCard: Rating requested for quote ${quote.id}`);
+    if (onRatingClick) {
+      onRatingClick(quote.id);
+    }
+  };
   
   // Check the actual acceptance status in the database when component mounts
   useEffect(() => {
@@ -135,6 +145,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
               <AcceptedQuoteStatus 
                 isCompleted={isRequestCompleted} 
                 isWaitingForRating={isWaitingForRating}
+                onRatingClick={handleQuoteRatingClick}
               />
             )}
             
