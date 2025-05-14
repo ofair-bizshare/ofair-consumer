@@ -27,6 +27,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
         <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6 lg:gap-8 w-full">
           {/* Left side - Text content */}
           <div className="w-full lg:w-1/2 animate-fade-in-up relative z-10 text-right lg:text-right">
+            {/* Moved the subtitle above the main heading */}
             <div className="text-base font-semibold text-[#00D09E] mb-3 flex items-center justify-end lg:justify-start">
               <ThumbsUp className="w-5 h-5 inline-block ml-2" />
               oFair - הפתרון המושלם לבעלי בתים

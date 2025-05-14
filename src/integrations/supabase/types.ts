@@ -608,6 +608,7 @@ export type Database = {
           price: string
           professional_id: string
           request_id: string
+          request_status: string | null
           sample_image_url: string | null
           scheduled_date: string | null
           scheduled_time: string | null
@@ -622,6 +623,7 @@ export type Database = {
           price: string
           professional_id: string
           request_id: string
+          request_status?: string | null
           sample_image_url?: string | null
           scheduled_date?: string | null
           scheduled_time?: string | null
@@ -636,6 +638,7 @@ export type Database = {
           price?: string
           professional_id?: string
           request_id?: string
+          request_status?: string | null
           sample_image_url?: string | null
           scheduled_date?: string | null
           scheduled_time?: string | null
