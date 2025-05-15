@@ -147,11 +147,12 @@ const RequestDetail: React.FC<RequestDetailProps> = ({
     : acceptedQuote;
 
   // Prepare the rating button prominent display for waiting_for_rating status
+  // אם יש סטטוס ממתין לדירוג והצעה מאושרת עם professional - מציגים דירוג תמיד, לא משנה התאריך
   const showRatingPrompt = request.status === 'waiting_for_rating' && acceptedQuote && acceptedQuote.professional;
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="glass-card p-6">
+    <div className="space-y-6 animate-fade-in font-assistant">
+      <div className="glass-card p-6 font-assistant">
         <div className="flex justify-between items-start mb-4">
           <div>
             <h2 className="text-2xl font-semibold text-blue-700">{request.title}</h2>

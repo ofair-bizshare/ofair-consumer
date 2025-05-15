@@ -1,4 +1,3 @@
-
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
@@ -10,6 +9,11 @@ module.exports = {
   ],
   prefix: "",
   theme: {
+    fontFamily: {
+      assistant: ["Assistant", "sans-serif"],
+      // נכפה ברירת מחדל assistant
+      sans: ["Assistant", "sans-serif"],
+    },
     container: {
       center: true,
       padding: "2rem",

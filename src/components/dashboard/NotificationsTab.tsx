@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Bell, CheckCircle, X, MessageSquare, Clock, Calendar, Wrench } from 'lucide-react';
@@ -93,8 +92,8 @@ const NotificationsTab: React.FC = () => {
   }
   
   return (
-    <div className="space-y-6" dir="rtl">
-      <div className="glass-card p-6">
+    <div className="space-y-6 font-assistant" dir="rtl">
+      <div className="glass-card p-6 font-assistant">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center">
             <h2 className="text-2xl font-semibold text-blue-700 flex items-center">
