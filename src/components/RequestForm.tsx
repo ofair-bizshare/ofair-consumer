@@ -493,13 +493,18 @@ const RequestForm: React.FC<RequestFormProps> = ({
                   />
                 </div>
               </PopoverTrigger>
-              <PopoverContent className="p-0 w-auto" align="start">
+              <PopoverContent className="p-0 w-auto z-50 bg-white" align="start">
                 <CalendarComponent
                   mode="single"
                   selected={selectedDate}
                   onSelect={handleSelectDate}
-                  className="border rounded-md"
-                  disabled={(date) => date < new Date()}
+                  className="border rounded-md p-3 pointer-events-auto bg-white z-50"
+                  disabled={(date) => {
+                    // Allow today & future, disable before today
+                    const today = new Date();
+                    today.setHours(0,0,0,0);
+                    return date < today;
+                  }}
                   initialFocus
                 />
               </PopoverContent>
