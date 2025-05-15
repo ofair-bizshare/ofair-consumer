@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Whatsapp } from "lucide-react";
+import { MessageCircle } from "lucide-react"; // Use MessageCircle as a fallback icon
 
 interface WhatsAppButtonProps {
   phoneNumber: string;
@@ -43,7 +43,7 @@ const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
         type="button"
         tabIndex={0}
       >
-        <Whatsapp className="h-4 w-4 text-green-500" />
+        <MessageCircle className="h-4 w-4 text-green-500" />
         שלח WhatsApp
       </Button>
     </a>
@@ -51,4 +51,3 @@ const WhatsAppButton: React.FC<WhatsAppButtonProps> = ({
 };
 
 export default WhatsAppButton;
-
