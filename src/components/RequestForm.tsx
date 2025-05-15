@@ -299,7 +299,7 @@ const RequestForm: React.FC<RequestFormProps> = ({
               <Label htmlFor="profession" className="text-gray-700">סוג עבודה</Label>
               <Popover open={openProfessionPopover} onOpenChange={setOpenProfessionPopover}>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" role="combobox" aria-expanded={openProfessionPopover} className="w-full justify-between text-right pr-3 pl-10 relative rounded-md">
+                  <Button variant="outline" role="combobox" aria-expanded={openProfessionPopover} className="w-full justify-between text-right pr-3 pl-10 relative rounded-lg">
                     {formData.profession || "בחר סוג עבודה"}
                     <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                   </Button>
@@ -358,7 +358,7 @@ const RequestForm: React.FC<RequestFormProps> = ({
           </div>
           <div className="space-y-2">
             <Label htmlFor="description" className="text-gray-700">תיאור מפורט של העבודה</Label>
-            <Textarea id="description" name="description" placeholder="תאר את העבודה שברצונך לבצע באופן מפורט ככל האפשר" value={formData.description} onChange={handleInputChange} className="h-32 rounded-md" />
+            <Textarea id="description" name="description" placeholder="תאר את העבודה שברצונך לבצע באופן מפורט ככל האפשר" value={formData.description} onChange={handleInputChange} className="h-32 rounded-lg" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="timing" className="text-gray-700">מועד ביצוע (אופציונלי)</Label>
@@ -366,7 +366,7 @@ const RequestForm: React.FC<RequestFormProps> = ({
               <PopoverTrigger asChild>
                 <div className="relative cursor-pointer">
                   <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                  <Input id="timing" name="timing" placeholder="מתי תרצה שהעבודה תתבצע?" value={formData.timing} onChange={handleInputChange} onClick={() => setOpenCalendar(true)} readOnly className="pr-10 rounded-md" />
+                  <Input id="timing" name="timing" placeholder="מתי תרצה שהעבודה תתבצע?" value={formData.timing} onChange={handleInputChange} onClick={() => setOpenCalendar(true)} readOnly className="pr-10 rounded-lg" />
                 </div>
               </PopoverTrigger>
               <PopoverContent className="p-0 w-auto z-50 bg-white" align="start">
