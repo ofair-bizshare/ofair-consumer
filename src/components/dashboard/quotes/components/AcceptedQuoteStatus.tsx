@@ -57,7 +57,7 @@ const AcceptedQuoteStatus: React.FC<AcceptedQuoteStatusProps> = ({
               <Star className="h-3 w-3 inline-block ml-1" />
               דרג עכשיו
             </Button>
-          </div> : <p className="text-xs text-green-600">בעל המקצוע קיבל הודעה על כך</p>}
+          </div> : <p className="text-green-600 font-normal text-base">בעל המקצוע קיבל הודעה על כך</p>}
       </div>
     </div>;
 };
