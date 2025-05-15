@@ -389,15 +389,16 @@ const RequestForm: React.FC<RequestFormProps> = ({
                     <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-full p-0" align="start">
+                <PopoverContent className="w-full min-w-[230px] bg-white shadow-lg z-50 p-0 border border-gray-300" align="start" style={{overflow:'visible'}}>
                   <Command dir="rtl">
-                    <CommandInput 
+                    <CommandInput
                       placeholder="חפש סוג עבודה..."
                       value={professionSearchTerm}
-                      onValueChange={setProfessionSearchTerm} 
+                      onValueChange={setProfessionSearchTerm}
+                      className="bg-white"
                     />
                     <CommandEmpty>לא נמצאו תוצאות</CommandEmpty>
-                    <CommandList>
+                    <CommandList className="bg-white z-50 max-h-64 overflow-auto border-gray-200">
                       <CommandGroup>
                         {filteredProfessions.map((profession) => (
                           <CommandItem
@@ -418,7 +419,6 @@ const RequestForm: React.FC<RequestFormProps> = ({
                 </PopoverContent>
               </Popover>
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="location" className="text-gray-700">עיר</Label>
               <Popover open={openCityPopover} onOpenChange={setOpenCityPopover}>
@@ -433,15 +433,16 @@ const RequestForm: React.FC<RequestFormProps> = ({
                     <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-full p-0" align="start">
+                <PopoverContent className="w-full min-w-[230px] bg-white shadow-lg z-50 p-0 border border-gray-300" align="start" style={{overflow:'visible'}}>
                   <Command dir="rtl">
-                    <CommandInput 
-                      placeholder="חפש עיר..." 
+                    <CommandInput
+                      placeholder="חפש עיר..."
                       value={citySearchTerm}
                       onValueChange={setCitySearchTerm}
+                      className="bg-white"
                     />
                     <CommandEmpty>לא נמצאו תוצאות</CommandEmpty>
-                    <CommandList>
+                    <CommandList className="bg-white z-50 max-h-64 overflow-auto border-gray-200">
                       <CommandGroup>
                         {filteredCities.map((city) => (
                           <CommandItem
@@ -463,7 +464,6 @@ const RequestForm: React.FC<RequestFormProps> = ({
               </Popover>
             </div>
           </div>
-
           <div className="space-y-2">
             <Label htmlFor="description" className="text-gray-700">תיאור מפורט של העבודה</Label>
             <Textarea 
@@ -475,7 +475,6 @@ const RequestForm: React.FC<RequestFormProps> = ({
               onChange={handleInputChange} 
             />
           </div>
-
           <div className="space-y-2">
             <Label htmlFor="timing" className="text-gray-700">מועד ביצוע (אופציונלי)</Label>
             <Popover open={openCalendar} onOpenChange={setOpenCalendar}>
@@ -506,7 +505,6 @@ const RequestForm: React.FC<RequestFormProps> = ({
               </PopoverContent>
             </Popover>
           </div>
-
           <div className="space-y-2">
             <Label className="text-gray-700">תמונות (אופציונלי)</Label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
@@ -516,7 +514,6 @@ const RequestForm: React.FC<RequestFormProps> = ({
                 <input type="file" className="hidden" accept="image/*" multiple onChange={handleImageUpload} />
               </label>
             </div>
-
             {previewUrls.length > 0 && (
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                 {previewUrls.map((url, index) => (
