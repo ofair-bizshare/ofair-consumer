@@ -43,15 +43,15 @@ const AcceptedQuoteStatus: React.FC<AcceptedQuoteStatusProps> = ({
     }
   };
   return <div className={`mt-2 rounded-md p-2 flex items-center ${isWaitingForRating ? 'bg-amber-50 border border-amber-200' : 'bg-green-50 border border-green-200'}`}>
-      {isWaitingForRating ? <Star className="h-4 w-4 text-amber-500 ml-2 shrink-0" /> : <CheckCircle className="h-4 w-4 text-green-500 ml-2 shrink-0" />}
+      {isWaitingForRating ? <Star className="h-4 w-4 text-amber-500 ml-2 shrink-0 my-0 py-0" /> : <CheckCircle className="h-4 w-4 text-green-500 ml-2 shrink-0" />}
       
       <div className="flex-1">
-        <p className="text-lg text-green-900 font-semibold">
+        <p className="text-lg font-semibold text-blue-800">
           {isWaitingForRating ? 'הצעה זו התקבלה - ממתין לדירוג' : 'הצעה זו התקבלה'}
         </p>
         
         {isCompleted ? <p className="text-xs text-green-600">העבודה הושלמה ודורגה</p> : isWaitingForRating ? <div className="flex flex-col mt-1">
-            <p className="text-amber-600 mb-2 font-medium text-sm">נא לדרג את בעל המקצוע לסיום התהליך</p>
+            <p className="text-amber-600 mb-2 font-medium text-sm py-0 my-[6px]">נא לדרג את בעל המקצוע לסיום התהליך</p>
             
             <Button onClick={handleRatingClick} size="sm" data-testid="rate-now-button" className="bg-amber-500 hover:bg-amber-600 text-white py-1 px-3 rounded inline-block text-sm">
               <Star className="h-3 w-3 inline-block ml-1" />
