@@ -124,7 +124,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           </div>
         </div>
         <div className="flex flex-col items-center sm:items-end gap-3 mt-2 sm:mt-0 w-full sm:w-auto">
-          <div className="flex items-center bg-gradient-to-r from-teal-500 to-blue-600 text-white px-4 py-2 w-full sm:w-auto justify-center sm:justify-start rounded">
+          <div className="flex items-center bg-gradient-to-r from-teal-500 to-blue-600 text-white px-4 py-2 w-full sm:w-auto justify-center sm:justify-start rounded-md">
             <Gift className="ml-2 h-5 w-5" aria-hidden="true" />
             <div>
               <div className="text-sm opacity-80">הקרדיט שלי</div>
