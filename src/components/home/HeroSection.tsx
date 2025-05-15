@@ -1,24 +1,19 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { FileText, Search, Gift, ThumbsUp, ChevronDown } from 'lucide-react';
 import RequestForm from '@/components/RequestForm';
 import { useIsMobile } from '@/hooks/use-mobile';
-
 interface HeroSectionProps {
   scrollToRequestForm: () => void;
   scrollToSearchSection: () => void;
 }
-
 const HeroSection: React.FC<HeroSectionProps> = ({
   scrollToRequestForm,
-  scrollToSearchSection,
+  scrollToSearchSection
 }) => {
   const isMobile = useIsMobile();
-  
-  return (
-    <section className="relative pt-20 pb-16 md:pt-32 md:pb-24 overflow-hidden w-full">
+  return <section className="relative pt-20 pb-16 md:pt-32 md:pb-24 overflow-hidden w-full">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-teal-50 z-[-1]"></div>
       <div className="absolute inset-0 z-[-1] opacity-50 bg-[url('https://images.unsplash.com/photo-1612968953208-56c5052b9ec4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80')] bg-cover bg-center"></div>
       <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-[-1]"></div>
@@ -39,19 +34,19 @@ const HeroSection: React.FC<HeroSectionProps> = ({
             </h1>
             <p className="text-base lg:text-lg text-gray-700 mb-6">פלטפורמה חינמית המחברת בין בעלי בתים לבעלי מקצוע מובילים בתחומם. קבלו הצעות מחיר וזמינות ללא התחייבות ובחרו את המקצוען הנכון עבורכם בקלות וביעילות.</p>
             <div className="flex flex-wrap gap-3 mb-8 lg:mb-0 justify-center lg:justify-start">
-              <Button size={isMobile ? "default" : "lg"} className="bg-[#00D09E] hover:bg-[#00C090] text-white button-transition flex items-center gap-1 shadow-md" onClick={scrollToRequestForm}>
+              <Button size={isMobile ? "default" : "lg"} onClick={scrollToRequestForm} className="bg-[#00D09E] hover:bg-[#00C090] text-white button-transition flex items-center gap-1 shadow-md font-medium rounded-md">
                 <FileText size={isMobile ? 16 : 20} />
                 <span className="text-sm md:text-base">שליחת פנייה לבעלי מקצוע</span>
               </Button>
               <Link to="/search">
-                <Button size={isMobile ? "default" : "lg"} variant="outline" className="border-blue-500 text-blue-700 hover:bg-blue-50 button-transition flex items-center gap-1">
+                <Button size={isMobile ? "default" : "lg"} variant="outline" className="border-blue-500 text-blue-700 hover:bg-blue-50 button-transition flex items-center gap-1 font-normal rounded-md">
                   <Search size={isMobile ? 16 : 20} />
                   <span className="text-sm md:text-base">חיפוש בעלי מקצוע</span>
                 </Button>
               </Link>
             </div>
             {/* Add new cashback benefit info */}
-            <div className="mt-6 p-3 md:p-4 bg-blue-50 border-2 border-blue-200 rounded-lg shadow-sm w-full">
+            <div className="mt-6 p-3 md:p-4 bg-blue-50 border-2 border-blue-200 shadow-sm w-full rounded-xl">
               <div className="flex items-start">
                 <Gift className="h-5 w-5 md:h-6 md:w-6 text-[#00D09E] mt-1 ml-2 flex-shrink-0" />
                 <div>
@@ -89,8 +84,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default HeroSection;

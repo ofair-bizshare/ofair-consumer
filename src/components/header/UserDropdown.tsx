@@ -99,7 +99,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({
             </span>}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56 text-right">
+      <DropdownMenuContent align="end" className="w-56 text-right bg-stone-50">
         <DropdownMenuItem onClick={() => navigate('/dashboard')}>
           <User className="ml-2 h-4 w-4" />
           <span className="mx-[4px]">אזור אישי</span>
