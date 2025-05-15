@@ -17,79 +17,11 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useDebounce } from '@/hooks/useDebounce';
 import { FcGoogle } from "react-icons/fc";
 import { createRequest } from '@/services/requests';
-
 interface RequestFormProps {
   onSuccess?: (value: boolean) => void;
 }
-
-const professions = [
-  'שיפוצים',
-  'חשמל',
-  'אינסטלציה',
-  'נגרות',
-  'מיזוג אוויר',
-  'גינון',
-  'ניקיון',
-  'צביעה',
-  'הובלות',
-  'עבודות בניה',
-  'אלומיניום',
-  'איטום',
-  'אינסטלטור',
-  'דלתות',
-  'חלונות',
-  'מטבחים',
-  'ריצוף',
-  'שליכט',
-  'בנייה'
-];
-
-const cities = [
-  'תל אביב',
-  'ירושלים',
-  'חיפה',
-  'ראשון לציון',
-  'פתח תקווה',
-  'אשדוד',
-  'נתניה',
-  'באר שבע',
-  'חולון',
-  'בני ברק',
-  'רמת גן',
-  'אשקלון',
-  'רחובות',
-  'בת ים',
-  'הרצליה',
-  'כפר סבא',
-  'מודיעין',
-  'לוד',
-  'רמלה',
-  'רעננה',
-  'הוד השרון',
-  'נצרת',
-  'קרית אתא',
-  'קרית גת',
-  'אילת',
-  'עכו',
-  'קרית מוצקין',
-  'רהט',
-  'נהריה',
-  'דימונה',
-  'טבריה',
-  'קרית ים',
-  'עפולה',
-  'יבנה',
-  'אום אל פחם',
-  'צפת',
-  'רמת השרון',
-  'טייבה',
-  'קרית שמונה',
-  'מגדל העמק',
-  'טמרה',
-  'סח\'נין',
-  'קרית ביאליק'
-];
-
+const professions = ['שיפוצים', 'חשמל', 'אינסטלציה', 'נגרות', 'מיזוג אוויר', 'גינון', 'ניקיון', 'צביעה', 'הובלות', 'עבודות בניה', 'אלומיניום', 'איטום', 'אינסטלטור', 'דלתות', 'חלונות', 'מטבחים', 'ריצוף', 'שליכט', 'בנייה'];
+const cities = ['תל אביב', 'ירושלים', 'חיפה', 'ראשון לציון', 'פתח תקווה', 'אשדוד', 'נתניה', 'באר שבע', 'חולון', 'בני ברק', 'רמת גן', 'אשקלון', 'רחובות', 'בת ים', 'הרצליה', 'כפר סבא', 'מודיעין', 'לוד', 'רמלה', 'רעננה', 'הוד השרון', 'נצרת', 'קרית אתא', 'קרית גת', 'אילת', 'עכו', 'קרית מוצקין', 'רהט', 'נהריה', 'דימונה', 'טבריה', 'קרית ים', 'עפולה', 'יבנה', 'אום אל פחם', 'צפת', 'רמת השרון', 'טייבה', 'קרית שמונה', 'מגדל העמק', 'טמרה', 'סח\'נין', 'קרית ביאליק'];
 const RequestForm: React.FC<RequestFormProps> = ({
   onSuccess
 }) => {
@@ -107,12 +39,17 @@ const RequestForm: React.FC<RequestFormProps> = ({
   const [filteredProfessions, setFilteredProfessions] = useState(professions);
   const [filteredCities, setFilteredCities] = useState(cities);
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { user, signIn, signUp, signInWithGoogle } = useAuth();
-  
+  const {
+    toast
+  } = useToast();
+  const {
+    user,
+    signIn,
+    signUp,
+    signInWithGoogle
+  } = useAuth();
   const debouncedProfessionSearch = useDebounce(professionSearchTerm, 300);
   const debouncedCitySearch = useDebounce(citySearchTerm, 300);
-  
   const [formData, setFormData] = useState({
     profession: '',
     description: '',
@@ -122,7 +59,6 @@ const RequestForm: React.FC<RequestFormProps> = ({
     phone: '',
     email: ''
   });
-  
   const [loginData, setLoginData] = useState({
     email: '',
     password: '',
@@ -136,7 +72,6 @@ const RequestForm: React.FC<RequestFormProps> = ({
     agreeTerms: false,
     phone: ''
   });
-  
   useEffect(() => {
     if (user) {
       setFormData(prev => ({
@@ -147,15 +82,16 @@ const RequestForm: React.FC<RequestFormProps> = ({
       }));
     }
   }, [user]);
-  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+    const {
+      name,
+      value
+    } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
   };
-  
   const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const {
       name,
@@ -186,7 +122,6 @@ const RequestForm: React.FC<RequestFormProps> = ({
       [name]: value
     }));
   };
-  
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const fileArray = Array.from(e.target.files);
@@ -196,7 +131,6 @@ const RequestForm: React.FC<RequestFormProps> = ({
       setPreviewUrls([...previewUrls, ...newPreviewUrls]);
     }
   };
-  
   const removeImage = (index: number) => {
     const newImages = [...images];
     const newPreviewUrls = [...previewUrls];
@@ -206,7 +140,6 @@ const RequestForm: React.FC<RequestFormProps> = ({
     setImages(newImages);
     setPreviewUrls(newPreviewUrls);
   };
-  
   const handleSelectDate = (date: Date | undefined) => {
     setSelectedDate(date);
     if (date) {
@@ -217,7 +150,6 @@ const RequestForm: React.FC<RequestFormProps> = ({
     }
     setOpenCalendar(false);
   };
-  
   const handleNext = () => {
     if (!formData.profession || !formData.description || !formData.location) {
       toast({
@@ -227,27 +159,23 @@ const RequestForm: React.FC<RequestFormProps> = ({
       });
       return;
     }
-    
     if (user) {
       handleFormSubmit();
     } else {
       setStep(2);
     }
   };
-  
   const handleFormSubmit = async () => {
     console.log('Submitting form data:', formData);
-    
     if (!user) {
       console.error('No user found, cannot create request');
       toast({
         title: "שגיאה בשליחת הבקשה",
         description: "אנא התחבר כדי לשלוח בקשה",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-    
     try {
       const requestId = await createRequest({
         title: formData.profession,
@@ -256,14 +184,11 @@ const RequestForm: React.FC<RequestFormProps> = ({
         timing: formData.timing,
         user_id: user.id
       });
-      
       if (!requestId) {
         throw new Error('Failed to create request');
       }
-      
       setNewRequestId(requestId);
       setShowSuccessDialog(true);
-      
       if (onSuccess) {
         onSuccess(false);
       }
@@ -272,14 +197,15 @@ const RequestForm: React.FC<RequestFormProps> = ({
       toast({
         title: "שגיאה בשליחת הבקשה",
         description: "אירעה שגיאה בשליחת הבקשה, אנא נסה שוב.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-  
   const handleGoogleSignIn = async () => {
     try {
-      const { error } = await signInWithGoogle();
+      const {
+        error
+      } = await signInWithGoogle();
       if (error) {
         console.error('Error signing in with Google:', error.message);
         toast({
@@ -297,7 +223,6 @@ const RequestForm: React.FC<RequestFormProps> = ({
       });
     }
   };
-  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginData.email || !loginData.password) {
@@ -308,13 +233,13 @@ const RequestForm: React.FC<RequestFormProps> = ({
       });
       return;
     }
-    
-    const { error } = await signIn(loginData.email, loginData.password);
+    const {
+      error
+    } = await signIn(loginData.email, loginData.password);
     if (!error) {
       handleFormSubmit();
     }
   };
-  
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!registerData.name || !registerData.email || !registerData.password || !registerData.passwordConfirm) {
@@ -341,25 +266,22 @@ const RequestForm: React.FC<RequestFormProps> = ({
       });
       return;
     }
-
-    const { error } = await signUp(registerData.email, registerData.password, {
+    const {
+      error
+    } = await signUp(registerData.email, registerData.password, {
       name: registerData.name,
-      phone: registerData.phone,
+      phone: registerData.phone
     });
-    
     if (!error) {
       handleFormSubmit();
     }
   };
-  
   const handleBack = () => {
     setStep(step - 1);
   };
-  
   const handleGoToDashboard = () => {
     setShowSuccessDialog(false);
     navigate('/dashboard');
-
     setTimeout(() => {
       const element = document.getElementById('request-' + newRequestId);
       if (element) {
@@ -369,50 +291,34 @@ const RequestForm: React.FC<RequestFormProps> = ({
       }
     }, 500);
   };
-  
   const renderFormContent = () => {
     if (step === 1) {
-      return (
-        <div className="space-y-6 animate-fade-in">
+      return <div className="space-y-6 animate-fade-in">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="profession" className="text-gray-700">סוג עבודה</Label>
               <Popover open={openProfessionPopover} onOpenChange={setOpenProfessionPopover}>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={openProfessionPopover}
-                    className="w-full justify-between text-right pr-3 pl-10 relative"
-                  >
+                  <Button variant="outline" role="combobox" aria-expanded={openProfessionPopover} className="w-full justify-between text-right pr-3 pl-10 relative rounded-md">
                     {formData.profession || "בחר סוג עבודה"}
                     <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-full min-w-[230px] bg-white shadow-lg z-50 p-0 border border-gray-300" align="start" style={{overflow:'visible'}}>
+                <PopoverContent className="w-full min-w-[230px] bg-white shadow-lg z-50 p-0 border border-gray-300" align="start" style={{
+                overflow: 'visible'
+              }}>
                   <Command dir="rtl">
-                    <CommandInput
-                      placeholder="חפש סוג עבודה..."
-                      value={professionSearchTerm}
-                      onValueChange={setProfessionSearchTerm}
-                      className="bg-white"
-                    />
+                    <CommandInput placeholder="חפש סוג עבודה..." value={professionSearchTerm} onValueChange={setProfessionSearchTerm} className="bg-white" />
                     <CommandEmpty>לא נמצאו תוצאות</CommandEmpty>
                     <CommandList className="bg-white z-50 max-h-64 overflow-auto border-gray-200">
                       <CommandGroup>
-                        {filteredProfessions.map((profession) => (
-                          <CommandItem
-                            key={profession}
-                            value={profession}
-                            onSelect={() => {
-                              handleSelectChange('profession', profession);
-                              setProfessionSearchTerm('');
-                              setOpenProfessionPopover(false);
-                            }}
-                          >
+                        {filteredProfessions.map(profession => <CommandItem key={profession} value={profession} onSelect={() => {
+                        handleSelectChange('profession', profession);
+                        setProfessionSearchTerm('');
+                        setOpenProfessionPopover(false);
+                      }}>
                             {profession}
-                          </CommandItem>
-                        ))}
+                          </CommandItem>)}
                       </CommandGroup>
                     </CommandList>
                   </Command>
@@ -423,40 +329,26 @@ const RequestForm: React.FC<RequestFormProps> = ({
               <Label htmlFor="location" className="text-gray-700">עיר</Label>
               <Popover open={openCityPopover} onOpenChange={setOpenCityPopover}>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={openCityPopover}
-                    className="w-full justify-between text-right pr-3 pl-10 relative"
-                  >
+                  <Button variant="outline" role="combobox" aria-expanded={openCityPopover} className="w-full justify-between text-right pr-3 pl-10 relative rounded-lg">
                     {formData.location || "בחר עיר"}
                     <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-full min-w-[230px] bg-white shadow-lg z-50 p-0 border border-gray-300" align="start" style={{overflow:'visible'}}>
+                <PopoverContent className="w-full min-w-[230px] bg-white shadow-lg z-50 p-0 border border-gray-300" align="start" style={{
+                overflow: 'visible'
+              }}>
                   <Command dir="rtl">
-                    <CommandInput
-                      placeholder="חפש עיר..."
-                      value={citySearchTerm}
-                      onValueChange={setCitySearchTerm}
-                      className="bg-white"
-                    />
+                    <CommandInput placeholder="חפש עיר..." value={citySearchTerm} onValueChange={setCitySearchTerm} className="bg-white" />
                     <CommandEmpty>לא נמצאו תוצאות</CommandEmpty>
                     <CommandList className="bg-white z-50 max-h-64 overflow-auto border-gray-200">
                       <CommandGroup>
-                        {filteredCities.map((city) => (
-                          <CommandItem
-                            key={city}
-                            value={city}
-                            onSelect={() => {
-                              handleSelectChange('location', city);
-                              setCitySearchTerm('');
-                              setOpenCityPopover(false);
-                            }}
-                          >
+                        {filteredCities.map(city => <CommandItem key={city} value={city} onSelect={() => {
+                        handleSelectChange('location', city);
+                        setCitySearchTerm('');
+                        setOpenCityPopover(false);
+                      }}>
                             {city}
-                          </CommandItem>
-                        ))}
+                          </CommandItem>)}
                       </CommandGroup>
                     </CommandList>
                   </Command>
@@ -466,14 +358,7 @@ const RequestForm: React.FC<RequestFormProps> = ({
           </div>
           <div className="space-y-2">
             <Label htmlFor="description" className="text-gray-700">תיאור מפורט של העבודה</Label>
-            <Textarea 
-              id="description" 
-              name="description" 
-              placeholder="תאר את העבודה שברצונך לבצע באופן מפורט ככל האפשר" 
-              className="h-32" 
-              value={formData.description} 
-              onChange={handleInputChange} 
-            />
+            <Textarea id="description" name="description" placeholder="תאר את העבודה שברצונך לבצע באופן מפורט ככל האפשר" value={formData.description} onChange={handleInputChange} className="h-32 rounded-md" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="timing" className="text-gray-700">מועד ביצוע (אופציונלי)</Label>
@@ -481,32 +366,16 @@ const RequestForm: React.FC<RequestFormProps> = ({
               <PopoverTrigger asChild>
                 <div className="relative cursor-pointer">
                   <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                  <Input 
-                    id="timing" 
-                    name="timing" 
-                    placeholder="מתי תרצה שהעבודה תתבצע?" 
-                    className="pr-10"
-                    value={formData.timing} 
-                    onChange={handleInputChange} 
-                    onClick={() => setOpenCalendar(true)}
-                    readOnly
-                  />
+                  <Input id="timing" name="timing" placeholder="מתי תרצה שהעבודה תתבצע?" value={formData.timing} onChange={handleInputChange} onClick={() => setOpenCalendar(true)} readOnly className="pr-10 rounded-md" />
                 </div>
               </PopoverTrigger>
               <PopoverContent className="p-0 w-auto z-50 bg-white" align="start">
-                <CalendarComponent
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={handleSelectDate}
-                  className="border rounded-md p-3 pointer-events-auto bg-white z-50"
-                  disabled={(date) => {
-                    // Allow today & future, disable before today
-                    const today = new Date();
-                    today.setHours(0,0,0,0);
-                    return date < today;
-                  }}
-                  initialFocus
-                />
+                <CalendarComponent mode="single" selected={selectedDate} onSelect={handleSelectDate} className="border rounded-md p-3 pointer-events-auto bg-white z-50" disabled={date => {
+                // Allow today & future, disable before today
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                return date < today;
+              }} initialFocus />
               </PopoverContent>
             </Popover>
           </div>
@@ -519,40 +388,25 @@ const RequestForm: React.FC<RequestFormProps> = ({
                 <input type="file" className="hidden" accept="image/*" multiple onChange={handleImageUpload} />
               </label>
             </div>
-            {previewUrls.length > 0 && (
-              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                {previewUrls.map((url, index) => (
-                  <div key={index} className="relative rounded-md overflow-hidden h-20">
+            {previewUrls.length > 0 && <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                {previewUrls.map((url, index) => <div key={index} className="relative rounded-md overflow-hidden h-20">
                     <img src={url} alt={`Uploaded ${index}`} className="w-full h-full object-cover" />
-                    <button 
-                      type="button" 
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs" 
-                      onClick={() => removeImage(index)}
-                    >
+                    <button type="button" className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs" onClick={() => removeImage(index)}>
                       ×
                     </button>
-                  </div>
-                ))}
-              </div>
-            )}
+                  </div>)}
+              </div>}
           </div>
-        </div>
-      );
+        </div>;
     } else {
-      return (
-        <div className="space-y-6 animate-fade-in">
+      return <div className="space-y-6 animate-fade-in">
           <div className="text-center mb-4">
             <UserRound className="mx-auto h-12 w-12 text-blue-500 mb-2" />
             <h3 className="text-lg font-medium text-gray-700">כניסה או הרשמה לשליחת הבקשה</h3>
             <p className="text-sm text-gray-500">כדי להמשיך, יש להתחבר או להירשם</p>
           </div>
           
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full flex items-center justify-center gap-2 py-6"
-            onClick={handleGoogleSignIn}
-          >
+          <Button type="button" variant="outline" className="w-full flex items-center justify-center gap-2 py-6" onClick={handleGoogleSignIn}>
             <FcGoogle className="h-5 w-5" />
             <span>התחברות עם Google</span>
           </Button>
@@ -637,13 +491,10 @@ const RequestForm: React.FC<RequestFormProps> = ({
               </form>
             </TabsContent>
           </Tabs>
-        </div>
-      );
+        </div>;
     }
   };
-
-  return (
-    <>
+  return <>
       <Card className="glass-card overflow-hidden animate-fade-in-up w-full max-w-md mx-auto" aria-labelledby="service-request-form-title">
         <div className="p-5 md:p-6">
           <div className="flex justify-between items-center mb-6">
@@ -658,27 +509,14 @@ const RequestForm: React.FC<RequestFormProps> = ({
           {renderFormContent()}
 
           <div className="flex justify-between mt-8">
-            {step > 1 && (
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={handleBack} 
-                className="border-[#00D09E] text-[#00D09E] hover:bg-teal-50"
-              >
+            {step > 1 && <Button type="button" variant="outline" onClick={handleBack} className="border-[#00D09E] text-[#00D09E] hover:bg-teal-50">
                 חזרה
-              </Button>
-            )}
-            {step === 1 && (
-              <div className="mr-auto">
-                <Button 
-                  type="button" 
-                  onClick={handleNext} 
-                  className="bg-[#00D09E] hover:bg-[#00C090]"
-                >
+              </Button>}
+            {step === 1 && <div className="mr-auto">
+                <Button type="button" onClick={handleNext} className="bg-[#00D09E] hover:bg-[#00C090] rounded-lg">
                   {user ? 'שלח בקשה' : 'המשך'}
                 </Button>
-              </div>
-            )}
+              </div>}
           </div>
         </div>
       </Card>
@@ -705,18 +543,12 @@ const RequestForm: React.FC<RequestFormProps> = ({
             </div>
           </div>
           <DialogFooter className="sm:justify-center">
-            <Button 
-              type="button" 
-              className="bg-[#00D09E] hover:bg-[#00C090] text-white w-full" 
-              onClick={handleGoToDashboard}
-            >
+            <Button type="button" className="bg-[#00D09E] hover:bg-[#00C090] text-white w-full" onClick={handleGoToDashboard}>
               עבור לאזור האישי
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
-  );
+    </>;
 };
-
 export default RequestForm;
