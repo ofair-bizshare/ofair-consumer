@@ -1,6 +1,5 @@
 
 import React from "react";
-import { whatsapp } from "lucide-react/icons";
 import { Button } from "@/components/ui/button";
 import { Whatsapp } from "lucide-react";
 
