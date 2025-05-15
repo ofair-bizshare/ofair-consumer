@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { QuoteInterface } from '@/types/dashboard';
@@ -10,6 +9,8 @@ import QuoteActionButtons from './components/QuoteActionButtons';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ErrorBoundary from '@/components/ui/error-boundary';
 import { checkIfAcceptedQuoteExists } from '@/services/quotes/acceptedQuotes';
+import WhatsAppButton from './components/WhatsAppButton';
+import { saveReferral } from '@/services/quotes';
 
 interface QuoteCardProps {
   quote: QuoteInterface;
@@ -108,6 +109,32 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   // Show action buttons based on status combinations
   const showActionButtons = requestStatus !== 'completed';
 
+  // --- WHATSAPP LOGIC START ---
+  const handleWhatsAppReveal = async () => {
+    // Log the WhatsApp reveal the same way as phone reveals with saveReferral
+    if (
+      quote &&
+      quote.professional &&
+      (quote.professional.phoneNumber || quote.professional.phone)
+    ) {
+      try {
+        await saveReferral(
+          // Use user ID if available, fallback to ''
+          (quote as any)?.userId || "",
+          quote.professional.id,
+          quote.professional.name,
+          quote.professional.phoneNumber || quote.professional.phone,
+          quote.professional.profession
+        );
+        console.log("WhatsApp reveal logged for professional:", quote.professional.id);
+      } catch (err) {
+        console.error("Error logging WhatsApp reveal:", err);
+      }
+    }
+  };
+
+  // --- WHATSAPP LOGIC END ---
+
   // Don't render the card at all if it shouldn't be displayed
   if (!shouldDisplayQuote && requestStatus !== 'active') {
     return null;
@@ -142,11 +169,23 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
             />
             
             {isAcceptedQuote && (
-              <AcceptedQuoteStatus 
-                isCompleted={isRequestCompleted} 
-                isWaitingForRating={isWaitingForRating}
-                onRatingClick={handleQuoteRatingClick}
-              />
+              <>
+                <AcceptedQuoteStatus 
+                  isCompleted={isRequestCompleted} 
+                  isWaitingForRating={isWaitingForRating}
+                  onRatingClick={handleQuoteRatingClick}
+                />
+                {/* WhatsApp Button only for accepted quotes and if phone number present */}
+                <div className="mt-2">
+                  <WhatsAppButton 
+                    phoneNumber={quote.professional.phoneNumber || quote.professional.phone || ""}
+                    professionalName={quote.professional.name || ""}
+                    professionalId={quote.professional.id}
+                    profession={quote.professional.profession || ""}
+                    onLogReveal={handleWhatsAppReveal}
+                  />
+                </div>
+              </>
             )}
             
             <div className={`mt-2 ${isMobile ? 'w-full' : ''}`}>
