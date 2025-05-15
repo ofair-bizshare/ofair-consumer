@@ -46,7 +46,7 @@ const AcceptedQuoteStatus: React.FC<AcceptedQuoteStatusProps> = ({
       {isWaitingForRating ? <Star className="h-4 w-4 text-amber-500 ml-2 shrink-0" /> : <CheckCircle className="h-4 w-4 text-green-500 ml-2 shrink-0" />}
       
       <div className="flex-1">
-        <p className="text-amber-600 text-lg">
+        <p className="text-lg text-green-900 font-semibold">
           {isWaitingForRating ? 'הצעה זו התקבלה - ממתין לדירוג' : 'הצעה זו התקבלה'}
         </p>
         
