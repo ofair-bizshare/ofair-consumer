@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Bell, CheckCircle, X, MessageSquare, Clock, Calendar, Wrench } from 'lucide-react';
@@ -5,60 +6,81 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { he } from 'date-fns/locale';
-import { 
+import {
   Notification,
-  fetchUserNotifications, 
+  fetchUserNotifications,
   markNotificationAsRead,
   markAllNotificationsAsRead,
   deleteNotification
 } from '@/services/notifications';
+import { supabase } from '@/integrations/supabase/client';
 
 const NotificationsTab: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showAll, setShowAll] = useState(true);
   const [loading, setLoading] = useState(true);
-  
+
+  // Subscribe to Supabase realtime notifications changes
   useEffect(() => {
-    const loadNotifications = async () => {
-      try {
-        const userNotifications = await fetchUserNotifications();
-        setNotifications(userNotifications);
-      } catch (error) {
-        console.error('Error loading notifications:', error);
-      } finally {
-        setLoading(false);
+    let channel: any = null;
+
+    const handleRealtimeUpdate = async () => {
+      setLoading(true);
+      const userNotifications = await fetchUserNotifications();
+      setNotifications(userNotifications);
+      setLoading(false);
+    };
+
+    const initialize = async () => {
+      await handleRealtimeUpdate();
+
+      // עוקב אחרי כל שינוי בטבלת notifications
+      channel = supabase.channel('notifications-changes')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+        }, (_payload) => {
+          handleRealtimeUpdate();
+        })
+        .subscribe();
+    };
+
+    initialize();
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
       }
     };
-    
-    loadNotifications();
   }, []);
-  
+
   const handleMarkAsRead = async (id: string) => {
     const success = await markNotificationAsRead(id);
-    
+
     if (success) {
-      setNotifications(prev => prev.map(notification => 
+      setNotifications(prev => prev.map(notification =>
         notification.id === id ? { ...notification, isRead: true } : notification
       ));
     }
   };
-  
+
   const handleMarkAllAsRead = async () => {
     const success = await markAllNotificationsAsRead();
-    
+
     if (success) {
       setNotifications(prev => prev.map(notification => ({ ...notification, isRead: true })));
     }
   };
-  
+
   const handleDeleteNotification = async (id: string) => {
     const success = await deleteNotification(id);
-    
+
     if (success) {
       setNotifications(prev => prev.filter(notification => notification.id !== id));
     }
   };
-  
+
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'quote':
@@ -75,14 +97,14 @@ const NotificationsTab: React.FC = () => {
         return <Bell className="text-blue-500" />;
     }
   };
-  
+
   const formatTime = (timestamp: number) => {
     return formatDistanceToNow(timestamp, { addSuffix: true, locale: he });
   };
-  
+
   const unreadCount = notifications.filter(n => !n.isRead).length;
   const displayNotifications = showAll ? notifications : notifications.filter(n => !n.isRead);
-  
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -90,7 +112,7 @@ const NotificationsTab: React.FC = () => {
       </div>
     );
   }
-  
+
   return (
     <div className="space-y-6 font-assistant" dir="rtl">
       <div className="glass-card p-6 font-assistant">
@@ -104,26 +126,26 @@ const NotificationsTab: React.FC = () => {
             </h2>
           </div>
           <div className="flex space-x-3 space-x-reverse">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className={showAll ? "bg-blue-50 text-blue-700" : ""}
               onClick={() => setShowAll(true)}
             >
               הכל
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className={!showAll ? "bg-blue-50 text-blue-700" : ""}
               onClick={() => setShowAll(false)}
             >
               לא נקראו
             </Button>
             {unreadCount > 0 && (
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleMarkAllAsRead}
               >
                 סמן הכל כנקרא
@@ -131,12 +153,12 @@ const NotificationsTab: React.FC = () => {
             )}
           </div>
         </div>
-        
+
         {displayNotifications.length > 0 ? (
           <div className="space-y-3">
             {displayNotifications.map(notification => (
-              <Card 
-                key={notification.id} 
+              <Card
+                key={notification.id}
                 className={`border-r-4 ${notification.isRead ? 'border-gray-200' : 'border-blue-500'} hover:shadow-md transition-shadow cursor-pointer`}
                 onClick={() => handleMarkAsRead(notification.id)}
               >
@@ -153,9 +175,9 @@ const NotificationsTab: React.FC = () => {
                           </h3>
                           <p className="text-gray-600 mt-1">{notification.message}</p>
                         </div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           className="text-gray-400 hover:text-gray-700"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -165,17 +187,17 @@ const NotificationsTab: React.FC = () => {
                           <X size={16} />
                         </Button>
                       </div>
-                      
+
                       <div className="flex justify-between items-center mt-3">
                         <span className="text-sm text-gray-500">
                           {formatTime(notification.timestamp)}
                         </span>
-                        
+
                         {notification.actionUrl && (
                           <a href={notification.actionUrl}>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
+                            <Button
+                              variant="outline"
+                              size="sm"
                               className="text-blue-700 border-blue-200 hover:bg-blue-50"
                               onClick={(e) => e.stopPropagation()}
                             >
@@ -183,11 +205,11 @@ const NotificationsTab: React.FC = () => {
                             </Button>
                           </a>
                         )}
-                        
+
                         {!notification.isRead && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             className="text-green-600 hover:text-green-700 hover:bg-green-50"
                             onClick={(e) => {
                               e.stopPropagation();

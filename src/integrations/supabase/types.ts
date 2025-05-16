@@ -220,6 +220,7 @@ export type Database = {
           description: string
           id: string
           image_url: string | null
+          image_urls: string[] | null
           location: string
           notes: string | null
           professional_id: string | null
@@ -240,6 +241,7 @@ export type Database = {
           description: string
           id?: string
           image_url?: string | null
+          image_urls?: string[] | null
           location: string
           notes?: string | null
           professional_id?: string | null
@@ -260,6 +262,7 @@ export type Database = {
           description?: string
           id?: string
           image_url?: string | null
+          image_urls?: string[] | null
           location?: string
           notes?: string | null
           professional_id?: string | null
@@ -548,6 +551,7 @@ export type Database = {
           lead_id: string | null
           lower_price_value: number | null
           lower_price_willing: boolean | null
+          media_urls: string[] | null
           price: number
           professional_id: string | null
           sample_image_url: string | null
@@ -563,6 +567,7 @@ export type Database = {
           lead_id?: string | null
           lower_price_value?: number | null
           lower_price_willing?: boolean | null
+          media_urls?: string[] | null
           price: number
           professional_id?: string | null
           sample_image_url?: string | null
@@ -578,6 +583,7 @@ export type Database = {
           lead_id?: string | null
           lower_price_value?: number | null
           lower_price_willing?: boolean | null
+          media_urls?: string[] | null
           price?: number
           professional_id?: string | null
           sample_image_url?: string | null
@@ -647,6 +653,7 @@ export type Database = {
           description: string
           estimated_time: string | null
           id: string
+          media_urls: string[] | null
           price: string
           professional_id: string
           request_id: string
@@ -662,6 +669,7 @@ export type Database = {
           description: string
           estimated_time?: string | null
           id?: string
+          media_urls?: string[] | null
           price: string
           professional_id: string
           request_id: string
@@ -677,6 +685,7 @@ export type Database = {
           description?: string
           estimated_time?: string | null
           id?: string
+          media_urls?: string[] | null
           price?: string
           professional_id?: string
           request_id?: string
