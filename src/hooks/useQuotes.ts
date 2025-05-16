@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { QuoteInterface } from '@/types/dashboard';
@@ -12,7 +11,9 @@ import {
   deleteAcceptedQuote,
   saveReferral,
   formatPrice,
-  redirectToPayment
+  redirectToPayment,
+  createQuoteNotification,
+  createRatingReminderNotification
 } from '@/services/quotes';
 
 export const useQuotes = (selectedRequestId: string | null) => {
@@ -182,21 +183,28 @@ export const useQuotes = (selectedRequestId: string | null) => {
       if (isAlreadyAccepted) {
         console.log("Quote already accepted in database, skipping database operations");
         
-        // Just update local state
-        setQuotes(prevQuotes => 
-          prevQuotes.map(quote => 
+        // עדכון מצב מקומי
+        setQuotes(prevQuotes =>
+          prevQuotes.map(quote =>
             quote.id === quoteId ? { ...quote, status: 'accepted' } : quote
           )
         );
-        
+
         setLastAcceptedQuoteId(quoteId);
-        
+
+        // יצירת התראה למשתמש
+        await createQuoteNotification(
+          acceptedQuote.description, // requestTitle (קצת טריקי - עדיף שם הבקשה אם קיים)
+          acceptedQuote.professional?.name || "בעל מקצוע",
+          acceptedQuote.requestId
+        );
+
         toast({
           title: "הצעה התקבלה",
           description: "הצעת המחיר כבר אושרה במערכת",
           variant: "default",
         });
-        
+
         setIsProcessing(false);
         return;
       }
@@ -226,7 +234,23 @@ export const useQuotes = (selectedRequestId: string | null) => {
         console.error("Failed to update request status");
       }
       
-      // 4. Update local state - mark this quote as accepted and others for this request as rejected
+      // 4. יצירת התראה - קבלת הצעה
+      await createQuoteNotification(
+        acceptedQuote.description, // עדיף לשלב למשל acceptedQuote.requestTitle אם יש
+        acceptedQuote.professional?.name || "בעל מקצוע",
+        acceptedQuote.requestId
+      );
+
+      // 5. תזכורת דירוג (רק אחרי שינוי סטטוס)
+      setTimeout(async () => {
+        // קריאה לפונקציה יוצרת התראה לדרג
+        await createRatingReminderNotification(
+          acceptedQuote.professional?.name || "בעל מקצוע",
+          acceptedQuote.professional?.id || ""
+        );
+      }, 500);
+
+      // 6. Update local state - mark this quote as accepted and others for this request as rejected
       console.log("Updating local quotes state");
       setQuotes(prevQuotes => 
         prevQuotes.map(quote => {
@@ -247,7 +271,7 @@ export const useQuotes = (selectedRequestId: string | null) => {
         })
       );
       
-      // 5. Save the accepted quote to the database
+      // 7. Save the accepted quote to the database
       console.log("Saving quote acceptance to database");
       
       const acceptedQuoteData = {
@@ -266,7 +290,7 @@ export const useQuotes = (selectedRequestId: string | null) => {
       
       await saveAcceptedQuote(acceptedQuoteData);
       
-      // 6. Also save phone reveal in referrals automatically
+      // 8. Also save phone reveal in referrals automatically
       await saveReferral(
         user.id,
         acceptedQuote.professional.id,

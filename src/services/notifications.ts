@@ -262,3 +262,30 @@ export const createRatingReminderNotification = async (
     return false;
   }
 };
+
+/**
+ * Create a referral notification (DB)
+ * לבעל מקצוע שמקבל הפניה
+ */
+export const createReferralNotification = async (
+  professionalId: string,
+  professionalName: string,
+  phoneNumber: string,
+  userName?: string // Optionally include the user who performed the referral
+): Promise<boolean> => {
+  try {
+    await createNotification({
+      title: 'הפניה חדשה',
+      message: `קיבלת הפניית לקוח חדשה${userName ? ` מ${userName}` : ""}. מס' טלפון: ${phoneNumber}`,
+      type: 'professional',
+      actionUrl: `/dashboard`, // או מסך הפניות, אפשר לעדכן בהתאם
+      actionLabel: 'צפה בפרטים',
+      user_id: professionalId
+    });
+
+    return true;
+  } catch (error) {
+    console.error('Error creating referral notification:', error);
+    return false;
+  }
+};
