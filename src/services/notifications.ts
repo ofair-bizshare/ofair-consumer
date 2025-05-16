@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -13,6 +12,13 @@ export interface Notification {
   actionLabel?: string;
   user_id?: string;
   sender_id?: string;
+}
+
+// Type guard for Notification.type
+const allowedTypes = ['quote', 'message', 'system', 'reminder', 'professional'] as const;
+type NotificationType = typeof allowedTypes[number];
+function isNotificationType(type: any): type is NotificationType {
+  return allowedTypes.includes(type);
 }
 
 /**
@@ -39,16 +45,11 @@ export const fetchUserNotifications = async (): Promise<Notification[]> => {
 
     if (!data) return [];
 
-    // Allowed types
-    const allowedTypes = ['quote', 'message', 'system', 'reminder', 'professional'] as const;
-
     return data.map((n: any) => ({
       id: n.id,
       title: n.title,
       message: n.description, // In DB: description
-      type: allowedTypes.includes(n.type)
-        ? (n.type as typeof allowedTypes[number])
-        : 'system',
+      type: isNotificationType(n.type) ? n.type : 'system',
       timestamp: new Date(n.created_at).getTime(),
       isRead: n.is_read,
       actionUrl: n.related_id ? `/dashboard?request=${n.related_id}` : undefined,
