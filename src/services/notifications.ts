@@ -46,7 +46,9 @@ export const fetchUserNotifications = async (): Promise<Notification[]> => {
       id: n.id,
       title: n.title,
       message: n.description, // In DB: description
-      type: allowedTypes.includes(n.type) ? n.type : 'system',
+      type: allowedTypes.includes(n.type)
+        ? (n.type as typeof allowedTypes[number])
+        : 'system',
       timestamp: new Date(n.created_at).getTime(),
       isRead: n.is_read,
       actionUrl: n.related_id ? `/dashboard?request=${n.related_id}` : undefined,
