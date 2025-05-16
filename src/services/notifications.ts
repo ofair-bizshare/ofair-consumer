@@ -103,7 +103,8 @@ export const createNotification = async (
       id: data.id,
       title: data.title,
       message: data.description,
-      type: data.type,
+      // FIX: ensure the type is valid or fallback to 'system'
+      type: isNotificationType(data.type) ? data.type : 'system',
       timestamp: new Date(data.created_at).getTime(),
       isRead: data.is_read,
       actionUrl: data.related_id ? `/dashboard?request=${data.related_id}` : undefined,
