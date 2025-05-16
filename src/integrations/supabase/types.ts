@@ -153,6 +153,7 @@ export type Database = {
           created_at: string
           final_amount: number
           id: string
+          invoice_url: string | null
           lead_id: string
           payment_method: string
           professional_id: string
@@ -164,6 +165,7 @@ export type Database = {
           created_at?: string
           final_amount: number
           id?: string
+          invoice_url?: string | null
           lead_id: string
           payment_method: string
           professional_id: string
@@ -175,6 +177,7 @@ export type Database = {
           created_at?: string
           final_amount?: number
           id?: string
+          invoice_url?: string | null
           lead_id?: string
           payment_method?: string
           professional_id?: string
@@ -598,6 +601,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      quote_payments: {
+        Row: {
+          commission_amount: number
+          created_at: string
+          final_amount: number
+          id: string
+          invoice_url: string | null
+          payment_method: string
+          professional_id: string
+          quote_id: string | null
+          request_id: string
+          share_percentage: number
+        }
+        Insert: {
+          commission_amount?: number
+          created_at?: string
+          final_amount: number
+          id?: string
+          invoice_url?: string | null
+          payment_method: string
+          professional_id: string
+          quote_id?: string | null
+          request_id: string
+          share_percentage?: number
+        }
+        Update: {
+          commission_amount?: number
+          created_at?: string
+          final_amount?: number
+          id?: string
+          invoice_url?: string | null
+          payment_method?: string
+          professional_id?: string
+          quote_id?: string | null
+          request_id?: string
+          share_percentage?: number
+        }
+        Relationships: []
       }
       quotes: {
         Row: {

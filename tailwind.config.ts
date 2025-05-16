@@ -62,6 +62,7 @@ module.exports = {
         'custom-green': '#00d09e', // Added the custom green color
       },
       borderRadius: {
+        // עיגול פינות ברירת מחדל – בינוני
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",

@@ -1,7 +1,10 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --radius: 0.5rem; /* medium rounded corners globally */
+}
 
 body, html {
   @apply font-assistant;
