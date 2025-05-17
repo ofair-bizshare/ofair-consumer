@@ -34,6 +34,8 @@ export interface QuoteInterface {
   description: string;
   status: QuoteStatus;
   sampleImageUrl?: string | null;
+  /** NEW: Support multiple images/videos per quote */
+  media_urls?: string[];
 }
 
 // Request interface
