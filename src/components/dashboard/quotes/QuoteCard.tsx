@@ -164,6 +164,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
             <QuoteDetails 
               price={quote.price || "0"} 
               estimatedTime={quote.estimatedTime || ""}
+              mediaUrls={quote.media_urls ?? []}
               sampleImageUrl={quote.sampleImageUrl}
               description={quote.description || ""}
             />
