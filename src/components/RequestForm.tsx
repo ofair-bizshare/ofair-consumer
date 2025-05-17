@@ -186,9 +186,9 @@ const RequestForm: React.FC<RequestFormProps> = ({
           if (error) {
             console.error("Upload error:", error);
           } else if (data) {
-            const { publicURL } = supabase.storage.from("requests-media").getPublicUrl(data.path);
-            if (publicURL) {
-              uploadedMediaUrls.push(publicURL);
+            const { data: { publicUrl } } = supabase.storage.from("requests-media").getPublicUrl(data.path);
+            if (publicUrl) {
+              uploadedMediaUrls.push(publicUrl);
             }
           }
         }
