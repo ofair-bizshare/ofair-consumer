@@ -17,6 +17,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useDebounce } from '@/hooks/useDebounce';
 import { FcGoogle } from "react-icons/fc";
 import { createRequest } from '@/services/requests';
+import { supabase } from '@/integrations/supabase/client';
 interface RequestFormProps {
   onSuccess?: (value: boolean) => void;
 }
@@ -177,12 +178,30 @@ const RequestForm: React.FC<RequestFormProps> = ({
       return;
     }
     try {
+      let uploadedMediaUrls: string[] = [];
+      if (images.length > 0) {
+        for (const file of images) {
+          const fileName = `${user.id}/${Date.now()}_${file.name}`;
+          const { data, error } = await supabase.storage.from("requests-media").upload(fileName, file);
+          if (error) {
+            console.error("Upload error:", error);
+          } else if (data) {
+            const { publicURL } = supabase.storage.from("requests-media").getPublicUrl(data.path);
+            if (publicURL) {
+              uploadedMediaUrls.push(publicURL);
+            }
+          }
+        }
+      }
+
       const requestId = await createRequest({
         title: formData.profession,
         description: formData.description,
         location: formData.location,
         timing: formData.timing,
-        user_id: user.id
+        user_id: user.id,
+        category: formData.profession,
+        media_urls: uploadedMediaUrls.length > 0 ? uploadedMediaUrls : undefined,
       });
       if (!requestId) {
         throw new Error('Failed to create request');

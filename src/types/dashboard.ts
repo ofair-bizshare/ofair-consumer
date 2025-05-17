@@ -48,6 +48,10 @@ export interface RequestInterface {
   status: RequestStatus;
   quotesCount: number;
   timing?: string;
+  /** NEW: Support multiple images/videos per request */
+  media_urls?: string[];
+  /** Work type, also saved in 'category' column in the DB */
+  category?: string;
 }
 
 // Notification interface

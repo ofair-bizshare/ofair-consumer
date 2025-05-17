@@ -772,6 +772,7 @@ export type Database = {
           description: string
           id: string
           location: string
+          media_urls: string[] | null
           status: string
           timing: string | null
           title: string
@@ -786,6 +787,7 @@ export type Database = {
           description: string
           id?: string
           location: string
+          media_urls?: string[] | null
           status?: string
           timing?: string | null
           title: string
@@ -800,6 +802,7 @@ export type Database = {
           description?: string
           id?: string
           location?: string
+          media_urls?: string[] | null
           status?: string
           timing?: string | null
           title?: string

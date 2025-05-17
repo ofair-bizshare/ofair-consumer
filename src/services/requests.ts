@@ -5,23 +5,21 @@ import { RequestInterface } from '@/types/dashboard';
 // Fetch user requests from the database
 export const fetchUserRequests = async (): Promise<RequestInterface[]> => {
   try {
-    // We need to use "as any" to bypass TypeScript's type checking
     const { data, error } = await supabase
       .from('requests')
       .select('*')
       .order('created_at', { ascending: false });
-      
+
     if (error) {
       console.error('Error fetching requests:', error);
       throw error;
     }
-    
+
     if (!data || data.length === 0) {
       console.log('No requests found in the database');
       return [];
     }
-    
-    // Map the database columns to our interface
+
     return data.map((item: any) => ({
       id: item.id,
       title: item.title,
@@ -29,14 +27,17 @@ export const fetchUserRequests = async (): Promise<RequestInterface[]> => {
       date: new Date(item.date).toLocaleDateString('he-IL'),
       location: item.location,
       status: item.status,
-      quotesCount: 0, // This will be updated when we fetch quotes
-      timing: item.timing
+      quotesCount: 0,
+      timing: item.timing,
+      media_urls: item.media_urls || [],
+      category: item.category || '', // Keep compatibility
     }));
   } catch (error) {
     console.error('Error fetching requests:', error);
     return [];
   }
 };
+
 
 // Create a new request in the database
 export const createRequest = async (requestData: {
@@ -45,11 +46,12 @@ export const createRequest = async (requestData: {
   location: string;
   timing?: string;
   user_id?: string;
+  category?: string;
+  media_urls?: string[];
 }): Promise<string | null> => {
   try {
-    // Get current user ID if not provided
     let userId = requestData.user_id;
-    
+
     if (!userId) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -59,7 +61,7 @@ export const createRequest = async (requestData: {
       userId = user.id;
     }
 
-    // We need to use "as any" to bypass TypeScript's type checking
+    // עדכון: שמירת category וגם media_urls
     const { data, error } = await supabase
       .from('requests')
       .insert({
@@ -68,18 +70,20 @@ export const createRequest = async (requestData: {
         location: requestData.location,
         timing: requestData.timing || null,
         status: 'active',
-        user_id: userId
+        user_id: userId,
+        category: requestData.category || requestData.title,
+        media_urls: requestData.media_urls && requestData.media_urls.length > 0 
+          ? requestData.media_urls 
+          : null
       })
       .select('id')
       .single();
-      
+
     if (error) {
       console.error('Error creating request:', error);
       throw error;
     }
-    
-    console.log('Request created successfully:', data);
-    // Fix: Add type assertion to ensure data.id is a string
+
     return data && 'id' in data ? String(data.id) : null;
   } catch (error) {
     console.error('Error creating request:', error);
