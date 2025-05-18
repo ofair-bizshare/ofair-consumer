@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { QuoteInterface } from '@/types/dashboard';
@@ -124,7 +125,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   if (Array.isArray(quote.media_urls) && quote.media_urls.length > 0) {
     mediaUrls = quote.media_urls.filter(url => typeof url === "string" && !!url && url !== "null");
   } else if (typeof quote.media_urls === 'string') {
-    const clean = quote.media_urls.trim();
+    const clean = quote.media_urls ? quote.media_urls.trim() : '';
     try {
       const parsed = JSON.parse(clean);
       if (Array.isArray(parsed)) {
