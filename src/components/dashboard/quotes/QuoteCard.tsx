@@ -119,39 +119,66 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
 
   // הגדרה חזקה: המטרה היא לקבל תמיד מערך string[] או ערך ריק
   let mediaUrls: string[] = [];
+  try {
+    // 1. אם זה מערך – קבל את כל הסטרינגים התקינים
+    if (Array.isArray(quote.media_urls)) {
+      mediaUrls = quote.media_urls.filter(
+        (url) => typeof url === "string" && !!url && url !== "null"
+      );
+    }
+    // 2. אם זה טקסט – תבדוק אם זה JSON או רשימה מופרדת בפסיק/סטרינג יחיד
+    else if (typeof quote.media_urls === "string" && quote.media_urls.trim() !== "") {
+      const clean = quote.media_urls.trim();
+      let parsed: unknown = null;
+      let parsedOk = false;
 
-  // תומך בשלוש צורות: מערך, JSON כמחרוזת, ומחרוזת עם פסיקים או לינק יחיד
-  if (Array.isArray(quote.media_urls) && quote.media_urls.length > 0) {
-    mediaUrls = quote.media_urls.filter(url => typeof url === "string" && !!url && url !== "null");
-  } else if (typeof quote.media_urls === 'string') {
-    // Explicit and safe: only trim if definitely a string
-    const clean = typeof quote.media_urls === "string" ? (quote.media_urls as string).trim() : "";
-    try {
-      const parsed = JSON.parse(clean);
-      if (Array.isArray(parsed)) {
-        mediaUrls = parsed.filter(url => typeof url === "string" && !!url && url !== "null");
-      } else if (typeof parsed === "string" && !!parsed && parsed !== "null") {
+      // נסיון לפרסר כ-JSON
+      try {
+        parsed = JSON.parse(clean);
+        parsedOk = true;
+      } catch {}
+
+      if (parsedOk && Array.isArray(parsed)) {
+        mediaUrls = parsed.filter(
+          (url) => typeof url === "string" && !!url && url !== "null"
+        );
+      } else if (parsedOk && typeof parsed === "string" && !!parsed && parsed !== "null") {
         mediaUrls = [parsed];
       }
-    } catch {
-      // לא JSON: נבדוק פסיקים
-      if (clean.includes(',')) {
-        mediaUrls = clean.split(',').map(s => s.trim()).filter(Boolean).filter(x => x !== "null");
-      } else if (clean.startsWith('http') && clean.length > 8) {
+      // אם לא JSON – בדיקה קלאסית
+      else if (clean.includes(",")) {
+        mediaUrls = clean
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .filter((x) => x !== "null");
+      } else if (clean.startsWith("http") && clean.length > 8) {
         mediaUrls = [clean];
       }
     }
+    // 3. טיפוס חריג – לא לשבור:
+    else {
+      mediaUrls = [];
+    }
+  } catch (err) {
+    // הגנה מלאה: אל תשבור את הכרטיס – דלג על מדיה
+    console.warn("שגיאה בעיבוד quote.media_urls:", { value: quote.media_urls, error: err });
+    mediaUrls = [];
   }
-  
-  // נ fallback: יש sampleImageUrl
-  if ((mediaUrls.length === 0 || !mediaUrls) && quote.sampleImageUrl) {
-    mediaUrls = [quote.sampleImageUrl];
+
+  // פיילבק – אם אין מדיה אחרי הכל, דאג ל-sampleImageUrl
+  if ((!mediaUrls || mediaUrls.length === 0) && quote.sampleImageUrl) {
+    if (typeof quote.sampleImageUrl === "string" && quote.sampleImageUrl.startsWith("http")) {
+      mediaUrls = [quote.sampleImageUrl];
+    }
   }
-  // סינון אחרון
-  mediaUrls = mediaUrls.filter(Boolean).filter(x => x !== "null");
+  // סינון סופי
+  mediaUrls = Array.isArray(mediaUrls)
+    ? mediaUrls.filter(Boolean).filter((x) => x !== "null")
+    : [];
 
   // debug
-  console.log('QuoteCard > ב-mediaUrls הסופי:', mediaUrls);
+  console.log('QuoteCard > mediaUrls:', mediaUrls);
 
   // --- WHATSAPP LOGIC START ---
   const handleWhatsAppReveal = async () => {
