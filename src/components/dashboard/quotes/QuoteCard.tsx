@@ -117,17 +117,40 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   // Show action buttons based on status combinations
   const showActionButtons = requestStatus !== 'completed';
 
-  // הגדרה עמידה לכל מבנה אפשרי של media_urls
-  // ** FIX: Start with '' instead of [] to avoid "never" issue **
-  let mediaUrls: string[] | string = '';
+  // הגדרה חזקה: המטרה היא לקבל תמיד מערך string[] או ערך ריק
+  let mediaUrls: string[] = [];
+
+  // תומך בשלוש צורות: מערך, JSON כמחרוזת, ומחרוזת עם פסיקים או לינק יחיד
   if (Array.isArray(quote.media_urls) && quote.media_urls.length > 0) {
-    mediaUrls = quote.media_urls as string[];
+    mediaUrls = quote.media_urls.filter(url => typeof url === "string" && !!url && url !== "null");
   } else if (typeof quote.media_urls === 'string') {
-    mediaUrls = quote.media_urls;
+    const clean = quote.media_urls.trim();
+    try {
+      const parsed = JSON.parse(clean);
+      if (Array.isArray(parsed)) {
+        mediaUrls = parsed.filter(url => typeof url === "string" && !!url && url !== "null");
+      } else if (typeof parsed === "string" && !!parsed && parsed !== "null") {
+        mediaUrls = [parsed];
+      }
+    } catch {
+      // לא JSON: נבדוק פסיקים
+      if (clean.includes(',')) {
+        mediaUrls = clean.split(',').map(s => s.trim()).filter(Boolean).filter(x => x !== "null");
+      } else if (clean.startsWith('http') && clean.length > 8) {
+        mediaUrls = [clean];
+      }
+    }
   }
-  if ((!mediaUrls || (Array.isArray(mediaUrls) && mediaUrls.length === 0)) && quote.sampleImageUrl) {
+
+  // נ fallback: יש sampleImageUrl
+  if ((mediaUrls.length === 0 || !mediaUrls) && quote.sampleImageUrl) {
     mediaUrls = [quote.sampleImageUrl];
   }
+  // סינון אחרון
+  mediaUrls = mediaUrls.filter(Boolean).filter(x => x !== "null");
+
+  // debug
+  console.log('QuoteCard > ב-mediaUrls הסופי:', mediaUrls);
 
   // --- WHATSAPP LOGIC START ---
   const handleWhatsAppReveal = async () => {
@@ -179,11 +202,10 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
       <Card className={`overflow-hidden mb-3 shadow-md transition-shadow ${!isInteractive ? 'opacity-70' : ''}`}>
         <CardContent className="p-0">
           <div className={`p-2 ${isMobile ? 'space-y-2' : 'p-4'} border-b border-gray-100`}>
-            {/* אין מדיה? מציגים פלייסהולדר */}
-            {(!mediaUrls ||
-              (Array.isArray(mediaUrls) && mediaUrls.length === 0) ||
-              (typeof mediaUrls === 'string' && mediaUrls.trim().length === 0))
-              && <NoMediaPlaceholder />}
+            {/* רק אם mediaUrls לא ריק, תציג גלריה */}
+            {(mediaUrls.length === 0)
+              ? <NoMediaPlaceholder />
+              : null}
             <ProfessionalInfo professional={quote.professional} />
             <QuoteDetails 
               price={quote.price || "0"} 

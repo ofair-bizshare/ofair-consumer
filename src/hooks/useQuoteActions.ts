@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/providers/AuthProvider';
@@ -87,7 +86,7 @@ export const useQuoteActions = ({
         return;
       }
 
-      // Database actions
+      // Update quote status to 'accepted'
       const success = await updateQuoteStatus(quoteId, 'accepted');
       if (!success) {
         toast({ title: "שגיאה בקבלת ההצעה", description: "אירעה שגיאה בקבלת ההצעה. אנא נסה שוב.", variant: "destructive" });
@@ -96,7 +95,18 @@ export const useQuoteActions = ({
       }
       setLastAcceptedQuoteId(quoteId);
 
-      // כאן דואגים לעדכן גם את הסטטוס של הבקשה
+      // Update ALL other quotes on this request to 'rejected'
+      setQuotes(prevQuotes =>
+        prevQuotes.map(quote =>
+          quote.id === quoteId
+            ? { ...quote, status: 'accepted' }
+            : quote.requestId === acceptedQuote.requestId
+              ? { ...quote, status: 'rejected' }
+              : quote
+        )
+      );
+
+      // Update request status to waiting_for_rating (IMPORTANT!)
       const requestStatusResult = await updateRequestStatus(acceptedQuote.requestId, 'waiting_for_rating');
       console.log('updateRequestStatus: requestId:', acceptedQuote.requestId, 'newStatus: waiting_for_rating', 'result:', requestStatusResult);
 
@@ -111,15 +121,6 @@ export const useQuoteActions = ({
           acceptedQuote.professional?.id || ""
         );
       }, 500);
-      setQuotes(prevQuotes =>
-        prevQuotes.map(quote =>
-          quote.id === quoteId
-            ? { ...quote, status: 'accepted' }
-            : quote.requestId === acceptedQuote.requestId && quote.status === 'pending'
-            ? { ...quote, status: 'rejected' }
-            : quote
-        )
-      );
       // Save in DB
       await saveAcceptedQuote({
         user_id: user.id,

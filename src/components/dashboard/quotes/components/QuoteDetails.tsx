@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ErrorBoundary from '@/components/ui/error-boundary';
@@ -27,38 +26,35 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   // Debug: בדוק איזה mediaUrls התקבלו
   console.log("QuoteDetails > mediaUrls prop:", mediaUrls);
 
+  // נניח mediaUrls מתקבל כבר כמערך string[] בלבד 
   let media: string[] = [];
 
   if (Array.isArray(mediaUrls)) {
     media = mediaUrls.filter(val => typeof val === 'string' && !!val && val !== "null");
-  } else if (typeof mediaUrls === 'string') {
-    const clean = mediaUrls.trim();
-    // מאמץ ראשון - JSON
+  } else if (typeof mediaUrls === 'string' && mediaUrls.trim()) {
+    // תמיכה רטרואקטיבית - לא צפוי להגיע אחרי השינוי מ-QuoteCard
     try {
-      const parsed = JSON.parse(clean);
+      const parsed = JSON.parse(mediaUrls.trim());
       if (Array.isArray(parsed)) {
         media = parsed.filter(val => typeof val === "string" && !!val && val !== "null");
       } else if (typeof parsed === "string" && !!parsed && parsed !== "null") {
         media = [parsed];
       }
     } catch {
-      // לא JSON? ננסה לפרק עם פסיקים 
-      if (clean.includes(',')) {
-        media = clean.split(',').map(s => s.trim()).filter(Boolean).filter(x => x !== "null");
+      if (mediaUrls.includes(',')) {
+        media = mediaUrls.split(',').map(s => s.trim()).filter(Boolean).filter(x => x !== "null");
       } else if (
-        clean.startsWith('http') && clean.length > 8 // בדיקה מינימלית לכתובת
+        mediaUrls.startsWith('http') && mediaUrls.length > 8
       ) {
-        media = [clean];
+        media = [mediaUrls];
       }
     }
   } else if (sampleImageUrl) {
     media = [sampleImageUrl];
   }
 
-  // ניקוי סופי מתווים ריקים/null
+  // סינון סופי
   media = media.filter(Boolean).filter(x => x !== "null");
-
-  // למעקב ב-console
   console.log("QuoteDetails > media after processing:", media);
 
   const isImage = (url: string) =>
@@ -72,7 +68,7 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   return (
     <ErrorBoundary fallback={<div className="p-2 bg-red-50 rounded text-sm">שגיאה בטעינת פרטי ההצעה</div>}>
       <div className="mt-2 space-y-2">
-        {/* Media Gallery */}
+        {/* גלריה מוצגת רק אם media לא ריק */}
         {media.length > 0 ? (
           <div className="mt-2 flex flex-wrap gap-3 items-center">
             {media.map((src, i) => (
