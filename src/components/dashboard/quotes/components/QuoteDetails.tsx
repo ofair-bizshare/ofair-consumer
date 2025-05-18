@@ -29,37 +29,42 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
 
   if (Array.isArray(mediaUrls) && mediaUrls.length > 0) {
     media = mediaUrls.filter((src) => !!src);
-  } else if (typeof mediaUrls === 'string' && mediaUrls.trim() !== '') {
+  } else if (
+    typeof mediaUrls === 'string' &&
+    (mediaUrls as string).trim() !== ''
+  ) {
     try {
       let parsed: unknown;
       try {
         parsed = JSON.parse(mediaUrls as string);
       } catch {
-        // if it's not JSON, try splitting by comma
+        // If it's not JSON, try splitting by comma
         if (typeof mediaUrls === 'string') {
-          parsed = mediaUrls
+          parsed = (mediaUrls as string)
             .split(',')
-            .map((s) => s.trim())
+            .map(s => (typeof s === 'string' ? s.trim() : ''))
             .filter(Boolean);
         } else {
           parsed = [];
         }
       }
       if (Array.isArray(parsed)) {
-        media = parsed.filter((item): item is string => typeof item === 'string' && !!item);
+        media = parsed.filter(
+          (item): item is string => typeof item === 'string' && !!item
+        );
       }
     } catch (err) {
       // fallback: if parse fails, check if it's a regular url string
-      if (typeof mediaUrls === 'string' && mediaUrls.startsWith('http')) {
-        media = [mediaUrls];
+      if (
+        typeof mediaUrls === 'string' &&
+        (mediaUrls as string).startsWith('http')
+      ) {
+        media = [mediaUrls as string];
       }
     }
   } else if (sampleImageUrl) {
     media = [sampleImageUrl];
   }
-
-  // Diagnostic log for debugging - מורידים אחרי בדיקות!
-  // console.log('decoded media:', media);
 
   // Filter function to detect image/video types
   const isImage = (url: string) =>
@@ -69,7 +74,7 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
     /\.(mp4|webm|ogg|mov)$/i.test(url);
 
   // Format price
-  const formattedPrice = price && price !== "0" && price !== "" ? price : "0";
+  const formattedPrice = price && price !== '0' && price !== '' ? price : '0';
 
   return (
     <ErrorBoundary fallback={<div className="p-2 bg-red-50 rounded text-sm">שגיאה בטעינת פרטי ההצעה</div>}>
@@ -90,7 +95,9 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
                       maxWidth: 120,
                       minWidth: 80
                     }}
-                    onError={e => { e.currentTarget.style.display = 'none'; }}
+                    onError={e => {
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                 ) : isVideo(src) ? (
                   <div
@@ -138,7 +145,7 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
                         alt={`המדיה #${openMediaIdx + 1}`}
                         className="rounded-lg shadow max-h-[70vh] max-w-full border border-gray-200"
                         loading="lazy"
-                        />
+                      />
                     ) : isVideo(media[openMediaIdx]) ? (
                       <video controls className="max-h-[70vh] rounded-lg border border-gray-200">
                         <source src={media[openMediaIdx]} />
@@ -177,4 +184,3 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
 };
 
 export default QuoteDetails;
-
