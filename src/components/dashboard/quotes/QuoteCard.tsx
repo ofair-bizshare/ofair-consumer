@@ -109,6 +109,12 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   // Show action buttons based on status combinations
   const showActionButtons = requestStatus !== 'completed';
 
+  // הכנה מודרנית של mediaUrls: נוודא שתמיד עובר מערך, גם אם לא קיים או חסר
+  const mediaUrls: string[] =
+    Array.isArray(quote.media_urls) && quote.media_urls.length > 0
+      ? quote.media_urls
+      : (quote.sampleImageUrl ? [quote.sampleImageUrl] : []);
+
   // --- WHATSAPP LOGIC START ---
   const handleWhatsAppReveal = async () => {
     // Log the WhatsApp reveal the same way as phone reveals with saveReferral
@@ -164,7 +170,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
             <QuoteDetails 
               price={quote.price || "0"} 
               estimatedTime={quote.estimatedTime || ""}
-              mediaUrls={quote.media_urls ?? []}
+              mediaUrls={mediaUrls}
               sampleImageUrl={quote.sampleImageUrl}
               description={quote.description || ""}
             />
