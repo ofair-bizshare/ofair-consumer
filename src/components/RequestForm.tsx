@@ -18,6 +18,11 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { FcGoogle } from "react-icons/fc";
 import { createRequest } from '@/services/requests';
 import { supabase } from '@/integrations/supabase/client';
+import ProfessionSelect from './request-form/ProfessionSelect';
+import CitySelect from './request-form/CitySelect';
+import ImageUpload from './request-form/ImageUpload';
+import TimingPicker from './request-form/TimingPicker';
+import ContactAuthForm from './request-form/ContactAuthForm';
 interface RequestFormProps {
   onSuccess?: (value: boolean) => void;
 }
@@ -342,203 +347,58 @@ const RequestForm: React.FC<RequestFormProps> = ({
     if (step === 1) {
       return <div className="space-y-6 animate-fade-in">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="profession" className="text-gray-700">סוג עבודה</Label>
-              <Popover open={openProfessionPopover} onOpenChange={setOpenProfessionPopover}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" role="combobox" aria-expanded={openProfessionPopover} className="w-full justify-between text-right pr-3 pl-10 relative rounded-lg">
-                    {formData.profession || "בחר סוג עבודה"}
-                    <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full min-w-[230px] bg-white shadow-lg z-50 p-0 border border-gray-300" align="start" style={{
-                overflow: 'visible'
-              }}>
-                  <Command dir="rtl">
-                    <CommandInput placeholder="חפש סוג עבודה..." value={professionSearchTerm} onValueChange={setProfessionSearchTerm} className="bg-white" />
-                    <CommandEmpty>לא נמצאו תוצאות</CommandEmpty>
-                    <CommandList className="bg-white z-50 max-h-64 overflow-auto border-gray-200">
-                      <CommandGroup>
-                        {filteredProfessions.map(profession => <CommandItem key={profession} value={profession} onSelect={() => {
-                        handleSelectChange('profession', profession);
-                        setProfessionSearchTerm('');
-                        setOpenProfessionPopover(false);
-                      }}>
-                            {profession}
-                          </CommandItem>)}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="location" className="text-gray-700">עיר</Label>
-              <Popover open={openCityPopover} onOpenChange={setOpenCityPopover}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" role="combobox" aria-expanded={openCityPopover} className="w-full justify-between text-right pr-3 pl-10 relative rounded-lg">
-                    {formData.location || "בחר עיר"}
-                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full min-w-[230px] bg-white shadow-lg z-50 p-0 border border-gray-300" align="start" style={{
-                overflow: 'visible'
-              }}>
-                  <Command dir="rtl">
-                    <CommandInput placeholder="חפש עיר..." value={citySearchTerm} onValueChange={setCitySearchTerm} className="bg-white" />
-                    <CommandEmpty>לא נמצאו תוצאות</CommandEmpty>
-                    <CommandList className="bg-white z-50 max-h-64 overflow-auto border-gray-200">
-                      <CommandGroup>
-                        {filteredCities.map(city => <CommandItem key={city} value={city} onSelect={() => {
-                        handleSelectChange('location', city);
-                        setCitySearchTerm('');
-                        setOpenCityPopover(false);
-                      }}>
-                            {city}
-                          </CommandItem>)}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
+            <ProfessionSelect
+              profession={formData.profession}
+              professions={professions}
+              searchTerm={professionSearchTerm}
+              filteredProfessions={filteredProfessions}
+              openPopover={openProfessionPopover}
+              setOpenPopover={setOpenProfessionPopover}
+              setSearchTerm={setProfessionSearchTerm}
+              onChange={handleSelectChange}
+            />
+            <CitySelect
+              city={formData.location}
+              cities={cities}
+              searchTerm={citySearchTerm}
+              filteredCities={filteredCities}
+              openPopover={openCityPopover}
+              setOpenPopover={setOpenCityPopover}
+              setSearchTerm={setCitySearchTerm}
+              onChange={handleSelectChange}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="description" className="text-gray-700">תיאור מפורט של העבודה</Label>
             <Textarea id="description" name="description" placeholder="תאר את העבודה שברצונך לבצע באופן מפורט ככל האפשר" value={formData.description} onChange={handleInputChange} className="h-32 rounded-lg" />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="timing" className="text-gray-700">מועד ביצוע (אופציונלי)</Label>
-            <Popover open={openCalendar} onOpenChange={setOpenCalendar}>
-              <PopoverTrigger asChild>
-                <div className="relative cursor-pointer">
-                  <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                  <Input id="timing" name="timing" placeholder="מתי תרצה שהעבודה תתבצע?" value={formData.timing} onChange={handleInputChange} onClick={() => setOpenCalendar(true)} readOnly className="pr-10 rounded-lg" />
-                </div>
-              </PopoverTrigger>
-              <PopoverContent className="p-0 w-auto z-50 bg-white" align="start">
-                <CalendarComponent mode="single" selected={selectedDate} onSelect={handleSelectDate} className="border rounded-md p-3 pointer-events-auto bg-white z-50" disabled={date => {
-                // Allow today & future, disable before today
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                return date < today;
-              }} initialFocus />
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-gray-700">תמונות (אופציונלי)</Label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-              <label className="cursor-pointer block">
-                <Upload className="mx-auto h-10 w-10 text-gray-400 mb-2" />
-                <span className="text-sm text-gray-500">לחץ להעלאת תמונות או גרור לכאן</span>
-                <input type="file" className="hidden" accept="image/*" multiple onChange={handleImageUpload} />
-              </label>
-            </div>
-            {previewUrls.length > 0 && <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                {previewUrls.map((url, index) => <div key={index} className="relative rounded-md overflow-hidden h-20">
-                    <img src={url} alt={`Uploaded ${index}`} className="w-full h-full object-cover" />
-                    <button type="button" className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs" onClick={() => removeImage(index)}>
-                      ×
-                    </button>
-                  </div>)}
-              </div>}
-          </div>
+          <TimingPicker
+            timing={formData.timing}
+            openCalendar={openCalendar}
+            setOpenCalendar={setOpenCalendar}
+            selectedDate={selectedDate}
+            handleSelectDate={handleSelectDate}
+            handleInputChange={handleInputChange}
+          />
+          <ImageUpload
+            previewUrls={previewUrls}
+            onUpload={handleImageUpload}
+            removeImage={removeImage}
+          />
         </div>;
     } else {
-      return <div className="space-y-6 animate-fade-in">
-          <div className="text-center mb-4">
-            <UserRound className="mx-auto h-12 w-12 text-blue-500 mb-2" />
-            <h3 className="text-lg font-medium text-gray-700">כניסה או הרשמה לשליחת הבקשה</h3>
-            <p className="text-sm text-gray-500">כדי להמשיך, יש להתחבר או להירשם</p>
-          </div>
-          
-          <Button type="button" variant="outline" className="w-full flex items-center justify-center gap-2 py-6" onClick={handleGoogleSignIn}>
-            <FcGoogle className="h-5 w-5" />
-            <span>התחברות עם Google</span>
-          </Button>
-          
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-gray-300"></span>
-            </div>
-            <div className="relative flex justify-center text-xs">
-              <span className="px-2 bg-white text-gray-500">או</span>
-            </div>
-          </div>
-          
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid grid-cols-2 w-full">
-              <TabsTrigger value="login">התחברות</TabsTrigger>
-              <TabsTrigger value="register">הרשמה</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="login-email">דוא"ל</Label>
-                  <Input id="login-email" name="email" type="email" placeholder="הזן את כתובת הדואל שלך" value={loginData.email} onChange={handleLoginChange} />
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <Label htmlFor="login-password">סיסמה</Label>
-                    <Link to="/forgot-password" className="text-xs text-[#00D09E] hover:text-[#00C090]">
-                      שכחת סיסמה?
-                    </Link>
-                  </div>
-                  <Input id="login-password" name="password" type="password" placeholder="הזן את הסיסמה שלך" value={loginData.password} onChange={handleLoginChange} />
-                </div>
-                
-                <Button type="submit" className="w-full bg-[#00D09E] hover:bg-[#00C090] text-white mt-4">
-                  התחבר ושלח בקשה
-                </Button>
-              </form>
-            </TabsContent>
-            
-            <TabsContent value="register">
-              <form onSubmit={handleRegister} className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="register-name">שם מלא</Label>
-                  <Input id="register-name" name="name" placeholder="הזן את שמך המלא" value={registerData.name} onChange={handleRegisterChange} />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="register-email">דוא"ל</Label>
-                  <Input id="register-email" name="email" type="email" placeholder="הזן את כתובת הדואל שלך" value={registerData.email} onChange={handleRegisterChange} />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="register-password">סיסמה</Label>
-                  <Input id="register-password" name="password" type="password" placeholder="בחר סיסמה (לפחות 8 תווים)" value={registerData.password} onChange={handleRegisterChange} />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="register-password-confirm">אימות סיסמה</Label>
-                  <Input id="register-password-confirm" name="passwordConfirm" type="password" placeholder="הזן שוב את הסיסמה" value={registerData.passwordConfirm} onChange={handleRegisterChange} />
-                </div>
-                
-                <div className="flex items-center space-x-2 space-x-reverse mt-2">
-                  <input type="checkbox" id="agree-terms" name="agreeTerms" checked={registerData.agreeTerms} onChange={handleRegisterChange} className="rounded border-gray-300 text-[#00D09E] focus:ring-[#00D09E]" />
-                  <Label htmlFor="agree-terms" className="text-sm cursor-pointer">
-                    אני מסכים/ה ל
-                    <Link to="/terms" className="text-[#00D09E] mx-1 hover:underline">
-                      תנאי השימוש
-                    </Link>
-                    ול
-                    <Link to="/privacy" className="text-[#00D09E] mx-1 hover:underline">
-                      מדיניות הפרטיות
-                    </Link>
-                  </Label>
-                </div>
-                
-                <Button type="submit" className="w-full bg-[#00D09E] hover:bg-[#00C090] text-white mt-4">
-                  הרשם ושלח בקשה
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
-        </div>;
+      return (
+        <ContactAuthForm
+          step={step}
+          loginData={loginData}
+          registerData={registerData}
+          handleLoginChange={handleLoginChange}
+          handleRegisterChange={handleRegisterChange}
+          handleLogin={handleLogin}
+          handleRegister={handleRegister}
+          handleGoogleSignIn={handleGoogleSignIn}
+        />
+      );
     }
   };
   return <>
