@@ -2,7 +2,7 @@
 import { useQuotesState } from './useQuotesState';
 import { useQuoteActions } from './useQuoteActions';
 
-// Combines both state and actions—API is the same as before!
+// אין יותר filter שמשנה את סדר quotes – מחזירים את מערך quotes נקי (כלומר, לא filter/map מעבר ל-requestId)
 export const useQuotes = (selectedRequestId: string | null) => {
   const {
     quotes,
@@ -29,6 +29,7 @@ export const useQuotes = (selectedRequestId: string | null) => {
     selectedRequestId
   });
 
+  // שומרים על אותו סדר ולא מסדרים מחדש אחרי accept! רק מציגים את הצעות רלוונטיות לבקשה
   return {
     quotes: selectedRequestId ? quotes.filter(q => q.requestId === selectedRequestId) : [],
     handleAcceptQuote,

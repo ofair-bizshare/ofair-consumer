@@ -152,6 +152,27 @@ export const useQuoteActions = ({
       if (selectedRequestId) {
         setTimeout(() => { refreshQuotes(selectedRequestId); }, 500);
       }
+      // UPDATE: הוסף כאן טוסט עם קישור לדירוג
+      toast({
+        title: "הצעה התקבלה",
+        description: "הצעת המחיר אושרה! נשמח אם תדרג את בעל המקצוע.",
+        action: (
+          <button
+            onClick={() => {
+              // עובר לכתובת עם האנקור (הוביל ישירות לחלון דירוג בדף)
+              setTimeout(() => {
+                window.location.hash = "#rating-section";
+                // מחכה ומוודא שמופעל ה-dialog (ב-RequestDetail יש שילוב לכך)
+              }, 250);
+            }}
+            className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded ml-2 font-semibold"
+            style={{ fontSize: 14 }}
+          >
+            דרג עכשיו
+          </button>
+        ),
+        variant: "success"
+      });
     } catch (error) {
       toast({
         title: "שגיאה בתהליך קבלת ההצעה",
