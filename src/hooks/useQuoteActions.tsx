@@ -15,6 +15,9 @@ import {
 } from '@/services/quotes';
 import { QuoteInterface } from '@/types/dashboard';
 import { Button } from '@/components/ui/button';
+import { useQuoteAccept } from './useQuoteAccept';
+import { useQuoteReject } from './useQuoteReject';
+import { useQuoteDialogState } from './useQuoteDialogState';
 
 export interface UseQuoteActionsParams {
   quotes: QuoteInterface[];
@@ -33,215 +36,46 @@ export const useQuoteActions = ({
   refreshQuotes,
   selectedRequestId
 }: UseQuoteActionsParams) => {
-  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { toast } = useToast();
-  const { user } = useAuth();
 
-  // Accept logic
+  const {
+    showPaymentDialog,
+    selectedQuoteId,
+    isProcessing,
+    setIsProcessing,
+    openPaymentDialog,
+    closePaymentDialog,
+  } = useQuoteDialogState();
+
+  const { processQuoteAcceptance } = useQuoteAccept({
+    quotes,
+    setQuotes,
+    setLastAcceptedQuoteId,
+    refreshQuotes,
+    selectedRequestId,
+    setIsProcessing,
+  });
+
+  const { handleRejectQuote } = useQuoteReject({
+    quotes,
+    setQuotes,
+    lastAcceptedQuoteId,
+    setLastAcceptedQuoteId,
+    refreshQuotes,
+    setIsProcessing,
+  });
+
+  // Accept logic - open payment dialog flow
   const handleAcceptQuote = async (quoteId: string) => {
     const quote = quotes.find(q => q.id === quoteId);
-    if (!quote) {
-      toast({ title: "שגיאה", description: "הצעת המחיר לא נמצאה במערכת", variant: "destructive" });
-      return;
-    }
-    if (quote.status === 'accepted') {
-      toast({ title: "הצעה זו כבר אושרה", description: "הצעת המחיר הזו כבר אושרה בעבר.", variant: "default" });
-      return;
-    }
-    const requestId = quote.requestId;
-    const existingAcceptedQuote = await checkIfAcceptedQuoteExists(requestId, quoteId);
+    if (!quote) return;
+    if (quote.status === 'accepted') return;
+    const existingAcceptedQuote = await checkIfAcceptedQuoteExists(quote.requestId, quoteId);
     if (existingAcceptedQuote) {
       setQuotes(prevQuotes => prevQuotes.map(q => q.id === quoteId ? { ...q, status: 'accepted' } : q));
       setLastAcceptedQuoteId(quoteId);
-      toast({ title: "הצעה זו כבר אושרה", description: "הצעת המחיר הזו כבר אושרה במערכת.", variant: "default" });
       return;
     }
-    setSelectedQuoteId(quoteId);
-    setShowPaymentDialog(true);
-  };
-
-  // Payment and acceptance
-  const processQuoteAcceptance = async (quoteId: string, paymentMethod: 'cash' | 'credit') => {
-    if (isProcessing) return;
-    setIsProcessing(true);
-    const acceptedQuote = quotes.find(q => q.id === quoteId);
-    if (!acceptedQuote || !user) {
-      setIsProcessing(false);
-      return;
-    }
-    const quotePrice = formatPrice(acceptedQuote.price);
-    try {
-      const isAlreadyAccepted = await checkIfAcceptedQuoteExists(acceptedQuote.requestId, quoteId);
-      if (isAlreadyAccepted) {
-        setQuotes(prevQuotes => prevQuotes.map(quote => quote.id === quoteId ? { ...quote, status: 'accepted' } : quote));
-        setLastAcceptedQuoteId(quoteId);
-        await createQuoteNotification(
-          acceptedQuote.description,
-          acceptedQuote.professional?.name || "בעל מקצוע",
-          acceptedQuote.requestId
-        );
-        toast({ title: "הצעה התקבלה", description: "הצעת המחיר כבר אושרה במערכת", variant: "default" });
-        setIsProcessing(false);
-        return;
-      }
-
-      // Update quote status to 'accepted'
-      const success = await updateQuoteStatus(quoteId, 'accepted');
-      if (!success) {
-        toast({ title: "שגיאה בקבלת ההצעה", description: "אירעה שגיאה בקבלת ההצעה. אנא נסה שוב.", variant: "destructive" });
-        setIsProcessing(false);
-        return;
-      }
-      setLastAcceptedQuoteId(quoteId);
-
-      // Update ALL other quotes on this request to 'rejected'
-      setQuotes(prevQuotes =>
-        prevQuotes.map(quote =>
-          quote.id === quoteId
-            ? { ...quote, status: 'accepted' }
-            : quote.requestId === acceptedQuote.requestId
-              ? { ...quote, status: 'rejected' }
-              : quote
-        )
-      );
-
-      // Update request status to waiting_for_rating (IMPORTANT!)
-      const requestStatusResult = await updateRequestStatus(acceptedQuote.requestId, 'waiting_for_rating');
-      console.log('updateRequestStatus: requestId:', acceptedQuote.requestId, 'newStatus: waiting_for_rating', 'result:', requestStatusResult);
-
-      await createQuoteNotification(
-        acceptedQuote.description,
-        acceptedQuote.professional?.name || "בעל מקצוע",
-        acceptedQuote.requestId
-      );
-      setTimeout(async () => {
-        await createRatingReminderNotification(
-          acceptedQuote.professional?.name || "בעל מקצוע",
-          acceptedQuote.professional?.id || ""
-        );
-      }, 500);
-      // Save in DB
-      await saveAcceptedQuote({
-        user_id: user.id,
-        quote_id: quoteId,
-        request_id: acceptedQuote.requestId,
-        professional_id: acceptedQuote.professional.id,
-        professional_name: acceptedQuote.professional.name,
-        price: quotePrice,
-        date: new Date().toISOString(),
-        status: 'accepted',
-        description: acceptedQuote.description,
-        payment_method: paymentMethod,
-        created_at: new Date().toISOString()
-      });
-      await saveReferral(
-        user.id,
-        acceptedQuote.professional.id,
-        acceptedQuote.professional.name,
-        acceptedQuote.professional.phoneNumber || acceptedQuote.professional.phone || "050-1234567",
-        acceptedQuote.professional.profession
-      );
-      // Credit card? go to pay
-      if (paymentMethod === 'credit') {
-        toast({ title: "הועברת לעמוד תשלום", description: "עמוד התשלום ייפתח בקרוב...", variant: "default" });
-        redirectToPayment(quoteId, quotePrice);
-        return;
-      }
-      toast({ title: "הצעה התקבלה", description: "הודעה נשלחה לבעל המקצוע. הוא יצור איתך קשר בהקדם.", variant: "default" });
-      if (selectedRequestId) {
-        setTimeout(() => { refreshQuotes(selectedRequestId); }, 500);
-      }
-      // UPDATE: טוסט עם קישור לדירוג (ACTION BUTTON)
-      const rateNowActionButton = (
-        <Button
-          onClick={() => {
-            setTimeout(() => {
-              window.location.hash = "#rating-section";
-            }, 250);
-          }}
-          className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded ml-2 font-semibold"
-          style={{ fontSize: 14 }}
-        >
-          דרג עכשיו
-        </Button>
-      );
-      toast({
-        title: "הצעה התקבלה",
-        description: "הצעת המחיר אושרה! נשמח אם תדרג את בעל המקצוע.",
-        action: rateNowActionButton,
-        variant: "success"
-      });
-    } catch (error) {
-      toast({
-        title: "שגיאה בתהליך קבלת ההצעה",
-        description: "אירעה שגיאה בתהליך. אנא נסה שוב מאוחר יותר.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  // Reject logic (simplified)
-  const handleRejectQuote = async (quoteId: string) => {
-    if (isProcessing) return;
-    setIsProcessing(true);
-    const rejectedQuote = quotes.find(q => q.id === quoteId);
-    if (!rejectedQuote) {
-      setIsProcessing(false);
-      return;
-    }
-    try {
-      if (rejectedQuote.status === 'accepted') {
-        if (lastAcceptedQuoteId === quoteId) setLastAcceptedQuoteId(null);
-        await deleteAcceptedQuote(quoteId);
-        await updateQuoteStatus(quoteId, 'rejected');
-        const quotesToUpdate = quotes.filter(q => 
-          q.requestId === rejectedQuote.requestId && q.id !== quoteId && q.status !== 'accepted'
-        );
-        if (quotesToUpdate.length > 0) {
-          await Promise.all(
-            quotesToUpdate.map(quote => updateQuoteStatus(quote.id, 'pending'))
-          );
-        }
-        setQuotes(prevQuotes => 
-          prevQuotes.map(quote => 
-            quote.requestId === rejectedQuote.requestId 
-              ? { ...quote, status: quote.id === quoteId ? 'rejected' : 'pending' } 
-              : quote
-          )
-        );
-        await updateRequestStatus(rejectedQuote.requestId, 'active');
-        toast({ title: "קבלת הצעה בוטלה", description: "אפשר לבחור הצעה אחרת כעת.", variant: "default" });
-      } else {
-        await updateQuoteStatus(quoteId, 'rejected');
-        setQuotes(prevQuotes => 
-          prevQuotes.map(quote => 
-            quote.id === quoteId 
-              ? { ...quote, status: 'rejected' } 
-              : quote
-          )
-        );
-        toast({ title: "הצעה נדחתה", description: "הודעה נשלחה לבעל המקצוע.", variant: "default" });
-      }
-    } catch (error) {
-      toast({
-        title: "שגיאה בתהליך דחיית ההצעה",
-        description: "אירעה שגיאה בתהליך. אנא נסה שוב מאוחר יותר.",
-        variant: "destructive",
-      });
-    } finally {
-      if (rejectedQuote.requestId) await refreshQuotes(rejectedQuote.requestId);
-      setIsProcessing(false);
-    }
-  };
-
-  // Close payment dialog
-  const closePaymentDialog = () => {
-    setShowPaymentDialog(false);
-    setSelectedQuoteId(null);
+    openPaymentDialog(quoteId);
   };
 
   return {
