@@ -119,20 +119,21 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
 
   // הגדרה חזקה: המטרה היא לקבל תמיד מערך string[] או ערך ריק
   let mediaUrls: string[] = [];
+
   try {
+    const mediaValue = quote.media_urls as string[] | string | null | undefined;
     // 1. אם זה מערך – קבל את כל הסטרינגים התקינים
-    if (Array.isArray(quote.media_urls)) {
-      mediaUrls = quote.media_urls.filter(
+    if (Array.isArray(mediaValue)) {
+      mediaUrls = mediaValue.filter(
         (url) => typeof url === "string" && !!url && url !== "null"
       );
     }
     // 2. אם זה טקסט – תבדוק אם זה JSON או רשימה מופרדת בפסיק/סטרינג יחיד
-    else if (typeof quote.media_urls === "string" && quote.media_urls.trim() !== "") {
-      const clean = quote.media_urls.trim();
+    else if (typeof mediaValue === "string" && mediaValue.trim() !== "") {
+      const clean = mediaValue.trim();
       let parsed: unknown = null;
       let parsedOk = false;
 
-      // נסיון לפרסר כ-JSON
       try {
         parsed = JSON.parse(clean);
         parsedOk = true;
@@ -144,9 +145,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
         );
       } else if (parsedOk && typeof parsed === "string" && !!parsed && parsed !== "null") {
         mediaUrls = [parsed];
-      }
-      // אם לא JSON – בדיקה קלאסית
-      else if (clean.includes(",")) {
+      } else if (clean.includes(",")) {
         mediaUrls = clean
           .split(",")
           .map((s) => s.trim())
@@ -155,13 +154,10 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
       } else if (clean.startsWith("http") && clean.length > 8) {
         mediaUrls = [clean];
       }
-    }
-    // 3. טיפוס חריג – לא לשבור:
-    else {
+    } else {
       mediaUrls = [];
     }
   } catch (err) {
-    // הגנה מלאה: אל תשבור את הכרטיס – דלג על מדיה
     console.warn("שגיאה בעיבוד quote.media_urls:", { value: quote.media_urls, error: err });
     mediaUrls = [];
   }
