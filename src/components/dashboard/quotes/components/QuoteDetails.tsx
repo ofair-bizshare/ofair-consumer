@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ErrorBoundary from '@/components/ui/error-boundary';
@@ -23,24 +24,36 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   const isMobile = useIsMobile();
   const [openMediaIdx, setOpenMediaIdx] = useState<number | null>(null);
 
-  // --- Media decoding patch (handles array & string) ---
+  // --- Media decoding patch (handles array & string, advanced) ---
   let media: string[] = [];
+
   if (Array.isArray(mediaUrls) && mediaUrls.length > 0) {
     media = mediaUrls.filter(src => !!src);
-  } else if (typeof mediaUrls === 'string') {
+  } else if (typeof mediaUrls === 'string' && mediaUrls.trim() !== '') {
     try {
-      const parsed = JSON.parse(mediaUrls);
-      if (Array.isArray(parsed)) {
-        media = parsed.filter(Boolean);
+      // ניסיָה כפולה: קודם JSON, אם נכשל עוברים לחלוקה פסיקים
+      let parsed = [];
+      try {
+        parsed = JSON.parse(mediaUrls);
+      } catch {
+        // לא JSON, מפרקים בפסיקים
+        parsed = mediaUrls.split(',').map(s => s.trim());
       }
-    } catch {
-      //
+      if (Array.isArray(parsed)) {
+        media = parsed.filter(Boolean); // לא לכלול ערכים ריקים/null
+      }
+    } catch (err) {
+      // לא הצלחנו לפרש, ננסה להתייחס לזה ככתובת אחת
+      if (mediaUrls && mediaUrls.startsWith('http')) {
+        media = [mediaUrls];
+      }
     }
   } else if (sampleImageUrl) {
     media = [sampleImageUrl];
   }
 
-  // --- End of patch ---
+  // Diagnostic log for debugging - מורידים אחרי בדיקות!
+  // console.log('decoded media:', media);
 
   // Filter function to detect image/video types
   const isImage = (url: string) =>
@@ -55,8 +68,7 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   return (
     <ErrorBoundary fallback={<div className="p-2 bg-red-50 rounded text-sm">שגיאה בטעינת פרטי ההצעה</div>}>
       <div className="mt-2 space-y-2">
-        {/* במקום הודעה בולטת: אם אין כלל מדיה, פשוט כלום */}
-        {/* Media Gallery: כל התמונות/וידאו */}
+        {/* Media Gallery */}
         {media.length > 0 ? (
           <div className="mt-2 flex flex-wrap gap-3 items-center">
             {media.map((src, i) => (
@@ -159,3 +171,4 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
 };
 
 export default QuoteDetails;
+
