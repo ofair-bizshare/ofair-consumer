@@ -125,7 +125,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     mediaUrls = quote.media_urls.filter(url => typeof url === "string" && !!url && url !== "null");
   } else if (typeof quote.media_urls === 'string') {
     // Only attempt to trim if it's actually a string
-    const clean = quote.media_urls.trim();
+    const clean = typeof quote.media_urls === "string" ? quote.media_urls.trim() : "";
     try {
       const parsed = JSON.parse(clean);
       if (Array.isArray(parsed)) {
@@ -142,7 +142,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
       }
     }
   }
-
+  
   // נ fallback: יש sampleImageUrl
   if ((mediaUrls.length === 0 || !mediaUrls) && quote.sampleImageUrl) {
     mediaUrls = [quote.sampleImageUrl];
