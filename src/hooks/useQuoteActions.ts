@@ -14,6 +14,7 @@ import {
   createRatingReminderNotification,
 } from '@/services/quotes';
 import { QuoteInterface } from '@/types/dashboard';
+import { Button } from '@/components/ui/button';
 
 export interface UseQuoteActionsParams {
   quotes: QuoteInterface[];
@@ -152,25 +153,24 @@ export const useQuoteActions = ({
       if (selectedRequestId) {
         setTimeout(() => { refreshQuotes(selectedRequestId); }, 500);
       }
-      // UPDATE: הוסף כאן טוסט עם קישור לדירוג
+      // UPDATE: טוסט עם קישור לדירוג (ACTION BUTTON)
+      const rateNowActionButton = (
+        <Button
+          onClick={() => {
+            setTimeout(() => {
+              window.location.hash = "#rating-section";
+            }, 250);
+          }}
+          className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded ml-2 font-semibold"
+          style={{ fontSize: 14 }}
+        >
+          דרג עכשיו
+        </Button>
+      );
       toast({
         title: "הצעה התקבלה",
         description: "הצעת המחיר אושרה! נשמח אם תדרג את בעל המקצוע.",
-        action: (
-          <button
-            onClick={() => {
-              // עובר לכתובת עם האנקור (הוביל ישירות לחלון דירוג בדף)
-              setTimeout(() => {
-                window.location.hash = "#rating-section";
-                // מחכה ומוודא שמופעל ה-dialog (ב-RequestDetail יש שילוב לכך)
-              }, 250);
-            }}
-            className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded ml-2 font-semibold"
-            style={{ fontSize: 14 }}
-          >
-            דרג עכשיו
-          </button>
-        ),
+        action: rateNowActionButton,
         variant: "success"
       });
     } catch (error) {
