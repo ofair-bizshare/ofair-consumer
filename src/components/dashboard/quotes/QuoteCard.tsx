@@ -118,7 +118,8 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   const showActionButtons = requestStatus !== 'completed';
 
   // הגדרה עמידה לכל מבנה אפשרי של media_urls
-  let mediaUrls: string[] | string = [];
+  // ** FIX: Start with '' instead of [] to avoid "never" issue **
+  let mediaUrls: string[] | string = '';
   if (Array.isArray(quote.media_urls) && quote.media_urls.length > 0) {
     mediaUrls = quote.media_urls as string[];
   } else if (typeof quote.media_urls === 'string') {
@@ -179,7 +180,10 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
         <CardContent className="p-0">
           <div className={`p-2 ${isMobile ? 'space-y-2' : 'p-4'} border-b border-gray-100`}>
             {/* אין מדיה? מציגים פלייסהולדר */}
-            {(!mediaUrls || (Array.isArray(mediaUrls) && mediaUrls.length === 0) || (typeof mediaUrls === 'string' && mediaUrls.trim().length === 0)) && <NoMediaPlaceholder />}
+            {(!mediaUrls ||
+              (Array.isArray(mediaUrls) && mediaUrls.length === 0) ||
+              (typeof mediaUrls === 'string' && mediaUrls.trim().length === 0))
+              && <NoMediaPlaceholder />}
             <ProfessionalInfo professional={quote.professional} />
             <QuoteDetails 
               price={quote.price || "0"} 
