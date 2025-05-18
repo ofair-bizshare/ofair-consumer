@@ -3,15 +3,15 @@ import React, { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ErrorBoundary from '@/components/ui/error-boundary';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
-import { Maximize2, ZoomIn, Image, Video } from 'lucide-react';
+import { ZoomIn, Image, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface QuoteDetailsProps {
   price: string;
   estimatedTime: string;
   description: string;
-  mediaUrls?: string[]; // primary source for images/videos!
-  sampleImageUrl?: string; // legacy support if no mediaUrls
+  mediaUrls?: string[] | string; // קיימים גם מערך וגם מחרוזת
+  sampleImageUrl?: string;
 }
 
 const QuoteDetails: React.FC<QuoteDetailsProps> = ({
@@ -24,51 +24,42 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   const isMobile = useIsMobile();
   const [openMediaIdx, setOpenMediaIdx] = useState<number | null>(null);
 
-  // Media decoding patch (safe, robust for all types)
+  // Debug: בדוק איזה mediaUrls התקבלו
+  console.log("QuoteDetails > mediaUrls prop:", mediaUrls);
+
   let media: string[] = [];
 
-  if (Array.isArray(mediaUrls) && mediaUrls.length > 0) {
-    // mediaUrls from API is string[]
-    media = mediaUrls.filter((src) => !!src);
-  } else if (
-    typeof mediaUrls === 'string' &&
-    mediaUrls &&
-    typeof (mediaUrls as string).trim === 'function' &&
-    (mediaUrls as string).trim() !== ''
-  ) {
+  if (Array.isArray(mediaUrls)) {
+    media = mediaUrls.filter(val => typeof val === 'string' && !!val && val !== "null");
+  } else if (typeof mediaUrls === 'string') {
+    const clean = mediaUrls.trim();
+    // מאמץ ראשון - JSON
     try {
-      let parsed: unknown = null;
-      try {
-        parsed = JSON.parse(mediaUrls as string);
-      } catch {
-        // Try splitting by comma only if still a string
-        if (typeof mediaUrls === 'string') {
-          parsed = (mediaUrls as string)
-            .split(',')
-            .map(s => (typeof s === 'string' ? s.trim() : ''))
-            .filter(Boolean);
-        } else {
-          parsed = [];
-        }
-      }
+      const parsed = JSON.parse(clean);
       if (Array.isArray(parsed)) {
-        media = parsed.filter(
-          (item): item is string => typeof item === 'string' && !!item
-        );
+        media = parsed.filter(val => typeof val === "string" && !!val && val !== "null");
+      } else if (typeof parsed === "string" && !!parsed && parsed !== "null") {
+        media = [parsed];
       }
-    } catch (err) {
-      // Fallback: check regular URL
-      if (
-        typeof mediaUrls === 'string' &&
-        typeof (mediaUrls as string).startsWith === 'function' &&
-        (mediaUrls as string).startsWith('http')
+    } catch {
+      // לא JSON? ננסה לפרק עם פסיקים 
+      if (clean.includes(',')) {
+        media = clean.split(',').map(s => s.trim()).filter(Boolean).filter(x => x !== "null");
+      } else if (
+        clean.startsWith('http') && clean.length > 8 // בדיקה מינימלית לכתובת
       ) {
-        media = [mediaUrls as string];
+        media = [clean];
       }
     }
   } else if (sampleImageUrl) {
     media = [sampleImageUrl];
   }
+
+  // ניקוי סופי מתווים ריקים/null
+  media = media.filter(Boolean).filter(x => x !== "null");
+
+  // למעקב ב-console
+  console.log("QuoteDetails > media after processing:", media);
 
   const isImage = (url: string) =>
     /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(url);
@@ -76,7 +67,6 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   const isVideo = (url: string) =>
     /\.(mp4|webm|ogg|mov)$/i.test(url);
 
-  // Format price
   const formattedPrice = price && price !== '0' && price !== '' ? price : '0';
 
   return (

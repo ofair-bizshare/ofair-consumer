@@ -95,7 +95,11 @@ export const useQuoteActions = ({
         return;
       }
       setLastAcceptedQuoteId(quoteId);
-      await updateRequestStatus(acceptedQuote.requestId, 'waiting_for_rating');
+
+      // כאן דואגים לעדכן גם את הסטטוס של הבקשה
+      const requestStatusResult = await updateRequestStatus(acceptedQuote.requestId, 'waiting_for_rating');
+      console.log('updateRequestStatus: requestId:', acceptedQuote.requestId, 'newStatus: waiting_for_rating', 'result:', requestStatusResult);
+
       await createQuoteNotification(
         acceptedQuote.description,
         acceptedQuote.professional?.name || "בעל מקצוע",

@@ -118,21 +118,13 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   const showActionButtons = requestStatus !== 'completed';
 
   // הגדרה עמידה לכל מבנה אפשרי של media_urls
-  let mediaUrls: string[] = [];
+  let mediaUrls: string[] | string = [];
   if (Array.isArray(quote.media_urls) && quote.media_urls.length > 0) {
     mediaUrls = quote.media_urls as string[];
   } else if (typeof quote.media_urls === 'string') {
-    // אם בטעות התקבל JSON string, ננסה להמיר למערך
-    try {
-      const parsed = JSON.parse(quote.media_urls);
-      if (Array.isArray(parsed)) {
-        mediaUrls = parsed.filter(Boolean) as string[];
-      }
-    } catch (e) {
-      // ignore, will fallback
-    }
+    mediaUrls = quote.media_urls;
   }
-  if ((!mediaUrls || mediaUrls.length === 0) && quote.sampleImageUrl) {
+  if ((!mediaUrls || (Array.isArray(mediaUrls) && mediaUrls.length === 0)) && quote.sampleImageUrl) {
     mediaUrls = [quote.sampleImageUrl];
   }
 
@@ -186,8 +178,8 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
       <Card className={`overflow-hidden mb-3 shadow-md transition-shadow ${!isInteractive ? 'opacity-70' : ''}`}>
         <CardContent className="p-0">
           <div className={`p-2 ${isMobile ? 'space-y-2' : 'p-4'} border-b border-gray-100`}>
-            {/* אם אין תמונות כלל, פשוט מקום ריק/placeholder קטן, לא הודעה קולנית */}
-            {(!mediaUrls || mediaUrls.length === 0) && <NoMediaPlaceholder />}
+            {/* אין מדיה? מציגים פלייסהולדר */}
+            {(!mediaUrls || (Array.isArray(mediaUrls) && mediaUrls.length === 0) || (typeof mediaUrls === 'string' && mediaUrls.trim().length === 0)) && <NoMediaPlaceholder />}
             <ProfessionalInfo professional={quote.professional} />
             <QuoteDetails 
               price={quote.price || "0"} 
