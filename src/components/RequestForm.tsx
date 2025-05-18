@@ -185,22 +185,37 @@ const RequestForm: React.FC<RequestFormProps> = ({
           const { data, error } = await supabase.storage.from("requests-media").upload(fileName, file);
           if (error) {
             console.error("Upload error:", error);
+            toast({
+              title: "שגיאה בהעלאת קובץ",
+              description: "אירעה שגיאה בהעלאת קובץ: " + (error.message || file.name),
+              variant: "destructive"
+            });
           } else if (data && data.path) {
-            // Only destructure 'data'
             const { data: publicUrlData } = supabase.storage.from("requests-media").getPublicUrl(data.path);
             if (publicUrlData && publicUrlData.publicUrl) {
               uploadedMediaUrls.push(publicUrlData.publicUrl);
+              console.log("publicUrl saved to media_urls:", publicUrlData.publicUrl);
             } else {
-              console.warn("No publicUrl generated for file:", fileName, publicUrlData);
+              console.error("No publicUrl generated for file:", fileName, publicUrlData);
+              toast({
+                title: "בעיה בגישה לתמונה",
+                description: "התמונה הועלתה אך לא ניתן לגשת אליה. נסה שוב או פנה למנהל המערכת.",
+                variant: "destructive"
+              });
             }
           } else {
             console.warn("No data returned from upload", data);
+            toast({
+              title: "שגיאה כללית בהעלאת תמונה",
+              description: "אירעה שגיאה כללית בהעלאת קובץ: " + file.name,
+              variant: "destructive"
+            });
           }
         }
       }
 
-      // Log ALL URLs that we try to submit
-      console.log("Submitted media_urls:", uploadedMediaUrls);
+      // Log all URLs that we try to submit
+      console.log("Final array submitted to media_urls:", uploadedMediaUrls);
 
       const requestId = await createRequest({
         title: formData.profession,
