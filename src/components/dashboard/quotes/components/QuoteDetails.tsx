@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ErrorBoundary from '@/components/ui/error-boundary';
@@ -23,39 +24,47 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   const isMobile = useIsMobile();
   const [openMediaIdx, setOpenMediaIdx] = useState<number | null>(null);
 
-  // Debug: בדוק איזה mediaUrls התקבלו
+  // דיבוג: הצג את המדיה שמגיעה
   console.log("QuoteDetails > mediaUrls prop:", mediaUrls);
 
-  // נניח mediaUrls מתקבל כבר כמערך string[] בלבד 
+  // עיבוד חזק - הפוך את mediaUrls למערך תקין של URL-ים
   let media: string[] = [];
 
   if (Array.isArray(mediaUrls)) {
-    media = mediaUrls.filter(val => typeof val === 'string' && !!val && val !== "null");
+    media = mediaUrls
+      .map(val => typeof val === 'string' ? val.trim() : '')
+      .filter(val => !!val && val !== "null" && val !== "undefined");
   } else if (typeof mediaUrls === 'string' && mediaUrls.trim()) {
-    // תמיכה רטרואקטיבית - לא צפוי להגיע אחרי השינוי מ-QuoteCard
     try {
       const parsed = JSON.parse(mediaUrls.trim());
       if (Array.isArray(parsed)) {
-        media = parsed.filter(val => typeof val === "string" && !!val && val !== "null");
-      } else if (typeof parsed === "string" && !!parsed && parsed !== "null") {
+        media = parsed
+          .map(val => typeof val === 'string' ? val.trim() : '')
+          .filter(val => !!val && val !== "null" && val !== "undefined");
+      } else if (typeof parsed === "string" && !!parsed && parsed !== "null" && parsed !== "undefined") {
         media = [parsed];
       }
     } catch {
       if (mediaUrls.includes(',')) {
-        media = mediaUrls.split(',').map(s => s.trim()).filter(Boolean).filter(x => x !== "null");
-      } else if (
-        mediaUrls.startsWith('http') && mediaUrls.length > 8
-      ) {
+        media = mediaUrls.split(',')
+          .map(s => s.trim())
+          .filter(Boolean)
+          .filter(x => x !== "null" && x !== "undefined");
+      } else if (mediaUrls.startsWith('http') && mediaUrls.length > 8) {
         media = [mediaUrls];
       }
     }
-  } else if (sampleImageUrl) {
+  } else if (sampleImageUrl && typeof sampleImageUrl === 'string' && sampleImageUrl.startsWith('http')) {
     media = [sampleImageUrl];
   }
 
-  // סינון סופי
-  media = media.filter(Boolean).filter(x => x !== "null");
-  console.log("QuoteDetails > media after processing:", media);
+  // סינון סופי - רק URL מאדכן של קובץ מדיה (תמונה\וידאו)
+  media = media.filter(Boolean)
+    .filter(x => x !== "null" && x !== "undefined")
+    .filter(x => /\.(jpe?g|png|gif|webp|bmp|svg|mp4|webm|ogg|mov)$/i.test(x));
+
+  // הוספה: לוג מדוייק על הפלט הסופי
+  console.log("QuoteDetails > media after filtering:", media);
 
   const isImage = (url: string) =>
     /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(url);
