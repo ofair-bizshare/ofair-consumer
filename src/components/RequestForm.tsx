@@ -28,25 +28,30 @@ interface RequestFormProps {
 }
 const professions = ['שיפוצים', 'חשמל', 'אינסטלציה', 'נגרות', 'מיזוג אוויר', 'גינון', 'ניקיון', 'צביעה', 'הובלות', 'עבודות בניה', 'אלומיניום', 'איטום', 'אינסטלטור', 'דלתות', 'חלונות', 'מטבחים', 'ריצוף', 'שליכט', 'בנייה'];
 const cities = ['תל אביב', 'ירושלים', 'חיפה', 'ראשון לציון', 'פתח תקווה', 'אשדוד', 'נתניה', 'באר שבע', 'חולון', 'בני ברק', 'רמת גן', 'אשקלון', 'רחובות', 'בת ים', 'הרצליה', 'כפר סבא', 'מודיעין', 'לוד', 'רמלה', 'רעננה', 'הוד השרון', 'נצרת', 'קרית אתא', 'קרית גת', 'אילת', 'עכו', 'קרית מוצקין', 'רהט', 'נהריה', 'דימונה', 'טבריה', 'קרית ים', 'עפולה', 'יבנה', 'אום אל פחם', 'צפת', 'רמת השרון', 'טייבה', 'קרית שמונה', 'מגדל העמק', 'טמרה', 'סח\'נין', 'קרית ביאליק'];
+// Overwrite sanitizeFilename for even safer results and more detailed logging.
 const sanitizeFilename = (filename: string) => {
   // Split name and extension
   const dotIdx = filename.lastIndexOf(".");
   let base = dotIdx > -1 ? filename.substring(0, dotIdx) : filename;
   let ext = dotIdx > -1 ? filename.substring(dotIdx) : "";
 
-  // Replace spaces with underscores, remove anything that's not ascii letter, digit, -, or _
+  // Remove all non-ASCII alphanumeric, -, or _, translate Hebrew/Unicode to "_"
   base = base
-    .replace(/\s+/g, "_")
-    .replace(/[^\w\-]/g, "")
+    .normalize('NFD') // Decompose unicode for more consistency
+    .replace(/[\u0590-\u05FF]/g, "_") // Convert Hebrew utf-8 chars to "_"
+    .replace(/[\u0600-\u06FF]/g, "_") // Arabic (if ever needed)
+    .replace(/[^\w\-]/g, "_") // Non-word
     .replace(/_+/g, "_")
+    .replace(/^-+|-+$/g, "")
     .toLowerCase();
 
-  // If the extension is not strictly [a-z0-9], clean it up
-  ext = ext.replace(/[^\.\w]/g, "").toLowerCase();
-
-  // Prevent double dots, fallback to .png if none
+  // If the extension is not valid ascii, clean up or fallback.
+  ext = ext.replace(/[^.\w]/g, "").toLowerCase();
   if (!ext.startsWith(".")) ext = ".png";
   if (!/^\.\w+$/.test(ext)) ext = ".png";
+
+  // Avoid empty name
+  if (base.length < 2) base = "img";
 
   return base + ext;
 };
@@ -208,9 +213,13 @@ const RequestForm: React.FC<RequestFormProps> = ({
       let uploadedMediaUrls: string[] = [];
       if (images.length > 0) {
         for (const file of images) {
-          // Sanitize the filename to prevent invalid keys in storage
+          // --- LOGGING FOR DEBUG ---
+          console.log("Original filename:", file.name);
           const safeFileName = sanitizeFilename(file.name);
+          console.log("Sanitized filename:", safeFileName);
           const fileName = `${user.id}/${Date.now()}_${safeFileName}`;
+          console.log("Full upload file path:", fileName);
+
           const { data, error } = await supabase.storage.from("requests-media").upload(
             fileName,
             file,
@@ -247,7 +256,6 @@ const RequestForm: React.FC<RequestFormProps> = ({
         }
       }
 
-      // Log all URLs that we try to submit
       console.log("Final array submitted to media_urls:", uploadedMediaUrls);
 
       const requestId = await createRequest({
