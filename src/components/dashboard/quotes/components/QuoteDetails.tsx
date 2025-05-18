@@ -31,23 +31,25 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
     media = mediaUrls.filter((src) => !!src);
   } else if (typeof mediaUrls === 'string' && mediaUrls.trim() !== '') {
     try {
-      // ניסיָה כפולה: קודם JSON, אם נכשל עוברים לחלוקה פסיקים
       let parsed: unknown;
       try {
-        parsed = JSON.parse(mediaUrls);
+        parsed = JSON.parse(mediaUrls as string);
       } catch {
-        // לא JSON, מפרקים בפסיקים
-        parsed = (mediaUrls as string)
-          .split(',')
-          .map((s) => s.trim())
-          .filter(Boolean);
+        // if it's not JSON, try splitting by comma
+        if (typeof mediaUrls === 'string') {
+          parsed = mediaUrls
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
+        } else {
+          parsed = [];
+        }
       }
       if (Array.isArray(parsed)) {
-        // filter to only non-empty, non-null strings
         media = parsed.filter((item): item is string => typeof item === 'string' && !!item);
       }
     } catch (err) {
-      // לא הצלחנו לפרש, ננסה להתייחס לזה ככתובת אחת
+      // fallback: if parse fails, check if it's a regular url string
       if (typeof mediaUrls === 'string' && mediaUrls.startsWith('http')) {
         media = [mediaUrls];
       }
