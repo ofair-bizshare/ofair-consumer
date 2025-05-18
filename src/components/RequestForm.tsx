@@ -28,6 +28,28 @@ interface RequestFormProps {
 }
 const professions = ['שיפוצים', 'חשמל', 'אינסטלציה', 'נגרות', 'מיזוג אוויר', 'גינון', 'ניקיון', 'צביעה', 'הובלות', 'עבודות בניה', 'אלומיניום', 'איטום', 'אינסטלטור', 'דלתות', 'חלונות', 'מטבחים', 'ריצוף', 'שליכט', 'בנייה'];
 const cities = ['תל אביב', 'ירושלים', 'חיפה', 'ראשון לציון', 'פתח תקווה', 'אשדוד', 'נתניה', 'באר שבע', 'חולון', 'בני ברק', 'רמת גן', 'אשקלון', 'רחובות', 'בת ים', 'הרצליה', 'כפר סבא', 'מודיעין', 'לוד', 'רמלה', 'רעננה', 'הוד השרון', 'נצרת', 'קרית אתא', 'קרית גת', 'אילת', 'עכו', 'קרית מוצקין', 'רהט', 'נהריה', 'דימונה', 'טבריה', 'קרית ים', 'עפולה', 'יבנה', 'אום אל פחם', 'צפת', 'רמת השרון', 'טייבה', 'קרית שמונה', 'מגדל העמק', 'טמרה', 'סח\'נין', 'קרית ביאליק'];
+const sanitizeFilename = (filename: string) => {
+  // Split name and extension
+  const dotIdx = filename.lastIndexOf(".");
+  let base = dotIdx > -1 ? filename.substring(0, dotIdx) : filename;
+  let ext = dotIdx > -1 ? filename.substring(dotIdx) : "";
+
+  // Replace spaces with underscores, remove anything that's not ascii letter, digit, -, or _
+  base = base
+    .replace(/\s+/g, "_")
+    .replace(/[^\w\-]/g, "")
+    .replace(/_+/g, "_")
+    .toLowerCase();
+
+  // If the extension is not strictly [a-z0-9], clean it up
+  ext = ext.replace(/[^\.\w]/g, "").toLowerCase();
+
+  // Prevent double dots, fallback to .png if none
+  if (!ext.startsWith(".")) ext = ".png";
+  if (!/^\.\w+$/.test(ext)) ext = ".png";
+
+  return base + ext;
+};
 const RequestForm: React.FC<RequestFormProps> = ({
   onSuccess
 }) => {
@@ -186,8 +208,9 @@ const RequestForm: React.FC<RequestFormProps> = ({
       let uploadedMediaUrls: string[] = [];
       if (images.length > 0) {
         for (const file of images) {
-          // Use encodeURIComponent for safety
-          const fileName = `${user.id}/${Date.now()}_${encodeURIComponent(file.name)}`;
+          // Sanitize the filename to prevent invalid keys in storage
+          const safeFileName = sanitizeFilename(file.name);
+          const fileName = `${user.id}/${Date.now()}_${safeFileName}`;
           const { data, error } = await supabase.storage.from("requests-media").upload(
             fileName,
             file,
@@ -209,7 +232,7 @@ const RequestForm: React.FC<RequestFormProps> = ({
               console.error("No publicUrl generated for file:", fileName, publicUrlData);
               toast({
                 title: "בעיה בגישה לתמונה",
-                description: "ה��מונה הועלתה אך לא ניתן לגשת אליה. נסה שוב או פנה למנהל המערכת.",
+                description: "התמונה הועלתה אך לא ניתן לגשת אליה. נסה שוב או פנה למנהל המערכת.",
                 variant: "destructive"
               });
             }
