@@ -23,6 +23,25 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   const isMobile = useIsMobile();
   const [openMediaIdx, setOpenMediaIdx] = useState<number | null>(null);
 
+  // --- Media decoding patch (handles array & string) ---
+  let media: string[] = [];
+  if (Array.isArray(mediaUrls) && mediaUrls.length > 0) {
+    media = mediaUrls.filter(src => !!src);
+  } else if (typeof mediaUrls === 'string') {
+    try {
+      const parsed = JSON.parse(mediaUrls);
+      if (Array.isArray(parsed)) {
+        media = parsed.filter(Boolean);
+      }
+    } catch {
+      //
+    }
+  } else if (sampleImageUrl) {
+    media = [sampleImageUrl];
+  }
+
+  // --- End of patch ---
+
   // Filter function to detect image/video types
   const isImage = (url: string) =>
     /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(url);
@@ -30,48 +49,15 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   const isVideo = (url: string) =>
     /\.(mp4|webm|ogg|mov)$/i.test(url);
 
-  // Compose the media array: if mediaUrls exists & has content, use it, else fallback for legacy
-  const media: string[] = Array.isArray(mediaUrls) && mediaUrls.length > 0
-    ? mediaUrls.filter(src => !!src)
-    : (sampleImageUrl ? [sampleImageUrl] : []);
-
-  console.log("QuoteDetails mediaUrls prop:", mediaUrls);
-  console.log("QuoteDetails media array used:", media);
-
   // Format price
   const formattedPrice = price && price !== "0" && price !== "" ? price : "0";
 
   return (
     <ErrorBoundary fallback={<div className="p-2 bg-red-50 rounded text-sm">שגיאה בטעינת פרטי ההצעה</div>}>
       <div className="mt-2 space-y-2">
-
-        {/* התראה ויזואלית אם אין כלל media */}
-        {(media.length === 0) && (
-          <div className="bg-yellow-100 text-yellow-800 px-3 py-2 mb-2 rounded text-sm font-semibold">
-            אין קבצי מדיה להצגה (mediaUrls ריק/לא תקין)
-          </div>
-        )}
-
-        <div className={`flex ${isMobile ? 'flex-col gap-1' : 'flex-row gap-6 space-x-reverse'}`}>
-          <div className="flex items-center">
-            <span className="font-semibold ml-2 text-sm">מחיר:</span>
-            <span className="text-blue-600 font-medium text-sm">₪{formattedPrice}</span>
-          </div>
-          {estimatedTime && (
-            <div className="flex items-center">
-              <span className="font-semibold ml-2 text-sm">זמן משוער:</span>
-              <span className="text-sm">{estimatedTime}</span>
-            </div>
-          )}
-        </div>
-        {description && (
-          <div className="mt-1">
-            <p className="line-clamp-3 text-lg font-semibold text-inherit">{description}</p>
-          </div>
-        )}
-
+        {/* במקום הודעה בולטת: אם אין כלל מדיה, פשוט כלום */}
         {/* Media Gallery: כל התמונות/וידאו */}
-        {media.length > 0 && (
+        {media.length > 0 ? (
           <div className="mt-2 flex flex-wrap gap-3 items-center">
             {media.map((src, i) => (
               <div key={src + i} className="relative inline-block group">
@@ -108,7 +94,6 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
                 </Button>
               </div>
             ))}
-
             {/* Dialog for viewing current media in large */}
             {openMediaIdx !== null && (
               <Dialog open={openMediaIdx !== null} onOpenChange={() => setOpenMediaIdx(null)}>
@@ -149,6 +134,23 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
                 </DialogContent>
               </Dialog>
             )}
+          </div>
+        ) : null}
+        <div className={`flex ${isMobile ? 'flex-col gap-1' : 'flex-row gap-6 space-x-reverse'}`}>
+          <div className="flex items-center">
+            <span className="font-semibold ml-2 text-sm">מחיר:</span>
+            <span className="text-blue-600 font-medium text-sm">₪{formattedPrice}</span>
+          </div>
+          {estimatedTime && (
+            <div className="flex items-center">
+              <span className="font-semibold ml-2 text-sm">זמן משוער:</span>
+              <span className="text-sm">{estimatedTime}</span>
+            </div>
+          )}
+        </div>
+        {description && (
+          <div className="mt-1">
+            <p className="line-clamp-3 text-lg font-semibold text-inherit">{description}</p>
           </div>
         )}
       </div>

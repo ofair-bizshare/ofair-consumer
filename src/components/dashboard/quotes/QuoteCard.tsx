@@ -12,6 +12,14 @@ import { checkIfAcceptedQuoteExists } from '@/services/quotes/acceptedQuotes';
 import WhatsAppButton from './components/WhatsAppButton';
 import { saveReferral } from '@/services/quotes';
 
+// Placeholder icon/image if no media
+const NoMediaPlaceholder = () => (
+  <div className="flex flex-col items-center justify-center w-full py-3 text-gray-400">
+    <span className="material-icons text-5xl mb-2" aria-hidden="true">image_off</span>
+    <span className="text-xs">אין מדיה זמינה לתצוגה</span>
+  </div>
+);
+
 interface QuoteCardProps {
   quote: QuoteInterface;
   onAcceptQuote: (quoteId: string) => void;
@@ -109,15 +117,24 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   // Show action buttons based on status combinations
   const showActionButtons = requestStatus !== 'completed';
 
-  // הכנה מודרנית של mediaUrls: נוודא שתמיד עובר מערך, גם אם לא קיים או חסר
-  const mediaUrls: string[] =
-    Array.isArray(quote.media_urls) && quote.media_urls.length > 0
-      ? quote.media_urls
-      : (quote.sampleImageUrl ? [quote.sampleImageUrl] : []);
-
-  // debug - print the media_urls for each quote
-  console.log(`QuoteCard [${quote.id}] media_urls:`, quote.media_urls);
-  console.log(`QuoteCard [${quote.id}] prepared mediaUrls:`, mediaUrls);
+  // הגדרה עמידה לכל מבנה אפשרי של media_urls
+  let mediaUrls: string[] = [];
+  if (Array.isArray(quote.media_urls) && quote.media_urls.length > 0) {
+    mediaUrls = quote.media_urls as string[];
+  } else if (typeof quote.media_urls === 'string') {
+    // אם בטעות התקבל JSON string, ננסה להמיר למערך
+    try {
+      const parsed = JSON.parse(quote.media_urls);
+      if (Array.isArray(parsed)) {
+        mediaUrls = parsed.filter(Boolean) as string[];
+      }
+    } catch (e) {
+      // ignore, will fallback
+    }
+  }
+  if ((!mediaUrls || mediaUrls.length === 0) && quote.sampleImageUrl) {
+    mediaUrls = [quote.sampleImageUrl];
+  }
 
   // --- WHATSAPP LOGIC START ---
   const handleWhatsAppReveal = async () => {
@@ -169,14 +186,9 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
       <Card className={`overflow-hidden mb-3 shadow-md transition-shadow ${!isInteractive ? 'opacity-70' : ''}`}>
         <CardContent className="p-0">
           <div className={`p-2 ${isMobile ? 'space-y-2' : 'p-4'} border-b border-gray-100`}>
-            {/* הודעת אזהרה אם אין תמונות כלל */}
-            {(!mediaUrls || mediaUrls.length === 0) && (
-              <div className="bg-yellow-100 text-yellow-800 px-3 py-2 mb-2 rounded text-sm font-semibold">
-                אין תמונות/וידאו להצעה זו (media_urls ריק)
-              </div>
-            )}
+            {/* אם אין תמונות כלל, פשוט מקום ריק/placeholder קטן, לא הודעה קולנית */}
+            {(!mediaUrls || mediaUrls.length === 0) && <NoMediaPlaceholder />}
             <ProfessionalInfo professional={quote.professional} />
-            
             <QuoteDetails 
               price={quote.price || "0"} 
               estimatedTime={quote.estimatedTime || ""}
