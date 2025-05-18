@@ -124,8 +124,8 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   if (Array.isArray(quote.media_urls) && quote.media_urls.length > 0) {
     mediaUrls = quote.media_urls.filter(url => typeof url === "string" && !!url && url !== "null");
   } else if (typeof quote.media_urls === 'string') {
-    // Only attempt to trim if it's actually a string
-    const clean = typeof quote.media_urls === "string" ? quote.media_urls.trim() : "";
+    // Explicit and safe: only trim if definitely a string
+    const clean = typeof quote.media_urls === "string" ? (quote.media_urls as string).trim() : "";
     try {
       const parsed = JSON.parse(clean);
       if (Array.isArray(parsed)) {
