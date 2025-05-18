@@ -192,7 +192,7 @@ const RequestForm: React.FC<RequestFormProps> = ({
             console.error("Supabase upload error:", error);
             toast({
               title: "שגיאה בהעלאת קובץ",
-              description: `(${error.status || ""}) ${error.message || file.name}`,
+              description: error.message || file.name,
               variant: "destructive"
             });
           } else if (data && data.path) {
