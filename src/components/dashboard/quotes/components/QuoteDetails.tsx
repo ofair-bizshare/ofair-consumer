@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ErrorBoundary from '@/components/ui/error-boundary';
@@ -36,12 +35,23 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
     ? mediaUrls.filter(src => !!src)
     : (sampleImageUrl ? [sampleImageUrl] : []);
 
+  console.log("QuoteDetails mediaUrls prop:", mediaUrls);
+  console.log("QuoteDetails media array used:", media);
+
   // Format price
   const formattedPrice = price && price !== "0" && price !== "" ? price : "0";
 
   return (
     <ErrorBoundary fallback={<div className="p-2 bg-red-50 rounded text-sm">שגיאה בטעינת פרטי ההצעה</div>}>
       <div className="mt-2 space-y-2">
+
+        {/* התראה ויזואלית אם אין כלל media */}
+        {(media.length === 0) && (
+          <div className="bg-yellow-100 text-yellow-800 px-3 py-2 mb-2 rounded text-sm font-semibold">
+            אין קבצי מדיה להצגה (mediaUrls ריק/לא תקין)
+          </div>
+        )}
+
         <div className={`flex ${isMobile ? 'flex-col gap-1' : 'flex-row gap-6 space-x-reverse'}`}>
           <div className="flex items-center">
             <span className="font-semibold ml-2 text-sm">מחיר:</span>
@@ -60,7 +70,7 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
           </div>
         )}
 
-        {/* Media Gallery: all images/videos */}
+        {/* Media Gallery: כל התמונות/וידאו */}
         {media.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-3 items-center">
             {media.map((src, i) => (

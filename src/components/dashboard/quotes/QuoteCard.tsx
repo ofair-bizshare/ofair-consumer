@@ -115,6 +115,10 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
       ? quote.media_urls
       : (quote.sampleImageUrl ? [quote.sampleImageUrl] : []);
 
+  // debug - print the media_urls for each quote
+  console.log(`QuoteCard [${quote.id}] media_urls:`, quote.media_urls);
+  console.log(`QuoteCard [${quote.id}] prepared mediaUrls:`, mediaUrls);
+
   // --- WHATSAPP LOGIC START ---
   const handleWhatsAppReveal = async () => {
     // Log the WhatsApp reveal the same way as phone reveals with saveReferral
@@ -165,6 +169,12 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
       <Card className={`overflow-hidden mb-3 shadow-md transition-shadow ${!isInteractive ? 'opacity-70' : ''}`}>
         <CardContent className="p-0">
           <div className={`p-2 ${isMobile ? 'space-y-2' : 'p-4'} border-b border-gray-100`}>
+            {/* הודעת אזהרה אם אין תמונות כלל */}
+            {(!mediaUrls || mediaUrls.length === 0) && (
+              <div className="bg-yellow-100 text-yellow-800 px-3 py-2 mb-2 rounded text-sm font-semibold">
+                אין תמונות/וידאו להצעה זו (media_urls ריק)
+              </div>
+            )}
             <ProfessionalInfo professional={quote.professional} />
             
             <QuoteDetails 
