@@ -185,14 +185,24 @@ const RequestForm: React.FC<RequestFormProps> = ({
           const { data, error } = await supabase.storage.from("requests-media").upload(fileName, file);
           if (error) {
             console.error("Upload error:", error);
-          } else if (data) {
-            const { data: { publicUrl } } = supabase.storage.from("requests-media").getPublicUrl(data.path);
-            if (publicUrl) {
-              uploadedMediaUrls.push(publicUrl);
+          } else if (data && data.path) {
+            const { data: publicUrlData, error: publicUrlError } = supabase.storage.from("requests-media").getPublicUrl(data.path);
+            if (publicUrlError) {
+              console.error("Error getting public URL:", publicUrlError);
             }
+            if (publicUrlData && publicUrlData.publicUrl) {
+              uploadedMediaUrls.push(publicUrlData.publicUrl);
+            } else {
+              console.warn("No publicUrl generated for file:", fileName, publicUrlData);
+            }
+          } else {
+            console.warn("No data returned from upload", data);
           }
         }
       }
+
+      // Log ALL URLs that we try to submit
+      console.log("Submitted media_urls:", uploadedMediaUrls);
 
       const requestId = await createRequest({
         title: formData.profession,
