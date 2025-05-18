@@ -181,13 +181,18 @@ const RequestForm: React.FC<RequestFormProps> = ({
       let uploadedMediaUrls: string[] = [];
       if (images.length > 0) {
         for (const file of images) {
-          const fileName = `${user.id}/${Date.now()}_${file.name}`;
-          const { data, error } = await supabase.storage.from("requests-media").upload(fileName, file);
+          // Use encodeURIComponent for safety
+          const fileName = `${user.id}/${Date.now()}_${encodeURIComponent(file.name)}`;
+          const { data, error } = await supabase.storage.from("requests-media").upload(
+            fileName,
+            file,
+            { cacheControl: '3600', upsert: false }
+          );
           if (error) {
-            console.error("Upload error:", error);
+            console.error("Supabase upload error:", error);
             toast({
               title: "שגיאה בהעלאת קובץ",
-              description: "אירעה שגיאה בהעלאת קובץ: " + (error.message || file.name),
+              description: `(${error.statusCode || ""}) ${error.message || file.name}`,
               variant: "destructive"
             });
           } else if (data && data.path) {
@@ -199,7 +204,7 @@ const RequestForm: React.FC<RequestFormProps> = ({
               console.error("No publicUrl generated for file:", fileName, publicUrlData);
               toast({
                 title: "בעיה בגישה לתמונה",
-                description: "התמונה הועלתה אך לא ניתן לגשת אליה. נסה שוב או פנה למנהל המערכת.",
+                description: "ה��מונה הועלתה אך לא ניתן לגשת אליה. נסה שוב או פנה למנהל המערכת.",
                 variant: "destructive"
               });
             }
@@ -303,7 +308,7 @@ const RequestForm: React.FC<RequestFormProps> = ({
     if (!registerData.agreeTerms) {
       toast({
         title: "תנאי שימוש",
-        description: "עליך לאשר את תנאי השימוש כדי להמשיך",
+        description: "עליך לאשר את תנאי השי��וש כדי להמשיך",
         variant: "destructive"
       });
       return;
