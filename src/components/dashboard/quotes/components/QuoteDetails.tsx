@@ -24,21 +24,24 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   const isMobile = useIsMobile();
   const [openMediaIdx, setOpenMediaIdx] = useState<number | null>(null);
 
-  // --- Media decoding patch (handles array & string, advanced) ---
+  // Media decoding patch (safe, robust for all types)
   let media: string[] = [];
 
   if (Array.isArray(mediaUrls) && mediaUrls.length > 0) {
+    // mediaUrls from API is string[]
     media = mediaUrls.filter((src) => !!src);
   } else if (
     typeof mediaUrls === 'string' &&
+    mediaUrls &&
+    typeof (mediaUrls as string).trim === 'function' &&
     (mediaUrls as string).trim() !== ''
   ) {
     try {
-      let parsed: unknown;
+      let parsed: unknown = null;
       try {
         parsed = JSON.parse(mediaUrls as string);
       } catch {
-        // If it's not JSON, try splitting by comma
+        // Try splitting by comma only if still a string
         if (typeof mediaUrls === 'string') {
           parsed = (mediaUrls as string)
             .split(',')
@@ -54,9 +57,10 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
         );
       }
     } catch (err) {
-      // fallback: if parse fails, check if it's a regular url string
+      // Fallback: check regular URL
       if (
         typeof mediaUrls === 'string' &&
+        typeof (mediaUrls as string).startsWith === 'function' &&
         (mediaUrls as string).startsWith('http')
       ) {
         media = [mediaUrls as string];
@@ -66,7 +70,6 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
     media = [sampleImageUrl];
   }
 
-  // Filter function to detect image/video types
   const isImage = (url: string) =>
     /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(url);
 
