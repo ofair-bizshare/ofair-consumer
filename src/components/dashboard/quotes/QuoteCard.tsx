@@ -120,46 +120,57 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   // הגדרה חזקה: המטרה היא לקבל תמיד מערך string[] או ערך ריק
   let mediaUrls: string[] = [];
 
+  // הוספת לוג רואו מרגע קריאת הצעה:
+  console.log("QuoteCard: quote.media_urls (raw):", quote.media_urls);
+
   try {
     const mediaValue = quote.media_urls as string[] | string | null | undefined;
-    // If array: filter only non-empty, non-null strings
+    // DEBUG: לוג על סוג ומהות הנתון
+    console.log("QuoteCard: typeof mediaValue:", typeof mediaValue, "value:", mediaValue);
     if (Array.isArray(mediaValue)) {
       mediaUrls = mediaValue.filter(
-        (url) => typeof url === "string" && url.trim() && url !== "null"
+        (url) => typeof url === "string" && url.trim() && url !== "null" && url !== "undefined"
       );
-    }
-    // Else: if string with content - try JSON, comma, http, etc
-    else if (typeof mediaValue === "string" && mediaValue.trim() !== "") {
+    } else if (typeof mediaValue === "string" && mediaValue.trim() !== "") {
       const clean = mediaValue.trim();
       let parsed: unknown = null;
       try {
         parsed = JSON.parse(clean);
         if (Array.isArray(parsed)) {
           mediaUrls = parsed.filter(
-            (url) => typeof url === "string" && url.trim() && url !== "null"
+            (url) => typeof url === "string" && url.trim() && url !== "null" && url !== "undefined"
           );
-        } else if (typeof parsed === "string" && parsed.trim() && parsed !== "null") {
+        } else if (typeof parsed === "string" && parsed.trim() && parsed !== "null" && parsed !== "undefined") {
           mediaUrls = [parsed];
         }
       } catch {
+        // Fallback: פסיק או כתובת ישירה
         if (clean.includes(",")) {
           mediaUrls = clean
             .split(",")
             .map((s) => s.trim())
             .filter(Boolean)
-            .filter((x) => x !== "null");
+            .filter((x) => x !== "null" && x !== "undefined");
         } else if (clean.startsWith("http") && clean.length > 8) {
           mediaUrls = [clean];
         }
       }
     }
+    // Fallback: sampleImageUrl
     if ((!mediaUrls || mediaUrls.length === 0) && quote.sampleImageUrl && typeof quote.sampleImageUrl === "string" && quote.sampleImageUrl.startsWith("http")) {
       mediaUrls = [quote.sampleImageUrl];
     }
-    // Final robust filtering
+    // DEBUG: אחרי עיבוד ראשוני
+    console.log("QuoteCard: mediaUrls after normalization:", mediaUrls);
+    // תיקון סופי: להוציא null/undefined ורק סיומות "אמיתיות" של תמונה/וידאו
     mediaUrls = Array.isArray(mediaUrls)
-      ? mediaUrls.filter((x) => x && typeof x === "string" && x !== "null")
+      ? mediaUrls
+          .filter((x) => x && typeof x === "string" && x !== "null" && x !== "undefined")
+          .filter((x) =>
+            /\.(jpe?g|png|gif|webp|bmp|svg|mp4|webm|ogg|mov)$/i.test(x)
+          )
       : [];
+    console.log("QuoteCard: valid mediaUrls to send to QuoteDetails:", mediaUrls);
   } catch (err) {
     console.warn("שגיאה בעיבוד quote.media_urls:", { value: quote.media_urls, error: err });
     mediaUrls = [];
