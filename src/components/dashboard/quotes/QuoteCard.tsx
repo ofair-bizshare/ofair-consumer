@@ -117,46 +117,46 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   // Show action buttons based on status combinations
   const showActionButtons = requestStatus !== 'completed';
 
-  // עיבוד מדיה - איחוד כל השלבים, סינון רך בלבד, בלי placeholder
+  // עיבוד מדיה - וריאציה חדשה (לוגיקה פשוטה ללא placeholder וללא אגרסיביות על סיומות)
   let mediaUrls: string[] = [];
 
+  // קבלת ערך גולמי (יכול להיות array/JSON-string/מחרוזת בודדת/null)
   try {
-    // לוג raw:
-    console.log("QuoteCard: raw quote.media_urls =", quote.media_urls, "typeof:", typeof quote.media_urls);
-
     const mediaValue = quote.media_urls as string[] | string | null | undefined;
     if (Array.isArray(mediaValue)) {
-      // תקף במיוחד ל־supabase array
       mediaUrls = mediaValue.filter(
         (url) => typeof url === "string" && url.trim().startsWith("http")
       );
     } else if (typeof mediaValue === "string" && mediaValue.trim() !== "") {
       const clean = mediaValue.trim();
       if (clean.startsWith("[")) {
-        // מהסוג: '["http1", "http2"]'
         try {
           const parsed = JSON.parse(clean);
           if (Array.isArray(parsed)) {
-            mediaUrls = parsed
-              .filter((url) => typeof url === "string" && url.trim().startsWith("http"));
+            mediaUrls = parsed.filter(
+              (url) => typeof url === "string" && url.trim().startsWith("http")
+            );
           }
-        } catch (e) {
-          console.log("QuoteCard: JSON parse error for media_urls string", e);
+        } catch {
+          // אם לא JSON חוקי, ממשיכים הלאה
         }
       } else if (clean.includes(",")) {
-        // מהסוג: 'http1, http2'
-        mediaUrls = clean.split(",").map(s => s.trim()).filter(s => s.startsWith("http"));
+        mediaUrls = clean
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s.startsWith("http"));
       } else if (clean.startsWith("http") && clean.length > 8) {
         mediaUrls = [clean];
       }
     }
+    // Fallback: sampleImageUrl
     if ((!mediaUrls || mediaUrls.length === 0) && quote.sampleImageUrl && typeof quote.sampleImageUrl === "string" && quote.sampleImageUrl.startsWith("http")) {
       mediaUrls = [quote.sampleImageUrl];
     }
-    // לוג לבדוק מה נשלח הלאה בפועל:
-    console.log("QuoteCard: mediaUrls normalized =", mediaUrls, Array.isArray(mediaUrls), mediaUrls.length);
+    // לוג זיהוי
+    console.log("QuoteCard: mediaUrls to send to QuoteDetails:", mediaUrls);
   } catch (err) {
-    console.warn("QuoteCard: media handling error:", err, { value: quote.media_urls });
+    console.warn("שגיאה בעיבוד quote.media_urls:", { value: quote.media_urls, error: err });
     mediaUrls = [];
   }
 
@@ -210,17 +210,15 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
       <Card className={`overflow-hidden mb-3 shadow-md transition-shadow ${!isInteractive ? 'opacity-70' : ''}`}>
         <CardContent className="p-0">
           <div className={`p-2 ${isMobile ? 'space-y-2' : 'p-4'} border-b border-gray-100`}>
-            {/* יציג רק אם יש תמונות אמיתיות */}
-            {mediaUrls && mediaUrls.length > 0 && (
-              <QuoteDetails 
-                price={quote.price || "0"} 
-                estimatedTime={quote.estimatedTime || ""}
-                mediaUrls={mediaUrls}
-                sampleImageUrl={quote.sampleImageUrl}
-                description={quote.description || ""}
-              />
-            )}
+            {/* רק אם mediaUrls לא ריק, תציג גלריה */}
             <ProfessionalInfo professional={quote.professional} />
+            <QuoteDetails 
+              price={quote.price || "0"} 
+              estimatedTime={quote.estimatedTime || ""}
+              mediaUrls={mediaUrls}
+              sampleImageUrl={quote.sampleImageUrl}
+              description={quote.description || ""}
+            />
             
             {isAcceptedQuote && (
               <>
@@ -229,6 +227,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
                   isWaitingForRating={isWaitingForRating}
                   onRatingClick={handleQuoteRatingClick}
                 />
+                {/* WhatsApp Button only for accepted quotes and if phone number present */}
                 <div className="mt-2">
                   <WhatsAppButton 
                     phoneNumber={quote.professional.phoneNumber || quote.professional.phone || ""}
@@ -247,7 +246,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
                 professionalName={quote.professional.name || "בעל מקצוע"}
                 professionalId={quote.professional.id}
                 profession={quote.professional.profession || ""}
-                autoReveal={isAcceptedQuote}
+                autoReveal={isAcceptedQuote} // Auto reveal for accepted quotes
               />
             </div>
           </div>
