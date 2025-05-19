@@ -24,17 +24,17 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   const isMobile = useIsMobile();
   const [openMediaIdx, setOpenMediaIdx] = useState<number | null>(null);
 
-  // דיבוג: הצג את המדיה שמגיעה
-  console.log("QuoteDetails > mediaUrls prop:", mediaUrls);
+  // לוג מידע על מה שהתקבל
+  console.log("QuoteDetails > mediaUrls received:", mediaUrls);
 
-  // עיבוד חזק - הפוך את mediaUrls למערך תקין של URL-ים
+  // נניח תמיד שמתקבל array (רגיל או ריק)
   let media: string[] = [];
-
   if (Array.isArray(mediaUrls)) {
     media = mediaUrls
       .map(val => typeof val === 'string' ? val.trim() : '')
       .filter(val => !!val && val !== "null" && val !== "undefined");
   } else if (typeof mediaUrls === 'string' && mediaUrls.trim()) {
+    // *למקרה שעדיין - legacy support*
     try {
       const parsed = JSON.parse(mediaUrls.trim());
       if (Array.isArray(parsed)) {
@@ -57,14 +57,9 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   } else if (sampleImageUrl && typeof sampleImageUrl === 'string' && sampleImageUrl.startsWith('http')) {
     media = [sampleImageUrl];
   }
+  // לא עוד סינון-סיומת – הקוד בקומפוננטת האב כבר עשה את זה
 
-  // סינון סופי - רק URL מאדכן של קובץ מדיה (תמונה\וידאו)
-  media = media.filter(Boolean)
-    .filter(x => x !== "null" && x !== "undefined")
-    .filter(x => /\.(jpe?g|png|gif|webp|bmp|svg|mp4|webm|ogg|mov)$/i.test(x));
-
-  // הוספה: לוג מדוייק על הפלט הסופי
-  console.log("QuoteDetails > media after filtering:", media);
+  console.log("QuoteDetails > media final (post filtering):", media);
 
   const isImage = (url: string) =>
     /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(url);
@@ -105,7 +100,17 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
                     <Video className="w-7 h-7 text-blue-600" />
                     <span className="sr-only">צפייה בוידאו</span>
                   </div>
-                ) : null}
+                ) : (
+                  // תמיכה בקישור לא ידוע (כל עוד יש), הצג קישור
+                  <a
+                    href={src}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-gray-200 text-gray-700 px-3 py-1.5 rounded text-xs block max-w-[120px] truncate underline mt-2 border border-gray-200 shadow"
+                    title={src}>
+                    מדיה לא מזוהה, הצג קישור
+                  </a>
+                )}
                 <Button
                   type="button"
                   size="icon"
@@ -126,8 +131,10 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
                       <div className="flex items-center gap-2 text-lg">
                         {isImage(media[openMediaIdx]) ? (
                           <Image className="w-6 h-6 text-blue-500" />
-                        ) : (
+                        ) : isVideo(media[openMediaIdx]) ? (
                           <Video className="w-6 h-6 text-blue-500" />
+                        ) : (
+                          <Image className="w-6 h-6 text-blue-500" />
                         )}
                         תצוגה במדיה בגודל מלא
                       </div>
@@ -149,7 +156,16 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
                         <source src={media[openMediaIdx]} />
                         הדפדפן שלך אינו תומך בניגון וידאו.
                       </video>
-                    ) : null}
+                    ) : (
+                      <a
+                        href={media[openMediaIdx]}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-gray-200 text-gray-700 px-3 py-1.5 rounded text-xs block"
+                        title={media[openMediaIdx]}>
+                        מדיה לא מזוהה, הצג קישור
+                      </a>
+                    )}
                   </div>
                   <DialogClose asChild>
                     <Button variant="outline" className="mt-2">סגור</Button>

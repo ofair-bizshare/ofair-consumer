@@ -120,31 +120,33 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   // הגדרה חזקה: המטרה היא לקבל תמיד מערך string[] או ערך ריק
   let mediaUrls: string[] = [];
 
-  // הוספת לוג רואו מרגע קריאת הצעה:
+  // לוג של ערך הגלם
   console.log("QuoteCard: quote.media_urls (raw):", quote.media_urls);
 
   try {
     const mediaValue = quote.media_urls as string[] | string | null | undefined;
-    // DEBUG: לוג על סוג ומהות הנתון
     console.log("QuoteCard: typeof mediaValue:", typeof mediaValue, "value:", mediaValue);
+
     if (Array.isArray(mediaValue)) {
       mediaUrls = mediaValue.filter(
         (url) => typeof url === "string" && url.trim() && url !== "null" && url !== "undefined"
       );
     } else if (typeof mediaValue === "string" && mediaValue.trim() !== "") {
       const clean = mediaValue.trim();
-      let parsed: unknown = null;
-      try {
-        parsed = JSON.parse(clean);
-        if (Array.isArray(parsed)) {
-          mediaUrls = parsed.filter(
-            (url) => typeof url === "string" && url.trim() && url !== "null" && url !== "undefined"
-          );
-        } else if (typeof parsed === "string" && parsed.trim() && parsed !== "null" && parsed !== "undefined") {
-          mediaUrls = [parsed];
+      if (clean.startsWith("[")) {
+        try {
+          const parsed = JSON.parse(clean);
+          if (Array.isArray(parsed)) {
+            mediaUrls = parsed.filter(
+              (url) => typeof url === "string" && url.trim() && url !== "null" && url !== "undefined"
+            );
+          }
+        } catch (e) {
+          console.warn("QuoteCard: JSON.parse failed for media_urls stringified array", e);
+          // fallback, don't set mediaUrls
         }
-      } catch {
-        // Fallback: פסיק או כתובת ישירה
+      } else {
+        // Try classic fallback
         if (clean.includes(",")) {
           mediaUrls = clean
             .split(",")
@@ -160,16 +162,27 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     if ((!mediaUrls || mediaUrls.length === 0) && quote.sampleImageUrl && typeof quote.sampleImageUrl === "string" && quote.sampleImageUrl.startsWith("http")) {
       mediaUrls = [quote.sampleImageUrl];
     }
-    // DEBUG: אחרי עיבוד ראשוני
+
+    // אחרי עיבוד ראשוני
     console.log("QuoteCard: mediaUrls after normalization:", mediaUrls);
-    // תיקון סופי: להוציא null/undefined ורק סיומות "אמיתיות" של תמונה/וידאו
-    mediaUrls = Array.isArray(mediaUrls)
+
+    // תיקון סופי:
+    // נשמור את הרשימה המקורית, כדי שאם ניפוי הסיומות יחזיר כלום, בכל זאת נעביר את המקוריות
+    const filteredByExt = Array.isArray(mediaUrls)
       ? mediaUrls
           .filter((x) => x && typeof x === "string" && x !== "null" && x !== "undefined")
           .filter((x) =>
             /\.(jpe?g|png|gif|webp|bmp|svg|mp4|webm|ogg|mov)$/i.test(x)
           )
       : [];
+
+    // במידה ואין אף כתובת עם סיומת מתאימה, ואם בכל זאת יש קישורים במערך המקורי, ננסה להציג אותם
+    if (filteredByExt.length === 0 && mediaUrls.length > 0) {
+      console.log("QuoteCard: No 'valid' extensions, but mediaUrls exist, passing original array:", mediaUrls);
+      // לא מסננים תוספתית
+    } else {
+      mediaUrls = filteredByExt;
+    }
     console.log("QuoteCard: valid mediaUrls to send to QuoteDetails:", mediaUrls);
   } catch (err) {
     console.warn("שגיאה בעיבוד quote.media_urls:", { value: quote.media_urls, error: err });
