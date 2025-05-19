@@ -46,6 +46,13 @@ export const useQuoteActions = ({
     closePaymentDialog,
   } = useQuoteDialogState();
 
+  // ניווט/הצגה של פופ אפ דירוג (אם relevant)
+  const handleShowRating = (quoteId: string) => {
+    setTimeout(() => {
+      window.location.hash = '#rating-section';
+    }, 250);
+  };
+
   const { processQuoteAcceptance } = useQuoteAccept({
     quotes,
     setQuotes,
@@ -53,15 +60,7 @@ export const useQuoteActions = ({
     refreshQuotes,
     selectedRequestId,
     setIsProcessing,
-  });
-
-  const { handleRejectQuote } = useQuoteReject({
-    quotes,
-    setQuotes,
-    lastAcceptedQuoteId,
-    setLastAcceptedQuoteId,
-    refreshQuotes,
-    setIsProcessing,
+    onShowRating: handleShowRating
   });
 
   // Accept logic - open payment dialog flow

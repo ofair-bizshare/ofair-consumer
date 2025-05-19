@@ -1,4 +1,3 @@
-
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/providers/AuthProvider';
 import {
@@ -30,8 +29,9 @@ export const useQuoteAccept = ({
   setLastAcceptedQuoteId,
   refreshQuotes,
   selectedRequestId,
-  setIsProcessing
-}: UseQuoteAcceptParams) => {
+  setIsProcessing,
+  onShowRating
+}: UseQuoteAcceptParams & { onShowRating?: (quoteId: string) => void }) => {
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -69,9 +69,15 @@ export const useQuoteAccept = ({
           variant: 'default',
         });
         setIsProcessing(false);
+
+        // הצג דירוג אם אפשר
+        if (typeof onShowRating === 'function') {
+          onShowRating(quoteId);
+        }
         return;
       }
 
+      // 1. עדכון סטטוס הצעה נבחרת בלבד ל-"accepted"
       const success = await updateQuoteStatus(quoteId, 'accepted');
       if (!success) {
         toast({
@@ -84,13 +90,21 @@ export const useQuoteAccept = ({
       }
       setLastAcceptedQuoteId(quoteId);
 
+      // 2. כל שאר הצעות לאותה בקשה ל-rejected
+      const rejectedQuotesIds = quotes
+        .filter(q => q.id !== quoteId && q.requestId === acceptedQuote.requestId)
+        .map(q => q.id);
+      await Promise.all(
+        rejectedQuotesIds.map(id => updateQuoteStatus(id, 'rejected'))
+      );
+
       setQuotes(prevQuotes =>
         prevQuotes.map(quote =>
           quote.id === quoteId
             ? { ...quote, status: 'accepted' }
-            : quote.requestId === acceptedQuote.requestId
-            ? { ...quote, status: 'rejected' }
-            : quote
+            : (quote.requestId === acceptedQuote.requestId
+                ? { ...quote, status: 'rejected' }
+                : quote)
         )
       );
 
@@ -142,6 +156,11 @@ export const useQuoteAccept = ({
           variant: 'default',
         });
         redirectToPayment(quoteId, quotePrice);
+
+        // אחרי תשלום - מיד לפתוח את דיאלוג הדירוג
+        if (typeof onShowRating === 'function') {
+          setTimeout(() => { onShowRating(quoteId); }, 1200);
+        }
         return;
       }
       toast({
@@ -160,6 +179,10 @@ export const useQuoteAccept = ({
           onClick={() => {
             setTimeout(() => {
               window.location.hash = '#rating-section';
+              // הצגת דיאלוג דירוג מיידית
+              if (typeof onShowRating === 'function') {
+                onShowRating(quoteId);
+              }
             }, 250);
           }}
           className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded ml-2 font-semibold"
@@ -174,6 +197,12 @@ export const useQuoteAccept = ({
         action: rateNowActionButton,
         variant: 'success',
       });
+
+      // פתיחת דיאלוג דירוג אוטומטית
+      if (typeof onShowRating === 'function') {
+        setTimeout(() => { onShowRating(quoteId); }, 1200);
+      }
+
     } catch (error) {
       toast({
         title: 'שגיאה בתהליך קבלת ההצעה',

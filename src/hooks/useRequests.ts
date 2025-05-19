@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { fetchUserRequests } from '@/services/requests';
 import { countQuotesForRequest } from '@/services/quotes/quoteFetching';
@@ -29,24 +28,23 @@ export const useRequests = () => {
       );
       
       // Sort requests - active first, then waiting_for_rating, then completed/expired/canceled
+      // תיקון מיון: קודם active, אחריו waiting_for_rating (ממתין לדירוג), ורק אז completed וכו'
       const sortedRequests = requestsWithQuotesCount.sort((a, b) => {
-        // Priority order: active > waiting_for_rating > other statuses
+        // Priority order: waiting_for_rating > active > other statuses
         const statusPriority: Record<string, number> = {
-          'active': 3,
-          'waiting_for_rating': 2,
-          'completed': 0, // Lower priority for completed requests (will appear at the bottom)
+          'waiting_for_rating': 4, // קודם ממתינות לדירוג
+          'active': 3,             // אחר כך פעילות רגילות
+          'completed': 0,          // נמוך למטה
           'expired': 0,
           'canceled': 0
         };
-        
         const priorityA = statusPriority[a.status] || 0;
         const priorityB = statusPriority[b.status] || 0;
-        
+
         // Compare by priority, then by date (newest first)
         if (priorityA !== priorityB) {
           return priorityB - priorityA;
         }
-        
         // For same status, sort by date (newest first)
         const dateA = new Date(a.date).getTime();
         const dateB = new Date(b.date).getTime();
