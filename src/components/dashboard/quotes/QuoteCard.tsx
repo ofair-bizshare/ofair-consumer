@@ -121,43 +121,42 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   let mediaUrls: string[] = [];
 
   try {
+    // לוג raw:
+    console.log("QuoteCard: raw quote.media_urls =", quote.media_urls, "typeof:", typeof quote.media_urls);
+
     const mediaValue = quote.media_urls as string[] | string | null | undefined;
     if (Array.isArray(mediaValue)) {
-      // אם זה מערך, לקחת כל קישור שמתחיל ב-http
+      // תקף במיוחד ל־supabase array
       mediaUrls = mediaValue.filter(
         (url) => typeof url === "string" && url.trim().startsWith("http")
       );
     } else if (typeof mediaValue === "string" && mediaValue.trim() !== "") {
       const clean = mediaValue.trim();
       if (clean.startsWith("[")) {
-        // JSON parse (כמו ['http...'])
+        // מהסוג: '["http1", "http2"]'
         try {
           const parsed = JSON.parse(clean);
           if (Array.isArray(parsed)) {
-            mediaUrls = parsed.filter(
-              (url) => typeof url === "string" && url.trim().startsWith("http")
-            );
+            mediaUrls = parsed
+              .filter((url) => typeof url === "string" && url.trim().startsWith("http"));
           }
-        } catch {
-          // ignore parse error
+        } catch (e) {
+          console.log("QuoteCard: JSON parse error for media_urls string", e);
         }
       } else if (clean.includes(",")) {
-        mediaUrls = clean
-          .split(",")
-          .map((s) => s.trim())
-          .filter((s) => s.startsWith("http"));
+        // מהסוג: 'http1, http2'
+        mediaUrls = clean.split(",").map(s => s.trim()).filter(s => s.startsWith("http"));
       } else if (clean.startsWith("http") && clean.length > 8) {
         mediaUrls = [clean];
       }
     }
-    // תמונה לדוגמה fallback
     if ((!mediaUrls || mediaUrls.length === 0) && quote.sampleImageUrl && typeof quote.sampleImageUrl === "string" && quote.sampleImageUrl.startsWith("http")) {
       mediaUrls = [quote.sampleImageUrl];
     }
-    // לוג דיאגנוסטי
-    console.log("QuoteCard: mediaUrls FINAL for quote.id", quote.id, mediaUrls);
+    // לוג לבדוק מה נשלח הלאה בפועל:
+    console.log("QuoteCard: mediaUrls normalized =", mediaUrls, Array.isArray(mediaUrls), mediaUrls.length);
   } catch (err) {
-    console.warn("שגיאה בעיבוד quote.media_urls:", { value: quote.media_urls, error: err });
+    console.warn("QuoteCard: media handling error:", err, { value: quote.media_urls });
     mediaUrls = [];
   }
 
@@ -211,7 +210,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
       <Card className={`overflow-hidden mb-3 shadow-md transition-shadow ${!isInteractive ? 'opacity-70' : ''}`}>
         <CardContent className="p-0">
           <div className={`p-2 ${isMobile ? 'space-y-2' : 'p-4'} border-b border-gray-100`}>
-            {/* תצוגת מדיה: מציג רק אם יש קישורים לפי כללים חדשים */}
+            {/* יציג רק אם יש תמונות אמיתיות */}
             {mediaUrls && mediaUrls.length > 0 && (
               <QuoteDetails 
                 price={quote.price || "0"} 

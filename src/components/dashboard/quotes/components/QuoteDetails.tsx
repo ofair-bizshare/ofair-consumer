@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ErrorBoundary from '@/components/ui/error-boundary';
@@ -24,32 +23,30 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   const isMobile = useIsMobile();
   const [openMediaIdx, setOpenMediaIdx] = useState<number | null>(null);
 
-  // לוג מידע על מה שהתקבל
-  console.log("QuoteDetails > mediaUrls received:", mediaUrls);
+  // לוג על קבלת המדיה
+  console.log("QuoteDetails: received mediaUrls =", mediaUrls, "sampleImageUrl =", sampleImageUrl);
 
-  // נניח תמיד שמתקבל array (רגיל או ריק)
+  // Normalize: חייב להוציא בדיוק מערך קישורי http של תכלס!
   let media: string[] = [];
   if (Array.isArray(mediaUrls)) {
     media = mediaUrls
       .map(val => typeof val === 'string' ? val.trim() : '')
-      .filter(val => !!val && val !== "null" && val !== "undefined");
+      .filter(val => !!val && val !== "null" && val !== "undefined" && val.startsWith("http"));
   } else if (typeof mediaUrls === 'string' && mediaUrls.trim()) {
-    // *למקרה שעדיין - legacy support*
     try {
       const parsed = JSON.parse(mediaUrls.trim());
       if (Array.isArray(parsed)) {
         media = parsed
           .map(val => typeof val === 'string' ? val.trim() : '')
-          .filter(val => !!val && val !== "null" && val !== "undefined");
-      } else if (typeof parsed === "string" && !!parsed && parsed !== "null" && parsed !== "undefined") {
+          .filter(val => !!val && val !== "null" && val !== "undefined" && val.startsWith("http"));
+      } else if (typeof parsed === "string" && !!parsed && parsed !== "null" && parsed !== "undefined" && parsed.startsWith("http")) {
         media = [parsed];
       }
     } catch {
       if (mediaUrls.includes(',')) {
         media = mediaUrls.split(',')
           .map(s => s.trim())
-          .filter(Boolean)
-          .filter(x => x !== "null" && x !== "undefined");
+          .filter(x => !!x && x !== "null" && x !== "undefined" && x.startsWith("http"));
       } else if (mediaUrls.startsWith('http') && mediaUrls.length > 8) {
         media = [mediaUrls];
       }
@@ -57,9 +54,9 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   } else if (sampleImageUrl && typeof sampleImageUrl === 'string' && sampleImageUrl.startsWith('http')) {
     media = [sampleImageUrl];
   }
-  // לא עוד סינון-סיומת – הקוד בקומפוננטת האב כבר עשה את זה
 
-  console.log("QuoteDetails > media final (post filtering):", media);
+  // לוג לבדוק מה מופיע סופית בגלריה!
+  console.log("QuoteDetails: normalized media for gallery:", media);
 
   const isImage = (url: string) =>
     /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(url);
@@ -72,7 +69,7 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   return (
     <ErrorBoundary fallback={<div className="p-2 bg-red-50 rounded text-sm">שגיאה בטעינת פרטי ההצעה</div>}>
       <div className="mt-2 space-y-2">
-        {/* גלריה מוצגת רק אם media לא ריק */}
+        {/* גלריה מוצגת רק אם media לא ריק אמיתי */}
         {media.length > 0 ? (
           <div className="mt-2 flex flex-wrap gap-3 items-center">
             {media.map((src, i) => (
@@ -101,7 +98,6 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
                     <span className="sr-only">צפייה בוידאו</span>
                   </div>
                 ) : (
-                  // תמיכה בקישור לא ידוע (כל עוד יש), הצג קישור
                   <a
                     href={src}
                     target="_blank"
@@ -122,7 +118,6 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
                 </Button>
               </div>
             ))}
-            {/* Dialog for viewing current media in large */}
             {openMediaIdx !== null && (
               <Dialog open={openMediaIdx !== null} onOpenChange={() => setOpenMediaIdx(null)}>
                 <DialogContent className="max-w-3xl bg-white shadow-2xl z-50 rounded-xl flex flex-col items-center">
