@@ -117,19 +117,15 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   // Show action buttons based on status combinations
   const showActionButtons = requestStatus !== 'completed';
 
-  // הגדרה חזקה: המטרה היא לקבל תמיד מערך string[] או ערך ריק
+  // עיבוד מדיה - וריאציה חדשה (לוגיקה פשוטה ללא placeholder וללא אגרסיביות על סיומות)
   let mediaUrls: string[] = [];
 
-  // לוג של ערך הגלם
-  console.log("QuoteCard: quote.media_urls (raw):", quote.media_urls);
-
+  // קבלת ערך גולמי (יכול להיות array/JSON-string/מחרוזת בודדת/null)
   try {
     const mediaValue = quote.media_urls as string[] | string | null | undefined;
-    console.log("QuoteCard: typeof mediaValue:", typeof mediaValue, "value:", mediaValue);
-
     if (Array.isArray(mediaValue)) {
       mediaUrls = mediaValue.filter(
-        (url) => typeof url === "string" && url.trim() && url !== "null" && url !== "undefined"
+        (url) => typeof url === "string" && url.trim().startsWith("http")
       );
     } else if (typeof mediaValue === "string" && mediaValue.trim() !== "") {
       const clean = mediaValue.trim();
@@ -138,52 +134,27 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
           const parsed = JSON.parse(clean);
           if (Array.isArray(parsed)) {
             mediaUrls = parsed.filter(
-              (url) => typeof url === "string" && url.trim() && url !== "null" && url !== "undefined"
+              (url) => typeof url === "string" && url.trim().startsWith("http")
             );
           }
-        } catch (e) {
-          console.warn("QuoteCard: JSON.parse failed for media_urls stringified array", e);
-          // fallback, don't set mediaUrls
+        } catch {
+          // אם לא JSON חוקי, ממשיכים הלאה
         }
-      } else {
-        // Try classic fallback
-        if (clean.includes(",")) {
-          mediaUrls = clean
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean)
-            .filter((x) => x !== "null" && x !== "undefined");
-        } else if (clean.startsWith("http") && clean.length > 8) {
-          mediaUrls = [clean];
-        }
+      } else if (clean.includes(",")) {
+        mediaUrls = clean
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s.startsWith("http"));
+      } else if (clean.startsWith("http") && clean.length > 8) {
+        mediaUrls = [clean];
       }
     }
     // Fallback: sampleImageUrl
     if ((!mediaUrls || mediaUrls.length === 0) && quote.sampleImageUrl && typeof quote.sampleImageUrl === "string" && quote.sampleImageUrl.startsWith("http")) {
       mediaUrls = [quote.sampleImageUrl];
     }
-
-    // אחרי עיבוד ראשוני
-    console.log("QuoteCard: mediaUrls after normalization:", mediaUrls);
-
-    // תיקון סופי:
-    // נשמור את הרשימה המקורית, כדי שאם ניפוי הסיומות יחזיר כלום, בכל זאת נעביר את המקוריות
-    const filteredByExt = Array.isArray(mediaUrls)
-      ? mediaUrls
-          .filter((x) => x && typeof x === "string" && x !== "null" && x !== "undefined")
-          .filter((x) =>
-            /\.(jpe?g|png|gif|webp|bmp|svg|mp4|webm|ogg|mov)$/i.test(x)
-          )
-      : [];
-
-    // במידה ואין אף כתובת עם סיומת מתאימה, ואם בכל זאת יש קישורים במערך המקורי, ננסה להציג אותם
-    if (filteredByExt.length === 0 && mediaUrls.length > 0) {
-      console.log("QuoteCard: No 'valid' extensions, but mediaUrls exist, passing original array:", mediaUrls);
-      // לא מסננים תוספתית
-    } else {
-      mediaUrls = filteredByExt;
-    }
-    console.log("QuoteCard: valid mediaUrls to send to QuoteDetails:", mediaUrls);
+    // לוג זיהוי
+    console.log("QuoteCard: mediaUrls to send to QuoteDetails:", mediaUrls);
   } catch (err) {
     console.warn("שגיאה בעיבוד quote.media_urls:", { value: quote.media_urls, error: err });
     mediaUrls = [];
@@ -240,9 +211,6 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
         <CardContent className="p-0">
           <div className={`p-2 ${isMobile ? 'space-y-2' : 'p-4'} border-b border-gray-100`}>
             {/* רק אם mediaUrls לא ריק, תציג גלריה */}
-            {(mediaUrls.length === 0)
-              ? <NoMediaPlaceholder />
-              : null}
             <ProfessionalInfo professional={quote.professional} />
             <QuoteDetails 
               price={quote.price || "0"} 
