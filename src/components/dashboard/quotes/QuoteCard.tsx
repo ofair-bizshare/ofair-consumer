@@ -117,19 +117,20 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   // Show action buttons based on status combinations
   const showActionButtons = requestStatus !== 'completed';
 
-  // עיבוד מדיה - וריאציה חדשה (לוגיקה פשוטה ללא placeholder וללא אגרסיביות על סיומות)
+  // עיבוד מדיה - איחוד כל השלבים, סינון רך בלבד, בלי placeholder
   let mediaUrls: string[] = [];
 
-  // קבלת ערך גולמי (יכול להיות array/JSON-string/מחרוזת בודדת/null)
   try {
     const mediaValue = quote.media_urls as string[] | string | null | undefined;
     if (Array.isArray(mediaValue)) {
+      // אם זה מערך, לקחת כל קישור שמתחיל ב-http
       mediaUrls = mediaValue.filter(
         (url) => typeof url === "string" && url.trim().startsWith("http")
       );
     } else if (typeof mediaValue === "string" && mediaValue.trim() !== "") {
       const clean = mediaValue.trim();
       if (clean.startsWith("[")) {
+        // JSON parse (כמו ['http...'])
         try {
           const parsed = JSON.parse(clean);
           if (Array.isArray(parsed)) {
@@ -138,7 +139,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
             );
           }
         } catch {
-          // אם לא JSON חוקי, ממשיכים הלאה
+          // ignore parse error
         }
       } else if (clean.includes(",")) {
         mediaUrls = clean
@@ -149,12 +150,12 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
         mediaUrls = [clean];
       }
     }
-    // Fallback: sampleImageUrl
+    // תמונה לדוגמה fallback
     if ((!mediaUrls || mediaUrls.length === 0) && quote.sampleImageUrl && typeof quote.sampleImageUrl === "string" && quote.sampleImageUrl.startsWith("http")) {
       mediaUrls = [quote.sampleImageUrl];
     }
-    // לוג זיהוי
-    console.log("QuoteCard: mediaUrls to send to QuoteDetails:", mediaUrls);
+    // לוג דיאגנוסטי
+    console.log("QuoteCard: mediaUrls FINAL for quote.id", quote.id, mediaUrls);
   } catch (err) {
     console.warn("שגיאה בעיבוד quote.media_urls:", { value: quote.media_urls, error: err });
     mediaUrls = [];
@@ -210,15 +211,17 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
       <Card className={`overflow-hidden mb-3 shadow-md transition-shadow ${!isInteractive ? 'opacity-70' : ''}`}>
         <CardContent className="p-0">
           <div className={`p-2 ${isMobile ? 'space-y-2' : 'p-4'} border-b border-gray-100`}>
-            {/* רק אם mediaUrls לא ריק, תציג גלריה */}
+            {/* תצוגת מדיה: מציג רק אם יש קישורים לפי כללים חדשים */}
+            {mediaUrls && mediaUrls.length > 0 && (
+              <QuoteDetails 
+                price={quote.price || "0"} 
+                estimatedTime={quote.estimatedTime || ""}
+                mediaUrls={mediaUrls}
+                sampleImageUrl={quote.sampleImageUrl}
+                description={quote.description || ""}
+              />
+            )}
             <ProfessionalInfo professional={quote.professional} />
-            <QuoteDetails 
-              price={quote.price || "0"} 
-              estimatedTime={quote.estimatedTime || ""}
-              mediaUrls={mediaUrls}
-              sampleImageUrl={quote.sampleImageUrl}
-              description={quote.description || ""}
-            />
             
             {isAcceptedQuote && (
               <>
@@ -227,7 +230,6 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
                   isWaitingForRating={isWaitingForRating}
                   onRatingClick={handleQuoteRatingClick}
                 />
-                {/* WhatsApp Button only for accepted quotes and if phone number present */}
                 <div className="mt-2">
                   <WhatsAppButton 
                     phoneNumber={quote.professional.phoneNumber || quote.professional.phone || ""}
@@ -246,7 +248,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
                 professionalName={quote.professional.name || "בעל מקצוע"}
                 professionalId={quote.professional.id}
                 profession={quote.professional.profession || ""}
-                autoReveal={isAcceptedQuote} // Auto reveal for accepted quotes
+                autoReveal={isAcceptedQuote}
               />
             </div>
           </div>
