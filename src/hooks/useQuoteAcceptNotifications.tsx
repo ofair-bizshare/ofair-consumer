@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { ToastAction } from '@/components/ui/toast';
 import { useToast } from '@/hooks/use-toast';
 
 export const useQuoteAcceptNotifications = () => {
@@ -38,11 +38,22 @@ export const useQuoteAcceptNotifications = () => {
     });
   };
 
-  const notifyAcceptWithRating = (action: React.ReactNode) => {
+  const notifyAcceptWithRating = (onRateNowClick: () => void) => {
     toast({
       title: 'הצעה התקבלה',
       description: 'הצעת המחיר אושרה! נשמח אם תדרג את בעל המקצוע.',
-      action,
+      action: (
+        <ToastAction
+          altText="Rate now"
+          onClick={() => {
+            onRateNowClick();
+          }}
+          className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded ml-2 font-semibold"
+          style={{ fontSize: 14 }}
+        >
+          דרג עכשיו
+        </ToastAction>
+      ),
       variant: 'success',
     });
   };
