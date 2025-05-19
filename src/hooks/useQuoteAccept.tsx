@@ -1,18 +1,10 @@
-import { useToast } from '@/hooks/use-toast';
+
+// THIS FILE IS NOW MUCH SHORTER & MAINTAINABLE!
 import { useAuth } from '@/providers/AuthProvider';
-import {
-  updateQuoteStatus,
-  updateRequestStatus,
-  checkIfAcceptedQuoteExists,
-  saveAcceptedQuote,
-  saveReferral,
-  formatPrice,
-  redirectToPayment,
-  createQuoteNotification,
-  createRatingReminderNotification,
-} from '@/services/quotes';
 import { Button } from '@/components/ui/button';
 import { QuoteInterface } from '@/types/dashboard';
+import { acceptQuoteApi } from './useQuoteAcceptApi';
+import { useQuoteAcceptNotifications } from './useQuoteAcceptNotifications';
 
 interface UseQuoteAcceptParams {
   quotes: QuoteInterface[];
@@ -32,154 +24,67 @@ export const useQuoteAccept = ({
   setIsProcessing,
   onShowRating
 }: UseQuoteAcceptParams & { onShowRating?: (quoteId: string) => void }) => {
-  const { toast } = useToast();
   const { user } = useAuth();
+  const notifications = useQuoteAcceptNotifications();
 
   const processQuoteAcceptance = async (
     quoteId: string,
     paymentMethod: 'cash' | 'credit'
   ) => {
     setIsProcessing(true);
-    const acceptedQuote = quotes.find(q => q.id === quoteId);
-    if (!acceptedQuote || !user) {
-      setIsProcessing(false);
-      return;
-    }
-    const quotePrice = formatPrice(acceptedQuote.price);
     try {
-      const isAlreadyAccepted = await checkIfAcceptedQuoteExists(
-        acceptedQuote.requestId,
-        quoteId
-      );
-      if (isAlreadyAccepted) {
-        setQuotes(prevQuotes =>
-          prevQuotes.map(quote =>
-            quote.id === quoteId ? { ...quote, status: 'accepted' } : quote
-          )
-        );
-        setLastAcceptedQuoteId(quoteId);
-        await createQuoteNotification(
-          acceptedQuote.description,
-          acceptedQuote.professional?.name || 'בעל מקצוע',
-          acceptedQuote.requestId
-        );
-        toast({
-          title: 'הצעה התקבלה',
-          description: 'הצעת המחיר כבר אושרה במערכת',
-          variant: 'default',
-        });
-        setIsProcessing(false);
+      const result = await acceptQuoteApi({
+        quotes,
+        user,
+        quoteId,
+        paymentMethod,
+        setQuotes,
+        setLastAcceptedQuoteId,
+        refreshQuotes,
+        selectedRequestId,
+      });
 
-        // הצג דירוג אם אפשר
+      // Error cases
+      if (!result.acceptedQuote) {
+        setIsProcessing(false);
+        return;
+      }
+      if (result.isAlreadyAccepted) {
+        notifications.notifyAlreadyAccepted();
+        setIsProcessing(false);
         if (typeof onShowRating === 'function') {
           onShowRating(quoteId);
         }
         return;
       }
-
-      // 1. עדכון סטטוס הצעה נבחרת בלבד ל-"accepted"
-      const success = await updateQuoteStatus(quoteId, 'accepted');
-      if (!success) {
-        toast({
-          title: 'שגיאה בקבלת ההצעה',
-          description: 'אירעה שגיאה בקבלת ההצעה. אנא נסה שוב.',
-          variant: 'destructive',
-        });
+      if (!result.success) {
+        notifications.notifyAcceptError();
         setIsProcessing(false);
         return;
       }
-      setLastAcceptedQuoteId(quoteId);
 
-      // 2. כל שאר הצעות לאותה בקשה ל-rejected
-      const rejectedQuotesIds = quotes
-        .filter(q => q.id !== quoteId && q.requestId === acceptedQuote.requestId)
-        .map(q => q.id);
-      await Promise.all(
-        rejectedQuotesIds.map(id => updateQuoteStatus(id, 'rejected'))
-      );
-
-      setQuotes(prevQuotes =>
-        prevQuotes.map(quote =>
-          quote.id === quoteId
-            ? { ...quote, status: 'accepted' }
-            : (quote.requestId === acceptedQuote.requestId
-                ? { ...quote, status: 'rejected' }
-                : quote)
-        )
-      );
-
-      await updateRequestStatus(
-        acceptedQuote.requestId,
-        'waiting_for_rating'
-      );
-
-      await createQuoteNotification(
-        acceptedQuote.description,
-        acceptedQuote.professional?.name || 'בעל מקצוע',
-        acceptedQuote.requestId
-      );
-
-      setTimeout(async () => {
-        await createRatingReminderNotification(
-          acceptedQuote.professional?.name || 'בעל מקצוע',
-          acceptedQuote.professional?.id || ''
-        );
-      }, 500);
-
-      await saveAcceptedQuote({
-        user_id: user.id,
-        quote_id: quoteId,
-        request_id: acceptedQuote.requestId,
-        professional_id: acceptedQuote.professional.id,
-        professional_name: acceptedQuote.professional.name,
-        price: quotePrice,
-        date: new Date().toISOString(),
-        status: 'accepted',
-        description: acceptedQuote.description,
-        payment_method: paymentMethod,
-        created_at: new Date().toISOString(),
-      });
-      await saveReferral(
-        user.id,
-        acceptedQuote.professional.id,
-        acceptedQuote.professional.name,
-        acceptedQuote.professional.phoneNumber ||
-          acceptedQuote.professional.phone ||
-          '050-1234567',
-        acceptedQuote.professional.profession
-      );
-
+      // Payment method logic and notifications
       if (paymentMethod === 'credit') {
-        toast({
-          title: 'הועברת לעמוד תשלום',
-          description: 'עמוד התשלום ייפתח בקרוב...',
-          variant: 'default',
+        notifications.notifyPaymentRedirect();
+        // Payment redirection
+        import('@/services/quotes').then(({ redirectToPayment }) => {
+          redirectToPayment(quoteId, result.quotePrice);
         });
-        redirectToPayment(quoteId, quotePrice);
-
-        // אחרי תשלום - מיד לפתוח את דיאלוג הדירוג
         if (typeof onShowRating === 'function') {
           setTimeout(() => { onShowRating(quoteId); }, 1200);
         }
+        setIsProcessing(false);
         return;
       }
-      toast({
-        title: 'הצעה התקבלה',
-        description: 'הודעה נשלחה לבעל המקצוע. הוא יצור איתך קשר בהקדם.',
-        variant: 'default',
-      });
-      if (selectedRequestId) {
-        setTimeout(() => {
-          refreshQuotes(selectedRequestId);
-        }, 500);
-      }
-      // טוסט עם קישור לדירוג
+
+      notifications.notifyAccepted();
+
+      // Toast with link to rate
       const rateNowActionButton = (
         <Button
           onClick={() => {
             setTimeout(() => {
               window.location.hash = '#rating-section';
-              // הצגת דיאלוג דירוג מיידית
               if (typeof onShowRating === 'function') {
                 onShowRating(quoteId);
               }
@@ -191,24 +96,14 @@ export const useQuoteAccept = ({
           דרג עכשיו
         </Button>
       );
-      toast({
-        title: 'הצעה התקבלה',
-        description: 'הצעת המחיר אושרה! נשמח אם תדרג את בעל המקצוע.',
-        action: rateNowActionButton,
-        variant: 'success',
-      });
+      notifications.notifyAcceptWithRating(rateNowActionButton);
 
-      // פתיחת דיאלוג דירוג אוטומטית
+      // Auto show rating dialog
       if (typeof onShowRating === 'function') {
         setTimeout(() => { onShowRating(quoteId); }, 1200);
       }
-
     } catch (error) {
-      toast({
-        title: 'שגיאה בתהליך קבלת ההצעה',
-        description: 'אירעה שגיאה בתהליך. אנא נסה שוב מאוחר יותר.',
-        variant: 'destructive',
-      });
+      notifications.notifyGeneralError();
     } finally {
       setIsProcessing(false);
     }
