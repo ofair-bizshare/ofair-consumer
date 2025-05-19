@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/providers/AuthProvider';
@@ -61,6 +62,16 @@ export const useQuoteActions = ({
     selectedRequestId,
     setIsProcessing,
     onShowRating: handleShowRating
+  });
+
+  // FIX: Wire up handleRejectQuote using useQuoteReject
+  const { handleRejectQuote } = useQuoteReject({
+    quotes,
+    setQuotes,
+    lastAcceptedQuoteId,
+    setLastAcceptedQuoteId,
+    refreshQuotes,
+    setIsProcessing,
   });
 
   // Accept logic - open payment dialog flow
