@@ -284,6 +284,7 @@ export type Database = {
       }
       notifications: {
         Row: {
+          client_details: Json | null
           created_at: string
           description: string
           id: string
@@ -295,6 +296,7 @@ export type Database = {
           type: string
         }
         Insert: {
+          client_details?: Json | null
           created_at?: string
           description: string
           id?: string
@@ -306,6 +308,7 @@ export type Database = {
           type: string
         }
         Update: {
+          client_details?: Json | null
           created_at?: string
           description?: string
           id?: string

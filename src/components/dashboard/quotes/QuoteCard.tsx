@@ -117,10 +117,8 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   // Show action buttons based on status combinations
   const showActionButtons = requestStatus !== 'completed';
 
-  // עיבוד מדיה - וריאציה חדשה (לוגיקה פשוטה ללא placeholder וללא אגרסיביות על סיומות)
+  // עיבוד מדיה - תיקון מלא שמטפל במקרה בו media_urls הוא מחרוזת שמייצגת מערך JSON
   let mediaUrls: string[] = [];
-
-  // קבלת ערך גולמי (יכול להיות array/JSON-string/מחרוזת בודדת/null)
   try {
     const mediaValue = quote.media_urls as string[] | string | null | undefined;
     if (Array.isArray(mediaValue)) {
@@ -129,21 +127,22 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
       );
     } else if (typeof mediaValue === "string" && mediaValue.trim() !== "") {
       const clean = mediaValue.trim();
-      if (clean.startsWith("[")) {
+      if (clean.startsWith("[") && clean.endsWith("]")) {
+        // זו מחרוזת JSON של מערך כתובות
         try {
-          const parsed = JSON.parse(clean);
-          if (Array.isArray(parsed)) {
-            mediaUrls = parsed.filter(
+          const parsedArr = JSON.parse(clean);
+          if (Array.isArray(parsedArr)) {
+            mediaUrls = parsedArr.filter(
               (url) => typeof url === "string" && url.trim().startsWith("http")
             );
           }
-        } catch {
-          // אם לא JSON חוקי, ממשיכים הלאה
+        } catch (e) {
+          console.warn("cannot JSON.parse media_urls!", e, clean);
         }
       } else if (clean.includes(",")) {
         mediaUrls = clean
           .split(",")
-          .map((s) => s.trim())
+          .map((s) => s.trim().replace(/^"|"$/g, "")) // הסרת גרשיים למקרה שהן קיימות סביב כל url
           .filter((s) => s.startsWith("http"));
       } else if (clean.startsWith("http") && clean.length > 8) {
         mediaUrls = [clean];
@@ -153,7 +152,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     if ((!mediaUrls || mediaUrls.length === 0) && quote.sampleImageUrl && typeof quote.sampleImageUrl === "string" && quote.sampleImageUrl.startsWith("http")) {
       mediaUrls = [quote.sampleImageUrl];
     }
-    // לוג זיהוי
+    // לוג זיהוי עם תוצאה סופית
     console.log("QuoteCard: mediaUrls to send to QuoteDetails:", mediaUrls);
   } catch (err) {
     console.warn("שגיאה בעיבוד quote.media_urls:", { value: quote.media_urls, error: err });
