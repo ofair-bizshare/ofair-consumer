@@ -1,5 +1,3 @@
-
-// THIS FILE IS NOW MUCH SHORTER & MAINTAINABLE!
 import { useAuth } from '@/providers/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { QuoteInterface } from '@/types/dashboard';
@@ -80,23 +78,14 @@ export const useQuoteAccept = ({
       notifications.notifyAccepted();
 
       // Toast with link to rate
-      const rateNowActionButton = (
-        <Button
-          onClick={() => {
-            setTimeout(() => {
-              window.location.hash = '#rating-section';
-              if (typeof onShowRating === 'function') {
-                onShowRating(quoteId);
-              }
-            }, 250);
-          }}
-          className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded ml-2 font-semibold"
-          style={{ fontSize: 14 }}
-        >
-          דרג עכשיו
-        </Button>
-      );
-      notifications.notifyAcceptWithRating(rateNowActionButton);
+      notifications.notifyAcceptWithRating(() => {
+        setTimeout(() => {
+          window.location.hash = '#rating-section';
+          if (typeof onShowRating === 'function') {
+            onShowRating(quoteId);
+          }
+        }, 250);
+      });
 
       // Auto show rating dialog
       if (typeof onShowRating === 'function') {
