@@ -23,9 +23,10 @@ export function useMediaUrls(quote: QuoteInterface): string[] {
         try {
           const parsedArr: unknown = JSON.parse(clean);
           if (isStringArray(parsedArr)) {
-            mediaUrls = parsedArr
-              .map((item) => item.trim())
-              .filter((url) => !!url && url.startsWith("http"));
+            mediaUrls = (parsedArr as string[])
+              .filter((item) => typeof item === "string" && !!item && item.trim().startsWith("http"))
+              .map((item) => (typeof item === "string" ? item.trim() : ''));
+            mediaUrls = mediaUrls.filter(Boolean);
           }
         } catch (e) {
           console.warn("cannot JSON.parse media_urls!", e, clean);
