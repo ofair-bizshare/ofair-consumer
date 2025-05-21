@@ -9,24 +9,26 @@ export function useMediaUrls(quote: QuoteInterface): string[] {
   return useMemo(() => {
     let mediaUrls: string[] = [];
     const rawMedia = quote.media_urls;
+
     // Helper: Type guard for string arrays
     const isStringArray = (arr: unknown): arr is string[] =>
       Array.isArray(arr) && arr.every(item => typeof item === "string");
 
     if (Array.isArray(rawMedia)) {
-      mediaUrls = rawMedia.filter(
-        (url): url is string => typeof url === "string" && !!url && url.trim().startsWith("http")
-      );
+      mediaUrls = rawMedia
+        .filter((url): url is string => typeof url === "string")
+        .map(url => url.trim())
+        .filter(url => !!url && url.startsWith("http"));
     } else if (typeof rawMedia === "string" && rawMedia) {
       const clean = rawMedia.trim();
       if (clean.startsWith("[") && clean.endsWith("]")) {
         try {
           const parsedArr: unknown = JSON.parse(clean);
           if (isStringArray(parsedArr)) {
-            mediaUrls = (parsedArr as string[])
-              .filter((item) => typeof item === "string" && !!item && item.trim().startsWith("http"))
-              .map((item) => (typeof item === "string" ? item.trim() : ''));
-            mediaUrls = mediaUrls.filter(Boolean);
+            // filter for strings only, then process
+            mediaUrls = parsedArr
+              .map((item) => (typeof item === "string" ? item.trim() : ""))
+              .filter((item) => !!item && item.startsWith("http"));
           }
         } catch (e) {
           console.warn("cannot JSON.parse media_urls!", e, clean);
