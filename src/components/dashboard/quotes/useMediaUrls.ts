@@ -24,10 +24,11 @@ export function useMediaUrls(quote: QuoteInterface): string[] {
       if (clean.startsWith("[") && clean.endsWith("]")) {
         try {
           const parsedArr: unknown = JSON.parse(clean);
-          if (isStringArray(parsedArr)) {
-            // filter for strings only, then process
+          if (Array.isArray(parsedArr)) {
+            // First filter for strings only, then trim and check validity
             mediaUrls = parsedArr
-              .map((item) => (typeof item === "string" ? item.trim() : ""))
+              .filter((item): item is string => typeof item === "string")
+              .map((item) => item.trim())
               .filter((item) => !!item && item.startsWith("http"));
           }
         } catch (e) {
@@ -54,3 +55,4 @@ export function useMediaUrls(quote: QuoteInterface): string[] {
     return mediaUrls;
   }, [quote.media_urls, quote.sampleImageUrl]);
 }
+
