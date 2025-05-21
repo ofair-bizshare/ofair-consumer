@@ -97,6 +97,46 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     setIsContactActive(!isContactActive);
   };
   
+  // --- התחלת טיפול ב-media_urls ---
+
+  // לוג מידע של תוכן המדיה שמגיע מה-DB
+  console.log('QuoteCard: quote.media_urls raw from DB:', quote.media_urls);
+
+  // עיבוד השדה media_urls - תמיכה גם במערך וגם במחרוזת (JSON או רגילה)
+  let mediaUrls: string[] | string = [];
+  if (Array.isArray(quote.media_urls)) {
+    mediaUrls = quote.media_urls.filter(url => !!url && typeof url === "string");
+  } else if (typeof quote.media_urls === 'string') {
+    // בדוק אולי זאת מחרוזת שמייצגת מערך JSON
+    const trimmed = quote.media_urls.trim();
+    try {
+      if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+        const arr = JSON.parse(trimmed);
+        if (Array.isArray(arr)) {
+          mediaUrls = arr.filter(url => !!url && typeof url === "string");
+        }
+      } else if (trimmed.includes(',')) {
+        mediaUrls = trimmed.split(',').map(s => s.trim()).filter(Boolean);
+      } else if (trimmed.startsWith('http')) {
+        mediaUrls = [trimmed];
+      } else {
+        mediaUrls = [];
+      }
+    } catch (e) {
+      // fallback: schlita במחרוזת לא חוקית, נסה לבדוק אם זה קישור בודד
+      if (trimmed.startsWith('http')) {
+        mediaUrls = [trimmed];
+      } else {
+        mediaUrls = [];
+      }
+    }
+  }
+
+  // פלט לוג של המדיה שעוברת הלאה
+  console.log('QuoteCard: mediaUrls parsed for details:', mediaUrls);
+
+  // --- סוף טיפול ב-media_urls ---
+  
   // Determine if this quote is accepted - check both the quote.status and the database verification
   const isAcceptedQuote = quote.status === 'accepted' || confirmedAccepted === true;
   
@@ -118,11 +158,11 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   const showActionButtons = requestStatus !== 'completed';
 
   // עיבוד מדיה - תיקון מלא שמטפל במקרה בו media_urls הוא מחרוזת שמייצגת מערך JSON
-  let mediaUrls: string[] = [];
+  let mediaUrls2: string[] = [];
   try {
     const mediaValue = quote.media_urls as string[] | string | null | undefined;
     if (Array.isArray(mediaValue)) {
-      mediaUrls = mediaValue.filter(
+      mediaUrls2 = mediaValue.filter(
         (url) => typeof url === "string" && url.trim().startsWith("http")
       );
     } else if (typeof mediaValue === "string" && mediaValue.trim() !== "") {
@@ -132,7 +172,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
         try {
           const parsedArr = JSON.parse(clean);
           if (Array.isArray(parsedArr)) {
-            mediaUrls = parsedArr.filter(
+            mediaUrls2 = parsedArr.filter(
               (url) => typeof url === "string" && url.trim().startsWith("http")
             );
           }
@@ -140,23 +180,23 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
           console.warn("cannot JSON.parse media_urls!", e, clean);
         }
       } else if (clean.includes(",")) {
-        mediaUrls = clean
+        mediaUrls2 = clean
           .split(",")
           .map((s) => s.trim().replace(/^"|"$/g, "")) // הסרת גרשיים למקרה שהן קיימות סביב כל url
           .filter((s) => s.startsWith("http"));
       } else if (clean.startsWith("http") && clean.length > 8) {
-        mediaUrls = [clean];
+        mediaUrls2 = [clean];
       }
     }
     // Fallback: sampleImageUrl
-    if ((!mediaUrls || mediaUrls.length === 0) && quote.sampleImageUrl && typeof quote.sampleImageUrl === "string" && quote.sampleImageUrl.startsWith("http")) {
-      mediaUrls = [quote.sampleImageUrl];
+    if ((!mediaUrls2 || mediaUrls2.length === 0) && quote.sampleImageUrl && typeof quote.sampleImageUrl === "string" && quote.sampleImageUrl.startsWith("http")) {
+      mediaUrls2 = [quote.sampleImageUrl];
     }
     // לוג זיהוי עם תוצאה סופית
-    console.log("QuoteCard: mediaUrls to send to QuoteDetails:", mediaUrls);
+    console.log("QuoteCard: mediaUrls to send to QuoteDetails:", mediaUrls2);
   } catch (err) {
     console.warn("שגיאה בעיבוד quote.media_urls:", { value: quote.media_urls, error: err });
-    mediaUrls = [];
+    mediaUrls2 = [];
   }
 
   // --- WHATSAPP LOGIC START ---
@@ -211,6 +251,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
           <div className={`p-2 ${isMobile ? 'space-y-2' : 'p-4'} border-b border-gray-100`}>
             {/* רק אם mediaUrls לא ריק, תציג גלריה */}
             <ProfessionalInfo professional={quote.professional} />
+            {/* עדכון מרכזי: שליחת mediaUrls כפי שעובדנו */}
             <QuoteDetails 
               price={quote.price || "0"} 
               estimatedTime={quote.estimatedTime || ""}
