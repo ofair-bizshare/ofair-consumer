@@ -25,11 +25,11 @@ export function useMediaUrls(quote: QuoteInterface): string[] {
         try {
           const parsedArr: unknown = JSON.parse(clean);
           if (Array.isArray(parsedArr)) {
-            // First filter for strings only, then trim and check validity
-            mediaUrls = parsedArr
-              .filter((item): item is string => typeof item === "string")
-              .map((item) => item.trim())
-              .filter((item) => !!item && item.startsWith("http"));
+            // First, filter for strings only, then use temp variable to satisfy TypeScript
+            const stringArr = parsedArr.filter((item): item is string => typeof item === "string");
+            mediaUrls = stringArr
+              .map(item => item.trim())
+              .filter(item => !!item && item.startsWith("http"));
           }
         } catch (e) {
           console.warn("cannot JSON.parse media_urls!", e, clean);
