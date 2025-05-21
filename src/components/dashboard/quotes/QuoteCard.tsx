@@ -109,6 +109,10 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   const rawMedia = quote.media_urls;
   console.log('QuoteCard: quote.media_urls raw from DB:', rawMedia);
 
+  // Helper: Type guard to safely cast unknown[] as string[]
+  const isStringArray = (arr: unknown): arr is string[] =>
+    Array.isArray(arr) && arr.every(item => typeof item === "string");
+
   if (Array.isArray(rawMedia)) {
     mediaUrls = rawMedia.filter(
       (url): url is string => typeof url === "string" && !!url && url.trim().startsWith("http")
@@ -118,10 +122,15 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     if (clean.startsWith("[") && clean.endsWith("]")) {
       try {
         const parsedArr = JSON.parse(clean);
-        if (Array.isArray(parsedArr)) {
+        if (isStringArray(parsedArr)) {
           mediaUrls = parsedArr.filter(
-            (url: unknown): url is string => typeof url === "string" && !!url && url.trim().startsWith("http")
+            (url) => typeof url === "string" && !!url && url.trim().startsWith("http")
           );
+        } else if (Array.isArray(parsedArr)) {
+          // fallback: filter items and cast to string when safe
+          mediaUrls = parsedArr
+            .map((item) => typeof item === "string" ? item.trim() : "")
+            .filter((url) => url.startsWith("http"));
         }
       } catch (e) {
         console.warn("cannot JSON.parse media_urls!", e, clean);
