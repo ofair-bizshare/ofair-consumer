@@ -123,9 +123,11 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
       try {
         const parsedArr: unknown = JSON.parse(clean);
         if (Array.isArray(parsedArr)) {
-          // First, filter only the string values
-          const stringArr = parsedArr.filter((url): url is string => typeof url === "string");
-          // Then trim and keep only those starting with http
+          // Filter only string values and tell TypeScript that result is string[]
+          const stringArr = parsedArr.filter(
+            (url): url is string => typeof url === "string"
+          ) as string[];
+          // Now safely use .trim()!
           mediaUrls = stringArr
             .map((item) => item.trim())
             .filter((url) => !!url && url.startsWith("http"));
