@@ -123,10 +123,12 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
       try {
         const parsedArr: unknown = JSON.parse(clean);
         if (Array.isArray(parsedArr)) {
-          // Only keep items that are strings, trimmed, non-empty, and start with http
-          mediaUrls = parsedArr
-            .map((item) => (typeof item === "string" ? item.trim() : ""))
-            .filter((url): url is string => !!url && url.startsWith("http"));
+          // First, filter only the string values
+          const stringArr = parsedArr.filter((url): url is string => typeof url === "string");
+          // Then trim and keep only those starting with http
+          mediaUrls = stringArr
+            .map((item) => item.trim())
+            .filter((url) => !!url && url.startsWith("http"));
         }
       } catch (e) {
         console.warn("cannot JSON.parse media_urls!", e, clean);
