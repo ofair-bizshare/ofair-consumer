@@ -97,6 +97,12 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     setIsContactActive(!isContactActive);
   };
   
+  // Add this stub function to fix the missing handler error
+  const handleWhatsAppReveal = () => {
+    console.log("User clicked WhatsApp button.");
+    // Here you could add further analytics/logging if needed
+  };
+
   // ----------- SAFE MEDIA_URLS HANDLING (TypeScript) -------------
   // Unified logic: handle array, string, null, undefined + logging
   let mediaUrls: string[] = [];
@@ -105,7 +111,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
 
   if (Array.isArray(rawMedia)) {
     mediaUrls = rawMedia.filter(
-      (url) => typeof url === "string" && url.trim().startsWith("http")
+      (url): url is string => typeof url === "string" && !!url && url.trim().startsWith("http")
     );
   } else if (typeof rawMedia === "string" && rawMedia) {
     const clean = rawMedia.trim();
@@ -114,7 +120,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
         const parsedArr = JSON.parse(clean);
         if (Array.isArray(parsedArr)) {
           mediaUrls = parsedArr.filter(
-            (url) => typeof url === "string" && url.trim().startsWith("http")
+            (url: unknown): url is string => typeof url === "string" && !!url && url.trim().startsWith("http")
           );
         }
       } catch (e) {
