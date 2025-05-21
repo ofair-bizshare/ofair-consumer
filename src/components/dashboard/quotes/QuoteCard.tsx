@@ -11,6 +11,8 @@ import ErrorBoundary from '@/components/ui/error-boundary';
 import { checkIfAcceptedQuoteExists } from '@/services/quotes/acceptedQuotes';
 import WhatsAppButton from './components/WhatsAppButton';
 import { saveReferral } from '@/services/quotes';
+import { useMediaUrls } from './useMediaUrls';
+import QuoteMediaPlaceholder from './QuoteMediaPlaceholder';
 
 // Placeholder icon/image if no media
 const NoMediaPlaceholder = () => (
@@ -103,59 +105,8 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     // Here you could add further analytics/logging if needed
   };
 
-  // ----------- SAFE MEDIA_URLS HANDLING (TypeScript) -------------
-  // Unified logic: handle array, string, null, undefined + logging
-  let mediaUrls: string[] = [];
-  const rawMedia = quote.media_urls;
-  console.log('QuoteCard: quote.media_urls raw from DB:', rawMedia);
-
-  // Helper: Type guard to safely cast unknown[] as string[]
-  const isStringArray = (arr: unknown): arr is string[] =>
-    Array.isArray(arr) && arr.every(item => typeof item === "string");
-
-  if (Array.isArray(rawMedia)) {
-    mediaUrls = rawMedia.filter(
-      (url): url is string => typeof url === "string" && !!url && url.trim().startsWith("http")
-    );
-  } else if (typeof rawMedia === "string" && rawMedia) {
-    const clean = rawMedia.trim();
-    if (clean.startsWith("[") && clean.endsWith("]")) {
-      try {
-        const parsedArr: unknown = JSON.parse(clean);
-        if (Array.isArray(parsedArr)) {
-          // Filter only string values and tell TypeScript that result is string[]
-          const stringArr = parsedArr.filter(
-            (url): url is string => typeof url === "string"
-          ) as string[];
-          // Now safely use .trim()!
-          mediaUrls = stringArr
-            .map((item) => item.trim())
-            .filter((url) => !!url && url.startsWith("http"));
-        }
-      } catch (e) {
-        console.warn("cannot JSON.parse media_urls!", e, clean);
-      }
-    } else if (clean.includes(",")) {
-      mediaUrls = clean
-        .split(",")
-        .map((s) => s.trim().replace(/^"|"$/g, "")) // remove quotes
-        .filter((s) => s.startsWith("http"));
-    } else if (clean.startsWith("http") && clean.length > 8) {
-      mediaUrls = [clean];
-    }
-  }
-
-  // Fallback: sampleImageUrl
-  if (
-    (!mediaUrls || mediaUrls.length === 0) &&
-    quote.sampleImageUrl &&
-    typeof quote.sampleImageUrl === "string" &&
-    quote.sampleImageUrl.startsWith("http")
-  ) {
-    mediaUrls = [quote.sampleImageUrl];
-  }
-
-  console.log("QuoteCard: final mediaUrls for QuoteDetails:", mediaUrls);
+  // Use refactored hook for unified media URL parsing logic
+  const mediaUrls = useMediaUrls(quote);
 
   // Determine if this quote is accepted - check both the quote.status and the database verification
   const isAcceptedQuote = quote.status === 'accepted' || confirmedAccepted === true;
@@ -209,6 +160,8 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
               sampleImageUrl={quote.sampleImageUrl}
               description={quote.description || ""}
             />
+            {/* If there is no media, show the placeholder in the info block (optional, or inside children if needed) */}
+            {(!mediaUrls || mediaUrls.length === 0) && <QuoteMediaPlaceholder />}
             {isAcceptedQuote && (
               <>
                 <AcceptedQuoteStatus 
