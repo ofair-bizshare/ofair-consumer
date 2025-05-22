@@ -1,28 +1,35 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import RequestForm from '@/components/RequestForm';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from '@/hooks/use-mobile';
+
+// UPDATED: onRequestCreated now returns Promise<void>
 interface RequestDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onRequestCreated?: () => void;
+  onRequestCreated?: () => Promise<void>;
 }
+
 const RequestDialog: React.FC<RequestDialogProps> = ({
   isOpen,
   onOpenChange,
   onRequestCreated
 }) => {
   const isMobile = useIsMobile();
-  const handleSuccess = () => {
+
+  // Make this function async so we can await onRequestCreated
+  const handleSuccess = async () => {
     // Close dialog when request is successfully created
     onOpenChange(false);
 
     // Refresh requests if callback provided
     if (onRequestCreated) {
-      onRequestCreated();
+      await onRequestCreated();
     }
   };
+
   return <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent dir="rtl" className="sm:max-w-[600px] max-h-[90vh] p-0 overflow-hidden w-[95%] mx-auto bg-slate-50">
         <DialogHeader className="p-4 pb-0">
