@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { QuoteInterface } from '@/types/dashboard';
 import { useToast } from '@/hooks/use-toast';
@@ -8,29 +9,44 @@ import {
   updateQuoteStatus
 } from '@/services/quotes';
 
-// Handles loading, state, refreshing
 export const useQuotesState = (selectedRequestId: string | null) => {
   const [quotes, setQuotes] = useState<QuoteInterface[]>([]);
   const [lastAcceptedQuoteId, setLastAcceptedQuoteId] = useState<string | null>(null);
   const { toast } = useToast();
 
+  // Log when main state changes for deep debug
+  useEffect(() => {
+    console.log('[useQuotesState][debug] quotes:', quotes);
+    console.log('[useQuotesState][debug] lastAcceptedQuoteId:', lastAcceptedQuoteId);
+  }, [quotes, lastAcceptedQuoteId]);
+  
   // Load quotes when selectedRequestId changes
   useEffect(() => {
-    if (!selectedRequestId) return;
+    if (!selectedRequestId) {
+      // Log on missing selection
+      console.log('[useQuotesState] selectedRequestId missing, skipping refresh');
+      return;
+    }
+    console.log('[useQuotesState] Trigger refreshQuotes for requestId:', selectedRequestId);
     refreshQuotes(selectedRequestId);
     // eslint-disable-next-line
   }, [selectedRequestId]);
 
   // Function to refresh quotes
   const refreshQuotes = useCallback(async (requestId: string) => {
-    if (!requestId) return;
+    if (!requestId) {
+      console.log('[useQuotesState][refreshQuotes] Called with no requestId');
+      return;
+    }
     try {
       const requestQuotes = await fetchQuotesForRequest(requestId);
+      console.log('[useQuotesState][refreshQuotes] Fetched', requestQuotes.length, 'quotes for request', requestId, requestQuotes);
+
       if (!requestQuotes) {
         setQuotes([]);
         return;
       }
-      // במקום בדיקה של accepted_quotes נעבור רק על quotes.status:
+      // כמו קודם: עדכון id להצעת accepted
       const acceptedQuote = requestQuotes.find(q => q.status === 'accepted');
       if (acceptedQuote) {
         setLastAcceptedQuoteId(acceptedQuote.id);
