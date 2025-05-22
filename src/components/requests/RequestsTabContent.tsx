@@ -21,13 +21,16 @@ const RequestsTabContent: React.FC<RequestsTabContentProps> = ({
   onCreateRequest,
   emptyText
 }) => {
-  if (requests.length === 0) {
+  // הצג רק בקשות שאינן ממתינות לדירוג (בקרת כפולה - המחלקה המרכזית מסננת גם)
+  const filtered = requests.filter(r => r.status !== "waiting_for_rating");
+
+  if (filtered.length === 0) {
     return <EmptyStateCard onCreateRequest={onCreateRequest} text={emptyText} />;
   }
 
   return (
     <div className="space-y-4">
-      {requests.map((request) => (
+      {filtered.map((request) => (
         <RequestCard 
           key={request.id}
           request={request}

@@ -37,6 +37,11 @@ const RequestsTab: React.FC = () => {
   const selectedRequest = requests.find(r => r.id === selectedRequestId);
   const selectedQuote = selectedQuoteId ? quotes.find(q => q.id === selectedQuoteId) : null;
 
+  // Define filtered requests: exclude waiting_for_rating requests
+  const filteredRequests = requests.filter(
+    r => r.status !== 'waiting_for_rating'
+  );
+
   // Initial data load when component mounts
   useEffect(() => {
     const initialLoad = async () => {
@@ -126,7 +131,7 @@ const RequestsTab: React.FC = () => {
         
         {isLoading ? <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00d09e]"></div>
-          </div> : <RequestsList requests={requests} onSelect={async id => {
+          </div> : <RequestsList requests={filteredRequests} onSelect={async id => {
         setSelectedRequestId(id);
         // Auto refresh quotes when selecting a new request
         if (id) {
@@ -140,7 +145,8 @@ const RequestsTab: React.FC = () => {
       </div>
       
       <div className="w-full lg:w-2/3" ref={selectedRequestRef}>
-        {selectedRequest ? <RequestDetail request={selectedRequest} quotes={quotes} onAcceptQuote={handleAcceptQuote} onRejectQuote={handleRejectQuote} onViewProfile={handleViewProfile} onRefresh={async () => {
+        {/* Only show request detail if it's not waiting for rating */}
+        {selectedRequest && selectedRequest.status !== "waiting_for_rating" ? <RequestDetail request={selectedRequest} quotes={quotes} onAcceptQuote={handleAcceptQuote} onRejectQuote={handleRejectQuote} onViewProfile={handleViewProfile} onRefresh={async () => {
         if (selectedRequestId) {
           console.log("Manual refresh of quotes triggered");
           try {
@@ -151,7 +157,7 @@ const RequestsTab: React.FC = () => {
             console.error("Error during manual refresh:", err);
           }
         }
-      }} /> : <EmptyRequestState isLoading={isLoading} hasRequests={requests.length > 0} isRequestDialogOpen={isRequestDialogOpen} setIsRequestDialogOpen={setIsRequestDialogOpen} />}
+      }} /> : <EmptyRequestState isLoading={isLoading} hasRequests={filteredRequests.length > 0} isRequestDialogOpen={isRequestDialogOpen} setIsRequestDialogOpen={setIsRequestDialogOpen} />}
       </div>
       
       {/* Payment Method Dialog */}
