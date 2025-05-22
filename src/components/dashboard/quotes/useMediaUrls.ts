@@ -8,13 +8,16 @@ import { QuoteInterface } from "@/types/dashboard";
 export function useMediaUrls(quote: QuoteInterface): string[] {
   // Helper: Filter any array to only strings
   const toStringArray = (arr: unknown): string[] =>
-    Array.isArray(arr) ? arr.filter((val): val is string => typeof val === "string") : [];
+    Array.isArray(arr)
+      ? arr.filter((val): val is string => typeof val === "string")
+      : [];
 
   return useMemo(() => {
     let mediaUrls: string[] = [];
     const rawMedia = quote.media_urls;
 
     if (Array.isArray(rawMedia)) {
+      // Ensure filtered for strings
       mediaUrls = toStringArray(rawMedia)
         .map(url => url.trim())
         .filter(url => !!url && url.startsWith("http"));
@@ -25,8 +28,10 @@ export function useMediaUrls(quote: QuoteInterface): string[] {
           const parsedArr: unknown = JSON.parse(clean);
           // Always filter as string array before using .trim()
           const arr = toStringArray(parsedArr);
-          // Fix: force array type so TypeScript knows `item` is string
-          mediaUrls = (arr as string[]).map(item => item.trim()).filter(item => !!item && item.startsWith("http"));
+          // Explicit: TypeScript knows arr is string[]
+          mediaUrls = arr
+            .map((item: string) => item.trim())
+            .filter((item: string) => !!item && item.startsWith("http"));
         } catch (e) {
           console.warn("cannot JSON.parse media_urls!", e, clean);
         }
@@ -52,4 +57,3 @@ export function useMediaUrls(quote: QuoteInterface): string[] {
     return mediaUrls;
   }, [quote.media_urls, quote.sampleImageUrl]);
 }
-
