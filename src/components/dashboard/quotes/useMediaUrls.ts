@@ -25,7 +25,8 @@ export function useMediaUrls(quote: QuoteInterface): string[] {
           const parsedArr: unknown = JSON.parse(clean);
           // Always filter as string array before using .trim()
           const arr = toStringArray(parsedArr);
-          mediaUrls = arr.map(item => item.trim()).filter(item => !!item && item.startsWith("http"));
+          // Fix: force array type so TypeScript knows `item` is string
+          mediaUrls = (arr as string[]).map(item => item.trim()).filter(item => !!item && item.startsWith("http"));
         } catch (e) {
           console.warn("cannot JSON.parse media_urls!", e, clean);
         }
@@ -51,3 +52,4 @@ export function useMediaUrls(quote: QuoteInterface): string[] {
     return mediaUrls;
   }, [quote.media_urls, quote.sampleImageUrl]);
 }
+
