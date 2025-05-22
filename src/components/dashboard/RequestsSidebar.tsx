@@ -11,10 +11,10 @@ interface RequestsSidebarProps {
   filteredRequests: any[];
   isRequestDialogOpen: boolean;
   setIsRequestDialogOpen: (open: boolean) => void;
-  onCreateRequest: () => void;
+  onCreateRequest: () => Promise<void>; // Was () => void; should return Promise<void>
   onSelectRequest: (id: string) => Promise<void>;
   selectedRequestId: string | null;
-  handleRefresh: () => Promise<void>; // FIX: Was () => void, must match actual function & usages!
+  handleRefresh: () => Promise<void>;
 }
 
 const RequestsSidebar: React.FC<RequestsSidebarProps> = ({
@@ -31,11 +31,18 @@ const RequestsSidebar: React.FC<RequestsSidebarProps> = ({
     <div className="w-full lg:w-1/3">
       <div className="mb-6 flex justify-between items-center">
         <h2 className="text-xl font-semibold text-blue-700">הבקשות שלי</h2>
-        <Button onClick={onCreateRequest} className="bg-[#00D09E] hover:bg-[#00C090] text-white flex items-center gap-1 rounded">
+        <Button
+          onClick={async () => { await onCreateRequest(); }}
+          className="bg-[#00D09E] hover:bg-[#00C090] text-white flex items-center gap-1 rounded"
+        >
           <PlusCircle size={16} />
           בקשה חדשה
         </Button>
-        <RequestDialog isOpen={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen} onRequestCreated={handleRefresh} />
+        <RequestDialog
+          isOpen={isRequestDialogOpen}
+          onOpenChange={setIsRequestDialogOpen}
+          onRequestCreated={handleRefresh}
+        />
       </div>
       {isLoading ? (
         <div className="flex justify-center py-12">
@@ -53,3 +60,4 @@ const RequestsSidebar: React.FC<RequestsSidebarProps> = ({
 };
 
 export default RequestsSidebar;
+
