@@ -14,7 +14,7 @@ interface RequestsSidebarProps {
   onCreateRequest: () => void;
   onSelectRequest: (id: string) => Promise<void>;
   selectedRequestId: string | null;
-  handleRefresh: () => void;
+  handleRefresh: () => Promise<void>; // FIX: Was () => void, must match actual function & usages!
 }
 
 const RequestsSidebar: React.FC<RequestsSidebarProps> = ({
