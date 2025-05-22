@@ -124,6 +124,7 @@ export const acceptQuoteApi = async (
     rejectedQuotesIds.map(id => updateQuoteStatus(id, 'rejected'))
   );
 
+  // *** כאן עידכון state מיידי של הסטטוס ***
   setQuotes(prevQuotes =>
     prevQuotes.map(quote =>
       quote.id === quoteId
