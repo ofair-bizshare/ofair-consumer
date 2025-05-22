@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -19,7 +18,7 @@ const MyRequests = () => {
     handleViewRequest
   } = useMyRequests();
 
-  // Filter requests by status
+  // Filter requests by status - UPDATED LOGIC
   const activeRequests = requests.filter(req => req.status === 'active');
   const waitingForRatingRequests = requests.filter(req => req.status === 'waiting_for_rating');
   const completedRequests = requests.filter(req => req.status === 'completed');
@@ -72,6 +71,7 @@ const MyRequests = () => {
               </TabsList>
               
               <TabsContent value="active" className="mt-0">
+                {/* Only show active requests */}
                 <RequestsTabContent 
                   requests={activeRequests} 
                   onViewRequest={handleViewRequest}
@@ -82,6 +82,7 @@ const MyRequests = () => {
               </TabsContent>
               
               <TabsContent value="waiting" className="mt-0">
+                {/* Only show waiting for rating requests */}
                 <RequestsTabContent 
                   requests={waitingForRatingRequests} 
                   onViewRequest={handleViewRequest}

@@ -9,6 +9,7 @@ import {
   redirectToPayment,
   createQuoteNotification,
   createRatingReminderNotification,
+  createNotification, // ensure notification helper is imported
 } from '@/services/quotes';
 import { QuoteInterface } from '@/types/dashboard';
 
@@ -68,6 +69,15 @@ export const acceptQuoteApi = async (
     );
     setLastAcceptedQuoteId(quoteId);
 
+    // Send notification for waiting for rating
+    await createNotification({
+      title: 'יש לך בעל מקצוע שממתין לדירוג',
+      message: `נדרש דירוג לבעל המקצוע: ${acceptedQuote.professional?.name || 'בעל מקצוע'} לבקשה "${acceptedQuote.description}"`,
+      type: 'reminder',
+      actionUrl: `/dashboard#rating-section`,
+      actionLabel: 'דרג כעת'
+    });
+
     await createQuoteNotification(
       acceptedQuote.description,
       acceptedQuote.professional?.name || 'בעל מקצוע',
@@ -83,8 +93,9 @@ export const acceptQuoteApi = async (
   }
 
   // Mark only the selected quote as accepted, others rejected
-  const success = await updateQuoteStatus(quoteId, 'accepted');
-  if (!success) {
+  // Step 1: Accepted quote
+  const acceptOk = await updateQuoteStatus(quoteId, 'accepted');
+  if (!acceptOk) {
     return {
       acceptedQuote,
       quotePrice,
@@ -95,10 +106,10 @@ export const acceptQuoteApi = async (
   }
   setLastAcceptedQuoteId(quoteId);
 
+  // Step 2: Reject all others for that request
   const rejectedQuotesIds = quotes
     .filter(q => q.id !== quoteId && q.requestId === acceptedQuote.requestId)
     .map(q => q.id);
-
   await Promise.all(
     rejectedQuotesIds.map(id => updateQuoteStatus(id, 'rejected'))
   );
@@ -113,17 +124,27 @@ export const acceptQuoteApi = async (
     )
   );
 
+  // Step 3: Set request status to waiting_for_rating
   await updateRequestStatus(
     acceptedQuote.requestId,
     'waiting_for_rating'
   );
 
+  // Send notification for waiting for rating
+  await createNotification({
+    title: 'יש לך בעל מקצוע שממתין לדירוג',
+    message: `נדרש דירוג לבעל המקצוע: ${acceptedQuote.professional?.name || 'בעל מקצוע'} לבקשה "${acceptedQuote.description}"`,
+    type: 'reminder',
+    actionUrl: `/dashboard#rating-section`,
+    actionLabel: 'דרג כעת'
+  });
+
+  // Notify for quote and schedule reminder
   await createQuoteNotification(
     acceptedQuote.description,
     acceptedQuote.professional?.name || 'בעל מקצוע',
     acceptedQuote.requestId
   );
-
   setTimeout(async () => {
     await createRatingReminderNotification(
       acceptedQuote.professional?.name || 'בעל מקצוע',
