@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/providers/AuthProvider';
@@ -157,6 +156,9 @@ const RequestsTab: React.FC = () => {
             } catch (err) {
               console.error("Error during manual refresh:", err);
             }
+          } else {
+            // Ensure a promise is always returned per type signature
+            return Promise.resolve();
           }
         }}
         selectedRequestId={selectedRequestId}
