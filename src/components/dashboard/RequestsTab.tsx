@@ -147,7 +147,7 @@ const RequestsTab: React.FC = () => {
         onAcceptQuote={handleAcceptQuote}
         onRejectQuote={handleRejectQuote}
         onViewProfile={handleViewProfile}
-        // Always return a Promise
+        // Always return a Promise<void>
         onRefresh={async () => {
           if (selectedRequestId) {
             console.log("Manual refresh of quotes triggered");
@@ -157,7 +157,8 @@ const RequestsTab: React.FC = () => {
             } catch (err) {
               console.error("Error during manual refresh:", err);
             }
-            return;
+            // Explicitly return a resolved Promise
+            return Promise.resolve();
           } else {
             // Always explicit Promise, never void
             return Promise.resolve();
