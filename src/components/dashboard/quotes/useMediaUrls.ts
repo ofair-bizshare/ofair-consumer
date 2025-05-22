@@ -23,14 +23,14 @@ export function useMediaUrls(quote: QuoteInterface): string[] {
       if (clean.startsWith("[") && clean.endsWith("]")) {
         try {
           const parsedArr: unknown = JSON.parse(clean);
+          // Always filter as string array before using .trim()
           const arr = toStringArray(parsedArr);
-          mediaUrls = arr
-            .map(item => item.trim())
-            .filter(item => !!item && item.startsWith("http"));
+          mediaUrls = arr.map(item => item.trim()).filter(item => !!item && item.startsWith("http"));
         } catch (e) {
           console.warn("cannot JSON.parse media_urls!", e, clean);
         }
       } else if (clean.includes(",")) {
+        // Might be a comma-separated string of URLs
         mediaUrls = clean
           .split(",")
           .map((s) => s.trim().replace(/^"|"$/g, "")) // remove quotes
