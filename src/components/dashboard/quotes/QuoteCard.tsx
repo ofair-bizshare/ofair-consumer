@@ -2,25 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { QuoteInterface } from '@/types/dashboard';
-import PhoneRevealButton from '@/components/PhoneRevealButton';
-import ProfessionalInfo from './components/ProfessionalInfo';
-import QuoteDetails from './components/QuoteDetails';
-import AcceptedQuoteStatus from './components/AcceptedQuoteStatus';
 import QuoteActionButtons from './components/QuoteActionButtons';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ErrorBoundary from '@/components/ui/error-boundary';
 import { checkIfAcceptedQuoteExists } from '@/services/quotes/acceptedQuotes';
-import WhatsAppButton from './components/WhatsAppButton';
 import { saveReferral } from '@/services/quotes';
-import { useMediaUrls } from './useMediaUrls'; // שימוש נכון
-
-// Placeholder icon/image if no media
-const NoMediaPlaceholder = () => (
-  <div className="flex flex-col items-center justify-center w-full py-3 text-gray-400">
-    <span className="material-icons text-5xl mb-2" aria-hidden="true">image_off</span>
-    <span className="text-xs">אין מדיה זמינה לתצוגה</span>
-  </div>
-);
+import { useMediaUrls } from './useMediaUrls';
+// New split components
+import AcceptedStatusAndContact from './AcceptedStatusAndContact';
+import PhoneRevealArea from './PhoneRevealArea';
+import QuoteMainDetails from './QuoteMainDetails';
 
 interface QuoteCardProps {
   quote: QuoteInterface;
@@ -29,10 +20,10 @@ interface QuoteCardProps {
   onViewProfile: (professionalId: string) => void;
   hasAcceptedQuote: boolean;
   requestStatus?: string;
-  onRatingClick?: (quoteId: string) => void; // Added callback for rating dialog
+  onRatingClick?: (quoteId: string) => void;
 }
 
-const QuoteCard: React.FC<QuoteCardProps> = ({ 
+const QuoteCard: React.FC<QuoteCardProps> = ({
   quote, 
   onAcceptQuote, 
   onRejectQuote, 
@@ -46,7 +37,7 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   const [confirmedAccepted, setConfirmedAccepted] = useState<boolean | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const isMobile = useIsMobile();
-  
+
   if (!quote || !quote.id || !quote.professional || !quote.professional.id) {
     console.error("Invalid quote data:", quote);
     return (
@@ -57,27 +48,19 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
       </Card>
     );
   }
-  
+
   const handleQuoteRatingClick = () => {
-    console.log(`QuoteCard: Rating requested for quote ${quote.id}`);
-    if (onRatingClick) {
-      onRatingClick(quote.id);
-    }
+    if (onRatingClick) onRatingClick(quote.id);
   };
-  
+
   useEffect(() => {
     const verifyAcceptanceStatus = async () => {
       try {
         setIsVerifying(true);
         if (!quote.requestId || !quote.id) return;
         const isAccepted = await checkIfAcceptedQuoteExists(quote.requestId, quote.id);
-        console.log(`Quote ${quote.id} acceptance check: DB=${isAccepted}, UI=${quote.status === 'accepted'}`);
-        if (isAccepted !== (quote.status === 'accepted')) {
-          console.warn(`Quote ${quote.id} has status mismatch - UI: ${quote.status}, DB: ${isAccepted ? 'accepted' : 'not accepted'}`);
-        }
         setConfirmedAccepted(isAccepted);
-      } catch (error) {
-        console.error("Error checking quote acceptance status:", error);
+      } catch {
         setConfirmedAccepted(null);
       } finally {
         setIsVerifying(false);
@@ -85,11 +68,9 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     };
     verifyAcceptanceStatus();
   }, [quote.id, quote.requestId, quote.status]);
-  
-  const handleContactClick = () => {
-    setIsContactActive(!isContactActive);
-  };
-  
+
+  const handleContactClick = () => setIsContactActive(!isContactActive);
+
   const isAcceptedQuote = quote.status === 'accepted' || confirmedAccepted === true;
   const isRequestCompleted = requestStatus === 'completed';
   const isWaitingForRating = requestStatus === 'waiting_for_rating';
@@ -100,11 +81,8 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   const isInteractive = !isRequestCompleted || isAcceptedQuote;
   const showActionButtons = requestStatus !== 'completed';
 
-  // שימוש נכון ב-useMediaUrls בלבד ומחיקת כל parsing ישן
   const mediaUrls = useMediaUrls(quote.media_urls, quote.sampleImageUrl);
-  console.log("QuoteCard: mediaUrls from useMediaUrls:", mediaUrls);
 
-  // --- WHATSAPP LOGIC START ---
   const handleWhatsAppReveal = async () => {
     if (
       quote &&
@@ -119,17 +97,13 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
           quote.professional.phoneNumber || quote.professional.phone,
           quote.professional.profession
         );
-        console.log("WhatsApp reveal logged for professional:", quote.professional.id);
       } catch (err) {
-        console.error("Error logging WhatsApp reveal:", err);
+        // Could add toast here if needed
       }
     }
   };
-  // --- WHATSAPP LOGIC END ---
 
-  if (!shouldDisplayQuote && requestStatus !== 'active') {
-    return null;
-  }
+  if (!shouldDisplayQuote && requestStatus !== 'active') return null;
   if (isVerifying) {
     return (
       <Card className="overflow-hidden mb-3 shadow-md">
@@ -147,43 +121,24 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     <ErrorBoundary>
       <Card className={`overflow-hidden mb-3 shadow-md transition-shadow ${!isInteractive ? 'opacity-70' : ''}`}>
         <CardContent className="p-0">
-          <div className={`p-2 ${isMobile ? 'space-y-2' : 'p-4'} border-b border-gray-100`}>
-            <ProfessionalInfo professional={quote.professional} />
-            <QuoteDetails 
-              price={quote.price || "0"} 
-              estimatedTime={quote.estimatedTime || ""}
-              mediaUrls={mediaUrls}
-              sampleImageUrl={quote.sampleImageUrl}
-              description={quote.description || ""}
-            />
-            {isAcceptedQuote && (
-              <>
-                <AcceptedQuoteStatus 
-                  isCompleted={isRequestCompleted} 
-                  isWaitingForRating={isWaitingForRating}
-                  onRatingClick={handleQuoteRatingClick}
-                />
-                <div className="mt-2">
-                  <WhatsAppButton 
-                    phoneNumber={quote.professional.phoneNumber || quote.professional.phone || ""}
-                    professionalName={quote.professional.name || ""}
-                    professionalId={quote.professional.id}
-                    profession={quote.professional.profession || ""}
-                    onLogReveal={handleWhatsAppReveal}
-                  />
-                </div>
-              </>
-            )}
-            <div className={`mt-2 ${isMobile ? 'w-full' : ''}`}>
-              <PhoneRevealButton 
-                phoneNumber={quote.professional.phoneNumber || quote.professional.phone || "050-1234567"}
-                professionalName={quote.professional.name || "בעל מקצוע"}
-                professionalId={quote.professional.id}
-                profession={quote.professional.profession || ""}
-                autoReveal={isAcceptedQuote}
-              />
-            </div>
-          </div>
+          <QuoteMainDetails 
+            quote={quote}
+            isMobile={isMobile}
+            mediaUrls={mediaUrls}
+          />
+          <AcceptedStatusAndContact
+            isAcceptedQuote={isAcceptedQuote}
+            isRequestCompleted={isRequestCompleted}
+            isWaitingForRating={isWaitingForRating}
+            onRatingClick={handleQuoteRatingClick}
+            quote={quote}
+            handleWhatsAppReveal={handleWhatsAppReveal}
+          />
+          <PhoneRevealArea
+            quote={quote}
+            isAcceptedQuote={isAcceptedQuote}
+            isMobile={isMobile}
+          />
           <QuoteActionButtons 
             requestStatus={requestStatus}
             quoteStatus={quote.status}
