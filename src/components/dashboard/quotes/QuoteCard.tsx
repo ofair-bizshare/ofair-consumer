@@ -57,8 +57,8 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
       try {
         setIsVerifying(true);
         if (!quote.requestId || !quote.id) return;
-        const isAccepted = await checkIfAcceptedQuoteExists(quote.requestId, quote.id);
-        setConfirmedAccepted(isAccepted);
+        // כבר לא נדרשת בדיקה/עדכון מול accepted_quotes – משתמשים אך ורק quote.status
+        setConfirmedAccepted(null);
       } catch {
         setConfirmedAccepted(null);
       } finally {
