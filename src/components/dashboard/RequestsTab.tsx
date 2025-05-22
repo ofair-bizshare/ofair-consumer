@@ -1,22 +1,19 @@
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/providers/AuthProvider';
-import RequestsList from './RequestsList';
-import RequestDetail from './RequestDetail';
-import RequestDialog from './RequestDialog';
-import EmptyRequestState from './EmptyRequestState';
 import { useRequests } from '@/hooks/useRequests';
-import { useQuotes } from '@/hooks/useQuotes'; // Import path remains the same
+import { useQuotes } from '@/hooks/useQuotes';
 import PaymentMethodDialog from './quotes/PaymentMethodDialog';
-import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+// Import the new sidebar and detail components
+import RequestsSidebar from './RequestsSidebar';
+import SelectedRequestContent from './SelectedRequestContent';
+
 const RequestsTab: React.FC = () => {
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const selectedRequestRef = useRef<HTMLDivElement>(null);
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const {
     requests,
@@ -86,13 +83,11 @@ const RequestsTab: React.FC = () => {
       processQuoteAcceptance(selectedQuoteId, method);
 
       // Only close the dialog after processing if it's cash payment
-      // For credit card payment, the redirect will happen
       if (method === 'cash') {
         setTimeout(() => {
           closePaymentDialog();
         }, 1000);
       }
-
       // Refresh quotes after accepting to ensure UI is up to date
       if (selectedRequestId) {
         setTimeout(() => {
@@ -100,7 +95,7 @@ const RequestsTab: React.FC = () => {
           refreshQuotes(selectedRequestId).catch(err => {
             console.error("Error refreshing quotes after payment:", err);
           });
-        }, 1500); // Slightly longer delay to allow database to update
+        }, 1500);
       }
     }
   };
@@ -116,52 +111,62 @@ const RequestsTab: React.FC = () => {
       console.error("Error during refresh:", error);
     }
   }, [refreshRequests, refreshQuotes, selectedRequestId]);
-  return <div className="flex flex-col-reverse lg:flex-row gap-8" dir="rtl">
-      <div className="w-full lg:w-1/3">
-        <div className="mb-6 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-blue-700">הבקשות שלי</h2>
-          
-          <Button onClick={() => setIsRequestDialogOpen(true)} className="bg-[#00D09E] hover:bg-[#00C090] text-white flex items-center gap-1 rounded">
-            <PlusCircle size={16} />
-            בקשה חדשה
-          </Button>
-          
-          <RequestDialog isOpen={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen} onRequestCreated={handleRefresh} />
-        </div>
-        
-        {isLoading ? <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00d09e]"></div>
-          </div> : <RequestsList requests={filteredRequests} onSelect={async id => {
-        setSelectedRequestId(id);
-        // Auto refresh quotes when selecting a new request
-        if (id) {
-          try {
-            await refreshQuotes(id);
-          } catch (err) {
-            console.error("Error refreshing quotes on selection:", err);
+
+  // Select request handler
+  const handleSelectRequest = async (id: string) => {
+    setSelectedRequestId(id);
+    if (id) {
+      try {
+        await refreshQuotes(id);
+      } catch (err) {
+        console.error("Error refreshing quotes on selection:", err);
+      }
+    }
+  };
+
+  return (
+    <div className="flex flex-col-reverse lg:flex-row gap-8" dir="rtl">
+      <RequestsSidebar
+        isLoading={isLoading}
+        requests={requests}
+        filteredRequests={filteredRequests}
+        isRequestDialogOpen={isRequestDialogOpen}
+        setIsRequestDialogOpen={setIsRequestDialogOpen}
+        onCreateRequest={() => setIsRequestDialogOpen(true)}
+        onSelectRequest={handleSelectRequest}
+        selectedRequestId={selectedRequestId}
+        handleRefresh={handleRefresh}
+      />
+      <SelectedRequestContent
+        selectedRequest={selectedRequest}
+        quotes={quotes}
+        isLoading={isLoading}
+        filteredRequests={filteredRequests}
+        selectedRequestRef={selectedRequestRef}
+        isRequestDialogOpen={isRequestDialogOpen}
+        setIsRequestDialogOpen={setIsRequestDialogOpen}
+        onAcceptQuote={handleAcceptQuote}
+        onRejectQuote={handleRejectQuote}
+        onViewProfile={handleViewProfile}
+        onRefresh={async () => {
+          if (selectedRequestId) {
+            console.log("Manual refresh of quotes triggered");
+            try {
+              await refreshQuotes(selectedRequestId);
+              await refreshRequests();
+            } catch (err) {
+              console.error("Error during manual refresh:", err);
+            }
           }
-        }
-      }} selectedRequestId={selectedRequestId} />}
-      </div>
-      
-      <div className="w-full lg:w-2/3" ref={selectedRequestRef}>
-        {/* Only show request detail if it's not waiting for rating */}
-        {selectedRequest && selectedRequest.status !== "waiting_for_rating" ? <RequestDetail request={selectedRequest} quotes={quotes} onAcceptQuote={handleAcceptQuote} onRejectQuote={handleRejectQuote} onViewProfile={handleViewProfile} onRefresh={async () => {
-        if (selectedRequestId) {
-          console.log("Manual refresh of quotes triggered");
-          try {
-            await refreshQuotes(selectedRequestId);
-            // Also refresh the requests to get updated status
-            await refreshRequests();
-          } catch (err) {
-            console.error("Error during manual refresh:", err);
-          }
-        }
-      }} /> : <EmptyRequestState isLoading={isLoading} hasRequests={filteredRequests.length > 0} isRequestDialogOpen={isRequestDialogOpen} setIsRequestDialogOpen={setIsRequestDialogOpen} />}
-      </div>
-      
+        }}
+        selectedRequestId={selectedRequestId}
+        refreshQuotes={refreshQuotes}
+        refreshRequests={refreshRequests}
+      />
       {/* Payment Method Dialog */}
       {selectedQuote && <PaymentMethodDialog open={showPaymentDialog} onOpenChange={closePaymentDialog} onSelectPaymentMethod={handleSelectPaymentMethod} quotePrice={selectedQuote.price} isProcessing={isProcessing} />}
-    </div>;
+    </div>
+  );
 };
+
 export default RequestsTab;
