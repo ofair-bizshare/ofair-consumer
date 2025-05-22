@@ -12,10 +12,19 @@ export function useMediaUrls(
   let output: string[] = [];
 
   if (Array.isArray(media_urls)) {
+    // לוג חדש לבדוק בהירות
+    console.log("[useMediaUrls] Detected Array input:", media_urls);
+
     // Filter only valid string URLs
-    output = media_urls.filter((url): url is string => typeof url === "string" && !!url && url.startsWith("http"));
+    output = media_urls.filter((url): url is string =>
+      typeof url === "string" &&
+      !!url &&
+      url.startsWith("http")
+    );
   } else if (typeof media_urls === "string" && media_urls.trim() !== "") {
     const clean = media_urls.trim();
+
+    console.log("[useMediaUrls] Raw string:", clean);
 
     if (clean.startsWith("[") && clean.endsWith("]")) {
       // JSON array string
@@ -28,6 +37,7 @@ export function useMediaUrls(
         }
       } catch (e) {
         // fallback, ignore
+        console.warn("[useMediaUrls] Failed to parse JSON:", clean, e);
       }
     } else if (clean.includes(",")) {
       // comma separated string
@@ -45,6 +55,9 @@ export function useMediaUrls(
   if ((!output || output.length === 0) && sampleImageUrl && typeof sampleImageUrl === "string" && sampleImageUrl.startsWith("http")) {
     output = [sampleImageUrl];
   }
+
+  // לוג למעקב תוצאה סופית
+  console.log("[useMediaUrls] Final output:", output);
 
   return output;
 }

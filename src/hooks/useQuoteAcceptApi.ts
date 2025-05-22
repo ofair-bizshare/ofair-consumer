@@ -1,4 +1,3 @@
-
 import {
   updateQuoteStatus,
   updateRequestStatus,
@@ -46,6 +45,7 @@ export const acceptQuoteApi = async (
 
   const acceptedQuote = quotes.find(q => q.id === quoteId);
   if (!acceptedQuote || !user) {
+    console.error("No acceptedQuote or user. acceptedQuote:", acceptedQuote, "user:", user);
     return {
       acceptedQuote: undefined,
       quotePrice: "0",
@@ -56,12 +56,15 @@ export const acceptQuoteApi = async (
   }
   const quotePrice = formatPrice(acceptedQuote.price);
 
-  // Check if already accepted
+  // בדיקה - האם כבר אושרה הצעה כלשהי
   const isAlreadyAccepted = await checkIfAcceptedQuoteExists(
     acceptedQuote.requestId,
     quoteId
   );
   if (isAlreadyAccepted) {
+    // לוג מצב - נמצאה הצעה שכבר התקבלה
+    console.log("[acceptQuoteApi] Quote already accepted in system:", quoteId);
+
     setQuotes(prevQuotes =>
       prevQuotes.map(quote =>
         quote.id === quoteId ? { ...quote, status: 'accepted' } : quote
@@ -92,10 +95,13 @@ export const acceptQuoteApi = async (
     };
   }
 
-  // Mark only the selected quote as accepted, others rejected
-  // Step 1: Accepted quote
+  // ===========================
+  // עדכון סטטוס לכל ההצעות לבקשה זו
+  // ===========================
+  // שלב 1: עדכון quote הראשי ל-accepted
   const acceptOk = await updateQuoteStatus(quoteId, 'accepted');
   if (!acceptOk) {
+    console.error("[acceptQuoteApi] Failed to set quote status to accepted:", quoteId);
     return {
       acceptedQuote,
       quotePrice,
@@ -106,10 +112,14 @@ export const acceptQuoteApi = async (
   }
   setLastAcceptedQuoteId(quoteId);
 
-  // Step 2: Reject all others for that request
+  // שלב 2: reject לכל האחרים, עבור אותה בקשה בלבד
   const rejectedQuotesIds = quotes
     .filter(q => q.id !== quoteId && q.requestId === acceptedQuote.requestId)
     .map(q => q.id);
+
+  // לוג מצב כל הסטטוסים לפני שינוי
+  console.log("[acceptQuoteApi] Quotes before status update:", quotes.map(q => ({ id: q.id, status: q.status })));
+
   await Promise.all(
     rejectedQuotesIds.map(id => updateQuoteStatus(id, 'rejected'))
   );
@@ -124,7 +134,18 @@ export const acceptQuoteApi = async (
     )
   );
 
-  // Step 3: Set request status to waiting_for_rating
+  // שאילתת בדיקה מיד אחרי
+  console.log("[acceptQuoteApi] Quotes after status update:",
+    quotes.map(q => ({
+      id: q.id,
+      requestId: q.requestId,
+      status: q.id === quoteId
+        ? 'accepted'
+        : (q.requestId === acceptedQuote.requestId ? 'rejected' : q.status)
+    }))
+  );
+
+  // שלב 3: שינוי סטטוס הבקשה לwaiting_for_rating
   await updateRequestStatus(
     acceptedQuote.requestId,
     'waiting_for_rating'
@@ -175,11 +196,22 @@ export const acceptQuoteApi = async (
     acceptedQuote.professional.profession
   );
 
+  // בסוף: רפרוש quotes ועדכון חוזר של כל מערך הסטטוסים
   if (selectedRequestId) {
     setTimeout(() => {
       refreshQuotes(selectedRequestId);
     }, 500);
   }
+
+  // לוג סופי - מוודאים רק הצעה אחת קיבלה accepted והיתר rejected
+  setTimeout(() => {
+    console.log("[acceptQuoteApi] FINAL state of quotes for request %s:",
+      acceptedQuote.requestId,
+      quotes
+        .filter(q => q.requestId === acceptedQuote.requestId)
+        .map(q => ({ id: q.id, status: (q.id === quoteId ? "accepted" : "rejected") }))
+    );
+  }, 600);
 
   return {
     acceptedQuote,
