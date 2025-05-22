@@ -10,7 +10,7 @@ interface QuoteDetailsProps {
   price: string;
   estimatedTime: string;
   description: string;
-  mediaUrls?: string[] | string; // קיימים גם מערך וגם מחרוזת
+  mediaUrls?: string[]; // הנחה מפושטת: תמיד מקבל מערך
   sampleImageUrl?: string;
 }
 
@@ -18,48 +18,26 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   price,
   estimatedTime,
   description,
-  mediaUrls,
+  mediaUrls = [],
   sampleImageUrl
 }) => {
   const isMobile = useIsMobile();
   const [openMediaIdx, setOpenMediaIdx] = useState<number | null>(null);
 
-  // לוג מידע על מה שהתקבל
+  // Log את המדיה שמגיעה מהאב
   console.log("QuoteDetails > mediaUrls received:", mediaUrls);
 
-  // נניח תמיד שמתקבל array (רגיל או ריק)
-  let media: string[] = [];
-  if (Array.isArray(mediaUrls)) {
-    media = mediaUrls
-      .map(val => typeof val === 'string' ? val.trim() : '')
-      .filter(val => !!val && val !== "null" && val !== "undefined");
-  } else if (typeof mediaUrls === 'string' && mediaUrls.trim()) {
-    // *למקרה שעדיין - legacy support*
-    try {
-      const parsed = JSON.parse(mediaUrls.trim());
-      if (Array.isArray(parsed)) {
-        media = parsed
-          .map(val => typeof val === 'string' ? val.trim() : '')
-          .filter(val => !!val && val !== "null" && val !== "undefined");
-      } else if (typeof parsed === "string" && !!parsed && parsed !== "null" && parsed !== "undefined") {
-        media = [parsed];
-      }
-    } catch {
-      if (mediaUrls.includes(',')) {
-        media = mediaUrls.split(',')
-          .map(s => s.trim())
-          .filter(Boolean)
-          .filter(x => x !== "null" && x !== "undefined");
-      } else if (mediaUrls.startsWith('http') && mediaUrls.length > 8) {
-        media = [mediaUrls];
-      }
-    }
-  } else if (sampleImageUrl && typeof sampleImageUrl === 'string' && sampleImageUrl.startsWith('http')) {
-    media = [sampleImageUrl];
-  }
-  // לא עוד סינון-סיומת – הקוד בקומפוננטת האב כבר עשה את זה
+  // דואגים שהמדיה תהיה תמיד מערך תקין
+  const media: string[] = Array.isArray(mediaUrls)
+    ? mediaUrls.filter(val => !!val && val !== "null" && val !== "undefined")
+    : [];
 
-  console.log("QuoteDetails > media final (post filtering):", media);
+  // אם אין בכלל מדיה ויש sampleImageUrl, מוסיפים אותו
+  const allMedia = media.length > 0
+    ? media
+    : (sampleImageUrl && sampleImageUrl.startsWith('http') ? [sampleImageUrl] : []);
+
+  console.log('QuoteDetails > after fallback:', allMedia);
 
   const isImage = (url: string) =>
     /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(url);
@@ -72,10 +50,9 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   return (
     <ErrorBoundary fallback={<div className="p-2 bg-red-50 rounded text-sm">שגיאה בטעינת פרטי ההצעה</div>}>
       <div className="mt-2 space-y-2">
-        {/* גלריה מוצגת רק אם media לא ריק */}
-        {media.length > 0 ? (
+        {allMedia.length > 0 ? (
           <div className="mt-2 flex flex-wrap gap-3 items-center">
-            {media.map((src, i) => (
+            {allMedia.map((src, i) => (
               <div key={src + i} className="relative inline-block group">
                 {isImage(src) ? (
                   <img
@@ -101,7 +78,6 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
                     <span className="sr-only">צפייה בוידאו</span>
                   </div>
                 ) : (
-                  // תמיכה בקישור לא ידוע (כל עוד יש), הצג קישור
                   <a
                     href={src}
                     target="_blank"
@@ -129,9 +105,9 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
                   <DialogHeader>
                     <DialogTitle>
                       <div className="flex items-center gap-2 text-lg">
-                        {isImage(media[openMediaIdx]) ? (
+                        {isImage(allMedia[openMediaIdx]) ? (
                           <Image className="w-6 h-6 text-blue-500" />
-                        ) : isVideo(media[openMediaIdx]) ? (
+                        ) : isVideo(allMedia[openMediaIdx]) ? (
                           <Video className="w-6 h-6 text-blue-500" />
                         ) : (
                           <Image className="w-6 h-6 text-blue-500" />
@@ -144,25 +120,25 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
                     </DialogDescription>
                   </DialogHeader>
                   <div className="w-full flex justify-center my-2">
-                    {isImage(media[openMediaIdx]) ? (
+                    {isImage(allMedia[openMediaIdx]) ? (
                       <img
-                        src={media[openMediaIdx]}
+                        src={allMedia[openMediaIdx]}
                         alt={`המדיה #${openMediaIdx + 1}`}
                         className="rounded-lg shadow max-h-[70vh] max-w-full border border-gray-200"
                         loading="lazy"
                       />
-                    ) : isVideo(media[openMediaIdx]) ? (
+                    ) : isVideo(allMedia[openMediaIdx]) ? (
                       <video controls className="max-h-[70vh] rounded-lg border border-gray-200">
-                        <source src={media[openMediaIdx]} />
+                        <source src={allMedia[openMediaIdx]} />
                         הדפדפן שלך אינו תומך בניגון וידאו.
                       </video>
                     ) : (
                       <a
-                        href={media[openMediaIdx]}
+                        href={allMedia[openMediaIdx]}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="bg-gray-200 text-gray-700 px-3 py-1.5 rounded text-xs block"
-                        title={media[openMediaIdx]}>
+                        title={allMedia[openMediaIdx]}>
                         מדיה לא מזוהה, הצג קישור
                       </a>
                     )}

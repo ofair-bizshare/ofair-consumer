@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { QuoteInterface } from '@/types/dashboard';
@@ -11,6 +12,7 @@ import ErrorBoundary from '@/components/ui/error-boundary';
 import { checkIfAcceptedQuoteExists } from '@/services/quotes/acceptedQuotes';
 import WhatsAppButton from './components/WhatsAppButton';
 import { saveReferral } from '@/services/quotes';
+import { useMediaUrls } from './useMediaUrls'; // שימוש נכון
 
 // Placeholder icon/image if no media
 const NoMediaPlaceholder = () => (
@@ -45,7 +47,6 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   const [isVerifying, setIsVerifying] = useState(false);
   const isMobile = useIsMobile();
   
-  // Safety check - if quote is invalid, don't render anything
   if (!quote || !quote.id || !quote.professional || !quote.professional.id) {
     console.error("Invalid quote data:", quote);
     return (
@@ -57,7 +58,6 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     );
   }
   
-  // Handle rating click for this specific quote
   const handleQuoteRatingClick = () => {
     console.log(`QuoteCard: Rating requested for quote ${quote.id}`);
     if (onRatingClick) {
@@ -65,22 +65,16 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     }
   };
   
-  // Check the actual acceptance status in the database when component mounts
   useEffect(() => {
     const verifyAcceptanceStatus = async () => {
       try {
         setIsVerifying(true);
         if (!quote.requestId || !quote.id) return;
-        
-        // Check acceptance status in the database
         const isAccepted = await checkIfAcceptedQuoteExists(quote.requestId, quote.id);
         console.log(`Quote ${quote.id} acceptance check: DB=${isAccepted}, UI=${quote.status === 'accepted'}`);
-        
-        // If there's a mismatch between UI state and DB state, log it
         if (isAccepted !== (quote.status === 'accepted')) {
           console.warn(`Quote ${quote.id} has status mismatch - UI: ${quote.status}, DB: ${isAccepted ? 'accepted' : 'not accepted'}`);
         }
-        
         setConfirmedAccepted(isAccepted);
       } catch (error) {
         console.error("Error checking quote acceptance status:", error);
@@ -89,7 +83,6 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
         setIsVerifying(false);
       }
     };
-    
     verifyAcceptanceStatus();
   }, [quote.id, quote.requestId, quote.status]);
   
@@ -97,71 +90,22 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     setIsContactActive(!isContactActive);
   };
   
-  // Determine if this quote is accepted - check both the quote.status and the database verification
   const isAcceptedQuote = quote.status === 'accepted' || confirmedAccepted === true;
-  
-  // Determine if this quote should be displayed with full interactivity
   const isRequestCompleted = requestStatus === 'completed';
   const isWaitingForRating = requestStatus === 'waiting_for_rating';
-  
-  // Only show non-accepted quotes if the request is active
-  // When request is completed or waiting for rating, ONLY show accepted quotes
   const shouldDisplayQuote = 
     requestStatus === 'active' || 
     isAcceptedQuote || 
     quote.status === 'pending';
-    
-  // Card is interactive if request is not completed or this is the accepted quote
   const isInteractive = !isRequestCompleted || isAcceptedQuote;
-  
-  // Show action buttons based on status combinations
   const showActionButtons = requestStatus !== 'completed';
 
-  // עיבוד מדיה - תיקון מלא שמטפל במקרה בו media_urls הוא מחרוזת שמייצגת מערך JSON
-  let mediaUrls: string[] = [];
-  try {
-    const mediaValue = quote.media_urls as string[] | string | null | undefined;
-    if (Array.isArray(mediaValue)) {
-      mediaUrls = mediaValue.filter(
-        (url) => typeof url === "string" && url.trim().startsWith("http")
-      );
-    } else if (typeof mediaValue === "string" && mediaValue.trim() !== "") {
-      const clean = mediaValue.trim();
-      if (clean.startsWith("[") && clean.endsWith("]")) {
-        // זו מחרוזת JSON של מערך כתובות
-        try {
-          const parsedArr = JSON.parse(clean);
-          if (Array.isArray(parsedArr)) {
-            mediaUrls = parsedArr.filter(
-              (url) => typeof url === "string" && url.trim().startsWith("http")
-            );
-          }
-        } catch (e) {
-          console.warn("cannot JSON.parse media_urls!", e, clean);
-        }
-      } else if (clean.includes(",")) {
-        mediaUrls = clean
-          .split(",")
-          .map((s) => s.trim().replace(/^"|"$/g, "")) // הסרת גרשיים למקרה שהן קיימות סביב כל url
-          .filter((s) => s.startsWith("http"));
-      } else if (clean.startsWith("http") && clean.length > 8) {
-        mediaUrls = [clean];
-      }
-    }
-    // Fallback: sampleImageUrl
-    if ((!mediaUrls || mediaUrls.length === 0) && quote.sampleImageUrl && typeof quote.sampleImageUrl === "string" && quote.sampleImageUrl.startsWith("http")) {
-      mediaUrls = [quote.sampleImageUrl];
-    }
-    // לוג זיהוי עם תוצאה סופית
-    console.log("QuoteCard: mediaUrls to send to QuoteDetails:", mediaUrls);
-  } catch (err) {
-    console.warn("שגיאה בעיבוד quote.media_urls:", { value: quote.media_urls, error: err });
-    mediaUrls = [];
-  }
+  // שימוש נכון ב-useMediaUrls בלבד ומחיקת כל parsing ישן
+  const mediaUrls = useMediaUrls(quote.media_urls, quote.sampleImageUrl);
+  console.log("QuoteCard: mediaUrls from useMediaUrls:", mediaUrls);
 
   // --- WHATSAPP LOGIC START ---
   const handleWhatsAppReveal = async () => {
-    // Log the WhatsApp reveal the same way as phone reveals with saveReferral
     if (
       quote &&
       quote.professional &&
@@ -169,7 +113,6 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     ) {
       try {
         await saveReferral(
-          // Use user ID if available, fallback to ''
           (quote as any)?.userId || "",
           quote.professional.id,
           quote.professional.name,
@@ -182,15 +125,11 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
       }
     }
   };
-
   // --- WHATSAPP LOGIC END ---
 
-  // Don't render the card at all if it shouldn't be displayed
   if (!shouldDisplayQuote && requestStatus !== 'active') {
     return null;
   }
-  
-  // Show a loading state while verifying the acceptance status from DB
   if (isVerifying) {
     return (
       <Card className="overflow-hidden mb-3 shadow-md">
@@ -209,7 +148,6 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
       <Card className={`overflow-hidden mb-3 shadow-md transition-shadow ${!isInteractive ? 'opacity-70' : ''}`}>
         <CardContent className="p-0">
           <div className={`p-2 ${isMobile ? 'space-y-2' : 'p-4'} border-b border-gray-100`}>
-            {/* רק אם mediaUrls לא ריק, תציג גלריה */}
             <ProfessionalInfo professional={quote.professional} />
             <QuoteDetails 
               price={quote.price || "0"} 
@@ -218,7 +156,6 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
               sampleImageUrl={quote.sampleImageUrl}
               description={quote.description || ""}
             />
-            
             {isAcceptedQuote && (
               <>
                 <AcceptedQuoteStatus 
@@ -226,7 +163,6 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
                   isWaitingForRating={isWaitingForRating}
                   onRatingClick={handleQuoteRatingClick}
                 />
-                {/* WhatsApp Button only for accepted quotes and if phone number present */}
                 <div className="mt-2">
                   <WhatsAppButton 
                     phoneNumber={quote.professional.phoneNumber || quote.professional.phone || ""}
@@ -238,18 +174,16 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
                 </div>
               </>
             )}
-            
             <div className={`mt-2 ${isMobile ? 'w-full' : ''}`}>
               <PhoneRevealButton 
                 phoneNumber={quote.professional.phoneNumber || quote.professional.phone || "050-1234567"}
                 professionalName={quote.professional.name || "בעל מקצוע"}
                 professionalId={quote.professional.id}
                 profession={quote.professional.profession || ""}
-                autoReveal={isAcceptedQuote} // Auto reveal for accepted quotes
+                autoReveal={isAcceptedQuote}
               />
             </div>
           </div>
-          
           <QuoteActionButtons 
             requestStatus={requestStatus}
             quoteStatus={quote.status}
