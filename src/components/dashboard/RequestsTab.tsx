@@ -99,7 +99,7 @@ const RequestsTab: React.FC = () => {
     }
   };
 
-  // Handle refresh button click
+  // Handle refresh button click and other places: always async!
   const handleRefresh = useCallback(async () => {
     try {
       await refreshRequests();
@@ -112,7 +112,7 @@ const RequestsTab: React.FC = () => {
   }, [refreshRequests, refreshQuotes, selectedRequestId]);
 
   // Select request handler
-  const handleSelectRequest = async (id: string) => {
+  const handleSelectRequest = useCallback(async (id: string) => {
     setSelectedRequestId(id);
     if (id) {
       try {
@@ -121,7 +121,7 @@ const RequestsTab: React.FC = () => {
         console.error("Error refreshing quotes on selection:", err);
       }
     }
-  };
+  }, [refreshQuotes]);
 
   return (
     <div className="flex flex-col-reverse lg:flex-row gap-8" dir="rtl">
@@ -147,6 +147,7 @@ const RequestsTab: React.FC = () => {
         onAcceptQuote={handleAcceptQuote}
         onRejectQuote={handleRejectQuote}
         onViewProfile={handleViewProfile}
+        // Always return a Promise
         onRefresh={async () => {
           if (selectedRequestId) {
             console.log("Manual refresh of quotes triggered");
@@ -156,8 +157,9 @@ const RequestsTab: React.FC = () => {
             } catch (err) {
               console.error("Error during manual refresh:", err);
             }
+            return;
           } else {
-            // Ensure a promise is always returned per type signature
+            // Always explicit Promise
             return Promise.resolve();
           }
         }}
