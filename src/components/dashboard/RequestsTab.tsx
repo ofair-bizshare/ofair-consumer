@@ -123,6 +123,22 @@ const RequestsTab: React.FC = () => {
     }
   }, [refreshQuotes]);
 
+  // Provide an explicit typed async function for onRefresh
+  const handleSelectedRequestRefresh = useCallback(async (): Promise<void> => {
+    if (selectedRequestId) {
+      console.log("Manual refresh of quotes triggered");
+      try {
+        await refreshQuotes(selectedRequestId);
+        await refreshRequests();
+      } catch (err) {
+        console.error("Error during manual refresh:", err);
+      }
+      return Promise.resolve();
+    } else {
+      return Promise.resolve();
+    }
+  }, [selectedRequestId, refreshQuotes, refreshRequests]);
+
   return (
     <div className="flex flex-col-reverse lg:flex-row gap-8" dir="rtl">
       <RequestsSidebar
@@ -147,23 +163,8 @@ const RequestsTab: React.FC = () => {
         onAcceptQuote={handleAcceptQuote}
         onRejectQuote={handleRejectQuote}
         onViewProfile={handleViewProfile}
-        // Always return a Promise<void>
-        onRefresh={async () => {
-          if (selectedRequestId) {
-            console.log("Manual refresh of quotes triggered");
-            try {
-              await refreshQuotes(selectedRequestId);
-              await refreshRequests();
-            } catch (err) {
-              console.error("Error during manual refresh:", err);
-            }
-            // Explicitly return a resolved Promise
-            return Promise.resolve();
-          } else {
-            // Always explicit Promise, never void
-            return Promise.resolve();
-          }
-        }}
+        // Use the explicit function to avoid TS error
+        onRefresh={handleSelectedRequestRefresh}
         selectedRequestId={selectedRequestId}
         refreshQuotes={refreshQuotes}
         refreshRequests={refreshRequests}
