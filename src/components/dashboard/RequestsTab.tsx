@@ -7,6 +7,7 @@ import PaymentMethodDialog from './quotes/PaymentMethodDialog';
 // Import the new sidebar and detail components
 import RequestsSidebar from './RequestsSidebar';
 import SelectedRequestContent from './SelectedRequestContent';
+import RequestDialog from './RequestDialog';
 
 const RequestsTab: React.FC = () => {
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
@@ -184,6 +185,15 @@ const RequestsTab: React.FC = () => {
           isProcessing={isProcessing}
         />
       )}
+      {/* Update RequestDialog usage below */}
+      <RequestDialog
+        isOpen={isRequestDialogOpen}
+        onOpenChange={setIsRequestDialogOpen}
+        onRequestCreated={async () => {
+          await handleRefresh();
+          return Promise.resolve();
+        }}
+      />
     </div>
   );
 };
