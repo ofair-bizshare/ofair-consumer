@@ -25,8 +25,8 @@ export function useMediaUrls(quote: QuoteInterface): string[] {
         try {
           const parsedArr: unknown = JSON.parse(clean);
           if (Array.isArray(parsedArr)) {
-            // First, filter for strings only, then use temp variable to satisfy TypeScript
-            const stringArr = parsedArr.filter((item): item is string => typeof item === "string");
+            // SAFETY: filter for string, then assign to string[] before .map
+            const stringArr: string[] = parsedArr.filter((item): item is string => typeof item === "string");
             mediaUrls = stringArr
               .map(item => item.trim())
               .filter(item => !!item && item.startsWith("http"));
@@ -55,4 +55,3 @@ export function useMediaUrls(quote: QuoteInterface): string[] {
     return mediaUrls;
   }, [quote.media_urls, quote.sampleImageUrl]);
 }
-
