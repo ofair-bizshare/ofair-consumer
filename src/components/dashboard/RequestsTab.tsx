@@ -100,7 +100,7 @@ const RequestsTab: React.FC = () => {
   };
 
   // Handle refresh button click and other places: always async!
-  const handleRefresh = useCallback(async () => {
+  const handleRefresh = useCallback(async (): Promise<void> => {
     try {
       await refreshRequests();
       if (selectedRequestId) {
@@ -109,6 +109,8 @@ const RequestsTab: React.FC = () => {
     } catch (error) {
       console.error("Error during refresh:", error);
     }
+    // Always explicitly return a resolved Promise (so return type is Promise<void>)
+    return Promise.resolve();
   }, [refreshRequests, refreshQuotes, selectedRequestId]);
 
   // Select request handler
@@ -147,7 +149,10 @@ const RequestsTab: React.FC = () => {
         filteredRequests={filteredRequests}
         isRequestDialogOpen={isRequestDialogOpen}
         setIsRequestDialogOpen={setIsRequestDialogOpen}
-        onCreateRequest={() => setIsRequestDialogOpen(true)}
+        onCreateRequest={async () => {
+          setIsRequestDialogOpen(true);
+          return Promise.resolve();
+        }}
         onSelectRequest={handleSelectRequest}
         selectedRequestId={selectedRequestId}
         handleRefresh={handleRefresh}
