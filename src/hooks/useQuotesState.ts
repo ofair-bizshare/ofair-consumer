@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { QuoteInterface } from '@/types/dashboard';
 import { useToast } from '@/hooks/use-toast';
@@ -31,19 +30,10 @@ export const useQuotesState = (selectedRequestId: string | null) => {
         setQuotes([]);
         return;
       }
-      // Check for an accepted quote in the fetched quotes
+      // במקום בדיקה של accepted_quotes נעבור רק על quotes.status:
       const acceptedQuote = requestQuotes.find(q => q.status === 'accepted');
       if (acceptedQuote) {
         setLastAcceptedQuoteId(acceptedQuote.id);
-      } else {
-        for (const quote of requestQuotes) {
-          const isAccepted = await checkIfAcceptedQuoteExists(requestId, quote.id);
-          if (isAccepted) {
-            await updateQuoteStatus(quote.id, 'accepted');
-            setLastAcceptedQuoteId(quote.id);
-            break;
-          }
-        }
       }
       setQuotes(prevQuotes => {
         const otherQuotes = prevQuotes.filter(q => q.requestId !== requestId);

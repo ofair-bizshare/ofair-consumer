@@ -76,16 +76,14 @@ export const createNotification = async (
       title: notification.title,
       description: notification.message,
       type: notification.type,
-      professional_id: user.id,
+      professional_id: notification.user_id || user.id, // תעדוף user_id שהוזן, אחרת משתמש מחובר
       is_read: false,
       created_at: new Date().toISOString(),
       related_id: undefined,
       related_type: undefined,
-      ...(
-        notification.actionUrl
-          ? { related_id: notification.actionUrl.split('=').pop() }
-          : {}
-      ),
+      ...(notification.actionUrl
+        ? { related_id: notification.actionUrl.split('=').pop() }
+        : {}),
       ...(notification.actionLabel ? { related_type: notification.actionLabel } : {}),
     };
 

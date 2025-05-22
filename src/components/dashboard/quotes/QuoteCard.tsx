@@ -70,7 +70,8 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
 
   const handleContactClick = () => setIsContactActive(!isContactActive);
 
-  const isAcceptedQuote = quote.status === 'accepted' || confirmedAccepted === true;
+  // נשתמש ישירות בסטטוס מהצעת המחיר:
+  const isAcceptedQuote = quote.status === 'accepted'; // מבטל בדיקה מול confirmedAccepted
   const isRequestCompleted = requestStatus === 'completed';
   const isWaitingForRating = requestStatus === 'waiting_for_rating';
   const shouldDisplayQuote = 
