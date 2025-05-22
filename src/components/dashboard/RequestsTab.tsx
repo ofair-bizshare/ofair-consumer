@@ -157,7 +157,6 @@ const RequestsTab: React.FC = () => {
             } catch (err) {
               console.error("Error during manual refresh:", err);
             }
-            // Ensure always returns a Promise<void>
             return;
           } else {
             // Always explicit Promise, never void
