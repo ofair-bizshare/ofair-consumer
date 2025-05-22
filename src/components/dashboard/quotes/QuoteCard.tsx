@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { QuoteInterface } from '@/types/dashboard';
@@ -21,6 +22,8 @@ interface QuoteCardProps {
   requestStatus?: string;
   onRatingClick?: (quoteId: string) => void;
 }
+
+const isAcceptedStatus = (status: string) => status === 'accepted' || status === 'approved';
 
 const QuoteCard: React.FC<QuoteCardProps> = ({
   quote, 
@@ -57,7 +60,6 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
       try {
         setIsVerifying(true);
         if (!quote.requestId || !quote.id) return;
-        // כבר לא נדרשת בדיקה/עדכון מול accepted_quotes – משתמשים אך ורק quote.status
         setConfirmedAccepted(null);
       } catch {
         setConfirmedAccepted(null);
@@ -70,8 +72,8 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
 
   const handleContactClick = () => setIsContactActive(!isContactActive);
 
-  // נשתמש ישירות בסטטוס מהצעת המחיר:
-  const isAcceptedQuote = quote.status === 'accepted'; // מבטל בדיקה מול confirmedAccepted
+  // עדכון: הבדיקה כוללת גם "approved"
+  const isAcceptedQuote = isAcceptedStatus(quote.status);
   const isRequestCompleted = requestStatus === 'completed';
   const isWaitingForRating = requestStatus === 'waiting_for_rating';
   const shouldDisplayQuote = 

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { QuoteInterface } from '@/types/dashboard';
 import { useToast } from '@/hooks/use-toast';
@@ -8,20 +9,18 @@ import {
   updateQuoteStatus
 } from '@/services/quotes';
 
-// Handles loading, state, refreshing
+const isAcceptedStatus = (status: string) => status === 'accepted' || status === 'approved';
+
 export const useQuotesState = (selectedRequestId: string | null) => {
   const [quotes, setQuotes] = useState<QuoteInterface[]>([]);
   const [lastAcceptedQuoteId, setLastAcceptedQuoteId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Load quotes when selectedRequestId changes
   useEffect(() => {
     if (!selectedRequestId) return;
     refreshQuotes(selectedRequestId);
-    // eslint-disable-next-line
   }, [selectedRequestId]);
 
-  // Function to refresh quotes
   const refreshQuotes = useCallback(async (requestId: string) => {
     if (!requestId) return;
     try {
@@ -30,8 +29,8 @@ export const useQuotesState = (selectedRequestId: string | null) => {
         setQuotes([]);
         return;
       }
-      // במקום בדיקה של accepted_quotes נעבור רק על quotes.status:
-      const acceptedQuote = requestQuotes.find(q => q.status === 'accepted');
+      // בדיקת הצעה מאושרת - גם approved:
+      const acceptedQuote = requestQuotes.find(q => isAcceptedStatus(q.status));
       if (acceptedQuote) {
         setLastAcceptedQuoteId(acceptedQuote.id);
       }

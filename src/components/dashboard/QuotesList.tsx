@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { QuoteInterface } from '@/types/dashboard';
 import QuoteCard from './quotes/QuoteCard';
@@ -12,6 +11,8 @@ interface QuotesListProps {
   requestStatus?: string;
   onRatingClick?: (quoteId: string) => void; // Added for rating functionality
 }
+
+const isAcceptedStatus = (status: string) => status === 'accepted' || status === 'approved';
 
 const QuotesList: React.FC<QuotesListProps> = ({ 
   quotes = [], // Default to empty array
@@ -40,15 +41,16 @@ const QuotesList: React.FC<QuotesListProps> = ({
   }
   
   // Check if any quote is accepted based on its status
-  const hasAcceptedQuote = validQuotes.some(quote => quote?.status === 'accepted');
+  const hasAcceptedQuote = validQuotes.some(quote => isAcceptedStatus(quote?.status));
   console.log("Has accepted quote:", hasAcceptedQuote, "Quotes count:", validQuotes.length);
   console.log("Quote statuses:", validQuotes.map(q => ({ id: q.id, status: q.status })));
   
   // Sort quotes to show accepted quotes first, then pending, then rejected
   const sortedQuotes = [...validQuotes].sort((a, b) => {
-    // Priority order: accepted > pending > other statuses
+    // Priority order: accepted/approved > pending > other statuses
     const statusPriority: Record<string, number> = {
       'accepted': 3,
+      'approved': 3,
       'pending': 2,
       'rejected': 0, // Lower priority for rejected quotes (will appear at the bottom)
       'expired': 0
@@ -61,20 +63,16 @@ const QuotesList: React.FC<QuotesListProps> = ({
     // Use the timestamp property from quotes, with safe type handling
     const getTimestamp = (quote: QuoteInterface | null | undefined) => {
       if (!quote) return Date.now();
-      
-      // Check if the quote object has created_at property
       const createdAt = quote as unknown as { created_at?: string | number | Date };
       if (createdAt && createdAt.created_at) {
         return new Date(createdAt.created_at).getTime();
       }
-      
       return Date.now(); // Fallback
     };
     
     if (priorityA !== priorityB) {
       return priorityB - priorityA;
     }
-    
     return getTimestamp(b) - getTimestamp(a);
   });
   
@@ -86,9 +84,7 @@ const QuotesList: React.FC<QuotesListProps> = ({
           console.warn("Skipping invalid quote in QuotesList:", quote);
           return null;
         }
-        
         console.log(`Rendering quote ${quote.id} with status: ${quote.status}`);
-        
         return (
           <ErrorBoundary key={quote.id} fallback={
             <div className="p-3 bg-red-50 rounded-md text-sm">
