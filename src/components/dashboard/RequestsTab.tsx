@@ -157,9 +157,10 @@ const RequestsTab: React.FC = () => {
             } catch (err) {
               console.error("Error during manual refresh:", err);
             }
+            // Ensure always returns a Promise<void>
             return;
           } else {
-            // Always explicit Promise
+            // Always explicit Promise, never void
             return Promise.resolve();
           }
         }}
@@ -168,7 +169,15 @@ const RequestsTab: React.FC = () => {
         refreshRequests={refreshRequests}
       />
       {/* Payment Method Dialog */}
-      {selectedQuote && <PaymentMethodDialog open={showPaymentDialog} onOpenChange={closePaymentDialog} onSelectPaymentMethod={handleSelectPaymentMethod} quotePrice={selectedQuote.price} isProcessing={isProcessing} />}
+      {selectedQuote && (
+        <PaymentMethodDialog
+          open={showPaymentDialog}
+          onOpenChange={closePaymentDialog}
+          onSelectPaymentMethod={handleSelectPaymentMethod}
+          quotePrice={selectedQuote.price}
+          isProcessing={isProcessing}
+        />
+      )}
     </div>
   );
 };
