@@ -13,6 +13,7 @@ import { PlusCircle } from 'lucide-react';
 const RequestsTab: React.FC = () => {
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'active' | 'waiting_for_rating'>('active');
   const selectedRequestRef = useRef<HTMLDivElement>(null);
   const {
     user
@@ -37,10 +38,9 @@ const RequestsTab: React.FC = () => {
   const selectedRequest = requests.find(r => r.id === selectedRequestId);
   const selectedQuote = selectedQuoteId ? quotes.find(q => q.id === selectedQuoteId) : null;
 
-  // Define filtered requests: exclude waiting_for_rating requests
-  const filteredRequests = requests.filter(
-    r => r.status !== 'waiting_for_rating'
-  );
+  // ללא סינון חוסם, ניקח הכל
+  const activeRequests = requests.filter(r => r.status === 'active');
+  const waitingForRatingRequests = requests.filter(r => r.status === 'waiting_for_rating');
 
   // Initial data load when component mounts
   useEffect(() => {
@@ -105,7 +105,7 @@ const RequestsTab: React.FC = () => {
     }
   };
 
-  // Handle refresh button click
+  // Update: make handleRefresh async and return Promise<void>
   const handleRefresh = useCallback(async () => {
     try {
       await refreshRequests();
@@ -116,52 +116,79 @@ const RequestsTab: React.FC = () => {
       console.error("Error during refresh:", error);
     }
   }, [refreshRequests, refreshQuotes, selectedRequestId]);
-  return <div className="flex flex-col-reverse lg:flex-row gap-8" dir="rtl">
+
+  return (
+    <div className="flex flex-col-reverse lg:flex-row gap-8" dir="rtl">
       <div className="w-full lg:w-1/3">
         <div className="mb-6 flex justify-between items-center">
           <h2 className="text-xl font-semibold text-blue-700">הבקשות שלי</h2>
-          
           <Button onClick={() => setIsRequestDialogOpen(true)} className="bg-[#00D09E] hover:bg-[#00C090] text-white flex items-center gap-1 rounded">
             <PlusCircle size={16} />
             בקשה חדשה
           </Button>
-          
           <RequestDialog isOpen={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen} onRequestCreated={handleRefresh} />
         </div>
-        
-        {isLoading ? <div className="flex justify-center py-12">
+        {/* טאב בין פעיל לממתין לדירוג */}
+        <div className="flex gap-2 mb-4">
+          <Button 
+            variant={activeTab === 'active' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('active')}
+            className={activeTab === 'active' ? 'bg-blue-100 text-blue-700' : ''}
+          >
+            פעילות ({activeRequests.length})
+          </Button>
+          <Button 
+            variant={activeTab === 'waiting_for_rating' ? 'default' : 'outline'}
+            onClick={() => setActiveTab('waiting_for_rating')}
+            className={activeTab === 'waiting_for_rating' ? 'bg-amber-100 text-amber-700' : ''}
+          >
+            ממתינות לדירוג ({waitingForRatingRequests.length})
+          </Button>
+        </div>
+        {isLoading ? (
+          <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#00d09e]"></div>
-          </div> : <RequestsList requests={filteredRequests} onSelect={async id => {
-        setSelectedRequestId(id);
-        // Auto refresh quotes when selecting a new request
-        if (id) {
-          try {
-            await refreshQuotes(id);
-          } catch (err) {
-            console.error("Error refreshing quotes on selection:", err);
-          }
-        }
-      }} selectedRequestId={selectedRequestId} />}
+          </div>
+        ) : (
+          <>
+            {activeTab === 'active' ? (
+              <RequestsList requests={activeRequests} onSelect={async id => {
+                setSelectedRequestId(id);
+                if (id) {
+                  try {
+                    await refreshQuotes(id);
+                  } catch (err) {
+                    console.error("Error refreshing quotes on selection:", err);
+                  }
+                }
+              }} selectedRequestId={selectedRequestId} />
+            ) : (
+              <RequestsList requests={waitingForRatingRequests} onSelect={id => setSelectedRequestId(id)} selectedRequestId={selectedRequestId} />
+            )}
+          </>
+        )}
       </div>
-      
       <div className="w-full lg:w-2/3" ref={selectedRequestRef}>
         {/* Only show request detail if it's not waiting for rating */}
-        {selectedRequest && selectedRequest.status !== "waiting_for_rating" ? <RequestDetail request={selectedRequest} quotes={quotes} onAcceptQuote={handleAcceptQuote} onRejectQuote={handleRejectQuote} onViewProfile={handleViewProfile} onRefresh={async () => {
-        if (selectedRequestId) {
-          console.log("Manual refresh of quotes triggered");
-          try {
-            await refreshQuotes(selectedRequestId);
-            // Also refresh the requests to get updated status
-            await refreshRequests();
-          } catch (err) {
-            console.error("Error during manual refresh:", err);
-          }
-        }
-      }} /> : <EmptyRequestState isLoading={isLoading} hasRequests={filteredRequests.length > 0} isRequestDialogOpen={isRequestDialogOpen} setIsRequestDialogOpen={setIsRequestDialogOpen} />}
+        {(selectedRequestId && selectedRequest && selectedRequest.status !== "waiting_for_rating") ? (
+          <RequestDetail request={selectedRequest} quotes={quotes} onAcceptQuote={handleAcceptQuote} onRejectQuote={handleRejectQuote} onViewProfile={handleViewProfile} onRefresh={async () => {
+            if (selectedRequestId) {
+              console.log("Manual refresh of quotes triggered");
+              try {
+                await refreshQuotes(selectedRequestId);
+                await refreshRequests();
+              } catch (err) {
+                console.error("Error during manual refresh:", err);
+              }
+            }
+          }} />
+        ) : (
+          <EmptyRequestState isLoading={isLoading} hasRequests={(activeTab === 'active' ? activeRequests : waitingForRatingRequests).length > 0} isRequestDialogOpen={isRequestDialogOpen} setIsRequestDialogOpen={setIsRequestDialogOpen} />
+        )}
       </div>
-      
       {/* Payment Method Dialog */}
       {selectedQuote && <PaymentMethodDialog open={showPaymentDialog} onOpenChange={closePaymentDialog} onSelectPaymentMethod={handleSelectPaymentMethod} quotePrice={selectedQuote.price} isProcessing={isProcessing} />}
-    </div>;
+    </div>
+  );
 };
 export default RequestsTab;

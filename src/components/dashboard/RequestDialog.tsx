@@ -6,7 +6,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 interface RequestDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onRequestCreated?: () => void;
+  onRequestCreated?: () => Promise<void>;
 }
 const RequestDialog: React.FC<RequestDialogProps> = ({
   isOpen,
@@ -14,13 +14,10 @@ const RequestDialog: React.FC<RequestDialogProps> = ({
   onRequestCreated
 }) => {
   const isMobile = useIsMobile();
-  const handleSuccess = () => {
-    // Close dialog when request is successfully created
+  const handleSuccess = async () => {
     onOpenChange(false);
-
-    // Refresh requests if callback provided
     if (onRequestCreated) {
-      onRequestCreated();
+      await onRequestCreated();
     }
   };
   return <Dialog open={isOpen} onOpenChange={onOpenChange}>
