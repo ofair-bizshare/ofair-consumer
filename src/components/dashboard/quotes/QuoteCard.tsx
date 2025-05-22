@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { QuoteInterface } from '@/types/dashboard';
@@ -124,7 +123,6 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
           <QuoteMainDetails 
             quote={quote}
             isMobile={isMobile}
-            mediaUrls={mediaUrls}
           />
           <AcceptedStatusAndContact
             isAcceptedQuote={isAcceptedQuote}
