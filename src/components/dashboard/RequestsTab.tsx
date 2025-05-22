@@ -111,17 +111,6 @@ const RequestsTab: React.FC = () => {
       console.error("Error during refresh:", error);
     }
   }, [refreshRequests, refreshQuotes, selectedRequestId]);
-
-  // Add console logs for main debug
-  useEffect(() => {
-    console.log('[RequestsTab][debug] Current requests loaded:', requests);
-    console.log('[RequestsTab][debug] Current selectedRequestId:', selectedRequestId);
-    if (selectedRequestId) {
-      const matching = requests.find(r => r.id === selectedRequestId);
-      console.log('[RequestsTab][debug] Matching request object:', matching);
-    }
-  }, [requests, selectedRequestId]);
-
   return <div className="flex flex-col-reverse lg:flex-row gap-8" dir="rtl">
       <div className="w-full lg:w-1/3">
         <div className="mb-6 flex justify-between items-center">
@@ -151,12 +140,6 @@ const RequestsTab: React.FC = () => {
       </div>
       
       <div className="w-full lg:w-2/3" ref={selectedRequestRef}>
-        {/* Display an alert if no selectedRequestId */}
-        {!selectedRequestId && (
-          <div className="p-4 bg-yellow-100 border-l-4 border-yellow-400 text-yellow-700 mb-4 rounded text-center">
-            <b>לא נבחרה בקשה להצגת הצעות.</b> אנא בחר פנייה ברשימה בצד שמאל (selectedRequestId=null)
-          </div>
-        )}
         {selectedRequest ? <RequestDetail request={selectedRequest} quotes={quotes} onAcceptQuote={handleAcceptQuote} onRejectQuote={handleRejectQuote} onViewProfile={handleViewProfile} onRefresh={async () => {
         if (selectedRequestId) {
           console.log("Manual refresh of quotes triggered");

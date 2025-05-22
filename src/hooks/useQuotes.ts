@@ -2,6 +2,7 @@
 import { useQuotesState } from './useQuotesState';
 import { useQuoteActions } from './useQuoteActions';
 
+// אין יותר filter שמשנה את סדר quotes – מחזירים את מערך quotes נקי (כלומר, לא filter/map מעבר ל-requestId)
 export const useQuotes = (selectedRequestId: string | null) => {
   const {
     quotes,
@@ -27,16 +28,6 @@ export const useQuotes = (selectedRequestId: string | null) => {
     refreshQuotes,
     selectedRequestId
   });
-
-  // Debug logs for flow
-  if (typeof window !== "undefined") {
-    console.log('[useQuotes][debug] selectedRequestId:', selectedRequestId);
-    console.log('[useQuotes][debug] quotes before filtering:', quotes);
-    if (selectedRequestId) {
-      const byRequest = quotes.filter(q => q.requestId === selectedRequestId);
-      console.log('[useQuotes][debug] quotes after filtering:', byRequest);
-    }
-  }
 
   // שומרים על אותו סדר ולא מסדרים מחדש אחרי accept! רק מציגים את הצעות רלוונטיות לבקשה
   return {
