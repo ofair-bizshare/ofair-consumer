@@ -221,8 +221,11 @@ export type Database = {
           id: string
           image_url: string | null
           image_urls: string[] | null
+          latitude: number | null
           location: string
+          longitude: number | null
           notes: string | null
+          profession: string | null
           professional_id: string | null
           share_percentage: number
           status: string
@@ -242,8 +245,11 @@ export type Database = {
           id?: string
           image_url?: string | null
           image_urls?: string[] | null
+          latitude?: number | null
           location: string
+          longitude?: number | null
           notes?: string | null
+          profession?: string | null
           professional_id?: string | null
           share_percentage?: number
           status?: string
@@ -263,8 +269,11 @@ export type Database = {
           id?: string
           image_url?: string | null
           image_urls?: string[] | null
+          latitude?: number | null
           location?: string
+          longitude?: number | null
           notes?: string | null
+          profession?: string | null
           professional_id?: string | null
           share_percentage?: number
           status?: string
@@ -328,6 +337,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      professional_notification_areas: {
+        Row: {
+          area_name: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          latitude: number | null
+          longitude: number | null
+          professional_id: string
+          radius_km: number | null
+          updated_at: string
+        }
+        Insert: {
+          area_name: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          professional_id: string
+          radius_km?: number | null
+          updated_at?: string
+        }
+        Update: {
+          area_name?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          professional_id?: string
+          radius_km?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       professional_ratings: {
         Row: {
@@ -543,7 +588,15 @@ export type Database = {
           proposal_type?: string
           reminder_count?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_proposal_reminders_proposal_id"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       proposals: {
         Row: {
@@ -883,6 +936,39 @@ export type Database = {
         }
         Relationships: []
       }
+      work_completion_reminders: {
+        Row: {
+          completion_form_sent: boolean | null
+          created_at: string
+          id: string
+          proposal_id: string
+          proposal_type: string
+          reminder_sent: boolean | null
+          scheduled_work_time: string
+          updated_at: string
+        }
+        Insert: {
+          completion_form_sent?: boolean | null
+          created_at?: string
+          id?: string
+          proposal_id: string
+          proposal_type: string
+          reminder_sent?: boolean | null
+          scheduled_work_time: string
+          updated_at?: string
+        }
+        Update: {
+          completion_form_sent?: boolean | null
+          created_at?: string
+          id?: string
+          proposal_id?: string
+          proposal_type?: string
+          reminder_sent?: boolean | null
+          scheduled_work_time?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -904,6 +990,10 @@ export type Database = {
           make_super_admin?: boolean
         }
         Returns: Json
+      }
+      calculate_distance_km: {
+        Args: { lat1: number; lon1: number; lat2: number; lon2: number }
+        Returns: number
       }
       check_admin_status: {
         Args: { user_id_param: string }

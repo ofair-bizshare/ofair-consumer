@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Phone } from 'lucide-react';
@@ -11,9 +12,9 @@ import {
   DialogHeader, 
   DialogTitle 
 } from '@/components/ui/dialog';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import PhoneVerification from './auth/PhoneVerification';
+import { saveReferral } from '@/services/quotes/referrals';
 
 interface PhoneRevealButtonProps {
   phoneNumber?: string;
@@ -46,15 +47,24 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
         const hasPhoneVerified = await checkPhoneVerification();
         if (hasPhoneVerified) {
           setIsRevealed(true);
-          saveReferral().catch(error => {
+          try {
+            await saveReferral(
+              user.id,
+              professionalId,
+              professionalName,
+              phoneNumber,
+              profession,
+              user.user_metadata?.name
+            );
+          } catch (error) {
             console.error("Error auto-saving referral:", error);
-          });
+          }
         }
       }
     };
     
     checkPhoneStatus();
-  }, [autoReveal, user, checkPhoneVerification]);
+  }, [autoReveal, user, checkPhoneVerification, professionalId, professionalName, phoneNumber, profession]);
   
   const handleReveal = async () => {
     if (onBeforeReveal && !onBeforeReveal()) {
@@ -76,42 +86,19 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
     
     setIsRevealed(true);
     
-    // Save the referral to the database
+    // Save the referral using the service
     try {
-      if (user) {
-        await saveReferral();
-      }
-    } catch (error) {
-      console.error("Error saving referral:", error);
-    }
-  };
-  
-  const saveReferral = async () => {
-    try {
-      // Check if referral already exists for this professional and user
-      const { data: existingReferrals } = await supabase
-        .from('referrals')
-        .select('id')
-        .eq('user_id', user?.id)
-        .eq('professional_id', professionalId)
-        .limit(1);
-        
-      // Only insert if no existing referral found
-      if (!existingReferrals || existingReferrals.length === 0) {
-        const { error } = await supabase
-          .from('referrals')
-          .insert({
-            user_id: user?.id,
-            professional_id: professionalId,
-            professional_name: professionalName,
-            phone_number: phoneNumber,
-            profession: profession,
-            status: 'new'
-          });
-        
-        if (error) {
-          console.error("Error saving referral:", error);
-        }
+      const success = await saveReferral(
+        user.id,
+        professionalId,
+        professionalName,
+        phoneNumber,
+        profession,
+        user.user_metadata?.name
+      );
+      
+      if (!success) {
+        console.error("Failed to save referral");
       }
     } catch (error) {
       console.error("Error saving referral:", error);
@@ -125,15 +112,24 @@ const PhoneRevealButton: React.FC<PhoneRevealButtonProps> = ({
     });
   };
 
-  const handleVerificationComplete = () => {
+  const handleVerificationComplete = async () => {
     setShowPhoneRequiredDialog(false);
     setIsRevealed(true);
     
     // After verification, save the referral
     if (user) {
-      saveReferral().catch(error => {
+      try {
+        await saveReferral(
+          user.id,
+          professionalId,
+          professionalName,
+          phoneNumber,
+          profession,
+          user.user_metadata?.name
+        );
+      } catch (error) {
         console.error("Error saving referral after verification:", error);
-      });
+      }
     }
     
     toast({
