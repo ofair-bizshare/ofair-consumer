@@ -969,6 +969,45 @@ export type Database = {
         }
         Relationships: []
       }
+      work_completions: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          professional_id: string
+          proposal_id: string | null
+          proposal_type: string | null
+          referral_id: string | null
+          status: string
+          updated_at: string
+          work_title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          professional_id: string
+          proposal_id?: string | null
+          proposal_type?: string | null
+          referral_id?: string | null
+          status: string
+          updated_at?: string
+          work_title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          professional_id?: string
+          proposal_id?: string | null
+          proposal_type?: string | null
+          referral_id?: string | null
+          status?: string
+          updated_at?: string
+          work_title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

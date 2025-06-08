@@ -11,32 +11,42 @@ export function useMediaUrls(
 ): string[] {
   let output: string[] = [];
 
-  if (Array.isArray(media_urls)) {
-    // לוג חדש לבדוק בהירות
-    console.log("[useMediaUrls] Detected Array input:", media_urls);
+  console.log("[useMediaUrls] Input media_urls:", media_urls, "sampleImageUrl:", sampleImageUrl);
 
+  if (Array.isArray(media_urls)) {
     // Filter only valid string URLs
     output = media_urls.filter((url): url is string =>
       typeof url === "string" &&
       !!url &&
-      url.startsWith("http")
+      url !== "null" &&
+      url !== "undefined" &&
+      url.trim() !== "" &&
+      (url.startsWith("http") || url.startsWith("data:"))
     );
+    console.log("[useMediaUrls] Processed array:", output);
   } else if (typeof media_urls === "string" && media_urls.trim() !== "") {
     const clean = media_urls.trim();
 
-    console.log("[useMediaUrls] Raw string:", clean);
-
-    if (clean.startsWith("[") && clean.endsWith("]")) {
+    if (clean === "null" || clean === "undefined") {
+      output = [];
+    } else if (clean.startsWith("[") && clean.endsWith("]")) {
       // JSON array string
       try {
         const arr = JSON.parse(clean);
         if (Array.isArray(arr)) {
           output = arr
-            .filter((x): x is string => typeof x === "string" && !!x && x.startsWith("http"))
+            .filter((x): x is string => 
+              typeof x === "string" && 
+              !!x && 
+              x !== "null" && 
+              x !== "undefined" &&
+              x.trim() !== "" &&
+              (x.startsWith("http") || x.startsWith("data:"))
+            )
             .map((x) => x.trim());
         }
+        console.log("[useMediaUrls] Parsed JSON array:", output);
       } catch (e) {
-        // fallback, ignore
         console.warn("[useMediaUrls] Failed to parse JSON:", clean, e);
       }
     } else if (clean.includes(",")) {
@@ -44,20 +54,33 @@ export function useMediaUrls(
       output = clean
         .split(",")
         .map((s) => s.trim().replace(/^"|"$/g, ""))
-        .filter((s) => s.startsWith("http"));
-    } else if (clean.startsWith("http") && clean.length > 8) {
+        .filter((s) => 
+          s && 
+          s !== "null" && 
+          s !== "undefined" &&
+          s.trim() !== "" &&
+          (s.startsWith("http") || s.startsWith("data:"))
+        );
+      console.log("[useMediaUrls] Processed comma-separated:", output);
+    } else if ((clean.startsWith("http") || clean.startsWith("data:")) && clean.length > 8) {
       // single URL
       output = [clean];
+      console.log("[useMediaUrls] Single URL:", output);
     }
   }
 
   // Fallback for sampleImageUrl if nothing fetched so far
-  if ((!output || output.length === 0) && sampleImageUrl && typeof sampleImageUrl === "string" && sampleImageUrl.startsWith("http")) {
+  if ((!output || output.length === 0) && 
+      sampleImageUrl && 
+      typeof sampleImageUrl === "string" && 
+      sampleImageUrl !== "null" && 
+      sampleImageUrl !== "undefined" &&
+      sampleImageUrl.trim() !== "" &&
+      (sampleImageUrl.startsWith("http") || sampleImageUrl.startsWith("data:"))) {
     output = [sampleImageUrl];
+    console.log("[useMediaUrls] Using fallback sampleImageUrl:", output);
   }
 
-  // לוג למעקב תוצאה סופית
   console.log("[useMediaUrls] Final output:", output);
-
   return output;
 }

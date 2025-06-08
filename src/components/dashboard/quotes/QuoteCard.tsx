@@ -76,10 +76,14 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
   const isAcceptedQuote = isAcceptedStatus(quote.status);
   const isRequestCompleted = requestStatus === 'completed';
   const isWaitingForRating = requestStatus === 'waiting_for_rating';
+  
+  // תיקון: להציג הצעות ב-waiting_for_rating גם אם הן לא accepted
   const shouldDisplayQuote = 
     requestStatus === 'active' || 
+    requestStatus === 'waiting_for_rating' ||
     isAcceptedQuote || 
     quote.status === 'pending';
+    
   const isInteractive = !isRequestCompleted || isAcceptedQuote;
   const showActionButtons = requestStatus !== 'completed';
 
@@ -105,7 +109,9 @@ const QuoteCard: React.FC<QuoteCardProps> = ({
     }
   };
 
-  if (!shouldDisplayQuote && requestStatus !== 'active') return null;
+  // תיקון: לא להסתיר הצעות ב-waiting_for_rating
+  if (!shouldDisplayQuote && requestStatus === 'active') return null;
+  
   if (isVerifying) {
     return (
       <Card className="overflow-hidden mb-3 shadow-md">
