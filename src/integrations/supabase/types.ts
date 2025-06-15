@@ -338,6 +338,44 @@ export type Database = {
           },
         ]
       }
+      otp_codes: {
+        Row: {
+          code: string
+          created_at: string
+          expires_at: string
+          id: string
+          phone_number: string
+          professional_id: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          phone_number: string
+          professional_id?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          phone_number?: string
+          professional_id?: string | null
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "otp_codes_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       professional_notification_areas: {
         Row: {
           area_name: string

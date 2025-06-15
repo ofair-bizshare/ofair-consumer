@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ErrorBoundary from '@/components/ui/error-boundary';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
-import { ZoomIn, Image, Video } from 'lucide-react';
+import { ZoomIn, Image, Video, ImageOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface QuoteDetailsProps {
@@ -14,36 +13,61 @@ interface QuoteDetailsProps {
   sampleImageUrl?: string;
 }
 
+// A small component to handle image loading and error states gracefully.
+const ImageThumbnail: React.FC<{ src: string; alt: string; onClick: () => void }> = ({ src, alt, onClick }) => {
+  const [hasError, setHasError] = useState(false);
+
+  // If the image fails to load, show a placeholder.
+  if (hasError) {
+    return (
+      <div
+        onClick={onClick}
+        className="w-[120px] h-[64px] rounded-md bg-gray-100 flex flex-col items-center justify-center border border-gray-200 shadow cursor-pointer text-gray-500"
+        title="התמונה לא זמינה"
+      >
+        <ImageOff className="w-7 h-7" />
+        <span className="text-xs mt-1">תמונה לא זמינה</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className="rounded-md max-h-16 object-cover cursor-zoom-in border border-gray-200 shadow hover:shadow-lg transition bg-gray-50"
+      onClick={onClick}
+      loading="lazy"
+      style={{
+        maxWidth: 120,
+        minWidth: 80,
+      }}
+      onError={() => setHasError(true)}
+    />
+  );
+};
+
 const QuoteDetails: React.FC<QuoteDetailsProps> = ({
   price,
   estimatedTime,
   description,
   mediaUrls = [],
-  sampleImageUrl
 }) => {
   const isMobile = useIsMobile();
   const [openMediaIdx, setOpenMediaIdx] = useState<number | null>(null);
 
   console.log("QuoteDetails > mediaUrls received:", mediaUrls);
-  console.log("QuoteDetails > sampleImageUrl:", sampleImageUrl);
 
-  // וודא שהמדיה תהיה תמיד מערך תקין
-  const media: string[] = Array.isArray(mediaUrls)
-    ? mediaUrls.filter(val => 
-        !!val && 
-        val !== "null" && 
-        val !== "undefined" && 
-        val.trim() !== "" &&
-        (val.startsWith('http') || val.startsWith('data:'))
-      )
-    : [];
+  // CRITICAL FIX: Removed the redundant, strict filtering logic.
+  // We now trust the `mediaUrls` prop, which is processed by the `useMediaUrls` hook.
+  const media: string[] = mediaUrls;
 
   console.log('QuoteDetails > filtered media:', media);
 
   const isImage = (url: string) =>
     /\.(jpe?g|png|gif|webp|bmp|svg)$/i.test(url) || url.startsWith('data:image/');
 
-  const isVideo = (url: string) =>
+  const isVideo = (url:string) =>
     /\.(mp4|webm|ogg|mov)$/i.test(url) || url.startsWith('data:video/');
 
   const formattedPrice = price && price !== '0' && price !== '' ? price : '0';
@@ -57,20 +81,10 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
             {media.map((src, i) => (
               <div key={src + i} className="relative inline-block group">
                 {isImage(src) ? (
-                  <img
+                  <ImageThumbnail
                     src={src}
                     alt={`תמונה #${i + 1}`}
-                    className="rounded-md max-h-16 object-cover cursor-zoom-in border border-gray-200 shadow hover:shadow-lg transition"
                     onClick={() => setOpenMediaIdx(i)}
-                    loading="lazy"
-                    style={{
-                      maxWidth: 120,
-                      minWidth: 80
-                    }}
-                    onError={e => {
-                      console.error('Failed to load image:', src);
-                      e.currentTarget.style.display = 'none';
-                    }}
                   />
                 ) : isVideo(src) ? (
                   <div
