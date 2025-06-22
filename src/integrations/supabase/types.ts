@@ -147,39 +147,6 @@ export type Database = {
         }
         Relationships: []
       }
-      israeli_settlements: {
-        Row: {
-          council_code: number | null
-          created_at: string | null
-          id: string
-          name: string
-          original_district: string | null
-          region: string
-          type: string
-          updated_at: string | null
-        }
-        Insert: {
-          council_code?: number | null
-          created_at?: string | null
-          id?: string
-          name: string
-          original_district?: string | null
-          region: string
-          type: string
-          updated_at?: string | null
-        }
-        Update: {
-          council_code?: number | null
-          created_at?: string | null
-          id?: string
-          name?: string
-          original_district?: string | null
-          region?: string
-          type?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       lead_payments: {
         Row: {
           commission_amount: number
@@ -1052,19 +1019,7 @@ export type Database = {
       }
     }
     Views: {
-      settlement_statistics: {
-        Row: {
-          cities: number | null
-          cities_percentage: number | null
-          local_councils: number | null
-          local_councils_percentage: number | null
-          region: string | null
-          regional_councils: number | null
-          regional_councils_percentage: number | null
-          total_settlements: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       add_internal_user: {
