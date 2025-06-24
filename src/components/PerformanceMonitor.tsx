@@ -26,12 +26,12 @@ const PerformanceMonitor = () => {
 
     // Measure Core Web Vitals
     if (typeof window !== 'undefined') {
-      import('web-vitals').then(({ onCLS, onFID, onFCP, onLCP, onTTFB }) => {
+      import('web-vitals').then(({ onCLS, onFCP, onLCP, onTTFB, onINP }) => {
         onCLS(reportWebVitals);
-        onFID(reportWebVitals);
         onFCP(reportWebVitals);
         onLCP(reportWebVitals);
         onTTFB(reportWebVitals);
+        onINP(reportWebVitals); // INP replaced FID in newer versions
       }).catch(() => {
         // Graceful fallback if web-vitals fails to load
         console.log('Web Vitals library not available');
