@@ -1,20 +1,23 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ScrollIndicator from '@/components/ScrollIndicator';
+import PerformanceMonitor from '@/components/PerformanceMonitor';
 import { Helmet } from 'react-helmet-async';
 
-// Import the refactored components
+// Lazy load non-critical sections
+const PopularServicesSection = lazy(() => import('@/components/home/PopularServicesSection'));
+const HowItWorksSection = lazy(() => import('@/components/home/HowItWorksSection'));
+const TestimonialsSection = lazy(() => import('@/components/home/TestimonialsSection'));
+const WhyChooseUsSection = lazy(() => import('@/components/home/WhyChooseUsSection'));
+const ArticlesSection = lazy(() => import('@/components/home/ArticlesSection'));
+const CtaSection = lazy(() => import('@/components/home/CtaSection'));
+
+// Import critical sections normally
 import HeroSection from '@/components/home/HeroSection';
-import PopularServicesSection from '@/components/home/PopularServicesSection';
 import SearchSection from '@/components/home/SearchSection';
-import HowItWorksSection from '@/components/home/HowItWorksSection';
-import TestimonialsSection from '@/components/home/TestimonialsSection';
-import WhyChooseUsSection from '@/components/home/WhyChooseUsSection';
-import ArticlesSection from '@/components/home/ArticlesSection';
-import CtaSection from '@/components/home/CtaSection';
 
 const Index = () => {
   const requestFormRef = useRef<HTMLDivElement>(null);
@@ -36,31 +39,69 @@ const Index = () => {
   const handleSearchSubmit = (profession: string, location: string) => {
     navigate(`/search?profession=${profession}&location=${location}`);
   };
+
+  // Loading fallback component
+  const SectionLoader = () => (
+    <div className="py-16 animate-pulse">
+      <div className="container mx-auto px-6">
+        <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto mb-8"></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
   
-  return <div className="flex flex-col min-h-screen" dir="rtl">
+  return (
+    <div className="flex flex-col min-h-screen" dir="rtl">
+      <PerformanceMonitor />
+      
       <Helmet>
-        {/* Preload critical assets for performance */}
-        <link rel="preload" href="/lovable-uploads/52b937d1-acd7-4831-b19e-79a55a774829.png" as="image" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://images.unsplash.com" />
-        
+        {/* Enhanced SEO and performance meta tags */}
         <title>oFair - מציאת בעלי מקצוע מובילים בכל תחום | פלטפורמת חיבור בין לקוחות למקצוענים</title>
         <meta name="description" content="פלטפורמה חינמית המחברת בין בעלי בתים לבעלי מקצוע אמינים ומקצועיים. קבלו הצעות מחיר ללא התחייבות ובחרו את המקצוען הנכון עבורכם." />
         <meta name="keywords" content="בעלי מקצוע, שיפוצים, חשמלאי, אינסטלציה, נגרות, גינון, ניקיון, צביעה, הובלות, מיזוג אוויר, תיקונים, שירותי בית" />
+        
+        {/* Open Graph optimized */}
         <meta property="og:title" content="oFair - מצא בעלי מקצוע מובילים לכל עבודה" />
         <meta property="og:description" content="פלטפורמה חינמית המחברת בין צרכנים לבעלי מקצוע מובילים בתחומם. קבלו הצעות מחיר ללא התחייבות." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://ofair.co.il" />
+        <meta property="og:image" content="/lovable-uploads/52b937d1-acd7-4831-b19e-79a55a774829.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        
+        {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="oFair - מצא בעלי מקצוע מובילים לכל עבודה" />
         <meta name="twitter:description" content="פלטפורמה חינמית המחברת בין צרכנים לבעלי מקצוע מובילים בתחומם. קבלו הצעות מחיר ללא התחייבות." />
+        <meta name="twitter:image" content="/lovable-uploads/52b937d1-acd7-4831-b19e-79a55a774829.png" />
+        
+        {/* Structured Data for SEO */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "oFair",
+            "url": "https://ofair.co.il",
+            "logo": "/lovable-uploads/52b937d1-acd7-4831-b19e-79a55a774829.png",
+            "description": "פלטפורמה למציאת בעלי מקצוע מובילים",
+            "sameAs": []
+          })}
+        </script>
+        
         <link rel="canonical" href="https://ofair.co.il" />
+        
+        {/* Performance hints */}
+        <link rel="prefetch" href="/search" />
+        <link rel="prefetch" href="/dashboard" />
       </Helmet>
       
       <Header />
       
-      {/* Hero Section */}
+      {/* Hero Section - Critical, load immediately */}
       <div ref={requestFormRef}>
         <HeroSection 
           scrollToRequestForm={scrollToRequestForm}
@@ -68,31 +109,42 @@ const Index = () => {
         />
       </div>
       
-      {/* Popular Services Section */}
-      <PopularServicesSection />
+      {/* Popular Services Section - Lazy loaded */}
+      <Suspense fallback={<SectionLoader />}>
+        <PopularServicesSection />
+      </Suspense>
       
-      {/* Search Section */}
+      {/* Search Section - Critical for user interaction */}
       <div ref={searchSectionRef}>
         <SearchSection onSearchSubmit={handleSearchSubmit} />
       </div>
       
-      {/* How it Works Section */}
-      <HowItWorksSection />
+      {/* Below-the-fold sections - Lazy loaded */}
+      <Suspense fallback={<SectionLoader />}>
+        <HowItWorksSection />
+      </Suspense>
       
-      {/* Testimonials Section */}
-      <TestimonialsSection />
+      <Suspense fallback={<SectionLoader />}>
+        <TestimonialsSection />
+      </Suspense>
       
-      {/* Why Choose Us Section */}
-      <WhyChooseUsSection />
+      <Suspense fallback={<SectionLoader />}>
+        <WhyChooseUsSection />
+      </Suspense>
       
-      {/* Articles Section */}
-      <ArticlesSection />
+      <Suspense fallback={<SectionLoader />}>
+        <ArticlesSection />
+      </Suspense>
       
-      {/* CTA Section */}
-      <CtaSection scrollToRequestForm={scrollToRequestForm} />
+      <Suspense fallback={<SectionLoader />}>
+        <CtaSection scrollToRequestForm={scrollToRequestForm} />
+      </Suspense>
       
       <Footer />
-    </div>;
+      
+      <ScrollIndicator />
+    </div>
+  );
 };
 
 export default Index;

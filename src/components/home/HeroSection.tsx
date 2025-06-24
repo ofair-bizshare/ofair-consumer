@@ -1,21 +1,45 @@
-import React from 'react';
+
+import React, { lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { FileText, Search, Gift, ThumbsUp, ChevronDown } from 'lucide-react';
-import RequestForm from '@/components/RequestForm';
 import { useIsMobile } from '@/hooks/use-mobile';
+
+// Lazy load RequestForm to reduce initial bundle size
+const RequestForm = lazy(() => import('@/components/RequestForm'));
+
 interface HeroSectionProps {
   scrollToRequestForm: () => void;
   scrollToSearchSection: () => void;
 }
+
 const HeroSection: React.FC<HeroSectionProps> = ({
   scrollToRequestForm,
   scrollToSearchSection
 }) => {
   const isMobile = useIsMobile();
-  return <section className="relative pt-20 pb-16 md:pt-32 md:pb-24 overflow-hidden w-full">
+
+  return (
+    <section className="relative pt-20 pb-16 md:pt-32 md:pb-24 overflow-hidden w-full">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-teal-50 z-[-1]"></div>
-      <div className="absolute inset-0 z-[-1] opacity-50 bg-[url('https://images.unsplash.com/photo-1612968953208-56c5052b9ec4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80')] bg-cover bg-center"></div>
+      
+      {/* Optimized background image with better loading */}
+      <div className="absolute inset-0 z-[-1] opacity-50">
+        <picture>
+          <source 
+            media="(max-width: 768px)" 
+            srcSet="https://images.unsplash.com/photo-1612968953208-56c5052b9ec4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=60" 
+          />
+          <img 
+            src="https://images.unsplash.com/photo-1612968953208-56c5052b9ec4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80" 
+            alt="Background"
+            className="w-full h-full object-cover"
+            loading="eager"
+            decoding="async"
+          />
+        </picture>
+      </div>
+      
       <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-[-1]"></div>
       
       <div className="container mx-auto px-4">
@@ -69,7 +93,19 @@ const HeroSection: React.FC<HeroSectionProps> = ({
             <div id="request-form" className="relative w-full">
               <div className="absolute -top-4 -left-4 w-8 h-8 bg-[#00D09E] rounded-full opacity-80 animate-pulse hidden md:block"></div>
               <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-blue-500 rounded-full opacity-70 animate-pulse hidden md:block"></div>
-              <RequestForm />
+              
+              <Suspense fallback={
+                <div className="bg-white rounded-xl shadow-lg p-6 animate-pulse">
+                  <div className="h-8 bg-gray-200 rounded mb-4"></div>
+                  <div className="space-y-3">
+                    <div className="h-4 bg-gray-200 rounded"></div>
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-10 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+              }>
+                <RequestForm />
+              </Suspense>
             </div>
           </div>
         </div>
@@ -84,6 +120,8 @@ const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
         </div>
       </div>
-    </section>;
+    </section>
+  );
 };
+
 export default HeroSection;

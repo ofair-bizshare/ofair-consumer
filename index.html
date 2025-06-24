@@ -4,12 +4,29 @@
   <head>
     <meta charset="UTF-8" />
     
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-WWZ2PF6D');</script>
+    <!-- Preload critical resources for faster loading -->
+    <link rel="preload" href="/lovable-uploads/52b937d1-acd7-4831-b19e-79a55a774829.png" as="image" fetchpriority="high" />
+    <link rel="preload" href="https://fonts.gstatic.com/s/assistant/v20/2sDPZGJYnIjSi6H75xXeNbFG9s8.woff2" as="font" type="font/woff2" crossorigin />
+    
+    <!-- DNS prefetch for external resources -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+    <link rel="dns-prefetch" href="https://images.unsplash.com" />
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+    
+    <!-- Preconnect for critical third-party domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Google Tag Manager with async loading -->
+    <script>
+      (function(w,d,s,l,i){
+        w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});
+        var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';
+        j.async=true;j.defer=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
+        f.parentNode.insertBefore(j,f);
+      })(window,document,'script','dataLayer','GTM-WWZ2PF6D');
+    </script>
     <!-- End Google Tag Manager -->
     
     <link rel="icon" type="image/png" href="/lovable-uploads/87593dbf-e9bb-481e-9fe0-fc31646ed1da.png" />
@@ -17,26 +34,87 @@
     <meta name="description" content="oFair - פלטפורמה למציאת בעלי מקצוע איכותיים" />
     <title>oFair - בעלי מקצוע בלחיצת כפתור</title>
     
-    <!-- Critical Preloads -->
-    <link rel="preload" href="/lovable-uploads/52b937d1-acd7-4831-b19e-79a55a774829.png" as="image" fetchpriority="high" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
-    <!-- Optimized Fonts Loading -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript>
-      <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@200..800&display=swap" rel="stylesheet">
-    </noscript>
-    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Optimized font loading with font-display: swap for better performance -->
+    <style>
+      @font-face {
+        font-family: 'Assistant';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url('https://fonts.gstatic.com/s/assistant/v20/2sDPZGJYnIjSi6H75xXeNbFG9s8.woff2') format('woff2');
+        unicode-range: U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
+      }
+      @font-face {
+        font-family: 'Assistant';
+        font-style: normal;
+        font-weight: 600;
+        font-display: swap;
+        src: url('https://fonts.gstatic.com/s/assistant/v20/2sDSZGJYnIjSi6H75xXeNrGMjz7mj6gN.woff2') format('woff2');
+        unicode-range: U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
+      }
+      @font-face {
+        font-family: 'Assistant';
+        font-style: normal;
+        font-weight: 700;
+        font-display: swap;
+        src: url('https://fonts.gstatic.com/s/assistant/v20/2sDSZGJYnIjSi6H75xXeNqWOjz7mj6gN.woff2') format('woff2');
+        unicode-range: U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
+      }
+      
+      /* Critical CSS to prevent layout shift */
+      body { 
+        font-family: 'Assistant', system-ui, -apple-system, sans-serif; 
+        margin: 0; 
+        line-height: 1.5;
+      }
+      #root { 
+        min-height: 100vh; 
+        display: flex; 
+        flex-direction: column; 
+      }
+      
+      /* Loading spinner for better perceived performance */
+      .app-loading {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40px;
+        height: 40px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #00D09E;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
   </head>
   <body>
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WWZ2PF6D"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- Google Tag Manager (noscript) with defer -->
+    <noscript>
+      <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WWZ2PF6D"
+        height="0" width="0" style="display:none;visibility:hidden" loading="lazy"></iframe>
+    </noscript>
     <!-- End Google Tag Manager (noscript) -->
     
-    <div id="root"></div>
-    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+    <div id="root">
+      <div class="app-loading"></div>
+    </div>
+    
+    <!-- Load critical scripts with optimal loading strategy -->
+    <script>
+      // Remove loading indicator when app loads
+      window.addEventListener('load', function() {
+        const loading = document.querySelector('.app-loading');
+        if (loading) loading.remove();
+      });
+    </script>
+    
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module" defer></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
