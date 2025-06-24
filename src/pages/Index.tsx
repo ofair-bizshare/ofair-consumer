@@ -115,7 +115,7 @@ const Index = () => {
       </Suspense>
       
       {/* Search Section - Critical for user interaction */}
-      <div ref={searchSectionRef}>
+      <div id="search-section" ref={searchSectionRef}>
         <SearchSection onSearchSubmit={handleSearchSubmit} />
       </div>
       
@@ -142,7 +142,7 @@ const Index = () => {
       
       <Footer />
       
-      <ScrollIndicator />
+      <ScrollIndicator targetId="search-section" />
     </div>
   );
 };

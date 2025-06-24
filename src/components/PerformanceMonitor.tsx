@@ -1,15 +1,22 @@
 
 import { useEffect } from 'react';
 
+// Declare gtag for TypeScript
+declare global {
+  interface Window {
+    gtag?: (...args: any[]) => void;
+  }
+}
+
 const PerformanceMonitor = () => {
   useEffect(() => {
     // Report Web Vitals for monitoring
     const reportWebVitals = (metric: any) => {
       console.log('Web Vital:', metric.name, metric.value);
       
-      // Send to analytics if needed
-      if (typeof gtag !== 'undefined') {
-        gtag('event', metric.name, {
+      // Send to analytics if available
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', metric.name, {
           event_category: 'Web Vitals',
           value: Math.round(metric.name === 'CLS' ? metric.value * 1000 : metric.value),
           non_interaction: true,
@@ -18,7 +25,7 @@ const PerformanceMonitor = () => {
     };
 
     // Measure Core Web Vitals
-    if (typeof window !== 'undefined' && 'web-vitals' in window) {
+    if (typeof window !== 'undefined') {
       import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
         getCLS(reportWebVitals);
         getFID(reportWebVitals);
