@@ -2,16 +2,16 @@
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Upload, X } from 'lucide-react';
+import OptimizedImage from '@/components/OptimizedImage';
 
 interface ImageUploadProps {
   previewUrls: string[];
   onUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   removeImage: (index: number) => void;
-  images?: File[]; // Optional, for identifying file type
+  images?: File[];
 }
 
 const isVideo = (fileUrl: string, file?: File) => {
-  // Prefer checking file.type, fallback to URL/extension if needed
   if (file && file.type) {
     return file.type.startsWith('video');
   }
@@ -53,22 +53,22 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                   src={url}
                   className="w-full h-full object-cover"
                   controls
+                  preload="metadata"
                   aria-label={`סרטון מספר ${index + 1}`}
                 />
               ) : (
-                <img
+                <OptimizedImage
                   src={url}
                   alt={`תמונה מספר ${index + 1}`}
                   className="w-full h-full object-cover"
-                  loading="lazy"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = "https://placehold.co/80x80?text=Image";
-                  }}
+                  width={80}
+                  height={80}
+                  sizes="80px"
                 />
               )}
               <button
                 type="button"
-                className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
                 title="הסר קובץ"
                 onClick={() => removeImage(index)}
               >

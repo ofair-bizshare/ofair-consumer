@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { FileText, Search, Gift, ThumbsUp, ChevronDown } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import OptimizedImage from '@/components/OptimizedImage';
 
 // Lazy load RequestForm to reduce initial bundle size
 const RequestForm = lazy(() => import('@/components/RequestForm'));
@@ -23,21 +24,17 @@ const HeroSection: React.FC<HeroSectionProps> = ({
     <section className="relative pt-20 pb-16 md:pt-32 md:pb-24 overflow-hidden w-full">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-teal-50 z-[-1]"></div>
       
-      {/* Optimized background image with better loading */}
+      {/* Optimized background image with responsive loading */}
       <div className="absolute inset-0 z-[-1] opacity-50">
-        <picture>
-          <source 
-            media="(max-width: 768px)" 
-            srcSet="https://images.unsplash.com/photo-1612968953208-56c5052b9ec4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=60" 
-          />
-          <img 
-            src="https://images.unsplash.com/photo-1612968953208-56c5052b9ec4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80" 
-            alt="Background"
-            className="w-full h-full object-cover"
-            loading="eager"
-            decoding="async"
-          />
-        </picture>
+        <OptimizedImage
+          src="https://images.unsplash.com/photo-1612968953208-56c5052b9ec4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80"
+          alt="Background"
+          className="w-full h-full object-cover"
+          priority={true}
+          sizes="100vw"
+          width={1770}
+          height={1000}
+        />
       </div>
       
       <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-[-1]"></div>
@@ -86,7 +83,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
           
           {/* Right side - Form with decorative elements */}
           <div className="w-full lg:w-1/2 animate-fade-in pt-4 lg:pt-0 relative z-10">
-            {/* Decorative elements */}
+            {/* Decorative elements - hidden on mobile for better performance */}
             <div className="absolute -top-12 -right-12 w-24 h-24 bg-gradient-to-br from-blue-400 to-teal-300 rounded-full blur-xl opacity-30 hidden lg:block"></div>
             <div className="absolute -bottom-8 -left-8 w-20 h-20 bg-gradient-to-br from-yellow-400 to-amber-300 rounded-full blur-lg opacity-30 hidden lg:block"></div>
             
@@ -110,7 +107,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
         </div>
         
-        {/* Scroll indicator */}
+        {/* Scroll indicator - optimized for mobile */}
         <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 text-center hidden md:block animate-bounce">
           <div className="flex flex-col items-center cursor-pointer" onClick={scrollToSearchSection}>
             <p className="text-blue-700 mb-2 font-medium">חפש בעלי מקצוע מובילים</p>
