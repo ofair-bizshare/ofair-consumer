@@ -117,6 +117,47 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_tokens: {
+        Row: {
+          created_at: string | null
+          device_info: string | null
+          expires_at: string
+          id: string
+          is_active: boolean | null
+          last_used_at: string | null
+          professional_id: string | null
+          token: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_info?: string | null
+          expires_at: string
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          professional_id?: string | null
+          token: string
+        }
+        Update: {
+          created_at?: string | null
+          device_info?: string | null
+          expires_at?: string
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          professional_id?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auth_tokens_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       internal_crm: {
         Row: {
           created_at: string
@@ -331,6 +372,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "notifications_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professional_certificates: {
+        Row: {
+          certificate_name: string
+          certificate_url: string
+          created_at: string
+          file_name: string
+          file_size: number | null
+          id: string
+          professional_id: string
+          updated_at: string
+          upload_date: string
+        }
+        Insert: {
+          certificate_name: string
+          certificate_url: string
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          id?: string
+          professional_id: string
+          updated_at?: string
+          upload_date?: string
+        }
+        Update: {
+          certificate_name?: string
+          certificate_url?: string
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          id?: string
+          professional_id?: string
+          updated_at?: string
+          upload_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_professional_certificates_professional_id"
             columns: ["professional_id"]
             isOneToOne: false
             referencedRelation: "professionals"
@@ -1083,6 +1168,10 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: boolean
       }
+      cleanup_expired_tokens: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       create_first_internal_super_admin: {
         Args: { admin_email: string; admin_name?: string }
         Returns: string
@@ -1093,6 +1182,64 @@ export type Database = {
       }
       create_super_admin: {
         Args: { admin_email_param: string }
+        Returns: string
+      }
+      fetch_active_leads: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          budget: number | null
+          category: string | null
+          client_address: string | null
+          client_name: string | null
+          client_phone: string | null
+          constraints: string | null
+          created_at: string
+          description: string
+          id: string
+          image_url: string | null
+          image_urls: string[] | null
+          latitude: number | null
+          location: string
+          longitude: number | null
+          notes: string | null
+          profession: string | null
+          professional_id: string | null
+          share_percentage: number
+          status: string
+          title: string
+          work_date: string | null
+          work_time: string | null
+        }[]
+      }
+      get_active_leads: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          budget: number | null
+          category: string | null
+          client_address: string | null
+          client_name: string | null
+          client_phone: string | null
+          constraints: string | null
+          created_at: string
+          description: string
+          id: string
+          image_url: string | null
+          image_urls: string[] | null
+          latitude: number | null
+          location: string
+          longitude: number | null
+          notes: string | null
+          profession: string | null
+          professional_id: string | null
+          share_percentage: number
+          status: string
+          title: string
+          work_date: string | null
+          work_time: string | null
+        }[]
+      }
+      get_current_professional_id_secure: {
+        Args: Record<PropertyKey, never>
         Returns: string
       }
       get_professional_by_identifier: {
@@ -1126,8 +1273,29 @@ export type Database = {
           updated_at: string | null
         }[]
       }
+      insert_lead: {
+        Args: {
+          p_professional_id: string
+          p_title: string
+          p_description: string
+          p_location: string
+          p_budget: number
+          p_share_percentage: number
+        }
+        Returns: string
+      }
       insert_project: {
         Args: { project_data: Json }
+        Returns: string
+      }
+      insert_proposal: {
+        Args: {
+          p_professional_id: string
+          p_lead_id: string
+          p_price: number
+          p_description: string
+          p_estimated_completion: string
+        }
         Returns: string
       }
       is_admin_check: {
@@ -1152,6 +1320,27 @@ export type Database = {
       }
       is_super_admin_safe: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      submit_lead: {
+        Args: {
+          p_professional_id: string
+          p_title: string
+          p_description: string
+          p_location: string
+          p_budget: number
+          p_share_percentage: number
+        }
+        Returns: boolean
+      }
+      submit_proposal: {
+        Args: {
+          p_professional_id: string
+          p_lead_id: string
+          p_price: number
+          p_description: string
+          p_estimated_completion: string
+        }
         Returns: boolean
       }
       update_project: {

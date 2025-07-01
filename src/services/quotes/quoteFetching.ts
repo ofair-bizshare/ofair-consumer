@@ -42,6 +42,7 @@ export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInt
         description,
         estimated_time,
         sample_image_url,
+        media_urls,
         status,
         created_at,
         request_id,
@@ -95,6 +96,7 @@ export const fetchQuotesForRequest = async (requestId: string): Promise<QuoteInt
         description: quote.description,
         estimatedTime: quote.estimated_time || '',
         sampleImageUrl: quote.sample_image_url,
+        media_urls: quote.media_urls,
         status: quote.status as QuoteStatus, // Cast to correct type
         createdAt: quote.created_at,
         requestId: quote.request_id,
