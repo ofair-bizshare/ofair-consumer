@@ -126,13 +126,17 @@ export const acceptQuoteApi = async (
 
   // *** כאן עידכון state מיידי של הסטטוס ***
   setQuotes(prevQuotes =>
-    prevQuotes.map(quote =>
-      quote.id === quoteId
-        ? { ...quote, status: 'accepted' }
-        : (quote.requestId === acceptedQuote.requestId
-            ? { ...quote, status: 'rejected' }
-            : quote)
-    )
+    prevQuotes.map(quote => {
+      if (quote.id === quoteId) {
+        console.log(`[acceptQuoteApi] Setting quote ${quoteId} to accepted`);
+        return { ...quote, status: 'accepted' };
+      } else if (quote.requestId === acceptedQuote.requestId) {
+        console.log(`[acceptQuoteApi] Setting quote ${quote.id} to rejected (same request)`);
+        return { ...quote, status: 'rejected' };
+      } else {
+        return quote;
+      }
+    })
   );
 
   // שאילתת בדיקה מיד אחרי

@@ -84,9 +84,14 @@ const QuoteActionButtons: React.FC<QuoteActionButtonsProps> = ({
         return true;
       }
 
-      // For pending quotes, show actions if there's no accepted quote
+      // For pending quotes, show actions if there's no accepted quote AND this quote is pending
       if (quoteStatus === 'pending' && !hasAcceptedQuote) {
         return true;
+      }
+      
+      // For rejected quotes, don't show actions
+      if (quoteStatus === 'rejected') {
+        return false;
       }
     }
 

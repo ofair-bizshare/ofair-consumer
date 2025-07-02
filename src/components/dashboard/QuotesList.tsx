@@ -40,10 +40,11 @@ const QuotesList: React.FC<QuotesListProps> = ({
     return <div className="text-gray-500 text-center py-4">התקבלו נתוני הצעות לא תקינים</div>;
   }
   
-  // Check if any quote is accepted based on its status
-  const hasAcceptedQuote = validQuotes.some(quote => isAcceptedStatus(quote?.status));
-  console.log("Has accepted quote:", hasAcceptedQuote, "Quotes count:", validQuotes.length);
-  console.log("Quote statuses:", validQuotes.map(q => ({ id: q.id, status: q.status })));
+  // Check if any quote is accepted based on its status - filter by current request only
+  const requestQuotes = validQuotes.filter(q => q.requestId === validQuotes[0]?.requestId);
+  const hasAcceptedQuote = requestQuotes.some(quote => isAcceptedStatus(quote?.status));
+  console.log("Has accepted quote:", hasAcceptedQuote, "Request quotes count:", requestQuotes.length);
+  console.log("Quote statuses:", requestQuotes.map(q => ({ id: q.id, status: q.status, requestId: q.requestId })));
   
   // Sort quotes to show accepted quotes first, then pending, then rejected
   const sortedQuotes = [...validQuotes].sort((a, b) => {
