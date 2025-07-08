@@ -13,7 +13,7 @@ html {
 }
 
 body, html {
-  @apply font-assistant;
+  font-family: "Assistant", "Heebo", Arial, sans-serif !important;
   text-rendering: optimizeSpeed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

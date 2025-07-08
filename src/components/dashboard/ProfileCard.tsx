@@ -22,8 +22,19 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   const {
     toast
   } = useToast();
-  const [profileImage, setProfileImage] = useState<string | null>(profile?.profile_image || null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isSavingImage, setIsSavingImage] = useState(false);
+
+  // Update profileImage when profile changes
+  React.useEffect(() => {
+    if (profile?.profile_image) {
+      console.log("ProfileCard: Setting profile image from profile:", profile.profile_image);
+      setProfileImage(profile.profile_image);
+    } else {
+      console.log("ProfileCard: No profile image in profile data");
+      setProfileImage(null);
+    }
+  }, [profile?.profile_image]);
   const handleProfileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
