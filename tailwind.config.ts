@@ -10,9 +10,9 @@ module.exports = {
   prefix: "",
   theme: {
     fontFamily: {
-      assistant: ["Assistant", "Heebo", "Arial", "sans-serif"],
-      // נכפה ברירת מחדל assistant עם fallback עברית
-      sans: ["Assistant", "Heebo", "Arial", "sans-serif"],
+      assistant: ["Assistant"],
+      // נכפה ברירת מחדל assistant בלבד
+      sans: ["Assistant"],
     },
     container: {
       center: true,
@@ -23,7 +23,7 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        assistant: ["Assistant", "Heebo", "Arial", "sans-serif"],
+        assistant: ["Assistant"],
       },
       colors: {
         border: "hsl(var(--border))",
