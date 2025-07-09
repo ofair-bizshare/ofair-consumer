@@ -98,5 +98,8 @@ export const useQuoteAccept = ({
     }
   };
 
-  return { processQuoteAcceptance };
+  return { 
+    processQuoteAcceptance,
+    PopupComponent: notifications.PopupComponent
+  };
 };

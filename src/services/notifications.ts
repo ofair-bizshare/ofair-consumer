@@ -215,20 +215,37 @@ export const createSystemNotification = async (
 };
 
 /**
- * Create a quote notification
+ * Create a quote notification for the user who made the request
  */
 export const createQuoteNotification = async (
   requestTitle: string,
   professionalName: string,
-  requestId: string
+  requestId: string,
+  userId?: string
 ): Promise<boolean> => {
   try {
+    // Get the user ID from the request if not provided
+    if (!userId) {
+      const { data: requestData } = await supabase
+        .from('requests')
+        .select('user_id')
+        .eq('id', requestId)
+        .single();
+      
+      if (!requestData) {
+        console.error('Request not found for notification');
+        return false;
+      }
+      userId = requestData.user_id;
+    }
+
     await createNotification({
       title: 'הצעת מחיר חדשה',
       message: `התקבלה הצעת מחיר חדשה מ${professionalName} לבקשתך "${requestTitle}"`,
       type: 'quote',
       actionUrl: `/dashboard?request=${requestId}`,
-      actionLabel: 'צפה בהצעה'
+      actionLabel: 'צפה בהצעה',
+      user_id: userId
     });
 
     return true;

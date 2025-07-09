@@ -1,70 +1,102 @@
 
-import React from 'react';
-import { ToastAction } from '@/components/ui/toast';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState } from 'react';
+import PopupNotification from '@/components/PopupNotification';
 
 export const useQuoteAcceptNotifications = () => {
-  const { toast } = useToast();
+  const [popup, setPopup] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    type: 'success' | 'error' | 'warning' | 'info';
+    actionButton?: { label: string; onClick: () => void };
+  }>({
+    isOpen: false,
+    title: '',
+    description: '',
+    type: 'info'
+  });
+
+  const showPopup = (
+    title: string, 
+    description: string, 
+    type: 'success' | 'error' | 'warning' | 'info',
+    actionButton?: { label: string; onClick: () => void }
+  ) => {
+    setPopup({
+      isOpen: true,
+      title,
+      description,
+      type,
+      actionButton
+    });
+  };
+
+  const closePopup = () => {
+    setPopup(prev => ({ ...prev, isOpen: false }));
+  };
 
   const notifyAlreadyAccepted = () => {
-    toast({
-      title: 'הצעה התקבלה',
-      description: 'הצעת המחיר כבר אושרה במערכת',
-      variant: 'default',
-    });
+    showPopup(
+      'הצעה התקבלה',
+      'הצעת המחיר כבר אושרה במערכת',
+      'info'
+    );
   };
 
   const notifyAcceptError = () => {
-    toast({
-      title: 'שגיאה בקבלת ההצעה',
-      description: 'אירעה שגיאה בקבלת ההצעה. אנא נסה שוב.',
-      variant: 'destructive',
-    });
+    showPopup(
+      'שגיאה בקבלת ההצעה',
+      'אירעה שגיאה בקבלת ההצעה. אנא נסה שוב.',
+      'error'
+    );
   };
 
   const notifyPaymentRedirect = () => {
-    toast({
-      title: 'הועברת לעמוד תשלום',
-      description: 'עמוד התשלום ייפתח בקרוב...',
-      variant: 'default',
-    });
+    showPopup(
+      'הועברת לעמוד תשלום',
+      'עמוד התשלום ייפתח בקרוב...',
+      'info'
+    );
   };
 
   const notifyAccepted = () => {
-    toast({
-      title: 'הצעה התקבלה',
-      description: 'הודעה נשלחה לבעל המקצוע. הוא יצור איתך קשר בהקדם.',
-      variant: 'default',
-    });
+    showPopup(
+      'הצעה התקבלה',
+      'הודעה נשלחה לבעל המקצוע. הוא יצור איתך קשר בהקדם.',
+      'success'
+    );
   };
 
   const notifyAcceptWithRating = (onRateNowClick: () => void) => {
-    toast({
-      title: 'הצעה התקבלה',
-      description: 'הצעת המחיר אושרה! נשמח אם תדרג את בעל המקצוע.',
-      action: (
-        <ToastAction
-          altText="Rate now"
-          onClick={() => {
-            onRateNowClick();
-          }}
-          className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded ml-2 font-semibold"
-          style={{ fontSize: 14 }}
-        >
-          דרג עכשיו
-        </ToastAction>
-      ),
-      variant: 'success',
-    });
+    showPopup(
+      'הצעה התקבלה',
+      'הצעת המחיר אושרה! נשמח אם תדרג את בעל המקצוע.',
+      'success',
+      {
+        label: 'דרג עכשיו',
+        onClick: onRateNowClick
+      }
+    );
   };
 
   const notifyGeneralError = () => {
-    toast({
-      title: 'שגיאה בתהליך קבלת ההצעה',
-      description: 'אירעה שגיאה בתהליך. אנא נסה שוב מאוחר יותר.',
-      variant: 'destructive',
-    });
+    showPopup(
+      'שגיאה בתהליך קבלת ההצעה',
+      'אירעה שגיאה בתהליך. אנא נסה שוב מאוחר יותר.',
+      'error'
+    );
   };
+
+  const PopupComponent = () => (
+    <PopupNotification
+      isOpen={popup.isOpen}
+      onClose={closePopup}
+      title={popup.title}
+      description={popup.description}
+      type={popup.type}
+      actionButton={popup.actionButton}
+    />
+  );
 
   return {
     notifyAlreadyAccepted,
@@ -73,5 +105,6 @@ export const useQuoteAcceptNotifications = () => {
     notifyAccepted,
     notifyAcceptWithRating,
     notifyGeneralError,
+    PopupComponent,
   };
 };

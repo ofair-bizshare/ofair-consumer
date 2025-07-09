@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ErrorBoundary from '@/components/ui/error-boundary';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
-import { ZoomIn, Image, Video, ImageOff } from 'lucide-react';
+import { ZoomIn, Image, Video, ImageOff, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface QuoteDetailsProps {
@@ -12,6 +12,42 @@ interface QuoteDetailsProps {
   mediaUrls?: string[];
   sampleImageUrl?: string;
 }
+
+// Component for description with read more functionality
+const DescriptionWithReadMore: React.FC<{ description: string }> = ({ description }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const shouldShowReadMore = description.length > 150;
+  
+  const displayText = isExpanded ? description : (shouldShowReadMore ? description.substring(0, 150) + '...' : description);
+  
+  return (
+    <div className="mt-1">
+      <p className="text-lg font-semibold text-inherit whitespace-pre-wrap">
+        {displayText}
+      </p>
+      {shouldShowReadMore && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="mt-2 p-0 h-auto text-blue-600 hover:text-blue-800 font-medium"
+        >
+          {isExpanded ? (
+            <>
+              <ChevronUp className="w-4 h-4 ml-1" />
+              קרא פחות
+            </>
+          ) : (
+            <>
+              <ChevronDown className="w-4 h-4 ml-1" />
+              קרא עוד
+            </>
+          )}
+        </Button>
+      )}
+    </div>
+  );
+};
 
 // A small component to handle image loading and error states gracefully.
 const ImageThumbnail: React.FC<{ src: string; alt: string; onClick: () => void }> = ({ src, alt, onClick }) => {
@@ -131,9 +167,7 @@ const QuoteDetails: React.FC<QuoteDetailsProps> = ({
           )}
         </div>
         {description && (
-          <div className="mt-1">
-            <p className="line-clamp-3 text-lg font-semibold text-inherit">{description}</p>
-          </div>
+          <DescriptionWithReadMore description={description} />
         )}
         
         {/* Dialog for viewing media in large */}

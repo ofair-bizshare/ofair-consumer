@@ -54,7 +54,7 @@ export const useQuoteActions = ({
     }, 250);
   };
 
-  const { processQuoteAcceptance } = useQuoteAccept({
+  const { processQuoteAcceptance, PopupComponent } = useQuoteAccept({
     quotes,
     setQuotes,
     setLastAcceptedQuoteId,
@@ -95,6 +95,7 @@ export const useQuoteActions = ({
     showPaymentDialog,
     closePaymentDialog,
     selectedQuoteId,
-    isProcessing
+    isProcessing,
+    PopupComponent
   };
 };

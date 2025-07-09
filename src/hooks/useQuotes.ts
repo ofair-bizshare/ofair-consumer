@@ -19,7 +19,8 @@ export const useQuotes = (selectedRequestId: string | null) => {
     showPaymentDialog,
     closePaymentDialog,
     selectedQuoteId,
-    isProcessing
+    isProcessing,
+    PopupComponent
   } = useQuoteActions({
     quotes,
     setQuotes,
@@ -39,6 +40,7 @@ export const useQuotes = (selectedRequestId: string | null) => {
     processQuoteAcceptance,
     closePaymentDialog,
     refreshQuotes,
-    isProcessing
+    isProcessing,
+    PopupComponent
   };
 };

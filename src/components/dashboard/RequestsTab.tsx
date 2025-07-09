@@ -33,7 +33,8 @@ const RequestsTab: React.FC = () => {
     selectedQuoteId,
     processQuoteAcceptance,
     closePaymentDialog,
-    isProcessing
+    isProcessing,
+    PopupComponent
   } = useQuotes(selectedRequestId);
   const selectedRequest = requests.find(r => r.id === selectedRequestId);
   const selectedQuote = selectedQuoteId ? quotes.find(q => q.id === selectedQuoteId) : null;
@@ -188,6 +189,9 @@ const RequestsTab: React.FC = () => {
       </div>
       {/* Payment Method Dialog */}
       {selectedQuote && <PaymentMethodDialog open={showPaymentDialog} onOpenChange={closePaymentDialog} onSelectPaymentMethod={handleSelectPaymentMethod} quotePrice={selectedQuote.price} isProcessing={isProcessing} />}
+      
+      {/* Popup Notifications */}
+      <PopupComponent />
     </div>
   );
 };
