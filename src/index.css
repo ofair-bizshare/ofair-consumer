@@ -84,6 +84,10 @@ img, picture, video {
 
 /* Mobile-specific optimizations */
 @media (max-width: 768px) {
+  body {
+    padding-bottom: 70px; /* Add space for bottom navigation */
+  }
+
   .animate-fade-in-up {
     animation-duration: 0.3s;
   }

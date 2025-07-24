@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import UserDropdown from './header/UserDropdown';
 import MobileMenu from './header/MobileMenu';
 import DesktopNav from './header/DesktopNav';
+import MobileProfileButton from './mobile/MobileProfileButton';
 import { useAuth } from '@/providers/AuthProvider';
 import { useIsMobile } from '@/hooks/use-mobile';
 const Header = () => {
@@ -75,18 +76,22 @@ const Header = () => {
             בעל מקצוע? הצטרף
           </a>
 
-          {user ? <UserDropdown onLogout={handleLogout} /> : <Button variant="ghost" className="hidden md:flex items-center space-x-2 text-blue-700 hover:text-blue-800 hover:bg-blue-50" onClick={handleLoginClick}>
-              <User size={18} />
-              <span>כניסה / הרשמה</span>
-            </Button>}
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex">
+            {user ? <UserDropdown onLogout={handleLogout} /> : <Button variant="ghost" className="flex items-center space-x-2 text-blue-700 hover:text-blue-800 hover:bg-blue-50" onClick={handleLoginClick}>
+                <User size={18} />
+                <span>כניסה / הרשמה</span>
+              </Button>}
+          </div>
 
-          <button className="md:hidden text-gray-800 p-1 z-50" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu" aria-expanded={isMenuOpen}>
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          {/* Mobile Profile Button */}
+          <div className="md:hidden">
+            <MobileProfileButton onLogout={handleLogout} />
+          </div>
         </div>
       </div>
 
-      <MobileMenu isLoggedIn={!!user} isOpen={isMenuOpen} onSendRequest={handleSendRequest} onLogout={handleLogout} onClose={() => setIsMenuOpen(false)} />
+      
     </header>;
 };
 export default Header;

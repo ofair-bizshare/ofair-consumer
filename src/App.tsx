@@ -40,6 +40,7 @@ import ScrollToTop from '@/components/ScrollToTop';
 import { Toaster } from '@/components/ui/toaster';
 import PhoneRequiredDialog from '@/components/auth/PhoneRequiredDialog';
 import ErrorBoundary from '@/components/ui/error-boundary';
+import BottomNavigation from '@/components/mobile/BottomNavigation';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -104,6 +105,7 @@ function App() {
                 </Routes>
                 <PhoneRequiredDialog />
                 <Toaster />
+                <BottomNavigation />
               </BrowserRouter>
             </HelmetProvider>
           </ThemeProvider>
