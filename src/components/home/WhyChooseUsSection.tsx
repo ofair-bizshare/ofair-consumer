@@ -40,8 +40,8 @@ const WhyChooseUsSection: React.FC = () => {
             <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="h-7 w-7 text-blue-700" />
             </div>
-            <h3 className="text-lg font-semibold text-blue-700 mb-2">שירות חינמי</h3>
-            <p className="text-gray-600 text-sm">אין עלות לצרכנים, שלמו רק עבור העבודה עצמה</p>
+            <h3 className="text-lg font-semibold text-blue-700 mb-2">תשלום נוח ובטוח</h3>
+            <p className="text-gray-600 text-sm">תשלום במזומן או באשראי ישירות באתר + 50₪ זיכוי לפעם הראשונה</p>
           </div>
         </div>
       </div>

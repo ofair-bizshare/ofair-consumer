@@ -27,11 +27,11 @@ const PaymentMethodDialog: React.FC<PaymentMethodDialogProps> = ({
           <p className="text-gray-700">יש לבחור אמצעי תשלום להזמנה בסך {formattedPrice} ₪</p>
           
           <div className="grid grid-cols-1 gap-3 pt-2">
-            <Button variant="outline" className="flex justify-right items-center gap-2 h-20 border-2 hover:bg-gray-50" onClick={() => onSelectPaymentMethod('credit')} disabled={isProcessing}>
+            <Button variant="outline" className="flex justify-right items-center gap-2 h-20 border-2 hover:bg-green-50 border-green-200" onClick={() => onSelectPaymentMethod('credit')} disabled={isProcessing}>
               <CreditCard className="w-6 h-6" />
               <div>
                 <p className="font-semibold">תשלום בכרטיס אשראי</p>
-                <p className="text-xs text-gray-500">תשלום מאובטח באתר</p>
+                <p className="text-xs text-green-600 font-medium">תשלום מאובטח באתר + 50₪ זיכוי להזמנה הבאה!</p>
               </div>
               {isProcessing && <Loader2 className="ml-auto w-5 h-5 animate-spin" />}
             </Button>

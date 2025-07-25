@@ -13,6 +13,7 @@ const HowItWorksSection = lazy(() => import('@/components/home/HowItWorksSection
 const TestimonialsSection = lazy(() => import('@/components/home/TestimonialsSection'));
 const WhyChooseUsSection = lazy(() => import('@/components/home/WhyChooseUsSection'));
 const ArticlesSection = lazy(() => import('@/components/home/ArticlesSection'));
+const GeneralQASection = lazy(() => import('@/components/faq/content/GeneralQASection'));
 const CtaSection = lazy(() => import('@/components/home/CtaSection'));
 
 // Import critical sections normally
@@ -134,6 +135,10 @@ const Index = () => {
       
       <Suspense fallback={<SectionLoader />}>
         <ArticlesSection />
+      </Suspense>
+      
+      <Suspense fallback={<SectionLoader />}>
+        <GeneralQASection />
       </Suspense>
       
       <Suspense fallback={<SectionLoader />}>

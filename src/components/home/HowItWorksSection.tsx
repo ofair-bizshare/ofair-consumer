@@ -35,8 +35,8 @@ const HowItWorksSection: React.FC = () => {
           
           <div className="text-center p-6 rounded-xl bg-blue-50/50 border border-blue-100 hover:shadow-lg transition-all duration-300">
             <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-bold mx-auto mb-4 bg-[#00d09e]">3</div>
-            <h3 className="text-xl font-semibold text-blue-700 mb-3">בחרו את המתאים</h3>
-            <p className="text-gray-600">השוו בין ההצעות וצרו קשר עם בעל המקצוע שהכי מתאים לצרכים שלכם</p>
+            <h3 className="text-xl font-semibold text-blue-700 mb-3">בחרו את המתאים ושלמו</h3>
+            <p className="text-gray-600">השוו בין ההצעות, בחרו מזומן או אשראי (עם הטבה של 50₪ לפעם הראשונה!) וצרו קשר</p>
             <div className="mt-4">
               <CheckCircle size={32} className="mx-auto text-[#00d09e]" />
             </div>
