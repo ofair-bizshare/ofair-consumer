@@ -5,8 +5,20 @@ import { QuoteInterface, QuoteStatus } from '@/types/dashboard';
 /**
  * Count quotes for a specific request
  */
+// Cache for quote counts to reduce database calls
+const quoteCounts = new Map<string, { count: number; timestamp: number }>();
+const CACHE_DURATION = 30000; // 30 seconds
+
 export const countQuotesForRequest = async (requestId: string): Promise<number> => {
   try {
+    // Check cache first
+    const cached = quoteCounts.get(requestId);
+    const now = Date.now();
+    
+    if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+      return cached.count;
+    }
+
     console.log("Counting quotes for request:", requestId);
     
     const { count, error } = await supabase
@@ -19,7 +31,12 @@ export const countQuotesForRequest = async (requestId: string): Promise<number> 
       return 0;
     }
     
-    return count || 0;
+    const result = count || 0;
+    
+    // Cache the result
+    quoteCounts.set(requestId, { count: result, timestamp: now });
+    
+    return result;
   } catch (error) {
     console.error("Error in countQuotesForRequest:", error);
     return 0;
